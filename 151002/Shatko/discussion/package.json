@@ -9,17 +9,17 @@
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "cassandra": "docker exec -it dist-comp-cassandra cqlsh",
-    "docker:start": "docker run -d --name=dist-comp-cassandra -p 9042:9042 cassandra",
-    "docker:stop": "docker rm -f dist-comp-cassandra"
+    "cassandra:setup": "docker exec -i dist-comp-cassandra cqlsh -e \"CREATE KEYSPACE distcomp WITH replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 }; USE distcomp; CREATE TABLE IF NOT EXISTS tbl_messages (id TEXT PRIMARY KEY, \\\"storyId\\\" TEXT, content TEXT);\""
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.1",
     "@nestjs/core": "^10.0.0",
     "@nestjs/mapped-types": "*",
+    "@nestjs/microservices": "^10.3.7",
     "@nestjs/platform-express": "^10.0.0",
     "cassandra-driver": "^4.7.2",
+    "kafkajs": "^2.2.4",
     "nestjs-zod": "^3.0.0",
     "pg": "^8.11.5",
     "reflect-metadata": "^0.2.0",

@@ -1,22 +1,21 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  HttpCode,
+  Param,
   ParseIntPipe,
+  Post,
   Put,
   UsePipes,
-  HttpCode,
-} from '@nestjs/common';
-import { MessagesService } from './messages.service';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
-import { ZodValidationPipe } from 'nestjs-zod';
+} from "@nestjs/common";
+import { ZodValidationPipe } from "nestjs-zod";
+import { CreateMessageDto } from "./dto/create-message.dto";
+import { UpdateMessageDto } from "./dto/update-message.dto";
+import { MessagesService } from "./messages.service";
 
-@Controller('messages')
+@Controller("messages")
 @UsePipes(ZodValidationPipe)
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
@@ -31,8 +30,8 @@ export class MessagesController {
     return this.messagesService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  @Get(":id")
+  findOne(@Param("id", ParseIntPipe) id: number) {
     return this.messagesService.findOne(id);
   }
 
@@ -41,9 +40,9 @@ export class MessagesController {
     return this.messagesService.update(updateMessageDto);
   }
 
-  @Delete(':id')
+  @Delete(":id")
   @HttpCode(204)
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param("id", ParseIntPipe) id: number) {
     return this.messagesService.remove(id);
   }
 }

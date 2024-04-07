@@ -14,6 +14,8 @@ import { MessagesService } from "./messages.service";
 import { CreateMessageDto } from "./dto/create-message.dto";
 import { UpdateMessageDto } from "./dto/update-message.dto";
 import { ZodValidationPipe } from "nestjs-zod";
+import { MessagePattern, Payload } from "@nestjs/microservices";
+import { IKafkaMessage } from "src/interfaces";
 
 @Controller("messages")
 @UsePipes(ZodValidationPipe)
