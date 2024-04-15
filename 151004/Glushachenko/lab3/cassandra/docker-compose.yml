@@ -1,0 +1,37 @@
+version: '3.4'
+
+services:
+  discussion:
+    image: ${DOCKER_REGISTRY-}discussion
+    build:
+      context: .
+      dockerfile: Discussion/Dockerfile
+    ports:
+      - 24130:24130
+
+  publisher:
+    image: ${DOCKER_REGISTRY-}publisher
+    build:
+      context: .
+      dockerfile: Publisher/Dockerfile
+    ports: 
+      - 24110:24110
+
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - 5432:5432
+
+  cassandra:
+    image: cassandra
+    ports:
+      - 9042:9042
+    volumes:
+      - ~/apps/cassandra:/var/lib/cassandra
+    environment:
+      - CASSANDRA_CLUSTER_NAME=cluster_by
