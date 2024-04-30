@@ -1,0 +1,19 @@
+﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 24110
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+RUN dotnet dev-certs https --trust
+WORKDIR /src
+COPY ["RV/RV.csproj", "RV/"]
+RUN dotnet restore "RV/RV.csproj"
+COPY . .
+WORKDIR "/src/RV"
+RUN dotnet build "RV.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "RV.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "RV.dll"]

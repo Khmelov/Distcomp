@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34525.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RV", "RV\RV.csproj", "{04B351CF-7FFA-4CB3-9888-B38CC9E08479}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discussion", "Discussion\Discussion.csproj", "{34F09A0A-D85D-458E-9867-D87956AFC44E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdentityServer", "IdentityServer\IdentityServer.csproj", "{4E71DA7F-ED74-4291-9647-DA1A6744595B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{04B351CF-7FFA-4CB3-9888-B38CC9E08479}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04B351CF-7FFA-4CB3-9888-B38CC9E08479}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04B351CF-7FFA-4CB3-9888-B38CC9E08479}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04B351CF-7FFA-4CB3-9888-B38CC9E08479}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34F09A0A-D85D-458E-9867-D87956AFC44E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34F09A0A-D85D-458E-9867-D87956AFC44E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34F09A0A-D85D-458E-9867-D87956AFC44E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34F09A0A-D85D-458E-9867-D87956AFC44E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E71DA7F-ED74-4291-9647-DA1A6744595B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E71DA7F-ED74-4291-9647-DA1A6744595B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E71DA7F-ED74-4291-9647-DA1A6744595B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E71DA7F-ED74-4291-9647-DA1A6744595B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {933E93E2-40DF-4A6D-931D-41006826E54F}
+	EndGlobalSection
+EndGlobal

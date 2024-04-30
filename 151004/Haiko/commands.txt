@@ -1,0 +1,4 @@
+docker build -t discussion -f Dockerfile_discussion .
+docker build -t publisher -f Dockerfile_publisher .
+docker build -t identity -f Dockerfile_identity .
+docker compose up

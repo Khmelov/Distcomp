@@ -1,0 +1,19 @@
+﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 24130
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+RUN dotnet dev-certs https --trust
+WORKDIR /src
+COPY ["Discussion/Discussion.csproj", "Discussion/"]
+RUN dotnet restore "Discussion/Discussion.csproj"
+COPY . .
+WORKDIR "/src/Discussion"
+RUN dotnet build "Discussion.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "Discussion.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Discussion.dll"]
