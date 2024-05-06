@@ -1,9 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: db/changelog/changeset/create-message-table.yaml
-  - include:
-      file: db/changelog/changeset/create-user-table.yaml
-  - include:
-      file: db/changelog/changeset/create-issue-table.yaml
-  - include:
-      file: db/changelog/changeset/create-sticker-table.yaml

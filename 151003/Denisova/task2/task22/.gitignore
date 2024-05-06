@@ -1,9 +1,0 @@
-# folders
-target
-.idea
-.mvn
-
-# files
-mvnw
-mvnw.cmd
-*.iml

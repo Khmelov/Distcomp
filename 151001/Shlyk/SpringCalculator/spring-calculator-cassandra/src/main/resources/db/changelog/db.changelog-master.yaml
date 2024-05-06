@@ -1,5 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: db/changelog/2024/03/07-01-changelog-init.sql
-  - include:
-      file: db/changelog/2024/04/08-01-changelog.sql

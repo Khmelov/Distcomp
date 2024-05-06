@@ -1,9 +1,0 @@
-syntax = "proto3";
-package context.cache;
-option java_package = "by.bsuir.poit.dc.rest.context.cache";
-option java_multiple_files = true;
-message NoteCacheDto {
-  uint64 id = 1;
-  string content = 2;
-  uint64 news_id = 3;
-}

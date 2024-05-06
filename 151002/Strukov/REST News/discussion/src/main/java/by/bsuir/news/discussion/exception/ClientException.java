@@ -1,7 +1,0 @@
-package by.bsuir.news.discussion.exception;
-
-public class ClientException extends Exception {
-    public ClientException(String message) {
-        super(message);
-    }
-}

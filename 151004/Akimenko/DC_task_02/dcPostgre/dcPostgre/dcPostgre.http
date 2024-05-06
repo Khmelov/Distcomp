@@ -1,6 +1,0 @@
-@dcPostgre_HostAddress = http://localhost:24110
-
-GET {{dcPostgre_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -1,5 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: db/changelog/2024/02/25-01-changelog-init.xml
-  - include:
-      file: db/changelog/2024/03/06-01-changelog.xml

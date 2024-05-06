@@ -1,6 +1,0 @@
-@Lab3.Publisher_HostAddress = http://localhost:5058
-
-GET {{Lab3.Publisher_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

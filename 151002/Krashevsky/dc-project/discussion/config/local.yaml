@@ -1,5 +1,0 @@
-port: 24131
-
-cassandra:
-  host: "host.docker.internal"
-  port: "9042"
