@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\Lable\" />
+    <Folder Include="Features\News\" />
+    <Folder Include="Features\Notice\" />
+    <Folder Include="Features\User\" />
+  </ItemGroup>
+
+</Project>
