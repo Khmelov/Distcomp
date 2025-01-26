@@ -20,11 +20,4 @@ public class RepositoryContext : DbContext
         
         base.OnModelCreating(modelBuilder);
     }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseInMemoryDatabase(databaseName: "rest");
-        
-        base.OnConfiguring(optionsBuilder);
-    }
 }
