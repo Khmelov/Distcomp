@@ -9,6 +9,6 @@ public class News : BaseEntity
     public DateTime Modified { get; set; }
     
     public virtual User User { get; set; } = null!;
-    public virtual Notice Notice { get; set; } = null!;
+    public virtual ICollection<Notice> Notices { get; set; } = new List<Notice>();
     public virtual ICollection<Label> Labels { get; set; } = new List<Label>();
 }
