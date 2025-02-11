@@ -3,8 +3,10 @@ using Persistence.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddCors(options => options.AddPolicy("RestCors", policyBuilder => policyBuilder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 builder.Services.ConfigureRepositories();
 builder.Services.ConfigureMapper();
@@ -20,5 +22,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("RestCors");
+
+app.MapControllers();
 
 app.Run();
