@@ -1,4 +1,5 @@
-﻿using Domain.Repositories;
+﻿using System.Linq.Expressions;
+using Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Persistence.Repositories;
@@ -12,34 +13,37 @@ public abstract class RepositoryBase<T> : IRepositoryBase<T> where T : class
         _context = context;
     }
 
-    public async Task<IEnumerable<T>> GetAll(bool trackChanges, CancellationToken cancellationToken = default)
+    public IQueryable<T> FindAll(bool trackChanges)
     {
         if (trackChanges)
         {
-            return await _context.Set<T>().ToListAsync(cancellationToken);
+            return _context.Set<T>();
         }
         
-        return await _context.Set<T>().AsNoTracking().ToListAsync(cancellationToken);
+        return _context.Set<T>().AsNoTracking();
     }
 
-    public async Task<T?> FindByIdAsync(long id, CancellationToken cancellationToken = default)
+    public IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression, bool trackChanges)
     {
-        var entity = await _context.Set<T>().FindAsync(new object[] { id }, cancellationToken);
-        
-        return entity;
+        if (trackChanges)
+        {
+            var entity = _context.Set<T>().Where(expression).AsNoTracking();
+        }
+
+        return _context.Set<T>().Where(expression);
     }
 
-    public async Task CreateAsync(T entity, CancellationToken cancellationToken = default)
+    public void Create(T entity)
     {
-        await _context.Set<T>().AddAsync(entity, cancellationToken);
+        _context.Set<T>().Add(entity);
     }
 
-    public void UpdateAsync(T entity)
+    public void Update(T entity)
     {
         _context.Set<T>().Update(entity);
     }
 
-    public void DeleteAsync(T entity)
+    public void Delete(T entity)
     {
         _context.Set<T>().Remove(entity);
     }

@@ -1,10 +1,12 @@
-﻿namespace Domain.Repositories;
+﻿using System.Linq.Expressions;
+
+namespace Domain.Repositories;
 
 public interface IRepositoryBase<T>
 {
-    Task<IEnumerable<T>> GetAll(bool trackChanges, CancellationToken cancellationToken = default);
-    Task<T?> FindByIdAsync(long id, CancellationToken cancellationToken = default);
-    Task CreateAsync(T entity, CancellationToken cancellationToken = default);
-    void UpdateAsync(T entity);
-    void DeleteAsync(T entity);
+    IQueryable<T> FindAll(bool trackChanges);
+    IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression, bool trackChanges);
+    void Create(T entity);
+    void Update(T entity);
+    void Delete(T entity);
 }
