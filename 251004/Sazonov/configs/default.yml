@@ -1,0 +1,20 @@
+log:
+  level: info
+  encoding: json
+
+core:
+  shutdown_timeout: 10s
+
+storage:
+  type: postgres
+  user: admin
+  password: admin
+  host: localhost
+  port: 5432
+  dbname: mixery
+  sslmode: disable
+
+http:
+  port: 24110
+  timeout: 5s
+  idle_timeout: 60s

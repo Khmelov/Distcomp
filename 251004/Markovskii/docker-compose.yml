@@ -1,0 +1,12 @@
+﻿name: 'rv'
+services:
+  news_service:
+    image: news_service
+    build:
+      context: ./NewsService/
+      dockerfile: ./Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://*:80
+    ports:
+      - 24110:80
+  
