@@ -1,16 +1,20 @@
 package by.kapinskiy.Task310.models;
 
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 public class Issue {
     private long id;
-    private long userId;
+    private User user;
     private String title;
     private String content;
     private Date created;
     private Date modified;
 
+    private List<Tag> tags = new ArrayList<>();
     public String getContent() {
         return content;
     }
@@ -51,11 +55,32 @@ public class Issue {
         this.title = title;
     }
 
-    public long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(long userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public List<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<Tag> tags) {
+        this.tags = tags;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Issue issue = (Issue) o;
+        return id == issue.id && user.equals(issue.user) && title.equals(issue.title) && content.equals(issue.content) && created.equals(issue.created) && modified.equals(issue.modified);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, user, title, content, created, modified);
     }
 }

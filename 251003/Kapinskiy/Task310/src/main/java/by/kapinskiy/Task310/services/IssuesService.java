@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class IssuesService {
@@ -23,10 +24,12 @@ public class IssuesService {
         this.usersRepository = usersRepository;
     }
 
-    public Issue save(Issue issue) {
-        if (!usersRepository.existsById(issue.getUserId())) {
-            throw new NotFoundException("User with such id does not exist");
-        }
+    private void setUser(Issue issue, long userId){
+        User user = usersRepository.findById(userId).orElseThrow(() -> new NotFoundException("User with such id does not exist"));
+        issue.setUser(user);
+    }
+    public Issue save(Issue issue, long userId) {
+        setUser(issue, userId);
         issue.setCreated(new Date());
         issue.setModified(new Date());
         return issuesRepository.save(issue);
@@ -41,23 +44,22 @@ public class IssuesService {
     }
 
     public void deleteById(long id) {
+
         if (!issuesRepository.existsById(id)) {
             throw new NotFoundException("Issue not found");
         }
         issuesRepository.deleteById(id);
     }
 
-    public void up(long id, Issue issue) {
-        issue.setId(id);
-        update(issue);
-    }
-
-    public Issue update(Issue issue) {
-        if (!issuesRepository.existsById(issue.getId())) {
-            throw new NotFoundException("Issue not found");
+    public Issue update(Issue issue, Long userId) {
+        if (userId != null) {
+            setUser(issue, userId);
         }
-
         issue.setModified(new Date());
         return issuesRepository.save(issue);
+    }
+
+    public boolean existsByTitle(String title){
+        return issuesRepository.existsByTitle(title);
     }
 }

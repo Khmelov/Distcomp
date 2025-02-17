@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Size;
 
 
 public class UserRequestDTO {
-    // Only for tests compliance
     private Long id;
 
     @NotBlank(message = "Login may not be blank")

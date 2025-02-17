@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public class IssueRequestDTO {
 
-    // For tests compliance
+
     private Long id;
 
     @NotNull(message = "User id can't be null")

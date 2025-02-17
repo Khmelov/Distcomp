@@ -55,4 +55,11 @@ public class InMemoryUsersRepository implements UsersRepository {
     public boolean existsById(long id) {
         return users.containsKey(id);
     }
+
+    @Override
+    public boolean existsByLogin(String login) {
+        return users.values().stream().anyMatch(user -> user.getLogin().equals(login));
+    }
+
+
 }

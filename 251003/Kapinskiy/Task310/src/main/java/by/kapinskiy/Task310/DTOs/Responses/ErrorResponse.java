@@ -1,4 +1,4 @@
-package by.kapinskiy.Task310.utils;
+package by.kapinskiy.Task310.DTOs.Responses;
 
 import java.util.Date;
 

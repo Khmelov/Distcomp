@@ -28,6 +28,12 @@ public class InMemoryIssuesRepository implements IssuesRepository {
         if (!issues.containsKey(id)) {
             id = idGenerator.incrementAndGet();
             issue.setId(id);
+        } else {
+            Issue prev = issues.get(id);
+            prev.getTags().stream().forEach(tag -> {
+                tag.getIssues().set(tag.getIssues().indexOf(prev), issue);
+            });
+            issue.setTags(prev.getTags());
         }
 
         issues.put(id, issue);
@@ -36,6 +42,8 @@ public class InMemoryIssuesRepository implements IssuesRepository {
 
     @Override
     public void deleteById(long id) {
+        Issue issue = issues.get(id);
+        issue.getTags().stream().forEach(tag -> tag.getIssues().remove(issue));
         issues.remove(id);
     }
 
@@ -55,5 +63,10 @@ public class InMemoryIssuesRepository implements IssuesRepository {
     @Override
     public boolean existsById(long id) {
         return issues.containsKey(id);
+    }
+
+    @Override
+    public boolean existsByTitle(String title) {
+        return issues.values().stream().anyMatch(i -> i.getTitle().equals(title));
     }
 }

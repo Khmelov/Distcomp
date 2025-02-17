@@ -13,4 +13,6 @@ public interface IssuesRepository {
     Optional<Issue> findById(long id);
     List<Issue> findAll();
     boolean existsById(long id);
+    boolean existsByTitle(String title);
+
 }

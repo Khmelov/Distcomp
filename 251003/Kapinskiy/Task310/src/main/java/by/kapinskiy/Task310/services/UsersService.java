@@ -36,9 +36,9 @@ public class UsersService {
         return usersRepository.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
     }
 
-    public void update(long id, User user) {
+    public User update(long id, User user) {
         user.setId(id);
-        update(user);
+        return update(user);
     }
 
     public User update(User user) {
@@ -47,5 +47,9 @@ public class UsersService {
         }
 
         return usersRepository.save(user);
+    }
+
+    public boolean existsByLogin(String login){
+        return usersRepository.existsByLogin(login);
     }
 }

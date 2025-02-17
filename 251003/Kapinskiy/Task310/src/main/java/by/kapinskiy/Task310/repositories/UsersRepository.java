@@ -12,4 +12,6 @@ public interface UsersRepository {
     Optional<User> findById(long id);
     List<User> findAll();
     boolean existsById(long id);
+
+    boolean existsByLogin(String login);
 }
