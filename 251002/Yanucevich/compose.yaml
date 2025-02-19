@@ -1,0 +1,36 @@
+services:
+  social-net:
+    image: significantnose/social-net:latest  
+    build: .
+    ports:
+      - 24110:24110
+    environment:
+      ConnectionStrings__npg: "User ID=postgres;Host=db;Password=postgres;Port=5432;Database=distcomp;Pooling=true;"
+      ASPNETCORE_URLS: "http://0.0.0.0:24110"
+
+    restart: unless-stopped
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16.0-alpine
+    container_name: db
+    restart: unless-stopped
+
+    environment:
+      PGPORT: 5432
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - 5432:5432
+
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready", "-d", "${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
