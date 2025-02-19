@@ -14,11 +14,11 @@ import (
 var (
 	ErrLabelNotFound = errors.Wrap(errors.ErrNotFound, "label is not found")
 
-	ErrLabelAlreadyExists = errors.Wrap(errors.ErrAlreadyExists, "label already exists")
+	ErrLabelAlreadyExists = errors.Wrap(errors.ErrForbidden, "label already exists")
 )
 
 func (n *LabelRepo) GetLabel(ctx context.Context, id int64) (model.Label, error) {
-	const query = `SELECT * FROM Label WHERE id = $1 LIMIT 1`
+	const query = `SELECT * FROM tbl_label WHERE id = $1 LIMIT 1`
 
 	var label model.Label
 	if err := n.db.GetContext(ctx, &label, query, id); err != nil {
@@ -33,7 +33,7 @@ func (n *LabelRepo) GetLabel(ctx context.Context, id int64) (model.Label, error)
 }
 
 func (n *LabelRepo) ListLabels(ctx context.Context) ([]model.Label, error) {
-	const query = `SELECT * FROM Label`
+	const query = `SELECT * FROM tbl_label`
 
 	labels := []model.Label{}
 	if err := n.db.SelectContext(ctx, &labels, query); err != nil {
@@ -44,7 +44,7 @@ func (n *LabelRepo) ListLabels(ctx context.Context) ([]model.Label, error) {
 }
 
 func (n *LabelRepo) CreateLabel(ctx context.Context, args model.Label) (model.Label, error) {
-	const query = `INSERT INTO Label (
+	const query = `INSERT INTO tbl_label (
 		name	
 	) VALUES (
 		:name
@@ -78,7 +78,7 @@ func (n *LabelRepo) CreateLabel(ctx context.Context, args model.Label) (model.La
 }
 
 func (n *LabelRepo) UpdateLabel(ctx context.Context, args model.Label) (model.Label, error) {
-	const query = `UPDATE Label SET
+	const query = `UPDATE tbl_label SET
 		name = COALESCE(NULLIF(:name, ''), name)
 	WHERE id = :id
 	RETURNING *`
@@ -112,7 +112,7 @@ func (n *LabelRepo) UpdateLabel(ctx context.Context, args model.Label) (model.La
 }
 
 func (n *LabelRepo) DeleteLabel(ctx context.Context, id int64) error {
-	const query = `DELETE FROM Label WHERE id = $1`
+	const query = `DELETE FROM tbl_label WHERE id = $1`
 
 	result, err := n.db.ExecContext(ctx, query, id)
 	if err != nil {

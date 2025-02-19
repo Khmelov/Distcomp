@@ -7,11 +7,11 @@ core:
 
 storage:
   type: postgres
-  user: admin
-  password: admin
+  user: postgres
+  password: postgres
   host: localhost
   port: 5432
-  dbname: mixery
+  dbname: distcomp
   sslmode: disable
 
 http:

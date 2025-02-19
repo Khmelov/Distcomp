@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	_ "github.com/jackc/pgx/stdlib"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -19,7 +20,7 @@ type Config struct {
 
 func (c Config) ConnectionString() string {
 	return fmt.Sprintf(
-		"user=%s password=%s host=%s port=%s dbname=%s sslmode=%s",
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		c.User,
 		c.Password,
 		c.Host,
@@ -30,10 +31,12 @@ func (c Config) ConnectionString() string {
 }
 
 func Connect(ctx context.Context, cfg Config) (*sqlx.DB, error) {
-	db, err := sqlx.ConnectContext(ctx, "pgx", cfg.ConnectionString())
+	pool, err := pgxpool.New(ctx, cfg.ConnectionString())
 	if err != nil {
 		return nil, err
 	}
+
+	db := sqlx.NewDb(stdlib.OpenDBFromPool(pool), "pgx")
 
 	return db, nil
 }

@@ -3,7 +3,6 @@ package writer
 import (
 	"context"
 	"database/sql"
-	stderrors "errors"
 
 	"github.com/Khmelov/Distcomp/251004/Sazonov/internal/model"
 	"github.com/jackc/pgerrcode"
@@ -14,15 +13,15 @@ import (
 var (
 	ErrWriterNotFound = errors.Wrap(errors.ErrNotFound, "writer is not found")
 
-	ErrWriterAlreadyExists = errors.Wrap(errors.ErrAlreadyExists, "writer already exists")
+	ErrWriterAlreadyExists = errors.Wrap(errors.ErrForbidden, "writer already exists")
 )
 
 func (w *WriterRepo) GetWriter(ctx context.Context, id int64) (model.Writer, error) {
-	const query = `SELECT * FROM Writer WHERE id = $1 LIMIT 1`
+	const query = `SELECT * FROM tbl_writer WHERE id = $1 LIMIT 1`
 
 	var writer model.Writer
 	if err := w.db.GetContext(ctx, &writer, query, id); err != nil {
-		if stderrors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return model.Writer{}, ErrWriterNotFound
 		}
 
@@ -33,7 +32,7 @@ func (w *WriterRepo) GetWriter(ctx context.Context, id int64) (model.Writer, err
 }
 
 func (w *WriterRepo) ListWriters(ctx context.Context) ([]model.Writer, error) {
-	const query = `SELECT * FROM Writer`
+	const query = `SELECT * FROM tbl_writer`
 
 	writers := []model.Writer{}
 	if err := w.db.SelectContext(ctx, &writers, query); err != nil {
@@ -44,7 +43,7 @@ func (w *WriterRepo) ListWriters(ctx context.Context) ([]model.Writer, error) {
 }
 
 func (w *WriterRepo) CreateWriter(ctx context.Context, args model.Writer) (model.Writer, error) {
-	const query = `INSERT INTO Writer (
+	const query = `INSERT INTO tbl_writer (
 		login, password, firstname, lastname
 	) VALUES (
 		:login, :password, :firstname, :lastname
@@ -54,7 +53,7 @@ func (w *WriterRepo) CreateWriter(ctx context.Context, args model.Writer) (model
 	if err != nil {
 		var pgErr *pgconn.PgError
 
-		if stderrors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			return model.Writer{}, ErrWriterAlreadyExists
 		}
 
@@ -78,7 +77,7 @@ func (w *WriterRepo) CreateWriter(ctx context.Context, args model.Writer) (model
 }
 
 func (w *WriterRepo) UpdateWriter(ctx context.Context, args model.Writer) (model.Writer, error) {
-	const query = `UPDATE Writer SET
+	const query = `UPDATE tbl_writer SET
 		login = COALESCE(NULLIF(:login, ''), login),
 		password = COALESCE(NULLIF(:password, ''), password),
 		firstname = COALESCE(NULLIF(:firstname, ''), firstname),
@@ -90,7 +89,7 @@ func (w *WriterRepo) UpdateWriter(ctx context.Context, args model.Writer) (model
 	if err != nil {
 		var pgErr *pgconn.PgError
 
-		if stderrors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			return model.Writer{}, ErrWriterAlreadyExists
 		}
 
@@ -115,13 +114,13 @@ func (w *WriterRepo) UpdateWriter(ctx context.Context, args model.Writer) (model
 }
 
 func (w *WriterRepo) DeleteWriter(ctx context.Context, id int64) error {
-	const query = `DELETE FROM Writer WHERE id = $1`
+	const query = `DELETE FROM tbl_writer WHERE id = $1`
 
 	result, err := w.db.ExecContext(ctx, query, id)
 	if err != nil {
 		var pgErr *pgconn.PgError
 
-		if stderrors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			return ErrWriterAlreadyExists
 		}
 

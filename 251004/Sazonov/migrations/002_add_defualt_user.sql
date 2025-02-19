@@ -1,5 +1,5 @@
 -- +goose Up
-INSERT INTO Writer (
+INSERT INTO tbl_writer (
   login, password, firstname, lastname
 ) VALUES (
   'alex.sazonov.13@yandex.ru', 'password', 'Алексей', 'Сазонов'

@@ -6,11 +6,9 @@ import (
 
 	httperrors "github.com/Khmelov/Distcomp/251004/Sazonov/internal/handler/http/errors"
 	"github.com/Khmelov/Distcomp/251004/Sazonov/internal/model"
-	"github.com/Khmelov/Distcomp/251004/Sazonov/pkg/logger"
 	"github.com/Khmelov/Distcomp/251004/Sazonov/pkg/validator"
 	"github.com/gin-gonic/gin"
 	"github.com/stackus/errors"
-	"go.uber.org/zap"
 )
 
 func (h *newsHandler) List() gin.HandlerFunc {
@@ -131,8 +129,6 @@ func (h *newsHandler) Update() gin.HandlerFunc {
 			httperrors.Error(c, err)
 			return
 		}
-
-		logger.Info(c, "new update response", zap.Any("news", news))
 
 		c.JSON(http.StatusOK, news)
 	}

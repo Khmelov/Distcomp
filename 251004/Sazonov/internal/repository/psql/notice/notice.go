@@ -13,11 +13,13 @@ import (
 var (
 	ErrNoticeNotFound = errors.Wrap(errors.ErrNotFound, "notice is not found")
 
-	ErrNoticeAlreadyExists = errors.Wrap(errors.ErrAlreadyExists, "notice already exists")
+	ErrNoticeAlreadyExists = errors.Wrap(errors.ErrForbidden, "notice already exists")
+
+	ErrNoReference = errors.Wrap(errors.ErrNotFound, "news are not found")
 )
 
 func (n *NoticeRepo) GetNotice(ctx context.Context, id int64) (model.Notice, error) {
-	const query = `SELECT * FROM Notice WHERE id = $1 LIMIT 1`
+	const query = `SELECT * FROM tbl_notice WHERE id = $1 LIMIT 1`
 
 	var notice model.Notice
 	if err := n.db.GetContext(ctx, &notice, query, id); err != nil {
@@ -32,7 +34,7 @@ func (n *NoticeRepo) GetNotice(ctx context.Context, id int64) (model.Notice, err
 }
 
 func (n *NoticeRepo) ListNotices(ctx context.Context) ([]model.Notice, error) {
-	const query = `SELECT * FROM Notice`
+	const query = `SELECT * FROM tbl_notice`
 
 	notices := []model.Notice{}
 	if err := n.db.SelectContext(ctx, &notices, query); err != nil {
@@ -43,10 +45,10 @@ func (n *NoticeRepo) ListNotices(ctx context.Context) ([]model.Notice, error) {
 }
 
 func (n *NoticeRepo) CreateNotice(ctx context.Context, args model.Notice) (model.Notice, error) {
-	const query = `INSERT INTO Notice (
-		newsId, content
+	const query = `INSERT INTO tbl_notice (
+		news_id, content
 	) VALUES (
-		:newsid, :content
+		:news_id, :content
 	) RETURNING *`
 
 	rows, err := n.db.NamedQueryContext(ctx, query, args)
@@ -55,6 +57,10 @@ func (n *NoticeRepo) CreateNotice(ctx context.Context, args model.Notice) (model
 
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			return model.Notice{}, ErrNoticeAlreadyExists
+		}
+
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.ForeignKeyViolation {
+			return model.Notice{}, ErrNoReference
 		}
 
 		return model.Notice{}, err
@@ -77,8 +83,8 @@ func (n *NoticeRepo) CreateNotice(ctx context.Context, args model.Notice) (model
 }
 
 func (n *NoticeRepo) UpdateNotice(ctx context.Context, args model.Notice) (model.Notice, error) {
-	const query = `UPDATE Notice SET
-		newsId = COALESCE(NULLIF(:newsid, 0), newsId),
+	const query = `UPDATE tbl_notice SET
+		news_id = COALESCE(NULLIF(:news_id, 0), news_id),
 		content = COALESCE(NULLIF(:content, ''), content)	
 	WHERE id = :id
 	RETURNING *`
@@ -89,6 +95,10 @@ func (n *NoticeRepo) UpdateNotice(ctx context.Context, args model.Notice) (model
 
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			return model.Notice{}, ErrNoticeAlreadyExists
+		}
+
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.ForeignKeyViolation {
+			return model.Notice{}, ErrNoReference
 		}
 
 		return model.Notice{}, err
@@ -112,7 +122,7 @@ func (n *NoticeRepo) UpdateNotice(ctx context.Context, args model.Notice) (model
 }
 
 func (n *NoticeRepo) DeleteNotice(ctx context.Context, id int64) error {
-	const query = `DELETE FROM Notice WHERE id = $1`
+	const query = `DELETE FROM tbl_notice WHERE id = $1`
 
 	result, err := n.db.ExecContext(ctx, query, id)
 	if err != nil {

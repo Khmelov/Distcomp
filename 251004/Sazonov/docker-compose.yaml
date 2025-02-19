@@ -22,7 +22,12 @@ services:
     restart: unless-stopped
 
     environment:
+      API_STORAGE_TYPE: postgres
       API_STORAGE_HOST: db
+      API_STORAGE_PORT: ${POSTGRES_PORT}
+      API_STORAGE_USER: ${POSTGRES_USER}
+      API_STORAGE_PASSWORD: ${POSTGRES_PASSWORD}
+      API_STORAGE_DBNAME: ${POSTGRES_DB}
 
     deploy:
       resources:

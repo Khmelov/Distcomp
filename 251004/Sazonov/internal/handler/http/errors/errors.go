@@ -22,7 +22,13 @@ func Error(c *gin.Context, err error) {
 	case errors.Is(err, errors.ErrBadRequest):
 		c.JSON(http.StatusBadRequest, HTTPError{Message: err.Error()})
 
-	case errors.Is(err, err):
+	case errors.Is(err, errors.ErrForbidden):
+		c.JSON(http.StatusForbidden, HTTPError{Message: err.Error()})
+
+	case errors.Is(err, errors.ErrAlreadyExists):
+		c.JSON(http.StatusConflict, HTTPError{Message: err.Error()})
+
+	case errors.Is(err, errors.ErrInternalServerError):
 		c.JSON(http.StatusInternalServerError, HTTPError{Message: err.Error()})
 
 	default:
