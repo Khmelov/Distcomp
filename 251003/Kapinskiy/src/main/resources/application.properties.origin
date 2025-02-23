@@ -1,0 +1,12 @@
+spring.application.name=Distcomp
+server.port=24110
+server.servlet.context-path=/api/v1.0
+
+spring.datasource.url=
+spring.datasource.username=
+spring.datasource.password=
+spring.datasource.driver-class-name=
+
+spring.jpa.properties.hibernate.show_sql=
+spring.jpa.properties.hibernate.dialect=
+spring.jpa.properties.hibernate.format_sql=
