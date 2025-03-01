@@ -1,0 +1,38 @@
+<databaseChangeLog>
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="Author"/>
+        </not>
+    </preConditions>
+    <changeSet id="AuthorCreate" author="postgres">
+        <createTable tableName="Author">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <addCheckConstraint tableName="Author" columnNames="login"
+                                constraintName="chk_login_length"
+                                checkConstraint="char_length(login) BETWEEN 2 AND 64"/>
+            <addCheckConstraint tableName="Author" columnNames="password"
+                                constraintName="chk_password_length"
+                                checkConstraint="char_length(password) BETWEEN 8 AND 128"/>
+            <addCheckConstraint tableName="Author" columnNames="firstname"
+                                constraintName="chk_firstname_length"
+                                checkConstraint="char_length(firstname) BETWEEN 2 AND 64"/>
+            <addCheckConstraint tableName="Author" columnNames="lastname"
+                                constraintName="chk_lastname_length"
+                                checkConstraint="char_length(lastname) BETWEEN 2 AND 64"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
