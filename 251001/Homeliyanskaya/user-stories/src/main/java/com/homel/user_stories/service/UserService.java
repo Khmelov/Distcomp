@@ -5,7 +5,6 @@ import com.homel.user_stories.dto.UserResponseTo;
 import com.homel.user_stories.exception.EntityNotFoundException;
 import com.homel.user_stories.mapper.UserMapper;
 import com.homel.user_stories.model.User;
-import com.homel.user_stories.repository.Impl.InMemoryUserRepository;
 import com.homel.user_stories.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

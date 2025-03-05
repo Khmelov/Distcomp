@@ -1,14 +1,14 @@
 package com.homel.user_stories.repository;
 
+import com.homel.user_stories.model.Label;
 import com.homel.user_stories.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface UserRepository {
-    User save(User notification);
-    Optional<User> findById(Long id);
-    public List<User> findAll();
-    void deleteById(Long id);
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+
 }
