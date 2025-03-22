@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 021-create-reaction-table
+      author: KopVZakone
+      runOnChange: true
+      changes:
+        - createTable:
+            tableName: tbl_reaction
+            columns:
+              - column:
+                  name: country
+                  type: text
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: tweetId
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(content) >= 2 AND char_length(content) <= 2048"
