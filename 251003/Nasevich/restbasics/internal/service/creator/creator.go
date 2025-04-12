@@ -38,7 +38,7 @@ func New(db CreatorDB) CreatorService {
 func (s *service) CreateCreator(ctx context.Context, cr creatorModel.Creator) (creator.Creator, error) {
 	mappedData, err := s.db.CreateCreator(ctx, mapper.MapCreatorToModel(cr))
 	if err != nil {
-		return creator.Creator{}, nil
+		return creator.Creator{}, err
 	}
 
 	return mapper.MapModelToCreator(mappedData), nil

@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: v2-update-message-table-changelog.yml
+      relativeToChangelogFile: true

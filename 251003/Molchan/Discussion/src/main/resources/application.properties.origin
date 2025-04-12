@@ -1,0 +1,17 @@
+spring.application.name=Discussion
+server.port=24130
+server.servlet.context-path=/api/v1.0
+
+spring.cassandra.contact-points=
+spring.cassandra.keyspace-name=
+spring.cassandra.local-datacenter=
+spring.cassandra.schema-action=RECREATE
+spring.cassandra.request.timeout=10s
+spring.cassandra.connection.connect-timeout=10s
+spring.cassandra.connection.init-query-timeout=10s
+
+spring.jpa.properties.hibernate.show_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.format_sql=true
+
+comment.country=

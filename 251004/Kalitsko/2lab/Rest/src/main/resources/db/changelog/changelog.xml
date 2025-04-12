@@ -1,0 +1,105 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Создание таблицы tbl_creator -->
+    <changeSet id="1" author="yourname">
+        <createTable tableName="tbl_creator" >
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="login" type="varchar(255)">
+            </column>
+            <column name="password" type="varchar(255)">
+            </column>
+            <column name="firstname" type="varchar(255)"/>
+            <column name="lastname" type="varchar(255)"/>
+        </createTable>
+        <addUniqueConstraint tableName="tbl_creator"
+                             columnNames="login"
+                             constraintName="unique_login"/>
+    </changeSet>
+
+    <!-- Создание таблицы tbl_topic -->
+    <changeSet id="2" author="yourname">
+        <createTable tableName="tbl_topic" >
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="creator_id" type="bigint">
+                <constraints foreignKeyName="fk_creator" references="tbl_creator(id)"/>
+            </column>
+            <column name="title" type="varchar(255)">
+            </column>
+            <column name="content" type="text"/>
+            <column name="created" type="timestamp">
+            </column>
+            <column name="modified" type="timestamp">
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="tbl_topic"
+                             columnNames="title"
+                             constraintName="unique_title"/>
+    </changeSet>
+
+    <!-- Создание таблицы tbl_tag -->
+    <changeSet id="3" author="yourname">
+        <createTable tableName="tbl_tag" >
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="varchar(255)">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Создание таблицы tbl_post -->
+    <changeSet id="4" author="yourname">
+        <createTable tableName="tbl_post" >
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="topic_id" type="bigint">
+                <constraints foreignKeyName="fk_topic" references="tbl_topic(id)"/>
+            </column>
+            <column name="content" type="text"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Создание связующей таблицы tbl_topic_tag -->
+    <changeSet id="5" author="yourname">
+        <createTable tableName="tbl_topic_tag" >
+            <column name="topic_id" type="bigint">
+                <constraints foreignKeyName="fk_topic" references="tbl_topic(id)"/>
+            </column>
+            <column name="tag_id" type="bigint">
+                <constraints foreignKeyName="fk_tag" references="tbl_tag(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-trigger-delete-unused-tags" author="yourname">
+        <createProcedure>
+            CREATE OR REPLACE FUNCTION delete_unused_tags()
+        RETURNS TRIGGER AS $$
+            BEGIN
+            DELETE FROM tbl_tag t
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM tbl_topic_tag tt
+                WHERE tt.tag_id = t.id
+            );
+            RETURN NULL;
+            END;
+        $$ LANGUAGE plpgsql;
+        </createProcedure>
+
+        <sql>
+            CREATE TRIGGER trigger_delete_unused_tags
+                AFTER DELETE ON tbl_topic_tag
+                FOR EACH STATEMENT
+                EXECUTE FUNCTION delete_unused_tags();
+        </sql>
+    </changeSet>
+</databaseChangeLog>

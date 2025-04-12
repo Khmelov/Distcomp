@@ -75,16 +75,18 @@ export class ArticleService {
 
   async deleteArticle(id: number): Promise<void> {
     try {
+      const article = await this.articleRepository.findOne({ where: { id } });
+      if (!article) throw new ConflictException();
       await this.articleRepository.delete(id);
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      if (err.code === '23505') {
+      if (err instanceof ConflictException) {
         throw new HttpException(
           {
-            errorCode: 40204,
-            errorMessage: 'Article already exist.',
+            errorCode: 40403,
+            errorMessage: 'Article does not exist.',
           },
-          HttpStatus.FORBIDDEN,
+          HttpStatus.NOT_FOUND,
         );
       }
       throw new InternalServerErrorException();

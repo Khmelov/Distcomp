@@ -1,0 +1,64 @@
+services:
+  publisher-api:
+    image: publisher-api
+    container_name: publisher-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://*:24110
+    build:
+      context: ./publisher
+      dockerfile: Presentation/API/Dockerfile
+    ports:
+      - "24110:24110"
+    networks:
+      - distcomp
+    depends_on:
+      - publisher-db
+
+  publisher-db:
+    image: postgres:latest
+    container_name: publisher-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=distcomp
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - publisher-data:/var/lib/postgresql/data
+    networks:
+      - distcomp
+
+  discussion-api:
+    image: discussion-api
+    container_name: discussion-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://*:24130
+    build:
+      context: ./discussion
+      dockerfile: Presentation/API/Dockerfile
+    ports:
+      - "24130:24130"
+    networks:
+      - distcomp
+    depends_on:
+      - discussion-db
+
+  discussion-db:
+    image: mongo:latest
+    container_name: discussion-db
+    ports:
+      - "9042:27017"
+    volumes:
+      - discussion-data:/data/db
+    networks:
+      - distcomp
+
+volumes:
+  discussion-data:
+  publisher-data:
+    
+networks:
+  distcomp:
+    driver: bridge

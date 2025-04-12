@@ -37,7 +37,7 @@ func New(db *sqlx.DB) Message {
 }
 
 func (i *instance) CreateMessage(ctx context.Context, is model.Message) (model.Message, error) {
-	query := `INSERT INTO message (issueid, content) 
+	query := `INSERT INTO tbl_message (issueid, content) 
 	          VALUES ($1, $2) RETURNING id`
 
 	var id int64
@@ -60,7 +60,7 @@ func (i *instance) CreateMessage(ctx context.Context, is model.Message) (model.M
 }
 
 func (i *instance) DeleteMessageByID(ctx context.Context, id int64) error {
-	query := `DELETE FROM message WHERE id = $1`
+	query := `DELETE FROM tbl_message WHERE id = $1`
 	result, err := i.db.ExecContext(ctx, query, id)
 	if err != nil {
 		log.Println("Error executing DELETE query:", err)
@@ -83,7 +83,7 @@ func (i *instance) DeleteMessageByID(ctx context.Context, id int64) error {
 
 func (i *instance) GetMessageByID(ctx context.Context, id int64) (model.Message, error) {
 	var message model.Message
-	query := `SELECT * FROM message WHERE id = $1`
+	query := `SELECT * FROM tbl_message WHERE id = $1`
 
 	err := i.db.GetContext(ctx, &message, query, id)
 	if err != nil {
@@ -98,7 +98,7 @@ func (i *instance) GetMessageByID(ctx context.Context, id int64) (model.Message,
 
 func (i *instance) GetMessages(ctx context.Context) ([]model.Message, error) {
 	var messages []model.Message
-	query := `SELECT * FROM message`
+	query := `SELECT * FROM tbl_message`
 
 	err := i.db.SelectContext(ctx, &messages, query)
 	if err != nil {
@@ -113,7 +113,7 @@ func (i *instance) GetMessages(ctx context.Context) ([]model.Message, error) {
 }
 
 func (i *instance) UpdateMessageByID(ctx context.Context, is model.Message) (model.Message, error) {
-	query := `UPDATE message SET issueId = $1, content = $2
+	query := `UPDATE tbl_message SET issueId = $1, content = $2
 	          WHERE id = $3 RETURNING id, issueId, content`
 	var updatedMessage model.Message
 

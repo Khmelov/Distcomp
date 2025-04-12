@@ -1,0 +1,6 @@
+@DistComp_HostAddress = http://localhost:5074
+
+GET {{DistComp_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	creatorModel "github.com/Khmelov/Distcomp/251003/Nasevich/restbasics/internal/model"
-	"github.com/Khmelov/Distcomp/251003/Nasevich/restbasics/internal/storage/psql/creator"
+	creatorDbModel "github.com/Khmelov/Distcomp/251003/Nasevich/restbasics/internal/storage/psql/creator"
 
 	"github.com/gorilla/mux"
 )
@@ -93,6 +93,11 @@ func (c Creator) createCreator(w http.ResponseWriter, r *http.Request) {
 
 	creator, err := c.srv.CreateCreator(ctx, cr)
 	if err != nil {
+		if errors.Is(err, creatorDbModel.ErrLoginExists) {
+			http.Error(w, "{}", http.StatusForbidden)
+			return
+		}
+
 		http.Error(w, "Failed to create creator", http.StatusInternalServerError)
 		return
 	}
@@ -117,7 +122,7 @@ func (c Creator) deleteCreatorByID(w http.ResponseWriter, r *http.Request) {
 
 	err = c.srv.DeleteCreatorByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, creator.ErrCreatorNotFound) {
+		if errors.Is(err, creatorDbModel.ErrCreatorNotFound) {
 			http.Error(w, `{"error": "Creator not found"}`, http.StatusNotFound)
 			return
 		}
@@ -146,7 +151,7 @@ func (c Creator) updateCreatorByID(w http.ResponseWriter, r *http.Request) {
 
 	updatedCreator, err := c.srv.UpdateCreatorByID(ctx, cr)
 	if err != nil {
-		if errors.Is(err, creator.ErrCreatorNotFound) {
+		if errors.Is(err, creatorDbModel.ErrCreatorNotFound) {
 			http.Error(w, "Creator not found", http.StatusNotFound)
 			return
 		}

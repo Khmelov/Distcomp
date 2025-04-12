@@ -1,5 +1,10 @@
 server:
   port: 24110
+
+comment:
+  service:
+    url: http://localhost:24130
+
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
@@ -8,7 +13,3 @@ spring:
     password: postgres
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.yaml
-
-  data:
-    jdbc:
-      dialect: postgresql

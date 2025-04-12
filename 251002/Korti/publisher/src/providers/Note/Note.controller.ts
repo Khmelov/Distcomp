@@ -14,7 +14,6 @@ import {
 import { NoteService } from './Note.service';
 import { Response } from 'express';
 import { NoteRequestTo, UpdateNoteTo } from './Dto/NoteRequestTo';
-import { NoteResponseTo } from './Dto/NoteResponseTo';
 
 @Controller('api/v1.0/notes')
 export class NoteController {
@@ -50,10 +49,10 @@ export class NoteController {
     res.status(HttpStatus.OK).json(note);
   }
 
-  @HttpCode(200)
-  @Get('articles/:noteId')
-  async getNotesByArticle(@Param('id', ParseIntPipe) id: number) {
-    const notes: NoteResponseTo[] = await this.noteService.getNotes(id);
-    return notes;
-  }
+  // @HttpCode(200)
+  // @Get('articles/:noteId')
+  // async getNotesByArticle(@Param('id', ParseIntPipe) id: number) {
+  //   const notes: NoteResponseTo[] = await this.noteService.getNotes(id);
+  //   return notes;
+  // }
 }

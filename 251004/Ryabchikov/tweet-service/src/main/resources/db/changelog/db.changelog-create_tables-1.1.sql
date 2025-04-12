@@ -1,7 +1,7 @@
 --liquibase formatted sql
 
 --changeset ryabchikov:1
-CREATE TABLE tweet_mark
+CREATE TABLE m2m_tweet_mark
 (
     mark_id  BIGINT NOT NULL,
     tweet_id BIGINT NOT NULL,

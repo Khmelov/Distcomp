@@ -3,7 +3,6 @@ package by.ryabchikov.tweet_service.service;
 import by.ryabchikov.tweet_service.dto.comment.CommentRequestTo;
 import by.ryabchikov.tweet_service.dto.comment.CommentResponseTo;
 import by.ryabchikov.tweet_service.dto.comment.CommentUpdateRequestTo;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 

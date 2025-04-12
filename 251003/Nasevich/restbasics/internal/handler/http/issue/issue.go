@@ -62,33 +62,35 @@ func (i Issue) createIssue(w http.ResponseWriter, r *http.Request) {
 	var issue issueModel.Issue
 
 	if err := json.NewDecoder(r.Body).Decode(&issue); err != nil {
-		http.Error(w, fmt.Sprintf("invalid input: %v", err), http.StatusBadRequest)
+		http.Error(w, "{}", http.StatusBadRequest)
 		return
 	}
 
 	if err := issue.Validate(); err != nil {
-		http.Error(w, fmt.Sprintf("validation error: %v", err), http.StatusBadRequest)
+		http.Error(w, "{}", http.StatusBadRequest)
 		return
 	}
 
 	createdIssue, err := i.srv.CreateIssue(ctx, issue)
 	if err != nil {
 		if errors.Is(err, issueDbModel.ErrInvalidForeignKey) {
-			http.Error(w, fmt.Sprintf("failed to create issue: %v", err), http.StatusBadRequest)
+			http.Error(w, "{}", http.StatusForbidden)
+			return
 		}
 
 		if errors.Is(err, issueDbModel.ErrInvalidIssueData) {
-			http.Error(w, fmt.Sprintf("failed to create issue: %v", err), http.StatusBadRequest)
+			http.Error(w, "{}", http.StatusForbidden)
+			return
 		}
 
-		http.Error(w, fmt.Sprintf("failed to create issue: %v", err), http.StatusInternalServerError)
+		http.Error(w, "{}", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(createdIssue); err != nil {
-		http.Error(w, fmt.Sprintf("failed to encode created issue: %v", err), http.StatusInternalServerError)
+		http.Error(w, "{}", http.StatusInternalServerError)
 	}
 }
 
@@ -98,7 +100,7 @@ func (i Issue) getIssueByID(w http.ResponseWriter, r *http.Request) {
 	idStr := mux.Vars(r)["id"]
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("invalid issue ID: %v", err), http.StatusBadRequest)
+		http.Error(w, "{}", http.StatusBadRequest)
 		return
 	}
 

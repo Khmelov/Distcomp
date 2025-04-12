@@ -39,7 +39,7 @@ func New(db *sqlx.DB) Creator {
 }
 
 func (i *instance) CreateCreator(ctx context.Context, cr model.Creator) (model.Creator, error) {
-	query := `INSERT INTO Creator (login, password, firstname, lastname) 
+	query := `INSERT INTO tbl_creator (login, password, firstname, lastname) 
 	          VALUES ($1, $2, $3, $4) RETURNING id`
 
 	var id int64
@@ -58,7 +58,7 @@ func (i *instance) CreateCreator(ctx context.Context, cr model.Creator) (model.C
 
 func (i *instance) GetCreators(ctx context.Context) ([]model.Creator, error) {
 	var creators []model.Creator
-	query := `SELECT * FROM Creator`
+	query := `SELECT * FROM tbl_creator`
 
 	err := i.db.SelectContext(ctx, &creators, query)
 	if err != nil {
@@ -74,7 +74,7 @@ func (i *instance) GetCreators(ctx context.Context) ([]model.Creator, error) {
 
 func (i *instance) GetCreatorByID(ctx context.Context, id int64) (model.Creator, error) {
 	var creator model.Creator
-	query := `SELECT id, login, password, firstname, lastname FROM Creator WHERE id = $1`
+	query := `SELECT id, login, password, firstname, lastname FROM tbl_creator WHERE id = $1`
 
 	err := i.db.GetContext(ctx, &creator, query, id)
 	if err != nil {
@@ -88,7 +88,7 @@ func (i *instance) GetCreatorByID(ctx context.Context, id int64) (model.Creator,
 }
 
 func (i *instance) UpdateCreatorByID(ctx context.Context, cr model.Creator) (model.Creator, error) {
-	query := `UPDATE Creator SET login = $1, password = $2, firstname = $3, lastname = $4 WHERE id = $5 RETURNING id, login, password, firstname, lastname`
+	query := `UPDATE tbl_creator SET login = $1, password = $2, firstname = $3, lastname = $4 WHERE id = $5 RETURNING id, login, password, firstname, lastname`
 	var updatedCreator model.Creator
 
 	err := i.db.QueryRowContext(ctx, query, cr.Login, cr.Password, cr.FirstName, cr.LastName, cr.ID).
@@ -107,7 +107,7 @@ func (i *instance) UpdateCreatorByID(ctx context.Context, cr model.Creator) (mod
 }
 
 func (i *instance) DeleteCreatorByID(ctx context.Context, id int64) error {
-	query := `DELETE FROM Creator WHERE id = $1`
+	query := `DELETE FROM tbl_creator WHERE id = $1`
 	result, err := i.db.ExecContext(ctx, query, id)
 	if err != nil {
 		log.Println("Error executing DELETE query:", err)

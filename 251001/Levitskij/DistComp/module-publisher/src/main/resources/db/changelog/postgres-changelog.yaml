@@ -1,0 +1,200 @@
+databaseChangeLog:
+#  - changeSet:
+#      id: 010-create-schema
+#      author: KopVZakone
+#      runOnChange: true
+#      changes:
+#        - sql:
+#            dbms: postgresql
+#            sql: "CREATE SCHEMA IF NOT EXISTS distcomp;"
+#  - property:
+#      name: defaultSchemaName
+#      value: distcomp
+  - changeSet:
+      id: 011-create-editor-table
+      author: KopVZakone
+      runOnChange: true
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_editor
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: login
+                  type: text
+                  constraints:
+                    nullable: false
+                    unique: true
+                    checkConstraint: "char_length(login) >= 2 AND char_length(login) <= 64"
+              - column:
+                  name: password
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(password) >= 8 AND char_length(password) <= 128"
+              - column:
+                  name: firstname
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(firstname) >= 2 AND char_length(firstname) <= 64"
+              - column:
+                  name: lastname
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(lastname) >= 2 AND char_length(lastname) <= 64"
+
+  - changeSet:
+      id: 012-create-tweet-table
+      author: KopVZakone
+      runOnChange: true
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_tweet
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: editor_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_tweet_editor
+                    references: tbl_editor(id) # distcomp.tbl_editor(id)
+              - column:
+                  name: title
+                  type: text
+                  constraints:
+                    nullable: false
+                    unique: true
+                    checkConstraint: "char_length(title) >= 2 AND char_length(title) <= 64"
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(content) >= 4 AND char_length(content) <= 2048"
+              - column:
+                  name: created
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: modified
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 013-create-reaction-table
+      author: KopVZakone
+      runOnChange: true
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_reaction
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: tweet_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_reaction_tweet
+                    references: tbl_tweet(id) #distcomp.tbl_tweet(id)
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(content) >= 2 AND char_length(content) <= 2048"
+
+  - changeSet:
+      id: 014-create-tag-table
+      author: KopVZakone
+      runOnChange: true
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_tag
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: text
+                  constraints:
+                    nullable: false
+                    unique: true
+                    checkConstraint: "char_length(name) >= 2 AND char_length(name) <= 32"
+
+  - changeSet:
+      id: 015-create-tweettag-table
+      author: KopVZakone
+      runOnChange: true
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_tweet_tag
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: tweet_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_tweettag_tweet
+                    references: tbl_tweet(id) #distcomp.tbl_tweet(id)
+              - column:
+                  name: tag_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_tweettag_tag
+                    references: tbl_tag(id) #distcomp.tbl_tag(id)
+  - changeSet:
+      id: 016-insert-editor
+      author: KopVZakone
+      runOnChange: true
+      changes:
+        - insert:
+            tableName: tbl_editor
+            columns:
+              - column:
+                  name: login
+                  value: "levitskijartur@gmail.com"
+              - column:
+                  name: password
+                  value: "123456789"
+              - column:
+                  name: firstname
+                  value: "Артур"
+              - column:
+                  name: lastname
+                  value: "Левицкий"

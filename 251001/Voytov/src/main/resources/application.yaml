@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: distributed_computing
+  datasource:
+    url: 'jdbc:postgresql://localhost:5432/distcomp'
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+  flyway:
+    url: ${spring.datasource.url}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+
+server:
+  port: 24110
+  servlet:
+    context-path: /api/v1.0

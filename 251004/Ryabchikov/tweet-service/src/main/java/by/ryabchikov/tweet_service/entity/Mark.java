@@ -40,7 +40,7 @@ public class Mark {
             cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}
     )
     @JoinTable(
-            name = "tweet_mark",
+            name = "m2m_tweet_mark",
             joinColumns = @JoinColumn(name = "mark_id"),
             inverseJoinColumns = @JoinColumn(name = "tweet_id")
     )

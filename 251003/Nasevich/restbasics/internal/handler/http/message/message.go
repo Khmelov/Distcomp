@@ -62,30 +62,30 @@ func (m Message) createMessage(w http.ResponseWriter, r *http.Request) {
 	var message messageModel.Message
 
 	if err := json.NewDecoder(r.Body).Decode(&message); err != nil {
-		http.Error(w, fmt.Sprintf("invalid input: %v", err), http.StatusBadRequest)
+		http.Error(w, "{}", http.StatusBadRequest)
 		return
 	}
 
 	if err := message.Validate(); err != nil {
-		http.Error(w, fmt.Sprintf("validation error: %v", err), http.StatusBadRequest)
+		http.Error(w, "{}", http.StatusBadRequest)
 		return
 	}
 
 	createdMessage, err := m.srv.CreateMessage(ctx, message)
 	if err != nil {
 		if errors.Is(err, messageDbModel.ErrInvalidForeignKey) {
-			http.Error(w, "issueId does not exist in the Issue table", http.StatusBadRequest)
+			http.Error(w, "{}", http.StatusBadRequest)
 			return
 		}
 
-		http.Error(w, fmt.Sprintf("failed to create message: %v", err), http.StatusInternalServerError)
+		http.Error(w, "{}", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(createdMessage); err != nil {
-		http.Error(w, fmt.Sprintf("failed to encode created message: %v", err), http.StatusInternalServerError)
+		http.Error(w, "{}", http.StatusInternalServerError)
 	}
 }
 

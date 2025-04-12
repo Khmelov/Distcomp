@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,8 +38,20 @@ public class TweetServiceImpl implements TweetService {
     @Transactional
     public TweetResponseTo create(TweetRequestTo tweetRequestTo) {
         checkOnTitleDuplication(tweetRequestTo.title());
+
+        Tweet tweet = tweetMapper.toTweet(tweetRequestTo);
+
+        if (tweet.getMarks() != null) {
+            tweet.getMarks().forEach(mark -> {
+                if (mark.getTweets() == null) {
+                    mark.setTweets(new ArrayList<>());
+                }
+                mark.getTweets().add(tweet);
+            });
+        }
+
         return tweetMapper.toTweetResponseTo(
-                tweetRepository.save(tweetMapper.toTweet(tweetRequestTo))
+                tweetRepository.save(tweet)
         );
     }
 
@@ -82,7 +95,6 @@ public class TweetServiceImpl implements TweetService {
     public void deleteById(Long id) {
         tweetRepository.findById(id)
                 .orElseThrow(() -> TweetNotFoundException.byId(id));
-
         tweetRepository.deleteById(id);
     }
 }

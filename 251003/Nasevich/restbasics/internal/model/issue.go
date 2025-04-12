@@ -11,12 +11,13 @@ var (
 )
 
 type Issue struct {
-	ID        int64  `json:"id"`
-	CreatorID int64  `json:"creatorId"`
-	Title     string `json:"title"`
-	Content   string `json:"content"`
-	Created   string `json:"created"`
-	Modified  string `json:"modified"`
+	ID        int64    `json:"id"`
+	CreatorID int64    `json:"creatorId"`
+	Title     string   `json:"title"`
+	Content   string   `json:"content"`
+	Created   string   `json:"created"`
+	Modified  string   `json:"modified"`
+	Marks     []string `json:"marks"`
 }
 
 func (i *Issue) Validate() error {

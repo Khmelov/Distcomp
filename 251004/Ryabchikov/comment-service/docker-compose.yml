@@ -1,0 +1,14 @@
+services:
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra-tweet
+    restart: always
+    environment:
+      CASSANDRA_USER: cassandra
+      CASSANDRA_PASSWORD: cassandra
+      CASSANDRA_BROADCAST_ADDRESS: localhost
+      CASSANDRA_BROADCAST_RPC_ADDRESS: localhost
+    ports:
+      - 9042:9042
+    volumes:
+      - ./data:/var/lib/cassandra

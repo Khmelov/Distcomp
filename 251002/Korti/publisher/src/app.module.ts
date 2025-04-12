@@ -13,6 +13,7 @@ import { Article } from './entities/Article';
 import { Note } from './entities/Note';
 import { Sticker } from './entities/Sticker';
 import { config } from 'dotenv';
+import { CacheModule } from '@nestjs/cache-manager';
 config();
 @Module({
   imports: [
@@ -25,6 +26,11 @@ config();
       database: process.env.DB_NAME,
       entities: [Editor, Article, Note, Sticker],
       synchronize: false,
+    }),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 60,
+      max: 100,
     }),
     EditorModule,
     ArticleModule,

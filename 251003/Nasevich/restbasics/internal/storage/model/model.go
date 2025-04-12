@@ -12,11 +12,12 @@ type Creator struct {
 
 type Issue struct {
 	ID        int64      `db:"id"`
-	CreatorID int64      `db:"creatorid"`
+	CreatorID int64      `db:"creator_id"`
 	Title     string     `db:"title"`
 	Content   string     `db:"content"`
 	Created   time.Time  `db:"created"`
 	Modified  *time.Time `db:"modified"`
+	Marks     []string
 }
 
 type Message struct {

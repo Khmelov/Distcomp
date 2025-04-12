@@ -1,6 +1,15 @@
-import { IsInt, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class NoteRequestTo {
+  @IsOptional()
+  id?: number;
+
   @IsInt()
   articleId: number;
 

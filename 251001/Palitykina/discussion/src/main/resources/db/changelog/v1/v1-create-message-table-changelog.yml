@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: v1_create_message_table
+      author: "Kate"
+      changes:
+        - createTable:
+            tableName: tbl_message
+            columns:
+              - column:
+                  name: country
+                  type: text
+              - column:
+                  name: storyId
+                  type: bigint
+              - column:
+                  name: id
+                  type: uuid
+              - column:
+                  name: content
+                  type: text
+        - addPrimaryKey:
+            tableName: tbl_message
+            columnNames: country, storyId, id

@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.List;
 
 @Setter
 @Getter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -48,9 +50,6 @@ public class Tweet {
     @Column(name = "last_modified_time")
     private LocalDateTime lastModifiedTime;
 
-    @ManyToMany(
-            mappedBy = "tweets",
-            cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}
-    )
+    @ManyToMany(mappedBy = "tweets", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Mark> marks = new ArrayList<>();
 }

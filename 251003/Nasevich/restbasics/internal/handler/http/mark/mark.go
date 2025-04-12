@@ -62,30 +62,30 @@ func (m Mark) createMark(w http.ResponseWriter, r *http.Request) {
 	var mark markModel.Mark
 
 	if err := json.NewDecoder(r.Body).Decode(&mark); err != nil {
-		http.Error(w, fmt.Sprintf("invalid input: %v", err), http.StatusBadRequest)
+		http.Error(w, "{}", http.StatusBadRequest)
 		return
 	}
 
 	if err := mark.Validate(); err != nil {
-		http.Error(w, fmt.Sprintf("validation error: %v", err), http.StatusBadRequest)
+		http.Error(w, "{}", http.StatusBadRequest)
 		return
 	}
 
 	createdMark, err := m.srv.CreateMark(ctx, mark)
 	if err != nil {
 		if errors.Is(err, markDbModel.ErrConstraintsCheck) {
-			http.Error(w, "issueId does not exist in the mark table", http.StatusBadRequest)
+			http.Error(w, "{}", http.StatusBadRequest)
 			return
 		}
 
-		http.Error(w, fmt.Sprintf("failed to create mark: %v", err), http.StatusInternalServerError)
+		http.Error(w, "{}", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(createdMark); err != nil {
-		http.Error(w, fmt.Sprintf("failed to encode created mark: %v", err), http.StatusInternalServerError)
+		http.Error(w, "{}", http.StatusInternalServerError)
 	}
 }
 

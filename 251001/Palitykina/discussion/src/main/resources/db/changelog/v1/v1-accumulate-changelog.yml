@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: v1-create-message-table-changelog.yml
+      relativeToChangelogFile: true

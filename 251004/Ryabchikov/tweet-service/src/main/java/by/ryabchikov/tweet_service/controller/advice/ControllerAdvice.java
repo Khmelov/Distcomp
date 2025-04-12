@@ -1,6 +1,5 @@
 package by.ryabchikov.tweet_service.controller.advice;
 
-import by.ryabchikov.tweet_service.exception.CommentNotFoundException;
 import by.ryabchikov.tweet_service.exception.CreatorLoginDuplicationException;
 import by.ryabchikov.tweet_service.exception.CreatorNotFoundException;
 import by.ryabchikov.tweet_service.exception.MarkNotFoundException;
@@ -42,7 +41,7 @@ public class ControllerAdvice {
     @ExceptionHandler(value = {
             MarkNotFoundException.class,
             CreatorNotFoundException.class,
-            CommentNotFoundException.class,
+            //CommentNotFoundException.class,
             TweetNotFoundException.class
     })
     public ResponseEntity<ExceptionObject> response404(@RequestBody Exception exception) {

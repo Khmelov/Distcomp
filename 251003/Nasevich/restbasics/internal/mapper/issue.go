@@ -24,6 +24,7 @@ func MapIssueToModel(i issue.Issue) (model.Issue, error) {
 		Title:     i.Title,
 		Content:   i.Content,
 		Modified:  &modified,
+		Marks:     i.Marks,
 	}, nil
 }
 
