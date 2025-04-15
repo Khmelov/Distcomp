@@ -1,0 +1,7 @@
+fastapi
+pydantic
+hypercorn
+sqlalchemy
+asyncpg
+aiokafka
+redis
