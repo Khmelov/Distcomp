@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -21,12 +22,6 @@ public class PostsController {
         this.postsService = postsService;
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public PostResponseDTO createPost(@RequestBody @Valid PostRequestDTO postRequestDTO, BindingResult binding) {
-        return postsService.save(postRequestDTO);
-    }
-
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<PostResponseDTO> getAllPosts() {
@@ -34,20 +29,11 @@ public class PostsController {
     }
 
     @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
     public PostResponseDTO getPostById(@PathVariable Long id) {
-        return postsService.findById(id);
-    }
-
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletePost(@PathVariable long id){
-        postsService.deleteById(id);
-    }
-
-    @PutMapping
-    @ResponseStatus(HttpStatus.OK)
-    public PostResponseDTO updatePost(@RequestBody @Valid PostRequestDTO postRequestDTO){
-        return postsService.update(postRequestDTO);
+        try {
+            return postsService.findById(id);
+        } catch (RuntimeException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
+        }
     }
 }

@@ -10,11 +10,15 @@ public class PostRequestTo {
     private String content;
 
     public void setId(long id) { this.id = id; }
-    public long getId() { return id; }
+    public Long getId() { return id; }
 
     public void setTopicId(long topicId) { this.topicId = topicId; }
     public long getTopicId() { return topicId; }
 
     public void setContent(String content) { this.content = content; }
     public String getContent() { return content; }
+
+    public PostRequestTo(Long id) { this.id = id; }
+
+    public PostRequestTo() {}
 }

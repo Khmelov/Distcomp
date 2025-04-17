@@ -19,8 +19,8 @@ dependencies {
     implementation 'jakarta.validation:jakarta.validation-api'
     implementation 'com.datastax.oss:java-driver-core:4.16.0'
     implementation 'org.mapstruct:mapstruct:1.6.0'
+    implementation 'org.springframework.kafka:spring-kafka'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.0'
-
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
 }

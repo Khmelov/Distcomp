@@ -2,78 +2,70 @@ package com.bsuir.dc.controller;
 
 import com.bsuir.dc.dto.request.PostRequestTo;
 import com.bsuir.dc.dto.response.PostResponseTo;
+import com.bsuir.dc.service.PostService;
 import com.bsuir.dc.util.exception.ValidationException;
 import com.bsuir.dc.util.validator.PostValidator;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1.0/posts")
 public class PostController {
-    private final RestClient restClient;
+    private final PostService postService;
     private final PostValidator postValidator;
+
     @Autowired
-    public PostController(RestClient restClient, PostValidator postValidator) {
-        this.restClient = restClient;
+    public PostController(PostService postService, PostValidator postValidator) {
+        this.postService = postService;
         this.postValidator = postValidator;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PostResponseTo createPost(@RequestBody @Valid PostRequestTo postRequestTo, BindingResult bindingResult) {
-        if (!bindingResult.hasFieldErrors()){
-            postValidator.validate(postRequestTo, bindingResult);
-        }
-        if (bindingResult.hasErrors()) throw new ValidationException(bindingResult);
-
-        return restClient.post()
-                .uri("/posts")
-                .body(postRequestTo)
-                .retrieve()
-                .body(PostResponseTo.class);
-    }
-
-    @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<PostResponseTo> getAllPosts() {
-        return restClient.get()
-                .uri("/posts")
-                .retrieve()
-                .body(new ParameterizedTypeReference<List<PostResponseTo>>() {});
+    public PostResponseTo createNote(@RequestBody @Valid PostRequestTo postRequestDTO,
+                                      BindingResult bindingResult) {
+        validateRequest(postRequestDTO, bindingResult);
+        return postService.createPost(postRequestDTO);
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public PostResponseTo getPostById(@PathVariable Long id) {
-        return restClient.get()
-                .uri("/posts/{id}", id)
-                .retrieve()
-                .body(PostResponseTo.class);
+        return postService.getPostById(id);
+    }
+
+    @GetMapping()
+    @ResponseStatus(HttpStatus.OK)
+    public List<PostResponseTo> getAllPosts() {
+        return postService.getAllPosts();
+    }
+
+    @PutMapping()
+    @ResponseStatus(HttpStatus.OK)
+    public PostResponseTo updateNote(
+            @RequestBody @Valid PostRequestTo postRequestDTO) {
+        return postService.processPostRequest("PUT", postRequestDTO);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletePost(@PathVariable long id) {
-        restClient.delete()
-                .uri("/posts/{id}", id)
-                .retrieve()
-                .toBodilessEntity();
+    public void deleteNote(@PathVariable Long id) {
+        PostRequestTo request = new PostRequestTo();
+        request.setId(id);
+        postService.processPostRequest("DELETE", request);
     }
 
-    @PutMapping
-    @ResponseStatus(HttpStatus.OK)
-    public PostResponseTo updatePost(@RequestBody @Valid PostRequestTo postRequestTo) {
-        return restClient.put()
-                .uri("/posts")
-                .body(postRequestTo)
-                .retrieve()
-                .body(PostResponseTo.class);
+    private void validateRequest(PostRequestTo request, BindingResult bindingResult) {
+        if (!bindingResult.hasFieldErrors()) {
+            postValidator.validate(request, bindingResult);
+        }
+        if (bindingResult.hasFieldErrors()) {
+            throw new ValidationException(bindingResult);
+        }
     }
 }
