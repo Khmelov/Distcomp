@@ -3,8 +3,10 @@ package httperrors
 import (
 	"net/http"
 
+	"github.com/Khmelov/Distcomp/251004/Sazonov/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/stackus/errors"
+	"go.uber.org/zap"
 )
 
 type HTTPError struct {
@@ -12,6 +14,8 @@ type HTTPError struct {
 }
 
 func Error(c *gin.Context, err error) {
+	logger.Error(c, "handle error", zap.Error(err))
+
 	switch {
 	case errors.Is(err, errors.ErrNotFound):
 		c.JSON(http.StatusNotFound, HTTPError{Message: err.Error()})

@@ -23,9 +23,9 @@ type News struct {
 }
 
 type Notice struct {
-	ID      int64  `db:"id"      json:"id,omitempty"`
-	NewsID  int64  `db:"news_id" json:"newsId"`
-	Content string `db:"content" json:"content"`
+	ID      int64  `db:"id"      json:"id,omitempty"      redis:"id"`
+	NewsID  int64  `db:"news_id" json:"newsId,omitempty"  redis:"news_id"`
+	Content string `db:"content" json:"content,omitempty" redis:"content"`
 }
 
 type Label struct {

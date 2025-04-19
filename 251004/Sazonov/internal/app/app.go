@@ -20,7 +20,7 @@ type app struct {
 }
 
 func New(cfg config.Config) (*app, error) {
-	repository, err := repository.New(cfg.Storage)
+	repository, err := repository.New(cfg.Storage, cfg.Redis)
 	if err != nil {
 		return nil, err
 	}
@@ -48,9 +48,7 @@ func New(cfg config.Config) (*app, error) {
 			},
 			[]appbase.CleanupFunc{
 				repository.Close,
-				func() {
-					producer.Close()
-				},
+				func() { producer.Close() },
 			},
 		),
 

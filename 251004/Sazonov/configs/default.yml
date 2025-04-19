@@ -13,6 +13,12 @@ storage:
   dbname: distcomp
   sslmode: disable
 
+redis:
+  db: 0
+  address: localhost:6379
+  user: distcomp
+  password: distcomp
+
 api:
   notice_addr: localhost:24130
 

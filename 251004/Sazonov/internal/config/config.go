@@ -11,6 +11,7 @@ type Config struct {
 	Core    CoreConfig
 	HTTP    HTTPServerConfig
 	API     APIConfig
+	Redis   RedisConfig
 	Kafka   KafkaConfig
 	Storage StorageConfig
 }
@@ -30,6 +31,13 @@ type StorageConfig struct {
 
 type APIConfig struct {
 	NoticeServiceAddr string
+}
+
+type RedisConfig struct {
+	Addr     string
+	User     string
+	Password string
+	DB       int
 }
 
 type LogConfig struct {
@@ -59,6 +67,12 @@ func Load() Config {
 		},
 		Core: CoreConfig{
 			ShutdownTimeout: viper.GetDuration("core.shutdown_timeout"),
+		},
+		Redis: RedisConfig{
+			Addr:     viper.GetString("redis.addr"),
+			User:     viper.GetString("redis.user"),
+			Password: viper.GetString("redis.password"),
+			DB:       viper.GetInt("redis.db"),
 		},
 		Storage: StorageConfig{
 			User:     viper.GetString("storage.user"),

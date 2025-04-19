@@ -19,6 +19,6 @@ func New(repo repository.Repository, adapter adapter.Adapter) Service {
 		NewsService:   repo,
 		LabelService:  repo,
 
-		NoticeService: notice.New(adapter.SyncNotice(), adapter.AsyncNotice(), repo),
+		NoticeService: notice.New(adapter.SyncNotice(), adapter.AsyncNotice(), repo, repo),
 	}
 }
