@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: discussion
+
+  cassandra:
+    keyspace-name: distcomp
+    local-datacenter: datacenter1
+
+  liquibase:
+    url: jdbc:cassandra://localhost:9042/distcomp?compliancemode=Liquibase[&localdatacenter=local]
+
+server:
+  port: 24130
+  servlet:
+    context-path: /api/v1.0
