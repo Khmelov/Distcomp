@@ -1,0 +1,28 @@
+@Discussion_HostAddress = http://localhost:5030
+
+
+
+###
+GET http://localhost:24130/api/v1.0/notices/38
+###
+GET http://localhost:24130/api/v1.0/notices/67fcf8cd966204e851096790
+###
+### создать уведомление
+POST http://localhost:24130/api/v1.0/notices
+Content-Type: application/json
+
+{
+  "newsId": 1,
+  "content": "content18700"
+}
+###
+PUT http://localhost:24130/api/v1.0/notices/
+Content-Type: application/json
+
+{
+  "id": "2",
+  "newsId": "2",
+  "content": "00001"
+}
+###
+DELETE http://localhost:24130/api/v1.0/notices/0

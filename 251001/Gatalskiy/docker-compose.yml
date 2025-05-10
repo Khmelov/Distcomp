@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  rest-api-lab1:  # Ваш Publisher сервис
+    build:
+      context: .
+      dockerfile: RestApiLab1/Dockerfile
+    ports:
+      - "24110:8080"  # Сопоставляем внешний порт 24110 с внутренним 8080
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings:DefaultConnection=Host=postgres;Port=5432;Database=publisher;Username=postgres;Password=postgres
+      - DiscussionService:BaseUrl=http://discussion:24130/
+    depends_on:
+      - postgres
+      - discussion
+
+  discussion:
+    build:
+      context: .
+      dockerfile: Discussion/Dockerfile
+    ports:
+      - "24130:8081"  # Сопоставляем внешний порт 24130 с внутренним 8081
+    environment:
+      - ASPNETCORE_URLS=http://+:8081
+      - MongoDB__ConnectionString=mongodb://mongo:9042
+      - MongoDB__DatabaseName=distcomp
+    depends_on:
+      - mongo
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: publisher
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:5.0
+    ports:
+      - "9042:9042"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  postgres-data:
+  mongo-data:
