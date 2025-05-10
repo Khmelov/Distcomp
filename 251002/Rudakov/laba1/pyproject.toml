@@ -1,0 +1,22 @@
+[project]
+name = "rvlab1"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Masha Kosher",email = "saakvaleri@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.9,<4.0"
+dependencies = [
+    "hypercorn (>=0.17.3,<0.18.0)",
+    "fastapi (>=0.115.8,<0.116.0)",
+    "pydantic-settings (>=2.7.1,<3.0.0)",
+    "sqlalchemy (>=2.0.38,<3.0.0)",
+    "aiosqlite (>=0.21.0,<0.22.0)",
+    "loguru (>=0.7.3,<0.8.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
