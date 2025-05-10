@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Создание таблицы tbl_users -->
+    <changeSet id="1" author="yourname">
+        <createTable tableName="tbl_users">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Создание таблицы tbl_topics -->
+    <changeSet id="2" author="yourname">
+        <createTable tableName="tbl_topics">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="tbl_topics"
+                baseColumnNames="user_id"
+                constraintName="fk_topics_users"
+                referencedTableName="tbl_users"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Создание таблицы tbl_stickers -->
+    <changeSet id="3" author="yourname">
+        <createTable tableName="tbl_stickers">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Создание таблицы tbl_posts -->
+    <changeSet id="4" author="yourname">
+        <createTable tableName="tbl_posts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="topic_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="tbl_posts"
+                baseColumnNames="topic_id"
+                constraintName="fk_posts_topics"
+                referencedTableName="tbl_topics"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Создание таблицы tbl_topics_stickers (связь многие-ко-многим) -->
+    <changeSet id="5" author="yourname">
+        <createTable tableName="tbl_topics_stickers">
+            <column name="topic_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sticker_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="tbl_topics_stickers" columnNames="topic_id, sticker_id"/>
+        <addForeignKeyConstraint
+                baseTableName="tbl_topics_stickers"
+                baseColumnNames="topic_id"
+                constraintName="fk_topics_stickers_topics"
+                referencedTableName="tbl_topics"
+                referencedColumnNames="id"/>
+        <addForeignKeyConstraint
+                baseTableName="tbl_topics_stickers"
+                baseColumnNames="sticker_id"
+                constraintName="fk_topics_stickers_stickers"
+                referencedTableName="tbl_stickers"
+                referencedColumnNames="id"/>
+    </changeSet>
+</databaseChangeLog>
