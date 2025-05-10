@@ -1,0 +1,22 @@
+server:
+  port: 24110
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  datasource:
+    url: jdbc:postgresql://localhost:5432/distcomp
+    username: postgres
+    password: postgres
+  liquibase:
+    change-log: classpath:db/changelog/master.xml
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+
+    cache:
+      type: redis

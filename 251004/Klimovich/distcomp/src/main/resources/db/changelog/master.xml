@@ -1,0 +1,84 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+    <changeSet id="create-schema" author="yourname">
+        <sql>CREATE SCHEMA IF NOT EXISTS distcomp;</sql>
+    </changeSet>
+    <changeSet id="init-schema-1" author="yourname">
+        <createTable tableName="tbl_writer">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="tbl_issue">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="writer_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_issue_writer"
+                             referencedTableName="tbl_writer" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="tbl_label">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="tbl_message">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="issue_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_message_issue"
+                             referencedTableName="tbl_issue" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="tbl_issue_label">
+            <column name="issue_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_il_issue"
+                             referencedTableName="tbl_issue" referencedColumnNames="id"/>
+            </column>
+            <column name="label_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_il_label"
+                             referencedTableName="tbl_label" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
