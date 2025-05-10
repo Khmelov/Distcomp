@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+
+    <changeSet id="1" author="yourname">
+        <createTable tableName="tbl_creator">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Создание таблицы tbl_article -->
+    <changeSet id="2" author="yourname">
+        <createTable tableName="tbl_article">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="creator_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+<!--            <column name="created" type="TIMESTAMP">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="tbl_article"
+                baseColumnNames="creator_id"
+                constraintName="fk_article_creator"
+                referencedTableName="tbl_creator"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Создание таблицы tbl_mark -->
+    <changeSet id="3" author="yourname">
+        <createTable tableName="tbl_mark">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Создание таблицы tbl_note -->
+    <changeSet id="4" author="yourname">
+        <createTable tableName="tbl_note">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="article_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="tbl_note"
+                baseColumnNames="article_id"
+                constraintName="fk_note_article"
+                referencedTableName="tbl_article"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Создание таблицы tbl_article_mark (связь многие-ко-многим) -->
+    <changeSet id="5" author="yourname">
+        <createTable tableName="tbl_article_mark">
+            <column name="article_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mark_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="tbl_article_mark" columnNames="article_id, mark_id"/>
+        <addForeignKeyConstraint
+                baseTableName="tbl_article_mark"
+                baseColumnNames="article_id"
+                constraintName="fk_article_mark_article"
+                referencedTableName="tbl_article"
+                referencedColumnNames="id"/>
+        <addForeignKeyConstraint
+                baseTableName="tbl_article_mark"
+                baseColumnNames="mark_id"
+                constraintName="fk_article_mark_mark"
+                referencedTableName="tbl_mark"
+                referencedColumnNames="id"/>
+    </changeSet>
+</databaseChangeLog>
