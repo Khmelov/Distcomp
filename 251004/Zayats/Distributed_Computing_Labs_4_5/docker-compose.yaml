@@ -1,0 +1,133 @@
+version: '3.9'
+
+services:
+  cassandra:
+    image: cassandra:latest
+    container_name: my-cassandra-container
+    ports:
+      - "9042:9042"
+    healthcheck:
+      test: [ "CMD", "cqlsh", "-e", "DESCRIBE KEYSPACES" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    expose:
+      - 9042
+    volumes:
+      - distcomp_cassandra:/var/lib/cassandra
+
+  init-cassandra:
+    image: cassandra:latest
+    environment:
+      CQLSH_HOST: cassandra
+      CQLSH_PORT: 9042
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    command: >
+      cqlsh -e "
+      CREATE KEYSPACE IF NOT EXISTS distcomp WITH replication = {'class':'SimpleStrategy', 'replication_factor':1};
+      CREATE TABLE IF NOT EXISTS distcomp.tbl_message (id bigint, topic_id bigint, content text, PRIMARY KEY (id));"
+  
+  postgres:
+    image: postgres:latest
+    container_name: my-postgres-container
+    ports:
+      - "5432:5432"
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_DB=distcomp
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - distcomp_postgres:/var/lib/postgresql/data
+  
+  redis:
+    image: redis:latest
+    container_name: my-redis-container
+    ports:
+      - "6379:6379"
+    volumes:
+      - distcomp_redis:/var/lib/redis
+  
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: my-zookeeper-container
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+    ports:
+      - "2181:2181"
+    expose:
+      - 2181
+  
+  kafka:
+    image: confluentinc/cp-kafka
+    container_name: my-kafka-container
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+    ports:
+      - "9092:9092"
+    expose:
+      - 9092
+    depends_on:
+      - zookeeper
+    healthcheck:
+      test: [ "CMD", "kafka-topics", "--list", "--bootstrap-server", "localhost:9092" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  
+  init-kafka-topics:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: >
+      sh -c "
+      kafka-topics --create --if-not-exists --topic InTopic --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 &&
+      kafka-topics --create --if-not-exists --topic OutTopic --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1"
+  
+  publisher:
+    build:
+      context: .
+      dockerfile: ./Publisher/Dockerfile
+    container_name: my_publisher_container
+    ports:
+      - "24110:24110"
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:24110
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      DISCUSSION_HOST: discussion
+      KAFKA_BROKER: kafka:9092
+      REDIS_HOST: redis
+    depends_on:
+      - postgres
+      - init-kafka-topics
+      - redis
+  
+  discussion:
+    build:
+      context: .
+      dockerfile: ./Discussion/Dockerfile
+    container_name: my_discussion_container
+    ports:
+      - "24130:24130"
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:24130
+      CASSANDRA_HOST: cassandra
+      SCHEMA: distcomp
+      KAFKA_BROKER: kafka:9092
+    depends_on:
+      - init-cassandra
+      - init-kafka-topics
+
+volumes:
+  distcomp_cassandra:
+  distcomp_postgres:
+  distcomp_redis:
