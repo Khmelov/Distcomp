@@ -1,0 +1,12 @@
+# .air.toml
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "swag init && go build -o tmp/main ."
+  include_ext = ["go"]
+  exclude_dir = ["assets", "tmp", "vendor", "docs"]
+
+[watch]
+  include_ext = ["go"]
+  exclude_dir = ["assets", "tmp", "vendor", "docs"]
