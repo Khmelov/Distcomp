@@ -3,7 +3,7 @@ package com.example.rest.controller;
 import com.example.rest.dto.requestDto.MessageRequestTo;
 import com.example.rest.dto.responseDto.MessageResponseTo;
 import com.example.rest.dto.updateDto.MessageUpdateTo;
-import com.example.rest.service.MessageService;
+import com.example.rest.service.MessageService.Implementation.MessageServiceRest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,19 +18,19 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class MessageController {
 
-    private final MessageService messageService;
+    private final MessageServiceRest messageServiceRest;
 
     @GetMapping
-    public Collection<MessageResponseTo> getAll() { return messageService.getAll(); }
+    public Collection<MessageResponseTo> getAll() { return messageServiceRest.getAll(); }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public MessageResponseTo create(@RequestBody @Valid MessageRequestTo input) { return messageService.create(input); }
+    public MessageResponseTo create(@RequestBody @Valid MessageRequestTo input) { return messageServiceRest.create(input); }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public MessageResponseTo update(@RequestBody @Valid MessageUpdateTo input) {
-        try{ return messageService.update(input); }
+        try{ return messageServiceRest.update(input); }
         catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
@@ -38,7 +38,7 @@ public class MessageController {
 
     @GetMapping("/{id}")
     public MessageResponseTo get(@PathVariable long id) {
-        try{ return messageService.get(id); }
+        try{ return messageServiceRest.get(id); }
         catch (NoSuchElementException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
@@ -47,7 +47,6 @@ public class MessageController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable long id) {
-        boolean deleted = messageService.delete(id);
-        if (!deleted) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+         messageServiceRest.delete(id);
     }
 }

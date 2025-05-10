@@ -25,4 +25,7 @@ public class Message {
     @Column
     private String content;
 
+    @Column()
+    private State state = State.APPROVE;
+
 }

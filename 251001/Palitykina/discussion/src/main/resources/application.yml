@@ -9,11 +9,11 @@ spring:
     keyspace-name: distcomp
     schema-action: create-if-not-exists
     local-datacenter: datacenter1
-  liquibase:
-    url: cassandra://localhost:9042/distcomp?compliancemode=Liquibase&localDatacenter=datacenter1
-    change-log: classpath:db/changelog/main-changelog.yml
-    enabled: true
-    driver-class-name: org.liquibase.ext.cassandra.driver.CassandraDriver
+  kafka:
+    bootstrap-servers: localhost:9092
 logging:
   level:
-    liquibase: DEBUG
+    org:
+      springframework:
+        data:
+          cassandra=DEBUG:

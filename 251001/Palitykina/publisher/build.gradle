@@ -25,8 +25,14 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+ //   implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'redis.clients:jedis:4.4.3' // или другая актуальная версия
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+//    testImplementation 'org.springframework.kafka:spring-kafka-test'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
@@ -42,6 +48,8 @@ dependencies {
     implementation 'org.postgresql:postgresql'
 
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+
 
 }
 

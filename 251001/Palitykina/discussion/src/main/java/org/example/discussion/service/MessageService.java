@@ -7,7 +7,10 @@ import org.example.discussion.entity.Message;
 import org.example.discussion.mapper.MessageMapper;
 import org.example.discussion.repository.MessageRepo;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +32,7 @@ public class MessageService {
         return messageRepo
                 .findByCountryAndId("US", id)
                 .map(messageMapper::ToMessageResponseTo)
-                .orElse(null);
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
     public MessageResponseTo create(MessageRequestTo input) {
         Message message = messageMapper.ToMessage(input);
@@ -45,10 +48,14 @@ public class MessageService {
         return messageRepo
                 .update(message)
                 .map(messageMapper::ToMessageResponseTo)
-                .orElseThrow();
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
-    public boolean delete(long id) {
-        return messageRepo.deleteByCountryAndId("US", id);
+    public void delete(long id) {
+        if(!messageRepo.existsByCountryAndId("US", id)){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+            messageRepo.deleteByCountryAndId("US", id);
+
     }
 }

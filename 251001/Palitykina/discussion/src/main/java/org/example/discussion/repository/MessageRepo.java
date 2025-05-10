@@ -16,6 +16,9 @@ public interface MessageRepo extends CassandraRepository<Message, String> {
     Optional<Message> findByCountryAndStoryIdAndId(String country, long storyId, long id);
     Optional<Message> findByCountryAndId(String country, long id);
 
+
+    boolean existsByCountryAndId(String country, long id);
+
     default Optional<Message> create(Message input){
         return Optional.of(save(input));
     }
