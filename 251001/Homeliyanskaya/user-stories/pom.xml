@@ -11,7 +11,8 @@
 	<groupId>com.homel</groupId>
 	<artifactId>user-stories</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>user-stories</name>
+    <packaging>pom</packaging>
+    <name>user-stories</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
@@ -20,7 +21,11 @@
 	<developers>
 		<developer/>
 	</developers>
-	<scm>
+    <modules>
+        <module>publisher</module>
+		<module>discussion</module>
+	</modules>
+    <scm>
 		<connection/>
 		<developerConnection/>
 		<tag/>
@@ -55,9 +60,21 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>kafka-clients</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+
+
 
 		<!-- MapStruct -->
 		<dependency>
@@ -73,19 +90,6 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- JPA (Jakarta Persistence) API -->
-		<dependency>
-			<groupId>jakarta.persistence</groupId>
-			<artifactId>jakarta.persistence-api</artifactId>
-			<version>3.1.0</version>
-		</dependency>
-
-
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>42.5.4</version>
-		</dependency>
 	</dependencies>
 
 	<build>
