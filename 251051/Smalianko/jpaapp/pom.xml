@@ -11,10 +11,10 @@
 		<relativePath/>
 	</parent>
 
-	<groupId>com.rest</groupId>
-	<artifactId>restapp</artifactId>
+	<groupId>com.jpaapp</groupId>
+	<artifactId>jpaapp</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>restapp</name>
+	<name>jpaapp</name>
 	<description>BSUIR_SMALINANKO_RAMAN</description>
 
 	<properties>
@@ -42,6 +42,16 @@
 			<version>2.6.0</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.7.8</version>
+		</dependency>
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+			<version>4.31.1</version>
+		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
