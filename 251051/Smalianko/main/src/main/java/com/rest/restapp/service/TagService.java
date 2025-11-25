@@ -2,7 +2,6 @@ package com.rest.restapp.service;
 
 import com.rest.restapp.dto.request.TagRequestToDto;
 import com.rest.restapp.dto.response.TagResponseToDto;
-import com.rest.restapp.entity.Tag;
 import com.rest.restapp.exception.NotFoundException;
 import com.rest.restapp.mapper.TagMapper;
 import com.rest.restapp.repositry.InMemoryRepository;
