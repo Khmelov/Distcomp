@@ -1,6 +1,7 @@
 package com.rest.restapp.handler;
 
 import com.rest.restapp.exception.ApiError;
+import com.rest.restapp.exception.DuplicateException;
 import com.rest.restapp.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ValidationException;
@@ -14,7 +15,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFoundException(NotFoundException e, HttpServletRequest request) {
+    public ResponseEntity<ApiError
+            > handleNotFoundException(NotFoundException e, HttpServletRequest request) {
         var error = new ApiError(
                 HttpStatus.NOT_FOUND.value(),
                 e.getMessage(),
@@ -45,6 +47,16 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(DuplicateException.class)
+    public ResponseEntity<ApiError> handleDuplicateLoginException(DuplicateException e, HttpServletRequest request) {
+        var error = new ApiError(
+                HttpStatus.FORBIDDEN.value(),
+                e.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     @ExceptionHandler(Exception.class)

@@ -1,10 +1,10 @@
-package com.rest.restapp;
+package com.rest.restapp.controller;
 
-import com.rest.restapp.dto.request.TagRequestToDto;
-import com.rest.restapp.dto.response.TagResponseToDto;
+import com.rest.restapp.config.AbstractIntegrationTest;
+import com.rest.restapp.dto.request.AuthorRequestToDto;
+import com.rest.restapp.dto.response.AuthorResponseToDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -12,60 +12,62 @@ import org.springframework.http.HttpStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class TagControllerTest {
+class AuthorControllerTest extends AbstractIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
 
-    private static final String TAGS_URL = "/api/v1.0/tags";
+    private static final String BASE_URL = "/api/v1.0/authors";
 
     @Test
-    void createTagTest_shouldReturnCreated() {
-        var request = new TagRequestToDto("bug");
+    void createAuthorTest_shouldReturnCreated() {
+        var request = new AuthorRequestToDto("testlogin", "pass1234", "John", "Doe");
 
-        var response = restTemplate.postForEntity(TAGS_URL, request, TagResponseToDto.class);
+        var response = restTemplate.postForEntity(BASE_URL, request, AuthorResponseToDto.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();
     }
 
     @Test
-    void getTagByIdTest_shouldReturnOk() {
-        var created = restTemplate.postForEntity(TAGS_URL, new TagRequestToDto("feature"), TagResponseToDto.class);
+    void getAuthorByIdTest_shouldReturnOk() {
+        var request = new AuthorRequestToDto("login2", "pass12345", "Jane", "Smith");
+        var created = restTemplate.postForEntity(BASE_URL, request, AuthorResponseToDto.class);
         assertThat(created.getBody())
                 .isNotNull();
+
         Long id = created.getBody().id();
 
-        var response = restTemplate.getForEntity(TAGS_URL + "/" + id, TagResponseToDto.class);
+        var response = restTemplate.getForEntity(BASE_URL + "/" + id, AuthorResponseToDto.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
     }
 
     @Test
-    void getAllTagsTest_shouldReturnOk() {
-        var response = restTemplate.getForEntity(TAGS_URL, TagResponseToDto[].class);
+    void getAllAuthorsTest_shouldReturnOk() {
+        var response = restTemplate.getForEntity(BASE_URL, AuthorResponseToDto[].class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
     }
 
     @Test
-    void updateTagTest_shouldReturnOk() {
-        var created = restTemplate.postForEntity(TAGS_URL, new TagRequestToDto("old"), TagResponseToDto.class);
+    void updateAuthorTest_shouldReturnOk() {
+        var request = new AuthorRequestToDto("updatelogin", "oldpass123", "Old", "Name");
+        var created = restTemplate.postForEntity(BASE_URL, request, AuthorResponseToDto.class);
         assertThat(created.getBody())
                 .isNotNull();
         Long id = created.getBody().id();
 
-        var updateRequest = new TagRequestToDto("updated");
+        var updateRequest = new AuthorRequestToDto("newlogin", "newpass123", "New", "Name");
         var putEntity = new HttpEntity<>(updateRequest);
 
         var response = restTemplate.exchange(
-                TAGS_URL + "/" + id,
+                BASE_URL + "/" + id,
                 HttpMethod.PUT,
                 putEntity,
-                TagResponseToDto.class
+                AuthorResponseToDto.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -73,14 +75,15 @@ class TagControllerTest {
     }
 
     @Test
-    void deleteTagTest_shouldReturnNoContent() {
-        var created = restTemplate.postForEntity(TAGS_URL, new TagRequestToDto("todelete"), TagResponseToDto.class);
+    void deleteAuthorTest_shouldReturnNoContent() {
+        var request = new AuthorRequestToDto("todelete", "12345678", "Del", "Me");
+        var created = restTemplate.postForEntity(BASE_URL, request, AuthorResponseToDto.class);
         assertThat(created.getBody())
                 .isNotNull();
         Long id = created.getBody().id();
 
         var response = restTemplate.exchange(
-                TAGS_URL + "/" + id,
+                BASE_URL + "/" + id,
                 HttpMethod.DELETE,
                 HttpEntity.EMPTY,
                 Void.class

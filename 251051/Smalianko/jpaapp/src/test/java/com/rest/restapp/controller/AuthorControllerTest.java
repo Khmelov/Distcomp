@@ -1,11 +1,10 @@
-package java.com.rest.restapp;
+package com.rest.restapp.controller;
 
+import com.rest.restapp.config.AbstractIntegrationTest;
 import com.rest.restapp.dto.request.AuthorRequestToDto;
 import com.rest.restapp.dto.response.AuthorResponseToDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -13,9 +12,7 @@ import org.springframework.http.HttpStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
-class AuthorControllerTest {
+class AuthorControllerTest extends AbstractIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -24,7 +21,7 @@ class AuthorControllerTest {
 
     @Test
     void createAuthorTest_shouldReturnCreated() {
-        var request = new AuthorRequestToDto("testlogin", "pass123", "John", "Doe");
+        var request = new AuthorRequestToDto("testlogin", "pass1234", "John", "Doe");
 
         var response = restTemplate.postForEntity(BASE_URL, request, AuthorResponseToDto.class);
 
@@ -34,7 +31,7 @@ class AuthorControllerTest {
 
     @Test
     void getAuthorByIdTest_shouldReturnOk() {
-        var request = new AuthorRequestToDto("login2", "pass", "Jane", "Smith");
+        var request = new AuthorRequestToDto("login2", "pass12345", "Jane", "Smith");
         var created = restTemplate.postForEntity(BASE_URL, request, AuthorResponseToDto.class);
         assertThat(created.getBody())
                 .isNotNull();
@@ -57,13 +54,13 @@ class AuthorControllerTest {
 
     @Test
     void updateAuthorTest_shouldReturnOk() {
-        var request = new AuthorRequestToDto("updatelogin", "oldpass", "Old", "Name");
+        var request = new AuthorRequestToDto("updatelogin", "oldpass123", "Old", "Name");
         var created = restTemplate.postForEntity(BASE_URL, request, AuthorResponseToDto.class);
         assertThat(created.getBody())
                 .isNotNull();
         Long id = created.getBody().id();
 
-        var updateRequest = new AuthorRequestToDto("newlogin", "newpass", "New", "Name");
+        var updateRequest = new AuthorRequestToDto("newlogin", "newpass123", "New", "Name");
         var putEntity = new HttpEntity<>(updateRequest);
 
         var response = restTemplate.exchange(
@@ -79,7 +76,7 @@ class AuthorControllerTest {
 
     @Test
     void deleteAuthorTest_shouldReturnNoContent() {
-        var request = new AuthorRequestToDto("todelete", "123", "Del", "Me");
+        var request = new AuthorRequestToDto("todelete", "12345678", "Del", "Me");
         var created = restTemplate.postForEntity(BASE_URL, request, AuthorResponseToDto.class);
         assertThat(created.getBody())
                 .isNotNull();
