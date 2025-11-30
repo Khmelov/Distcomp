@@ -10,7 +10,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
     <changeSet id="3" author="Roman">
-        <ext:createTable tableName="tbl_notice" keyspaceName="Raman">
+        <ext:createTable tableName="tbl_notice">
 
             <ext:column name="country" type="text">
                 <ext:constraints primaryKey="true" primaryKeyPosition="1"/>

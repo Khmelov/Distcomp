@@ -40,7 +40,7 @@ services:
       - "8080:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092 # 🌟 ИСПОЛЬЗУЕМ ВНУТРЕННИЙ ПОРТ И ИМЯ СЕРВИСА
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
     networks:
       - kafkanet
     depends_on:

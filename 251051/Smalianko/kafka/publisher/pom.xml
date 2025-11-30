@@ -5,10 +5,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.11</version>
-		<relativePath/>
+        <groupId>com.kafka</groupId>
+        <artifactId>kafka</artifactId>
+        <version>1.0.0</version>
 	</parent>
 
 	<groupId>com.kafka</groupId>
