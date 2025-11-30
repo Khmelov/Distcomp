@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class IssueService {
