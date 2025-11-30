@@ -1,0 +1,4 @@
+spring:
+  cassandra:
+    keyspace-name: distcomp
+    local-datacenter: datacenter1

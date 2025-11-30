@@ -8,9 +8,8 @@ import org.springframework.data.cassandra.repository.config.EnableCassandraRepos
 @SpringBootApplication(
         exclude = {CassandraAutoConfiguration.class}
 )
-@EnableCassandraRepositories
-public class DiscussionApplication {
+public class DiscussionRedisApplication {
     public static void main(String[] args) {
-        SpringApplication.run(DiscussionApplication.class, args);
+        SpringApplication.run(DiscussionRedisApplication.class, args);
     }
 }

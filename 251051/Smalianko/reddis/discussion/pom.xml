@@ -11,7 +11,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.nosql</groupId>
+    <groupId>com.kafka</groupId>
     <artifactId>discussion</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>discussion</name>
@@ -28,6 +28,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.kafka</groupId>
+            <artifactId>async-core</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
@@ -39,6 +44,16 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-cassandra</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-stream</artifactId>
+            <version>4.1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-stream-binder-kafka</artifactId>
+            <version>4.1.3</version>
         </dependency>
 
         <dependency>

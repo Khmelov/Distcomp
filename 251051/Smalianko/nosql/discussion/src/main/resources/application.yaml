@@ -3,19 +3,8 @@ server:
 
 spring:
   cassandra:
-    keyspace-name: distcomp
+    #keyspace-name: distcomp
+    local-datacenter: datacenter1
     contact-points: localhost
     port: 9042
-    local-datacenter: datacenter1
     schema-action: none
-
-  liquibase:
-    enabled: true
-    change-log: classpath:db/changelog/changelog-master-cassandra.xml
-    url: jdbc:cassandra://localhost:9042/system?localdatacenter=datacenter1
-    driver-class-name: com.ing.data.cassandra.jdbc.CassandraDriver
-
-logging:
-  level:
-    liquibase: DEBUG
-    com.ing.data: DEBUG
