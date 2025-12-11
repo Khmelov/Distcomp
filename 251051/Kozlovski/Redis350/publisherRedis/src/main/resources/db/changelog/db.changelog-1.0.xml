@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <!-- Таблица Writer -->
+    <changeSet id="create-tbl-writer" author="dev">
+        <createTable tableName="tbl_writer">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Таблица Mark -->
+    <changeSet id="create-tbl-mark" author="dev">
+        <createTable tableName="tbl_mark">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Таблица Tweet -->
+    <changeSet id="create-tbl-tweet" author="dev">
+        <createTable tableName="tbl_tweet">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="writer_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                constraintName="fk_tweet_writer"
+                baseTableName="tbl_tweet"
+                baseColumnNames="writer_id"
+                referencedTableName="tbl_writer"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Таблица связи Tweet <-> Mark -->
+    <changeSet id="create-tbl-tweet_mark" author="dev">
+        <createTable tableName="tbl_tweet_mark">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tweet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mark_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                constraintName="fk_tweet_mark_tweet"
+                baseTableName="tbl_tweet_mark"
+                baseColumnNames="tweet_id"
+                referencedTableName="tbl_tweet"
+                referencedColumnNames="id"/>
+        <addForeignKeyConstraint
+                constraintName="fk_tweet_mark_mark"
+                baseTableName="tbl_tweet_mark"
+                baseColumnNames="mark_id"
+                referencedTableName="tbl_mark"
+                referencedColumnNames="id"/>
+        <addUniqueConstraint
+                constraintName="uk_tweet_mark"
+                tableName="tbl_tweet_mark"
+                columnNames="tweet_id, mark_id"/>
+    </changeSet>
+
+</databaseChangeLog>

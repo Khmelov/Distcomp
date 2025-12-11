@@ -1,0 +1,37 @@
+server:
+  port: 24130
+
+kafka:
+  bootstrap-servers: localhost:9092
+
+
+
+spring:
+  cassandra:
+    keyspace-name: distcomp
+    contact-points: 127.0.0.1
+    port: 9042
+    schema-action: create-if-not-exists
+    local-datacenter: DC1
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    consumer:
+      group-id: discussion-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.info.headers: false
+        spring.json.value.default.type: java.util.HashMap
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+        spring.json.use.type.info.headers: false
+        spring.json.trusted.packages: "*"
+        spring.json.value.default.type: java.util.HashMap

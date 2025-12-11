@@ -1,0 +1,19 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="create_comment_table" author="me">
+        <sql>
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_comment (
+            country text,
+            tweet_id bigint,
+            id bigint,
+            content text,
+            PRIMARY KEY ((country), tweet_id, id)
+            ) WITH CLUSTERING ORDER BY (tweet_id ASC, id ASC);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
