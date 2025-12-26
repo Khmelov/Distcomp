@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: antigravity
+      changes:
+        - createTable:
+            tableName: tbl_comment
+            columns:
+              - column:
+                  name: country
+                  type: text
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_tbl_comment
+              - column:
+                  name: news_id
+                  type: bigint
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_tbl_comment
+              - column:
+                  name: content
+                  type: text

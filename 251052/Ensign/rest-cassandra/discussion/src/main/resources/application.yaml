@@ -1,0 +1,17 @@
+server:
+  port: 24130
+
+spring:
+  application:
+    name: discussion-service
+  cassandra:
+    keyspace-name: distcomp
+    contact-points: localhost
+    port: 9042
+    local-datacenter: datacenter1
+    schema-action: create_if_not_exists
+    request:
+      timeout: 10s
+    connection:
+      connect-timeout: 10s
+      init-query-timeout: 10s
