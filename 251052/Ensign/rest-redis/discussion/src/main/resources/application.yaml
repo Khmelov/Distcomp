@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: discussion-service
+  cassandra:
+    contact-points: localhost:9042
+    local-datacenter: datacenter1
+    keyspace-name: distcomp
+    schema-action: recreate_drop_unused
+    request:
+      timeout: 10s
+    connection:
+      connect-timeout: 10s
+      init-query-timeout: 10s
+  kafka:
+    bootstrap-servers: 127.0.0.1:9094
+    consumer:
+      group-id: discussion-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.value.default.type: com.restApp.discussion.dto.CommentRequestTo
+        spring.json.use.type.headers: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+server:
+  port: 24130
+  shutdown: graceful
