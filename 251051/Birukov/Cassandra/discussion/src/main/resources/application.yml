@@ -1,0 +1,42 @@
+server:
+  port: 24130
+  #servlet:
+    #context-path: /api/v1.0
+
+spring:
+  application:
+    name: discussion
+  
+  data:
+    cassandra:
+      contact-points: localhost
+      port: 9042
+      keyspace-name: distcomp
+      local-datacenter: datacenter1
+      schema-action: CREATE_IF_NOT_EXISTS
+      
+    connection:
+      connect-timeout: 10s
+      init-query-timeout: 30s
+      
+    request:
+      timeout: 10s
+      consistency: LOCAL_ONE
+  
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    check-change-log-location: false
+
+liquibase:
+  cassandra:
+    contact-points: localhost:9042
+    keyspace: distcomp
+    local-datacenter: datacenter1
+
+logging:
+  level:
+    org.springframework.data.cassandra: INFO
+    org.liquibase: DEBUG
+    liquibase: DEBUG
+    com.example.cassandraliquibase: DEBUG

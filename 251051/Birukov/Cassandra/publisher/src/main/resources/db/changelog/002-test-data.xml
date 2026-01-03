@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+		http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+	
+	<changeSet id="002-1" author="birukov">
+		<comment>Insert test writers</comment>
+		
+		<insert tableName="tbl_writer" schemaName="distcomp">
+			<column name="id" valueNumeric="1"/>
+			<column name="login" value="andreybirukov04@mail.ru"/>
+			<column name="password" value="password123"/>
+			<column name="firstname" value="Андрей"/>
+			<column name="lastname" value="Бирюков"/>
+		</insert>
+	</changeSet>
+</databaseChangeLog>

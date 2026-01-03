@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-insert-test-data
+      author: system
+      changes:
+        - sqlFile:
+            path: scripts/custom-cql/002-insert-test-data.cql
+            relativeToChangelogFile: true
