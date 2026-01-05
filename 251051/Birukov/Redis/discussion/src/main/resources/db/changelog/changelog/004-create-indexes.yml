@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-indexes
+      author: birukov
+      changes:
+        - createIndex:
+            indexName: idx_note_tweet_id
+            schemaName: distcomp
+            tableName: tbl_note
+            columns:
+              - column:
+                  name: tweet_id
+                  type: bigint

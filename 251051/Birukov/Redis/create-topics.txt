@@ -1,0 +1,11 @@
+docker exec -it kafka kafka-topics --create ^
+  --topic InTopic ^
+  --partitions 3 ^
+  --replication-factor 1 ^
+  --bootstrap-server localhost:29092
+
+docker exec -it kafka kafka-topics --create ^
+  --topic OutTopic ^
+  --partitions 3 ^
+  --replication-factor 1 ^
+  --bootstrap-server localhost:29092

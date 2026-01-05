@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-table-note
+      author: birukov
+      changes:
+        - createTable:
+            tableName: tbl_note
+            schemaName: distcomp
+            columns:
+              - column:
+                  name: country
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tweet_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: text
+              - column:
+                  name: state
+                  type: text
+            primaryKey:
+              columnNames: country, id, tweet_id
+            clusteringOrder:
+              columns: id
+              columns: tweet_id
+              order: DESC
