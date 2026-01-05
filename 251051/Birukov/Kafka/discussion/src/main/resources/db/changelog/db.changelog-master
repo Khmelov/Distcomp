@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - include:
+      file: changelog/001-create-keyspace.yaml
+  - include:
+      file: changelog/002-create-table-note.yaml
+  - include:
+      file: changelog/003-insert-test-data.yaml
+  - include:
+      file: changelog/004-create-indexes.yaml

@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-keyspace
+      author: system
+      changes:
+        - sqlFile:
+            path: scripts/custom-cql/001-create-keyspace.cql
+            relativeToChangelogFile: true
