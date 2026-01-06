@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="005-create-tbl-tweet-label" author="labs">
+        <createTable tableName="tbl_tweet_label" schemaName="distcomp">
+            <column name="tweet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="label_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addPrimaryKey
+                tableName="tbl_tweet_label"
+                schemaName="distcomp"
+                columnNames="tweet_id,label_id"/>
+        
+        <addForeignKeyConstraint
+                baseTableName="tbl_tweet_label"
+                baseTableSchemaName="distcomp"
+                baseColumnNames="tweet_id"
+                constraintName="fk_tweet_label_tweet"
+                referencedTableName="tbl_tweet"
+                referencedTableSchemaName="distcomp"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+        
+        <addForeignKeyConstraint
+                baseTableName="tbl_tweet_label"
+                baseTableSchemaName="distcomp"
+                baseColumnNames="label_id"
+                constraintName="fk_tweet_label_label"
+                referencedTableName="tbl_label"
+                referencedTableSchemaName="distcomp"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+</databaseChangeLog>
+

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="create-schema" author="labs">
+        <sql>
+            CREATE SCHEMA IF NOT EXISTS distcomp;
+        </sql>
+    </changeSet>
+
+    <include file="db/changelog/changes/001-create-tbl-writer.xml"/>
+    <include file="db/changelog/changes/002-create-tbl-label.xml"/>
+    <include file="db/changelog/changes/003-create-tbl-tweet.xml"/>
+    <include file="db/changelog/changes/004-create-tbl-message.xml"/>
+    <include file="db/changelog/changes/005-create-tbl-tweet-label.xml"/>
+    <include file="db/changelog/changes/006-insert-initial-data.xml"/>
+
+</databaseChangeLog>
+

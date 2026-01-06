@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="006-insert-initial-data" author="labs">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM distcomp.tbl_writer WHERE login = 'rogach.lizaveta@gmail.com'
+            </sqlCheck>
+        </preConditions>
+        
+        <insert tableName="tbl_writer" schemaName="distcomp">
+            <column name="login" value="rogach.lizaveta@gmail.com"/>
+            <column name="password" value="password123"/>
+            <column name="firstname" value="Елизавета"/>
+            <column name="lastname" value="Рогач"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
+
