@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="000-create-schema" author="system">
+        <sql>
+            CREATE SCHEMA IF NOT EXISTS distcomp;
+        </sql>
+    </changeSet>
+
+    <changeSet id="001-create-tbl-user" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="tbl_user" schemaName="distcomp"/>
+            </not>
+        </preConditions>
+        <createTable tableName="tbl_user" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="001-1-create-index-user-login" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_user_login" tableName="tbl_user" schemaName="distcomp"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="idx_user_login" tableName="tbl_user" schemaName="distcomp">
+            <column name="login"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="002-create-tbl-label" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="tbl_label" schemaName="distcomp"/>
+            </not>
+        </preConditions>
+        <createTable tableName="tbl_label" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="002-1-create-index-label-name" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_label_name" tableName="tbl_label" schemaName="distcomp"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="idx_label_name" tableName="tbl_label" schemaName="distcomp">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="003-create-tbl-article" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="tbl_article" schemaName="distcomp"/>
+            </not>
+        </preConditions>
+        <createTable tableName="tbl_article" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_article_user" referencedTableName="tbl_user" referencedTableSchemaName="distcomp" referencedColumnNames="id"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="003-1-create-index-article-user-id" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_article_user_id" tableName="tbl_article" schemaName="distcomp"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="idx_article_user_id" tableName="tbl_article" schemaName="distcomp">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="003-2-create-index-article-title" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_article_title" tableName="tbl_article" schemaName="distcomp"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="idx_article_title" tableName="tbl_article" schemaName="distcomp">
+            <column name="title"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="004-create-tbl-post" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="tbl_post" schemaName="distcomp"/>
+            </not>
+        </preConditions>
+        <createTable tableName="tbl_post" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="article_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_post_article" referencedTableName="tbl_article" referencedTableSchemaName="distcomp" referencedColumnNames="id"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="004-1-create-index-post-article-id" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_post_article_id" tableName="tbl_post" schemaName="distcomp"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="idx_post_article_id" tableName="tbl_post" schemaName="distcomp">
+            <column name="article_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="005-create-tbl-article-label" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="tbl_article_label" schemaName="distcomp"/>
+            </not>
+        </preConditions>
+        <createTable tableName="tbl_article_label" schemaName="distcomp">
+            <column name="article_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_article_label_article" referencedTableName="tbl_article" referencedTableSchemaName="distcomp" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="label_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_article_label_label" referencedTableName="tbl_label" referencedTableSchemaName="distcomp" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="005-1-add-primary-key-article-label" author="system">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="tbl_article_label" schemaName="distcomp"/>
+                <not>
+                    <primaryKeyExists tableName="tbl_article_label" schemaName="distcomp"/>
+                </not>
+            </and>
+        </preConditions>
+        <addPrimaryKey tableName="tbl_article_label" columnNames="article_id,label_id" schemaName="distcomp"/>
+    </changeSet>
+
+</databaseChangeLog>
+
