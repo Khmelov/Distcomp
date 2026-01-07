@@ -1,0 +1,10 @@
+fastapi~=0.115.12
+pydantic~=2.11.7
+pytest~=8.4.0
+httpx~=0.28.1
+SQLAlchemy~=2.0.31
+psycopg2-binary~=2.9.9
+alembic~=1.13.1
+testcontainers~=4.7.2
+uvicorn~=0.30.6
+pytest-asyncio
