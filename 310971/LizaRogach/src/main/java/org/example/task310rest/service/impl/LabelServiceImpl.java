@@ -1,0 +1,68 @@
+package org.example.task310rest.service.impl;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import org.example.task310rest.dto.LabelRequestTo;
+import org.example.task310rest.dto.LabelResponseTo;
+import org.example.task310rest.exception.NotFoundException;
+import org.example.task310rest.exception.ValidationException;
+import org.example.task310rest.mapper.LabelMapper;
+import org.example.task310rest.model.Label;
+import org.example.task310rest.repository.LabelRepository;
+import org.example.task310rest.service.LabelService;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+@Service
+public class LabelServiceImpl implements LabelService {
+
+    private final LabelRepository repository;
+    private final LabelMapper mapper;
+
+    public LabelServiceImpl(LabelRepository repository, LabelMapper mapper) {
+        this.repository = repository;
+        this.mapper = mapper;
+    }
+
+    @Override
+    public LabelResponseTo create(LabelRequestTo request) {
+        validate(request);
+        Label entity = mapper.toEntity(request);
+        repository.save(entity);
+        return mapper.toDto(entity);
+    }
+
+    @Override
+    public LabelResponseTo getById(Long id) {
+        Label entity = repository.findById(id).orElseThrow(() -> new NotFoundException("Label not found: " + id));
+        return mapper.toDto(entity);
+    }
+
+    @Override
+    public List<LabelResponseTo> getAll() {
+        return repository.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
+    }
+
+    @Override
+    public LabelResponseTo update(Long id, LabelRequestTo request) {
+        validate(request);
+        Label entity = repository.findById(id).orElseThrow(() -> new NotFoundException("Label not found: " + id));
+        mapper.updateEntityFromDto(request, entity);
+        repository.save(entity);
+        return mapper.toDto(entity);
+    }
+
+    @Override
+    public void delete(Long id) {
+        Label entity = repository.findById(id).orElseThrow(() -> new NotFoundException("Label not found: " + id));
+        repository.deleteById(entity.getId());
+    }
+
+    private void validate(LabelRequestTo request) {
+        if (!StringUtils.hasText(request.getName())) {
+            throw new ValidationException("Label name must not be blank");
+        }
+    }
+}
+
+
