@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="002-create-notice-table" author="student">
+        <sql>
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_notice (
+                                                               country text,
+                                                               tweetid bigint,
+                                                               id bigint,
+                                                               content text,
+                                                               PRIMARY KEY ((country), tweetid DESC, id DESC)
+                )
+                WITH CLUSTERING ORDER BY (tweetid DESC, id DESC)
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
