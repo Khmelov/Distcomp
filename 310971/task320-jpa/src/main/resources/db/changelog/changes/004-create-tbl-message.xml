@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="004-create-tbl-message" author="liza">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="tbl_message" schemaName="distcomp"/>
+            </not>
+        </preConditions>
+        <createTable tableName="tbl_message" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tweet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="tbl_message"
+                baseTableSchemaName="distcomp"
+                baseColumnNames="tweet_id"
+                constraintName="fk_message_tweet"
+                referencedTableName="tbl_tweet"
+                referencedTableSchemaName="distcomp"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+        <createIndex indexName="idx_message_tweet_id" tableName="tbl_message" schemaName="distcomp">
+            <column name="tweet_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+

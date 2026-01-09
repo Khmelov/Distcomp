@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="008-setup-search-path" author="liza">
+        <validCheckSum>9:6cabac5dcfcf896ec2d5f4b1eda9693f</validCheckSum>
+        <!-- Set default search_path for the database -->
+        <sql>
+            ALTER DATABASE distcomp SET search_path TO distcomp, public;
+        </sql>
+        <rollback>
+            ALTER DATABASE distcomp SET search_path TO public;
+        </rollback>
+    </changeSet>
+
+    <changeSet id="008a-setup-search-path-role" author="liza">
+        <!-- Set search_path for postgres user to ensure it works for all connections -->
+        <sql>
+            ALTER ROLE postgres SET search_path TO distcomp, public;
+        </sql>
+        <rollback>
+            ALTER ROLE postgres SET search_path TO public;
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
+

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="009-create-public-views" author="liza" runAlways="true">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <tableExists tableName="tbl_writer" schemaName="distcomp"/>
+                <tableExists tableName="tbl_tweet" schemaName="distcomp"/>
+                <tableExists tableName="tbl_label" schemaName="distcomp"/>
+                <tableExists tableName="tbl_message" schemaName="distcomp"/>
+                <tableExists tableName="tbl_tweet_label" schemaName="distcomp"/>
+            </and>
+        </preConditions>
+        <!-- Create views in public schema for backward compatibility with SQL queries without schema -->
+        <!-- runAlways="true" ensures views are recreated on every startup to reflect any schema changes -->
+        <sql>
+            DROP VIEW IF EXISTS public.tbl_writer CASCADE;
+            CREATE VIEW public.tbl_writer AS SELECT * FROM distcomp.tbl_writer;
+        </sql>
+        <sql>
+            DROP VIEW IF EXISTS public.tbl_tweet CASCADE;
+            CREATE VIEW public.tbl_tweet AS SELECT * FROM distcomp.tbl_tweet;
+        </sql>
+        <sql>
+            DROP VIEW IF EXISTS public.tbl_label CASCADE;
+            CREATE VIEW public.tbl_label AS SELECT * FROM distcomp.tbl_label;
+        </sql>
+        <sql>
+            DROP VIEW IF EXISTS public.tbl_message CASCADE;
+            CREATE VIEW public.tbl_message AS SELECT * FROM distcomp.tbl_message;
+        </sql>
+        <sql>
+            DROP VIEW IF EXISTS public.tbl_tweet_label CASCADE;
+            CREATE VIEW public.tbl_tweet_label AS SELECT * FROM distcomp.tbl_tweet_label;
+        </sql>
+        <!-- Grant permissions on views to allow external queries -->
+        <sql>
+            GRANT SELECT ON public.tbl_writer TO PUBLIC;
+            GRANT SELECT ON public.tbl_tweet TO PUBLIC;
+            GRANT SELECT ON public.tbl_label TO PUBLIC;
+            GRANT SELECT ON public.tbl_message TO PUBLIC;
+            GRANT SELECT ON public.tbl_tweet_label TO PUBLIC;
+        </sql>
+        <!-- Also grant permissions on underlying tables to ensure views work -->
+        <sql>
+            GRANT SELECT ON distcomp.tbl_writer TO PUBLIC;
+            GRANT SELECT ON distcomp.tbl_tweet TO PUBLIC;
+            GRANT SELECT ON distcomp.tbl_label TO PUBLIC;
+            GRANT SELECT ON distcomp.tbl_message TO PUBLIC;
+            GRANT SELECT ON distcomp.tbl_tweet_label TO PUBLIC;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
+
