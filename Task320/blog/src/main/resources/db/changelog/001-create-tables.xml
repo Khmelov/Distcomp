@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.17.xsd">
+
+    <!-- Create schema if not exists -->
+    <changeSet id="000-create-schema" author="system">
+        <createSchema schemaName="distcomp"/>
+    </changeSet>
+
+    <!-- Create tbl_writer table -->
+    <changeSet id="001-create-tbl-writer" author="system">
+        <createTable tableName="tbl_writer">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_writer_login" tableName="tbl_writer">
+            <column name="login"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Create tbl_tag table -->
+    <changeSet id="002-create-tbl-tag" author="system">
+        <createTable tableName="tbl_tag">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_tag_name" tableName="tbl_tag">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Create tbl_article table -->
+    <changeSet id="003-create-tbl-article" author="system">
+        <createTable tableName="tbl_article">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="writer_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="tbl_article"
+            baseColumnNames="writer_id"
+            referencedTableName="tbl_writer"
+            referencedColumnNames="id"
+            constraintName="fk_article_writer"
+            onDelete="CASCADE"/>
+
+        <createIndex indexName="idx_article_writer_id" tableName="tbl_article">
+            <column name="writer_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_article_title" tableName="tbl_article">
+            <column name="title"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Create tbl_reaction table -->
+    <changeSet id="004-create-tbl-reaction" author="system">
+        <createTable tableName="tbl_reaction">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="article_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="tbl_reaction"
+            baseColumnNames="article_id"
+            referencedTableName="tbl_article"
+            referencedColumnNames="id"
+            constraintName="fk_reaction_article"
+            onDelete="CASCADE"/>
+
+        <createIndex indexName="idx_reaction_article_id" tableName="tbl_reaction">
+            <column name="article_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Create tbl_article_tag junction table -->
+    <changeSet id="005-create-tbl-article-tag" author="system">
+        <createTable tableName="tbl_article_tag">
+            <column name="article_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+            tableName="tbl_article_tag"
+            columnNames="article_id, tag_id"
+            constraintName="pk_article_tag"/>
+
+        <addForeignKeyConstraint
+            baseTableName="tbl_article_tag"
+            baseColumnNames="article_id"
+            referencedTableName="tbl_article"
+            referencedColumnNames="id"
+            constraintName="fk_article_tag_article"
+            onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+            baseTableName="tbl_article_tag"
+            baseColumnNames="tag_id"
+            referencedTableName="tbl_tag"
+            referencedColumnNames="id"
+            constraintName="fk_article_tag_tag"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+</databaseChangeLog>
