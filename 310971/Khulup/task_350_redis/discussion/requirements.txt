@@ -1,0 +1,12 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+sqlalchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.9
+pytest==8.4.2
+pytest-asyncio==0.23.8
+httpx==0.25.2
+cassandra-driver==3.28.0
+kafka-python==2.0.2
+confluent-kafka==2.3.0
