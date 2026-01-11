@@ -1,0 +1,62 @@
+﻿# discussion-module/src/main/resources/application.yml
+server:
+  port: 24130
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: discussion-module
+  
+  main:
+    web-application-type: servlet
+  
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    consumer:
+      group-id: discussion-group
+      auto-offset-reset: earliest
+
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      
+      enable-auto-commit: false
+      properties:
+        
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        
+        spring.json.trusted.packages: "by.rest.discussion.dto.kafka,by.rest.publisher.dto.kafka,*"
+        
+        spring.json.value.default.type: "by.rest.discussion.dto.kafka.CommentKafkaRequest"
+        
+        spring.json.use.type.headers: false
+   
+        spring.json.type.mapping: "commentEvent:by.rest.discussion.dto.kafka.CommentKafkaRequest,moderationResult:by.rest.discussion.dto.kafka.ModerationResult"
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    
+
+    admin:
+      properties:
+        bootstrap:
+          servers: localhost:9092
+
+kafka:
+  topic:
+    in: "InTopic"
+    out: "OutTopic"
+
+
+logging:
+  level:
+    by.rest.discussion: DEBUG
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
+    root: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+

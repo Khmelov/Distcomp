@@ -1,0 +1,69 @@
+package by.rest.discussion.controller;
+
+import by.rest.discussion.dto.CommentRequestTo;
+import by.rest.discussion.dto.CommentResponseTo;
+import by.rest.discussion.service.CommentService;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+
+@RestController
+@RequestMapping("/api/v1.0/comments")
+public class CommentController {
+    
+    private final CommentService service;
+    
+    public CommentController(CommentService service) {
+        this.service = service;
+    }
+    
+    @PostMapping
+    public ResponseEntity<CommentResponseTo> create(@Valid @RequestBody CommentRequestTo request) {
+        CommentResponseTo response = service.create(request);
+        return ResponseEntity.created(
+                URI.create(String.format("/api/v1.0/comments/%d/%d", 
+                    response.getStoryId(), response.getId())))
+                .body(response);
+    }
+    
+    @GetMapping
+    public Page<CommentResponseTo> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return service.getAll(page, size);
+    }
+    
+    @GetMapping("/story/{storyId}")
+    public Page<CommentResponseTo> getByStoryId(
+            @PathVariable Long storyId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return service.getByStoryId(storyId, page, size);
+    }
+    
+    @GetMapping("/story/{storyId}/{id}")
+    public CommentResponseTo getById(
+            @PathVariable Long storyId,
+            @PathVariable Long id) {
+        return service.getById(storyId, id);
+    }
+    
+    @PutMapping("/story/{storyId}/{id}")
+    public CommentResponseTo update(
+            @PathVariable Long storyId,
+            @PathVariable Long id,
+            @Valid @RequestBody CommentRequestTo request) {
+        return service.update(storyId, id, request);
+    }
+    
+    @DeleteMapping("/story/{storyId}/{id}")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long storyId,
+            @PathVariable Long id) {
+        service.delete(storyId, id);
+        return ResponseEntity.noContent().build();
+    }
+}

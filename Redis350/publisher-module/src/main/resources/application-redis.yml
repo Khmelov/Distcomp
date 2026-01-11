@@ -1,0 +1,42 @@
+# application-redis.yml
+spring:
+  config:
+    activate:
+      on-profile: redis
+
+  redis:
+    host: localhost
+    port: 6379
+    password: ${REDIS_PASSWORD:password123}
+    timeout: 5000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1ms
+      shutdown-timeout: 100ms
+    connect-timeout: 2000ms
+    
+  cache:
+    type: redis
+    redis:
+      time-to-live: 86400000  # 24 hours
+      cache-null-values: false
+      key-prefix: "publisher:prod:"
+      use-key-prefix: true
+      enable-statistics: true
+
+redis:
+  ttl:
+    hours: 24
+    editors: 12
+    stories: 6
+    tags: 24
+    comments: 3
+
+logging:
+  level:
+    org.springframework.data.redis: DEBUG
+    org.springframework.cache: DEBUG
+    by.rest.publisher.config.RedisCacheService: TRACE

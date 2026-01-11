@@ -1,0 +1,45 @@
+spring:
+  config:
+    activate:
+      on-profile: nocassandra
+  
+  cassandra:
+    enabled: false
+  
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.cassandra.CassandraDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.cassandra.CassandraRepositoriesAutoConfiguration
+  
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: discussion-nocassandra
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        enable.auto.commit: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  
+  main:
+    allow-bean-definition-overriding: true
+    lazy-initialization: true
+
+server:
+  port: 24130
+
+kafka:
+  topic:
+    in: InTopic
+    out: OutTopic
+
+logging:
+  level:
+    by.rest.discussion: INFO
+    org.springframework.kafka: INFO
+    root: INFO

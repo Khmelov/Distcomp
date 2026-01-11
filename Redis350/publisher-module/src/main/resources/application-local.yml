@@ -1,0 +1,19 @@
+# application-local.yml
+spring:
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 1000ms
+    
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10 минут для быстрой разработки
+      cache-null-values: false
+      key-prefix: "publisher:local:"
+      use-key-prefix: true
+
+logging:
+  level:
+    org.springframework.data.redis: DEBUG
+    org.springframework.cache: TRACE

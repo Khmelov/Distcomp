@@ -1,0 +1,18 @@
+server:
+  port: 24130
+
+spring:
+  cassandra:
+    keyspace-name: distcomp
+    contact-points: localhost
+    port: 9042
+    local-datacenter: datacenter1
+    schema-action: CREATE_IF_NOT_EXISTS
+    connection:
+      connect-timeout: 10s
+      init-query-timeout: 10s
+
+logging:
+  level:
+    by.rest.discussion: DEBUG
+    org.springframework.data.cassandra: DEBUG

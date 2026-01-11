@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="1-editor" author="nikita">
+        <createTable tableName="tbl_editor">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2-tag" author="nikita">
+        <createTable tableName="tbl_tag">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3-story" author="nikita">
+        <createTable tableName="tbl_story">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="editor_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_story_editor"
+                             referencedTableName="tbl_editor" referencedColumnNames="id"/>
+            </column>
+            <column name="title" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="timestamp"/>
+            <column name="modified" type="timestamp"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="4-comment" author="nikita">
+        <createTable tableName="tbl_comment">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="story_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_comment_story"
+                             referencedTableName="tbl_story" referencedColumnNames="id"/>
+            </column>
+            <column name="content" type="text">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5-story-tag" author="nikita">
+        <createTable tableName="tbl_story_tag">
+            <column name="story_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_storytag_story"
+                             referencedTableName="tbl_story" referencedColumnNames="id"/>
+            </column>
+            <column name="tag_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_storytag_tag"
+                             referencedTableName="tbl_tag" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="tbl_story_tag" columnNames="story_id, tag_id" constraintName="pk_story_tag"/>
+        <createIndex tableName="tbl_story_tag" indexName="idx_story_tag_story">
+            <column name="story_id"/>
+        </createIndex>
+        <createIndex tableName="tbl_story_tag" indexName="idx_story_tag_tag">
+            <column name="tag_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

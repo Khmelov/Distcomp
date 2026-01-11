@@ -1,0 +1,95 @@
+server:
+  port: 24110
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: publisher-service
+  
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+  
+  # Redis Configuration
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 5000ms
+    jedis:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1ms
+  
+  # Cache Configuration with Redis
+  cache:
+    type: redis
+    redis:
+      time-to-live: 86400000  # 24 hours in milliseconds
+      cache-null-values: false
+      key-prefix: "publisher:"
+      use-key-prefix: true
+  
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: publisher-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "by.rest.publisher.dto.kafka"
+        spring.json.type.mapping: moderationResult:by.rest.publisher.dto.kafka.ModerationResult
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: commentEvent:by.rest.publisher.dto.kafka.CommentKafkaRequest
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+
+# Custom Redis TTL settings
+redis:
+  ttl:
+    hours: 24
+    editors: 12
+    stories: 6
+    tags: 24
+    comments: 3
+
+# Kafka Topics
+kafka:
+  topic:
+    in: InTopic
+    out: OutTopic
+
+# Discussion service URL
+discussion:
+  service:
+    url: http://localhost:24130
+
+logging:
+  level:
+    by.rest.publisher: INFO
+    org.springframework.kafka: INFO
+    org.springframework.cache: DEBUG  # Добавляем логирование кэша
+    org.springframework.data.redis: DEBUG  # Логирование Redis

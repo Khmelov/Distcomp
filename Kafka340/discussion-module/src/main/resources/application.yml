@@ -1,0 +1,54 @@
+# src/main/resources/application.yml
+server:
+  port: 24130
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: discussion-module
+  
+  main:
+    web-application-type: servlet
+  
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    consumer:
+      group-id: discussion-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      enable-auto-commit: false
+      properties:
+        spring:
+          json:
+            trusted-packages: "by.rest.discussion.dto.kafka"
+            value:
+              default:
+                type: "by.rest.discussion.dto.kafka.CommentKafkaRequest"
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    
+    # Автоматическое создание тем
+    admin:
+      properties:
+        bootstrap:
+          servers: localhost:9092
+
+# Настройки Kafka
+kafka:
+  topic:
+    in: "InTopic"
+    out: "OutTopic"
+
+# Настройки логгирования
+logging:
+  level:
+    by.rest.discussion: INFO
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

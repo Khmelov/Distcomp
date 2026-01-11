@@ -1,0 +1,78 @@
+# 1. Health check (теперь должен работать)
+Invoke-RestMethod -Uri "http://localhost:24110/health" -Method GET
+
+# 2. Создаем теги
+$tags = @("Technology", "Science", "News", "Programming", "Java")
+foreach ($tagName in $tags) {
+    $body = @{ name = $tagName } | ConvertTo-Json
+    Invoke-RestMethod -Uri "http://localhost:24110/api/v1.0/tags" `
+        -Method POST `
+        -ContentType "application/json" `
+        -Body $body
+}
+
+# 3. Получаем теги (теперь должны быть)
+Invoke-RestMethod -Uri "http://localhost:24110/api/v1.0/tags" -Method GET
+
+# 4. Создаем второго редактора
+$editor2 = @{
+    login = "john.doe"
+    password = "securepass"
+    firstname = "John"
+    lastname = "Doe"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:24110/api/v1.0/editors" `
+    -Method POST `
+    -ContentType "application/json" `
+    -Body $editor2
+
+# 5. Создаем статью с тегами
+$storyWithTags = @{
+    editorId = 2
+    title = "Multimodule Architecture in Spring Boot"
+    content = "This article explains how to create multimodule projects with Spring Boot and Cassandra."
+    tagIds = @(1, 2, 3)  # Используем первые три тега
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:24110/api/v1.0/stories" `
+    -Method POST `
+    -ContentType "application/json" `
+    -Body $storyWithTags
+
+# 6. Проверяем статью с тегами
+Invoke-RestMethod -Uri "http://localhost:24110/api/v1.0/stories/2" -Method GET
+
+# 7. Получаем теги для статьи 2
+Invoke-RestMethod -Uri "http://localhost:24110/api/v1.0/relations/stories/2/tags" -Method GET
+
+
+
+# 1. Health check Discussion
+Invoke-RestMethod -Uri "http://localhost:24130/health" -Method GET
+
+# 2. Создаем комментарии для статей
+1..3 | ForEach-Object {
+    $comment = @{
+        storyId = 1
+        content = "Comment $_ for story 1"
+    } | ConvertTo-Json
+    
+    Invoke-RestMethod -Uri "http://localhost:24130/api/v1.0/comments" `
+        -Method POST `
+        -ContentType "application/json" `
+        -Body $comment
+}
+
+# 3. Получаем комментарии
+Invoke-RestMethod -Uri "http://localhost:24130/api/v1.0/comments" -Method GET
+
+# 4. Получаем комментарии для story 1
+Invoke-RestMethod -Uri "http://localhost:24130/api/v1.0/comments/story/1" -Method GET
+
+
+# 1. Publisher получает комментарии через Feign Client
+Invoke-RestMethod -Uri "http://localhost:24110/api/v1.0/stories/1/comments" -Method GET
+
+# 2. Через relations контроллер
+Invoke-RestMethod -Uri "http://localhost:24110/api/v1.0/relations/stories/1/comments" -Method GET

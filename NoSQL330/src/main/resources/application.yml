@@ -1,0 +1,22 @@
+server:
+  port: 24110
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none  # или create-drop для разработки
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+  liquibase:
+    enabled: false  # Отключите Liquibase для H2
+
+logging:
+  level:
+    org.hibernate.SQL: debug

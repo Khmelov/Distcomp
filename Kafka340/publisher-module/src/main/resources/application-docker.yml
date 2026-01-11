@@ -1,0 +1,23 @@
+# publisher/src/main/resources/application-docker.yml
+spring:
+  datasource:
+    url: jdbc:h2:tcp://h2-db:1521/~/publisherdb
+    username: sa
+    password: 
+  
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+kafka:
+  topic:
+    in: InTopic
+    out: OutTopic
+
+server:
+  port: 24110
+  forward-headers-strategy: framework
