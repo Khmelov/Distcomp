@@ -1,0 +1,9 @@
+spring:
+  autoconfigure:
+    exclude: []
+  cassandra:
+    contact-points: localhost
+    port: 9042
+    keyspace-name: distcomp
+    local-datacenter: datacenter1
+    schema-action: recreate_drop_unused
