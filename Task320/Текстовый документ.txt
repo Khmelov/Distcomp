@@ -1,0 +1,8 @@
+D:\БГУИР\3 курс\Зимняя\СП\Олеся\Task320\publick\src\main\java\com\publick\service\AuthorService.java:27:29
+java: cannot find symbol
+  symbol:   method existsByLoginIgnoreCase(java.lang.String)
+  location: variable authorRepository of type com.publick.repository.AuthorRepository
+D:\БГУИР\3 курс\Зимняя\СП\Олеся\Task320\publick\src\main\java\com\publick\service\IssueService.java:37:28
+java: cannot find symbol
+  symbol:   method existsByTitleIgnoreCase(java.lang.String)
+  location: variable issueRepository of type com.publick.repository.IssueRepository

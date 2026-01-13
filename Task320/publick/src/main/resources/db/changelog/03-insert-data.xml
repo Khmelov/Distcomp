@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Insert initial author data -->
+    <changeSet id="004-insert-initial-author" author="system" runOnChange="true">
+        <sql>
+            INSERT INTO distcomp.tbl_author (login, password, firstname, lastname)
+            SELECT 'lis4alis@yandex.by', 'defaultpassword', 'Oneen', 'Федоренко'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM distcomp.tbl_author WHERE login = 'lis4alis@yandex.by'
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

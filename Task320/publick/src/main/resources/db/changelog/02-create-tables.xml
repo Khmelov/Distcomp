@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Create tables -->
+    <changeSet id="006-create-author-table" author="system" runOnChange="true">
+        <sql>
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_author (
+                id BIGSERIAL PRIMARY KEY,
+                login TEXT NOT NULL UNIQUE,
+                password TEXT NOT NULL,
+                firstname TEXT NOT NULL,
+                lastname TEXT NOT NULL,
+                CONSTRAINT chk_author_login_length CHECK (length(login) BETWEEN 2 AND 64),
+                CONSTRAINT chk_author_password_length CHECK (length(password) BETWEEN 8 AND 128),
+                CONSTRAINT chk_author_firstname_length CHECK (length(firstname) BETWEEN 2 AND 64),
+                CONSTRAINT chk_author_lastname_length CHECK (length(lastname) BETWEEN 2 AND 64)
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="002-create-sticker-table" author="system" runOnChange="true">
+        <sql>
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_sticker (
+                id BIGSERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                CONSTRAINT chk_sticker_name_length CHECK (length(name) BETWEEN 2 AND 32)
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="003-create-issue-table" author="system" runOnChange="true">
+        <sql>
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_issue (
+                id BIGSERIAL PRIMARY KEY,
+                author_id BIGINT NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_issue_author FOREIGN KEY (author_id) REFERENCES distcomp.tbl_author(id),
+                CONSTRAINT chk_issue_title_length CHECK (length(title) BETWEEN 2 AND 64),
+                CONSTRAINT chk_issue_content_length CHECK (length(content) BETWEEN 4 AND 2048)
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="004-create-post-table" author="system" runOnChange="true">
+        <sql>
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_post (
+                id BIGSERIAL PRIMARY KEY,
+                issue_id BIGINT NOT NULL,
+                content TEXT NOT NULL,
+                CONSTRAINT fk_post_issue FOREIGN KEY (issue_id) REFERENCES distcomp.tbl_issue(id),
+                CONSTRAINT chk_post_content_length CHECK (length(content) BETWEEN 2 AND 2048)
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="005-create-issue-sticker-table" author="system" runOnChange="true">
+        <sql>
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_issue_sticker (
+                id BIGSERIAL PRIMARY KEY,
+                issue_id BIGINT NOT NULL,
+                sticker_id BIGINT NOT NULL,
+                CONSTRAINT fk_issue_sticker_issue FOREIGN KEY (issue_id) REFERENCES distcomp.tbl_issue(id),
+                CONSTRAINT fk_issue_sticker_sticker FOREIGN KEY (sticker_id) REFERENCES distcomp.tbl_sticker(id),
+                CONSTRAINT uk_issue_sticker UNIQUE (issue_id, sticker_id)
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
