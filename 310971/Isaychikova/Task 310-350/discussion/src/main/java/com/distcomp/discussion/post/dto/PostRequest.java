@@ -1,0 +1,66 @@
+package com.distcomp.discussion.post.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+public class PostRequest {
+
+    @NotNull
+    private Long articleId;
+
+    private Long id;
+
+    @NotBlank
+    @Size(max = 2048)
+    private String content;
+
+    @Size(max = 255)
+    private String country;
+
+    public PostRequest() {
+    }
+
+    public Long getArticleId() {
+        return articleId;
+    }
+
+    public void setArticleId(Long articleId) {
+        this.articleId = articleId;
+    }
+
+    @JsonProperty("storyId")
+    public Long getStoryId() {
+        return articleId;
+    }
+
+    @JsonProperty("storyId")
+    public void setStoryId(Long storyId) {
+        this.articleId = storyId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+}

@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - distcomp_postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+  cassandra:
+    image: cassandra:4.1
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: distcomp
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' 127.0.0.1 9042 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - distcomp_cassandra_data:/var/lib/cassandra
+
+  cassandra-init:
+    image: cassandra:4.1
+    depends_on:
+      - cassandra
+    restart: "no"
+    volumes:
+      - ./discussion/src/main/resources/cassandra-init.cql:/cassandra-init.cql:ro
+    entrypoint: ["/bin/bash", "-lc"]
+    command: >
+      "for i in {1..120}; do
+        cqlsh cassandra 9042 -f /cassandra-init.cql && exit 0;
+        echo 'Waiting for Cassandra...';
+        sleep 2;
+      done;
+      echo 'Cassandra init failed';
+      exit 1"
+
+volumes:
+  distcomp_postgres_data:
+  distcomp_cassandra_data:
