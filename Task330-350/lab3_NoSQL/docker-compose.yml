@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  cassandra:
+    image: cassandra:4.0
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=TestCluster
+    healthcheck:
+      test: ["CMD-SHELL", "nodetool status | grep UN"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "24110:8000"  # Основной порт API
+      - "24130:8001"  # Дополнительный порт для внутренних запросов
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    environment:
+      - CASSANDRA_HOST=cassandra
+      - API_PORT=8000
+      - INTERNAL_API_PORT=8001
