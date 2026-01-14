@@ -1,0 +1,43 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="005" author="you">
+        <createTable tableName="tbl_story_tag">
+            <column name="story_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_story_tag_story"
+                             referencedTableName="tbl_story"
+                             referencedColumnNames="id"/>
+            </column>
+
+            <column name="tag_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_story_tag_tag"
+                             referencedTableName="tbl_tag"
+                             referencedColumnNames="id"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+                tableName="tbl_story_tag"
+                columnNames="story_id, tag_id"
+                constraintName="pk_story_tag"/>
+    </changeSet>
+
+    <changeSet id="005-add-updated-at-to-writer" author="you">
+        <addColumn tableName="tbl_story_tag">
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

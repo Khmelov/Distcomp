@@ -1,0 +1,18 @@
+server:
+  port: 24110
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/distcomp
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+  jackson:
+    mapper:
+      ALLOW_COERCION_OF_SCALARS: false
