@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-message-table
+      author: system
+      changes:
+        - createTable:
+            tableName: tbl_message
+            columns:
+              - column:
+                  name: country
+                  type: text
+              - column:
+                  name: tweet_id
+                  type: bigint
+              - column:
+                  name: id
+                  type: bigint
+              - column:
+                  name: content
+                  type: text
+        - addPrimaryKey:
+            tableName: tbl_message
+            columnNames: country, tweet_id, id
+            constraintName: pk_tbl_message
+        - createIndex:
+            tableName: tbl_message
+            columns:
+              - column:
+                  name: tweet_id
+            indexName: idx_tbl_message_tweet_id

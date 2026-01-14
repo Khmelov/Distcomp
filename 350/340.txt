@@ -1,0 +1,4312 @@
+package com.socialnetwork.discussion.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.cassandra.config.AbstractCassandraConfiguration;
+import org.springframework.data.cassandra.config.SchemaAction;
+import org.springframework.data.cassandra.core.cql.keyspace.CreateKeyspaceSpecification;
+import org.springframework.data.cassandra.core.cql.keyspace.KeyspaceOption;
+import org.springframework.data.cassandra.repository.config.EnableCassandraRepositories;
+
+import java.util.Collections;
+import java.util.List;
+
+@Configuration
+@EnableCassandraRepositories(basePackages = "com.socialnetwork.discussion.repository")
+public class CassandraConfig extends AbstractCassandraConfiguration {
+
+    @Override
+    protected String getKeyspaceName() {
+        return "distcomp";
+    }
+
+    @Override
+    protected String getContactPoints() {
+        return "localhost";
+    }
+
+    @Override
+    protected int getPort() {
+        return 9042;
+    }
+
+    @Override
+    public SchemaAction getSchemaAction() {
+        return SchemaAction.CREATE_IF_NOT_EXISTS;
+    }
+
+    @Override
+    public String[] getEntityBasePackages() {
+        return new String[]{"com.socialnetwork.discussion.model"};
+    }
+
+    @Override
+    protected List<CreateKeyspaceSpecification> getKeyspaceCreations() {
+        return Collections.singletonList(
+                CreateKeyspaceSpecification.createKeyspace(getKeyspaceName())
+                        .ifNotExists()
+                        .with(KeyspaceOption.DURABLE_WRITES, true)
+                        .withSimpleReplication(1)
+        );
+    }
+
+    @Override
+    protected String getLocalDataCenter() {
+        return "datacenter1";
+    }
+}
+package com.socialnetwork.discussion.config;
+
+import com.socialnetwork.discussion.model.Message;
+import com.socialnetwork.discussion.repository.MessageRepository;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.cassandra.core.CassandraAdminOperations;
+import org.springframework.stereotype.Component;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.UUID;
+
+@Component("discussionDataInitializer") // Изменяем имя бина
+public class DataInitializer {
+
+    private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
+    @Autowired
+    private MessageRepository messageRepository;
+
+    @PostConstruct
+    public void init() {
+        System.out.println("Initializing Cassandra database...");
+
+        // Очищаем существующие данные
+        messageRepository.deleteAll();
+
+        // Добавляем тестовые данные с различными странами
+        Message message1 = new Message("US", 1L, 1L, "First test message from US");
+        Message message2 = new Message("US", 1L, 2L, "Second test message from US");
+        Message message3 = new Message("RU", 2L, 3L, "Test message from Russia");
+        Message message4 = new Message("BY", 2L, 4L, "Test message from Belarus");
+
+        messageRepository.save(message1);
+        messageRepository.save(message2);
+        messageRepository.save(message3);
+        messageRepository.save(message4);
+
+        System.out.println("Cassandra database initialized with test data");
+        System.out.println("Total messages: " + messageRepository.count());
+    }
+}
+package com.socialnetwork.discussion.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+@Configuration
+public class JacksonConfig {
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // Настраиваем формат даты
+        JavaTimeModule javaTimeModule = new JavaTimeModule();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(formatter));
+        javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
+
+        objectMapper.registerModule(javaTimeModule);
+
+        // Отключаем SerializationFeature.FAIL_ON_EMPTY_BEANS
+        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+
+        // Включаем красивый вывод JSON (для отладки)
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+        // Игнорируем неизвестные свойства
+        objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        return objectMapper;
+    }
+}
+package com.socialnetwork.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
+
+@Configuration
+public class ValidationConfig {
+
+    @Bean
+    public MethodValidationPostProcessor methodValidationPostProcessor() {
+        return new MethodValidationPostProcessor();
+    }
+}
+package com.socialnetwork.controller;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+public class HomeController {
+
+    @GetMapping("/")
+    public ResponseEntity<Map<String, String>> home() {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Social Network API is running");
+        response.put("version", "v1.0");
+        response.put("status", "OK");
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/v1.0")
+    public ResponseEntity<Map<String, String>> apiInfo() {
+        Map<String, String> response = new HashMap<>();
+        response.put("endpoints", "/api/v1.0/users, /api/v1.0/tweets, /api/v1.0/labels, /api/v1.0/messages");
+        response.put("port", "24110");
+        return ResponseEntity.ok(response);
+    }
+}
+package com.socialnetwork.discussion.controller;
+
+import com.socialnetwork.discussion.dto.request.MessageRequestDto;
+import com.socialnetwork.discussion.dto.response.MessageResponseDto;
+import com.socialnetwork.discussion.model.Message;
+import com.socialnetwork.discussion.repository.MessageRepository;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/v1.0/messages")
+public class MessageController {
+
+    @Autowired
+    private MessageRepository messageRepository;
+
+    @GetMapping
+    public ResponseEntity<List<MessageResponseDto>> getAllMessages() {
+        List<Message> messages = messageRepository.findAll();
+        List<MessageResponseDto> response = messages.stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getMessageById(@PathVariable Long id) {
+        Message message = messageRepository.findById(id)
+                .orElse(null);
+
+        if (message == null) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("timestamp", java.time.LocalDateTime.now());
+            errorResponse.put("status", HttpStatus.NOT_FOUND.value());
+            errorResponse.put("error", "Not Found");
+            errorResponse.put("message", "Message not found with id: " + id);
+            errorResponse.put("path", "/api/v1.0/messages/" + id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+
+        return ResponseEntity.ok(toResponseDto(message));
+    }
+
+    @PostMapping
+    public ResponseEntity<MessageResponseDto> createMessage(@Valid @RequestBody MessageRequestDto request) {
+        String state = moderateContent(request.getContent());
+
+        Message message = new Message(
+                request.getCountry() != null ? request.getCountry() : "US",
+                request.getTweetId(),
+                Math.abs(UUID.randomUUID().getMostSignificantBits()),
+                request.getContent(),
+                state
+        );
+
+        Message saved = messageRepository.save(message);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponseDto(saved));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateMessage(@PathVariable Long id,
+                                           @Valid @RequestBody MessageRequestDto request) {
+        Message message = messageRepository.findById(id)
+                .orElse(null);
+
+        if (message == null) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("timestamp", java.time.LocalDateTime.now());
+            errorResponse.put("status", HttpStatus.NOT_FOUND.value());
+            errorResponse.put("error", "Not Found");
+            errorResponse.put("message", "Message not found with id: " + id);
+            errorResponse.put("path", "/api/v1.0/messages/" + id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+
+        String state = moderateContent(request.getContent());
+        message.setContent(request.getContent());
+        message.setCountry(request.getCountry() != null ? request.getCountry() : "US");
+        message.setTweetId(request.getTweetId());
+        message.setState(state);
+
+        Message updated = messageRepository.save(message);
+        return ResponseEntity.ok(toResponseDto(updated));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteMessage(@PathVariable Long id) {
+        Message message = messageRepository.findById(id)
+                .orElse(null);
+
+        if (message == null) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("timestamp", java.time.LocalDateTime.now());
+            errorResponse.put("status", HttpStatus.NOT_FOUND.value());
+            errorResponse.put("error", "Not Found");
+            errorResponse.put("message", "Message not found with id: " + id);
+            errorResponse.put("path", "/api/v1.0/messages/" + id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+
+        messageRepository.delete(message);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/tweet/{tweetId}")
+    public ResponseEntity<List<MessageResponseDto>> getMessagesByTweetId(@PathVariable Long tweetId) {
+        List<Message> messages = messageRepository.findByTweetId(tweetId);
+        List<MessageResponseDto> response = messages.stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/country/{country}/tweet/{tweetId}")
+    public ResponseEntity<List<MessageResponseDto>> getMessagesByCountryAndTweetId(
+            @PathVariable String country,
+            @PathVariable Long tweetId) {
+        List<Message> messages = messageRepository.findByCountryAndTweetId(country, tweetId);
+        List<MessageResponseDto> response = messages.stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    private MessageResponseDto toResponseDto(Message message) {
+        return new MessageResponseDto(
+                message.getCountry(),
+                message.getTweetId(),
+                message.getId(),
+                message.getContent()
+        );
+    }
+
+    private String moderateContent(String content) {
+        String[] stopWords = {"spam", "scam", "fraud", "illegal"};
+        for (String word : stopWords) {
+            if (content.toLowerCase().contains(word)) {
+                return "DECLINE";
+            }
+        }
+        return "APPROVE";
+    }
+}
+package com.socialnetwork.discussion.dto.kafka;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import java.util.UUID;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class KafkaMessageRequest {
+    private UUID requestId;
+    private String operation; // CREATE, UPDATE, DELETE, GET, GET_ALL, GET_BY_TWEET
+    private Long messageId;
+    private String country;
+    private Long tweetId;
+    private String content;
+
+    public KafkaMessageRequest() {}
+
+    // Геттеры и сеттеры
+    public UUID getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(UUID requestId) {
+        this.requestId = requestId;
+    }
+
+    public String getOperation() {
+        return operation;
+    }
+
+    public void setOperation(String operation) {
+        this.operation = operation;
+    }
+
+    public Long getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(Long messageId) {
+        this.messageId = messageId;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public Long getTweetId() {
+        return tweetId;
+    }
+
+    public void setTweetId(Long tweetId) {
+        this.tweetId = tweetId;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+}
+package com.socialnetwork.discussion.dto.kafka;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import java.util.List;
+import java.util.UUID;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class KafkaMessageResponse {
+    private UUID requestId;
+    private boolean success;
+    private String error;
+    private Long messageId;
+    private String country;
+    private Long tweetId;
+    private String content;
+    private String state; // PENDING, APPROVE, DECLINE
+    private List<KafkaMessageResponse> messages;
+
+    public KafkaMessageResponse() {}
+
+    // Геттеры и сеттеры
+    public UUID getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(UUID requestId) {
+        this.requestId = requestId;
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public Long getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(Long messageId) {
+        this.messageId = messageId;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public Long getTweetId() {
+        return tweetId;
+    }
+
+    public void setTweetId(Long tweetId) {
+        this.tweetId = tweetId;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public List<KafkaMessageResponse> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(List<KafkaMessageResponse> messages) {
+        this.messages = messages;
+    }
+}
+package com.socialnetwork.discussion.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+public class MessageRequestDto {
+
+    @NotBlank(message = "Country cannot be blank")
+    @Size(min = 2, max = 2, message = "Country code must be 2 characters")
+    private String country;
+
+    @NotNull(message = "Tweet ID is required")
+    private Long tweetId;
+
+    @NotBlank(message = "Content cannot be blank")
+    @Size(min = 2, max = 2048, message = "Content must be between 2 and 2048 characters")
+    private String content;
+
+    public MessageRequestDto() {}
+
+    public MessageRequestDto(String country, Long tweetId, String content) {
+        this.country = country;
+        this.tweetId = tweetId;
+        this.content = content;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public Long getTweetId() {
+        return tweetId;
+    }
+
+    public void setTweetId(Long tweetId) {
+        this.tweetId = tweetId;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+}
+package com.socialnetwork.discussion.dto.response;
+
+public class MessageResponseDto {
+    private String country;
+    private Long tweetId;
+    private Long id;
+    private String content;
+
+    public MessageResponseDto() {}
+
+    public MessageResponseDto(String country, Long tweetId, Long id, String content) {
+        this.country = country;
+        this.tweetId = tweetId;
+        this.id = id;
+        this.content = content;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public Long getTweetId() {
+        return tweetId;
+    }
+
+    public void setTweetId(Long tweetId) {
+        this.tweetId = tweetId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+}
+package com.socialnetwork.exception;
+
+public class DuplicateResourceException extends RuntimeException {
+
+    public DuplicateResourceException(String message) {
+        super(message);
+    }
+
+    public DuplicateResourceException(String resource, String field, String value) {
+        super(resource + " с " + field + " '" + value + "' уже существует");
+    }
+}
+package com.socialnetwork.exception;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+
+public class ErrorResponse {
+    private int errorCode;
+    private String errorMessage;
+    private LocalDateTime timestamp;
+    private Map<String, String> errors;
+
+    public ErrorResponse() {}
+
+    public ErrorResponse(int errorCode, String errorMessage, LocalDateTime timestamp) {
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+        this.timestamp = timestamp;
+    }
+
+    public ErrorResponse(int errorCode, String errorMessage, LocalDateTime timestamp, Map<String, String> errors) {
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+        this.timestamp = timestamp;
+        this.errors = errors;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(int errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public Map<String, String> getErrors() {
+        return errors;
+    }
+
+    public void setErrors(Map<String, String> errors) {
+        this.errors = errors;
+    }
+}
+package com.socialnetwork.discussion.exception;
+
+import com.socialnetwork.discussion.dto.response.MessageResponseDto;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+        response.put("error", "Bad Request");
+        response.put("errors", errors);
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatchException(
+            MethodArgumentTypeMismatchException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+        response.put("error", "Bad Request");
+        response.put("message", String.format("Parameter '%s': expected type %s",
+                ex.getName(), ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown"));
+        response.put("path", ex.getName());
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNoHandlerFoundException(NoHandlerFoundException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        response.put("error", "Not Found");
+        response.put("message", "Resource not found: " + ex.getRequestURL());
+        response.put("path", ex.getRequestURL());
+
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        response.put("error", "Not Found");
+        response.put("message", ex.getMessage());
+        response.put("path", "");
+
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.put("error", "Internal Server Error");
+        response.put("message", ex.getMessage());
+        response.put("path", "");
+
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
+package com.socialnetwork.exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+
+    public ResourceNotFoundException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+package com.socialnetwork.discussion.model;
+
+import org.springframework.data.cassandra.core.cql.Ordering;
+import org.springframework.data.cassandra.core.cql.PrimaryKeyType;
+import org.springframework.data.cassandra.core.mapping.Column;
+import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
+import org.springframework.data.cassandra.core.mapping.Table;
+
+import jakarta.validation.constraints.Size;
+
+@Table(value = "tbl_message")
+public class Message {
+
+    @PrimaryKeyColumn(
+            name = "country",
+            type = PrimaryKeyType.PARTITIONED,
+            ordinal = 0
+    )
+    private String country;
+
+    @PrimaryKeyColumn(
+            name = "tweet_id",
+            type = PrimaryKeyType.CLUSTERED,
+            ordering = Ordering.DESCENDING,
+            ordinal = 1
+    )
+    private Long tweetId;
+
+    @PrimaryKeyColumn(
+            name = "id",
+            type = PrimaryKeyType.CLUSTERED,
+            ordering = Ordering.DESCENDING,
+            ordinal = 2
+    )
+    private Long id;
+
+    @Column("content")
+    @Size(min = 2, max = 2048, message = "Content must be between 2 and 2048 characters")
+    private String content;
+
+    @Column("state")
+    private String state = "PENDING"; // PENDING, APPROVE, DECLINE
+
+    public Message() {}
+
+    public Message(String country, Long tweetId, Long id, String content) {
+        this.country = country;
+        this.tweetId = tweetId;
+        this.id = id;
+        this.content = content;
+        this.state = "PENDING";
+    }
+
+    public Message(String country, Long tweetId, Long id, String content, String state) {
+        this.country = country;
+        this.tweetId = tweetId;
+        this.id = id;
+        this.content = content;
+        this.state = state;
+    }
+
+    // Getters and Setters
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public Long getTweetId() {
+        return tweetId;
+    }
+
+    public void setTweetId(Long tweetId) {
+        this.tweetId = tweetId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+}
+package com.socialnetwork.discussion.repository;
+
+import com.socialnetwork.discussion.model.Message;
+import org.springframework.data.cassandra.repository.CassandraRepository;
+import org.springframework.data.cassandra.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface MessageRepository extends CassandraRepository<Message, Long> {
+
+    // Поиск сообщений по tweetId и country
+    @Query("SELECT * FROM tbl_message WHERE country = ?0 AND tweet_id = ?1")
+    List<Message> findByCountryAndTweetId(String country, Long tweetId);
+
+    // Поиск всех сообщений для твита (используем ALLOW FILTERING для демонстрации)
+    @Query("SELECT * FROM tbl_message WHERE tweet_id = ?0 ALLOW FILTERING")
+    List<Message> findByTweetId(Long tweetId);
+
+    // Поиск сообщений по стране
+    List<Message> findByCountry(String country);
+
+    // Поиск по ID (неэффективно в Cassandra, но для тестов)
+    @Query("SELECT * FROM tbl_message WHERE id = ?0 ALLOW FILTERING")
+    Optional<Message> findById(Long id);
+}
+package com.socialnetwork.discussion.service.impl;
+
+import com.socialnetwork.discussion.dto.request.MessageRequestDto;
+import com.socialnetwork.discussion.dto.response.MessageResponseDto;
+import com.socialnetwork.discussion.model.Message;
+import com.socialnetwork.discussion.repository.MessageRepository;
+import com.socialnetwork.discussion.service.MessageService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+public class MessageServiceImpl implements MessageService {
+
+    private final MessageRepository messageRepository;
+
+    @Autowired
+    public MessageServiceImpl(MessageRepository messageRepository) {
+        this.messageRepository = messageRepository;
+    }
+
+    @Override
+    public List<MessageResponseDto> getAll() {
+        return messageRepository.findAll().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public MessageResponseDto getById(Long id) {
+        Message message = messageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Message not found with id: " + id));
+        return toResponse(message);
+    }
+
+    @Override
+    public MessageResponseDto create(MessageRequestDto request) {
+        Message message = new Message();
+        message.setCountry(request.getCountry() != null ? request.getCountry() : "US");
+        message.setTweetId(request.getTweetId());
+        message.setId(Math.abs(UUID.randomUUID().getMostSignificantBits())); // Положительный ID
+        message.setContent(request.getContent());
+
+        Message savedMessage = messageRepository.save(message);
+        return toResponse(savedMessage);
+    }
+
+    @Override
+    public MessageResponseDto update(Long id, MessageRequestDto request) {
+        Message existingMessage = messageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Message not found with id: " + id));
+
+        existingMessage.setContent(request.getContent());
+        existingMessage.setCountry(request.getCountry() != null ? request.getCountry() : "US");
+        existingMessage.setTweetId(request.getTweetId());
+
+        Message updatedMessage = messageRepository.save(existingMessage);
+        return toResponse(updatedMessage);
+    }
+
+    @Override
+    public void delete(Long id) {
+        Message message = messageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Message not found with id: " + id));
+
+        messageRepository.delete(message);
+    }
+
+    @Override
+    public List<MessageResponseDto> getByTweetId(Long tweetId) {
+        return messageRepository.findByTweetId(tweetId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<MessageResponseDto> getByCountryAndTweetId(String country, Long tweetId) {
+        return messageRepository.findByCountryAndTweetId(country, tweetId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    private MessageResponseDto toResponse(Message message) {
+        return new MessageResponseDto(
+                message.getCountry(),
+                message.getTweetId(),
+                message.getId(),
+                message.getContent()
+        );
+    }
+}
+package com.socialnetwork.discussion.service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.socialnetwork.discussion.dto.kafka.KafkaMessageRequest;
+import com.socialnetwork.discussion.dto.kafka.KafkaMessageResponse;
+import com.socialnetwork.discussion.model.Message;
+import com.socialnetwork.discussion.repository.MessageRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+public class KafkaConsumerService {
+
+    private static final String IN_TOPIC = "InTopic";
+    private static final String OUT_TOPIC = "OutTopic";
+
+    @Autowired
+    private KafkaTemplate<String, Object> kafkaTemplate;
+
+    @Autowired
+    private MessageRepository messageRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @KafkaListener(topics = IN_TOPIC)
+    public void listen(String messageJson) {
+        try {
+            System.out.println("=== Received Kafka message ===");
+            System.out.println("Raw message: " + messageJson);
+
+            // Десериализуем JSON в объект
+            KafkaMessageRequest request = objectMapper.readValue(messageJson, KafkaMessageRequest.class);
+
+            System.out.println("Operation: " + request.getOperation());
+            System.out.println("RequestId: " + request.getRequestId());
+            System.out.println("TweetId: " + request.getTweetId());
+            System.out.println("==============================");
+
+            KafkaMessageResponse response = processRequest(request);
+            sendResponse(request.getRequestId(), response);
+        } catch (Exception e) {
+            System.err.println("Error processing Kafka request: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private KafkaMessageResponse processRequest(KafkaMessageRequest request) {
+        System.out.println("Processing operation: " + request.getOperation());
+
+        switch (request.getOperation()) {
+            case "CREATE":
+                return createMessage(request);
+            case "GET":
+                return getMessage(request);
+            case "GET_ALL":
+                return getAllMessages(request);
+            case "GET_BY_TWEET":
+                return getMessagesByTweet(request);
+            case "UPDATE":
+                return updateMessage(request);
+            case "DELETE":
+                return deleteMessage(request);
+            default:
+                throw new IllegalArgumentException("Unknown operation: " + request.getOperation());
+        }
+    }
+
+    private KafkaMessageResponse createMessage(KafkaMessageRequest request) {
+        System.out.println("Creating message for tweet: " + request.getTweetId());
+
+        // Модерация контента
+        String state = moderateContent(request.getContent());
+
+        Message message = new Message(
+                request.getCountry() != null ? request.getCountry() : "US",
+                request.getTweetId(),
+                generateId(),
+                request.getContent(),
+                state
+        );
+
+        Message saved = messageRepository.save(message);
+
+        KafkaMessageResponse response = new KafkaMessageResponse();
+        response.setRequestId(request.getRequestId());
+        response.setSuccess(true);
+        response.setMessageId(saved.getId());
+        response.setCountry(saved.getCountry());
+        response.setTweetId(saved.getTweetId());
+        response.setContent(saved.getContent());
+        response.setState(saved.getState());
+
+        System.out.println("Message created with id: " + saved.getId() + ", state: " + saved.getState());
+        return response;
+    }
+
+    private KafkaMessageResponse getMessage(KafkaMessageRequest request) {
+        System.out.println("Getting message with id: " + request.getMessageId());
+
+        Message message = messageRepository.findById(request.getMessageId())
+                .orElseThrow(() -> new RuntimeException("Message not found with id: " + request.getMessageId()));
+
+        KafkaMessageResponse response = new KafkaMessageResponse();
+        response.setRequestId(request.getRequestId());
+        response.setSuccess(true);
+        response.setMessageId(message.getId());
+        response.setCountry(message.getCountry());
+        response.setTweetId(message.getTweetId());
+        response.setContent(message.getContent());
+        response.setState(message.getState());
+
+        return response;
+    }
+
+    private KafkaMessageResponse getAllMessages(KafkaMessageRequest request) {
+        System.out.println("Getting all messages");
+
+        List<Message> messages = messageRepository.findAll();
+
+        List<KafkaMessageResponse> messageResponses = messages.stream()
+                .map(this::convertToKafkaResponse)
+                .collect(Collectors.toList());
+
+        KafkaMessageResponse response = new KafkaMessageResponse();
+        response.setRequestId(request.getRequestId());
+        response.setSuccess(true);
+        response.setMessages(messageResponses);
+
+        return response;
+    }
+
+    private KafkaMessageResponse getMessagesByTweet(KafkaMessageRequest request) {
+        System.out.println("Getting messages for tweet: " + request.getTweetId());
+
+        List<Message> messages = messageRepository.findByTweetId(request.getTweetId());
+
+        List<KafkaMessageResponse> messageResponses = messages.stream()
+                .map(this::convertToKafkaResponse)
+                .collect(Collectors.toList());
+
+        KafkaMessageResponse response = new KafkaMessageResponse();
+        response.setRequestId(request.getRequestId());
+        response.setSuccess(true);
+        response.setMessages(messageResponses);
+
+        return response;
+    }
+
+    private KafkaMessageResponse updateMessage(KafkaMessageRequest request) {
+        System.out.println("Updating message with id: " + request.getMessageId());
+
+        Message message = messageRepository.findById(request.getMessageId())
+                .orElseThrow(() -> new RuntimeException("Message not found with id: " + request.getMessageId()));
+
+        // Модерация обновленного контента
+        String state = moderateContent(request.getContent());
+
+        message.setContent(request.getContent());
+        message.setCountry(request.getCountry() != null ? request.getCountry() : "US");
+        message.setTweetId(request.getTweetId());
+        message.setState(state);
+
+        Message updated = messageRepository.save(message);
+
+        KafkaMessageResponse response = new KafkaMessageResponse();
+        response.setRequestId(request.getRequestId());
+        response.setSuccess(true);
+        response.setMessageId(updated.getId());
+        response.setCountry(updated.getCountry());
+        response.setTweetId(updated.getTweetId());
+        response.setContent(updated.getContent());
+        response.setState(updated.getState());
+
+        return response;
+    }
+
+    private KafkaMessageResponse deleteMessage(KafkaMessageRequest request) {
+        System.out.println("Deleting message with id: " + request.getMessageId());
+
+        Message message = messageRepository.findById(request.getMessageId())
+                .orElseThrow(() -> new RuntimeException("Message not found with id: " + request.getMessageId()));
+
+        messageRepository.delete(message);
+
+        KafkaMessageResponse response = new KafkaMessageResponse();
+        response.setRequestId(request.getRequestId());
+        response.setSuccess(true);
+
+        return response;
+    }
+
+    private String moderateContent(String content) {
+        if (content == null) {
+            return "APPROVE";
+        }
+
+        // Простая модерация на основе стоп-слов
+        String[] stopWords = {"spam", "scam", "fraud", "illegal"};
+
+        for (String word : stopWords) {
+            if (content.toLowerCase().contains(word)) {
+                System.out.println("Message declined due to stop word: " + word);
+                return "DECLINE";
+            }
+        }
+
+        return "APPROVE";
+    }
+
+    private Long generateId() {
+        return Math.abs(UUID.randomUUID().getMostSignificantBits());
+    }
+
+    private KafkaMessageResponse convertToKafkaResponse(Message message) {
+        KafkaMessageResponse response = new KafkaMessageResponse();
+        response.setMessageId(message.getId());
+        response.setCountry(message.getCountry());
+        response.setTweetId(message.getTweetId());
+        response.setContent(message.getContent());
+        response.setState(message.getState());
+        return response;
+    }
+
+    private void sendResponse(UUID requestId, KafkaMessageResponse response) {
+        response.setRequestId(requestId);
+        String key = "response-" + requestId;
+        System.out.println("Sending response to OutTopic, key: " + key);
+        try {
+            kafkaTemplate.send(OUT_TOPIC, key, response);
+            System.out.println("Response sent successfully");
+        } catch (Exception e) {
+            System.err.println("Error sending response: " + e.getMessage());
+        }
+    }
+}
+package com.socialnetwork.discussion.service;
+
+import com.socialnetwork.discussion.dto.request.MessageRequestDto;
+import com.socialnetwork.discussion.dto.response.MessageResponseDto;
+import java.util.List;
+
+public interface MessageService {
+    List<MessageResponseDto> getAll();
+    MessageResponseDto getById(Long id);
+    MessageResponseDto create(MessageRequestDto request);
+    MessageResponseDto update(Long id, MessageRequestDto request);
+    void delete(Long id);
+    List<MessageResponseDto> getByTweetId(Long tweetId);
+    List<MessageResponseDto> getByCountryAndTweetId(String country, Long tweetId);
+}
+package com.socialnetwork.discussion;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.cassandra.repository.config.EnableCassandraRepositories;
+import org.springframework.context.annotation.ComponentScan;
+
+@SpringBootApplication
+@ComponentScan(basePackages = "com.socialnetwork.discussion")
+public class DiscussionApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(DiscussionApplication.class, args);
+	}
+}
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-message-table
+      author: system
+      changes:
+        - createTable:
+            tableName: tbl_message
+            columns:
+              - column:
+                  name: country
+                  type: text
+              - column:
+                  name: tweet_id
+                  type: bigint
+              - column:
+                  name: id
+                  type: bigint
+              - column:
+                  name: content
+                  type: text
+        - addPrimaryKey:
+            tableName: tbl_message
+            columnNames: country, tweet_id, id
+            constraintName: pk_tbl_message
+        - createIndex:
+            tableName: tbl_message
+            columns:
+              - column:
+                  name: tweet_id
+            indexName: idx_tbl_message_tweet_id
+
+databaseChangeLog:
+  - include:
+      file: db/changelog/001-create-message-table.yaml
+
+# ===============================
+# Server Configuration
+# ===============================
+server.port=24130
+server.servlet.context-path=/
+
+# ===============================
+# Application Configuration
+# ===============================
+spring.application.name=discussion
+
+# ===============================
+# Kafka Configuration - ??????????
+# ===============================
+spring.kafka.bootstrap-servers=localhost:29092
+spring.kafka.consumer.group-id=discussion-group
+spring.kafka.consumer.auto-offset-reset=earliest
+spring.kafka.consumer.key-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+spring.kafka.consumer.value-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+spring.kafka.consumer.enable-auto-commit=false
+
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer
+
+# ===============================
+# Cassandra Configuration
+# ===============================
+spring.data.cassandra.keyspace-name=distcomp
+spring.data.cassandra.contact-points=localhost
+spring.data.cassandra.port=9042
+spring.data.cassandra.local-datacenter=datacenter1
+spring.data.cassandra.schema-action=create_if_not_exists
+
+# ===============================
+# Logging Configuration
+# ===============================
+logging.level.org.springframework.kafka=DEBUG
+logging.level.com.socialnetwork.discussion=DEBUG
+logging.level.org.springframework.data.cassandra=INFO
+logging.level.com.datastax.oss.driver=WARN
+
+# Jackson Configuration
+spring.jackson.serialization.indent-output=true
+spring.jackson.default-property-inclusion=non_null
+spring.jackson.deserialization.fail-on-unknown-properties=false
+spring.jackson.date-format=yyyy-MM-dd'T'HH:mm:ss
+spring.jackson.time-zone=UTC
+spring.jackson.serialization.write-dates-as-timestamps=false
+spring.jackson.serialization.fail-on-empty-beans=false
+
+# Spring MVC Configuration
+spring.mvc.throw-exception-if-no-handler-found=true
+spring.web.resources.add-mappings=false
+
+# Enable detailed error responses
+server.error.include-message=always
+server.error.include-binding-errors=always
+server.error.include-stacktrace=never
+server.error.include-exception=false
+
+-- Установка схемы по умолчанию
+SET search_path TO distcomp;
+
+-- Добавление первого пользователя (требование задания)
+INSERT INTO tbl_user (login, password, firstname, lastname, created, modified)
+VALUES (
+    'su582004@gmail.com',
+    'securepassword123',
+    'Domina',
+    'Cympanosau',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+)
+ON CONFLICT (login) DO NOTHING;
+
+-- Создание keyspace, если не существует
+CREATE KEYSPACE IF NOT EXISTS distcomp
+WITH replication = {
+    'class': 'SimpleStrategy',
+    'replication_factor': 1
+}
+AND durable_writes = true;
+
+-- Использование keyspace
+USE distcomp;
+
+-- Создание таблицы сообщений
+CREATE TABLE IF NOT EXISTS tbl_message (
+    country text,
+    tweet_id bigint,
+    id bigint,
+    content text,
+    PRIMARY KEY ((country), tweet_id, id)
+) WITH CLUSTERING ORDER BY (tweet_id DESC, id DESC);
+
+-- Создание индекса для поиска по tweet_id
+CREATE INDEX IF NOT EXISTS idx_tweet_id ON tbl_message (tweet_id);
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.socialnetwork</groupId>
+		<artifactId>social-network-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>discussion</artifactId>
+	<name>discussion</name>
+
+	<dependencies>
+		<!-- Spring Boot Starters -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- Cassandra -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-cassandra</artifactId>
+		</dependency>
+
+		<!-- Kafka -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- Тестирование -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
+
+package com.socialnetwork.config;
+
+import com.socialnetwork.model.User;
+import com.socialnetwork.repository.UserRepository;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class DataInitializer {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @PostConstruct
+    public void init() {
+        System.out.println("DataInitializer: Checking database...");
+
+        // Проверяем, существует ли уже пользователь с заданным логином
+        if (!userRepository.existsByLogin("su582004@gmail.com")) {
+            User user = new User();
+            user.setLogin("su582004@gmail.com");
+            user.setPassword("securepassword123");
+            user.setFirstname("Domina");
+            user.setLastname("Cympanosau");
+
+            userRepository.save(user);
+
+            System.out.println("DataInitializer: Created initial user with login: su582004@gmail.com");
+        } else {
+            System.out.println("DataInitializer: Initial user already exists");
+        }
+
+        System.out.println("DataInitializer: Total users in database: " + userRepository.count());
+    }
+}
+package com.socialnetwork.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class JacksonConfig {
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        return objectMapper;
+    }
+}
+package com.socialnetwork.config;
+
+import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.TopicBuilder;
+
+@Configuration
+public class KafkaConfig {
+
+    @Bean
+    public NewTopic inTopic() {
+        return TopicBuilder.name("InTopic")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic outTopic() {
+        return TopicBuilder.name("OutTopic")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+}
+package com.socialnetwork.config;
+
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TablePrefixNamingStrategy extends PhysicalNamingStrategyStandardImpl {
+
+    @Override
+    public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
+        String tableName = name.getText();
+
+        if (!tableName.startsWith("tbl_")) {
+            tableName = "tbl_" + tableName;
+        }
+
+        return Identifier.toIdentifier(tableName, name.isQuoted());
+    }
+
+    @Override
+    public Identifier toPhysicalSequenceName(Identifier name, JdbcEnvironment jdbcEnvironment) {
+        String sequenceName = name.getText();
+
+        if (!sequenceName.startsWith("tbl_")) {
+            sequenceName = "tbl_" + sequenceName;
+        }
+
+        return Identifier.toIdentifier(sequenceName, name.isQuoted());
+    }
+}
+package com.socialnetwork.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
+
+@Configuration
+public class ValidationConfig {
+
+    @Bean
+    public MethodValidationPostProcessor methodValidationPostProcessor() {
+        return new MethodValidationPostProcessor();
+    }
+}
+package com.socialnetwork.controller;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+public class HomeController {
+
+    @GetMapping("/")
+    public ResponseEntity<Map<String, String>> home() {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Social Network API is running");
+        response.put("version", "v1.0");
+        response.put("status", "OK");
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/v1.0")
+    public ResponseEntity<Map<String, String>> apiInfo() {
+        Map<String, String> response = new HashMap<>();
+        response.put("endpoints", "/api/v1.0/users, /api/v1.0/tweets, /api/v1.0/labels, /api/v1.0/messages");
+        response.put("port", "24110");
+        return ResponseEntity.ok(response);
+    }
+}
+package com.socialnetwork.controller;
+
+import com.socialnetwork.dto.request.LabelRequestTo;
+import com.socialnetwork.dto.response.LabelResponseTo;
+import com.socialnetwork.service.LabelService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1.0/labels")
+public class LabelController {
+
+    @Autowired
+    private LabelService labelService;
+
+    @GetMapping
+    public ResponseEntity<List<LabelResponseTo>> getAllLabels() {
+        List<LabelResponseTo> labels = labelService.getAll();
+        return ResponseEntity.ok(labels);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<LabelResponseTo> getLabelById(@PathVariable Long id) {
+        LabelResponseTo label = labelService.getById(id);
+        return ResponseEntity.ok(label);
+    }
+
+    @GetMapping("/name/{name}")
+    public ResponseEntity<LabelResponseTo> getLabelByName(@PathVariable String name) {
+        LabelResponseTo label = labelService.findByName(name);
+        return ResponseEntity.ok(label);
+    }
+
+    @PostMapping
+    public ResponseEntity<LabelResponseTo> createLabel(@Valid @RequestBody LabelRequestTo request) {
+        LabelResponseTo createdLabel = labelService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdLabel);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<LabelResponseTo> updateLabel(@PathVariable Long id,
+                                                       @Valid @RequestBody LabelRequestTo request) {
+        LabelResponseTo updatedLabel = labelService.update(id, request);
+        return ResponseEntity.ok(updatedLabel);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLabel(@PathVariable Long id) {
+        labelService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/page")
+    public ResponseEntity<Page<LabelResponseTo>> getLabelsPage(
+            @PageableDefault(size = 10, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<LabelResponseTo> labels = labelService.getAll(pageable);
+        return ResponseEntity.ok(labels);
+    }
+}
+package com.socialnetwork.controller;
+
+import com.socialnetwork.dto.request.MessageRequestTo;
+import com.socialnetwork.dto.response.MessageResponseTo;
+import com.socialnetwork.service.MessageService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1.0/messages")
+public class MessageController {
+
+    @Autowired
+    private MessageService messageService;
+
+    @GetMapping
+    public ResponseEntity<List<MessageResponseTo>> getAllMessages() {
+        List<MessageResponseTo> messages = messageService.getAll();
+        return ResponseEntity.ok(messages);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<MessageResponseTo> getMessageById(@PathVariable Long id) {
+        MessageResponseTo message = messageService.getById(id);
+        return ResponseEntity.ok(message);
+    }
+
+    @PostMapping
+    public ResponseEntity<MessageResponseTo> createMessage(@Valid @RequestBody MessageRequestTo request) {
+        // Если country не указан, устанавливаем значение по умолчанию
+        if (request.getCountry() == null || request.getCountry().trim().isEmpty()) {
+            request.setCountry("US");
+        }
+
+        MessageResponseTo createdMessage = messageService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdMessage);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<MessageResponseTo> updateMessage(@PathVariable Long id,
+                                                           @Valid @RequestBody MessageRequestTo request) {
+        // Если country не указан, устанавливаем значение по умолчанию
+        if (request.getCountry() == null || request.getCountry().trim().isEmpty()) {
+            request.setCountry("US");
+        }
+
+        MessageResponseTo updatedMessage = messageService.update(id, request);
+        return ResponseEntity.ok(updatedMessage);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMessage(@PathVariable Long id) {
+        messageService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/tweet/{tweetId}")
+    public ResponseEntity<List<MessageResponseTo>> getMessagesByTweetId(@PathVariable Long tweetId) {
+        List<MessageResponseTo> messages = messageService.getByTweetId(tweetId);
+        return ResponseEntity.ok(messages);
+    }
+}
+package com.socialnetwork.controller;
+
+import com.socialnetwork.dto.request.TweetRequestTo;
+import com.socialnetwork.dto.response.TweetResponseTo;
+import com.socialnetwork.service.TweetService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1.0/tweets")
+public class TweetController {
+
+    @Autowired
+    private TweetService tweetService;
+
+    @GetMapping
+    public ResponseEntity<List<TweetResponseTo>> getAllTweets() {
+        List<TweetResponseTo> tweets = tweetService.getAll();
+        return ResponseEntity.ok(tweets);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TweetResponseTo> getTweetById(@PathVariable Long id) {
+        TweetResponseTo tweet = tweetService.getById(id);
+        return ResponseEntity.ok(tweet);
+    }
+
+    @PostMapping
+    public ResponseEntity<TweetResponseTo> createTweet(@Valid @RequestBody TweetRequestTo request) {
+        TweetResponseTo createdTweet = tweetService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdTweet);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TweetResponseTo> updateTweet(@PathVariable Long id,
+                                                       @Valid @RequestBody TweetRequestTo request) {
+        TweetResponseTo updatedTweet = tweetService.update(id, request);
+        return ResponseEntity.ok(updatedTweet);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTweet(@PathVariable Long id) {
+        tweetService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/page")
+    public ResponseEntity<Page<TweetResponseTo>> getTweetsPage(
+            @PageableDefault(size = 10, sort = "created", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<TweetResponseTo> tweets = tweetService.getAll(pageable);
+        return ResponseEntity.ok(tweets);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<TweetResponseTo>> getTweetsByUserId(@PathVariable Long userId) {
+        List<TweetResponseTo> tweets = tweetService.getByUserId(userId);
+        return ResponseEntity.ok(tweets);
+    }
+
+    @GetMapping("/user/{userId}/page")
+    public ResponseEntity<Page<TweetResponseTo>> getTweetsByUserIdPage(
+            @PathVariable Long userId,
+            @PageableDefault(size = 10, sort = "created", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<TweetResponseTo> tweets = tweetService.getByUserId(userId, pageable);
+        return ResponseEntity.ok(tweets);
+    }
+
+    @GetMapping("/label/{labelId}")
+    public ResponseEntity<List<TweetResponseTo>> getTweetsByLabelId(@PathVariable Long labelId) {
+        List<TweetResponseTo> tweets = tweetService.getByLabelId(labelId);
+        return ResponseEntity.ok(tweets);
+    }
+
+    @GetMapping("/label/{labelId}/page")
+    public ResponseEntity<Page<TweetResponseTo>> getTweetsByLabelIdPage(
+            @PathVariable Long labelId,
+            @PageableDefault(size = 10, sort = "created", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<TweetResponseTo> tweets = tweetService.getByLabelId(labelId, pageable);
+        return ResponseEntity.ok(tweets);
+    }
+}
+package com.socialnetwork.controller;
+
+import com.socialnetwork.dto.request.UserRequestTo;
+import com.socialnetwork.dto.response.UserResponseTo;
+import com.socialnetwork.service.UserService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1.0/users")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @GetMapping
+    public ResponseEntity<List<UserResponseTo>> getAllUsers() {
+        List<UserResponseTo> users = userService.getAll();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseTo> getUserById(@PathVariable Long id) {
+        UserResponseTo user = userService.getById(id);
+        return ResponseEntity.ok(user);
+    }
+
+    @PostMapping
+    public ResponseEntity<UserResponseTo> createUser(@Valid @RequestBody UserRequestTo request) {
+        UserResponseTo createdUser = userService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponseTo> updateUser(@PathVariable Long id,
+                                                     @Valid @RequestBody UserRequestTo request) {
+        UserResponseTo updatedUser = userService.update(id, request);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/page")
+    public ResponseEntity<Page<UserResponseTo>> getUsersPage(
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<UserResponseTo> users = userService.getAll(pageable);
+        return ResponseEntity.ok(users);
+    }
+}
+package com.socialnetwork.dto.external;
+
+public class MessageRequestDto {
+    private String country;
+    private Long tweetId;
+    private String content;
+
+    public MessageRequestDto() {}
+
+    public MessageRequestDto(String country, Long tweetId, String content) {
+        this.country = country;
+        this.tweetId = tweetId;
+        this.content = content;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public Long getTweetId() {
+        return tweetId;
+    }
+
+    public void setTweetId(Long tweetId) {
+        this.tweetId = tweetId;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+}
+package com.socialnetwork.dto.external;
+
+public class MessageResponseDto {
+    private String country;
+    private Long tweetId;
+    private Long id;
+    private String content;
+
+    public MessageResponseDto() {}
+
+    public MessageResponseDto(String country, Long tweetId, Long id, String content) {
+        this.country = country;
+        this.tweetId = tweetId;
+        this.id = id;
+        this.content = content;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public Long getTweetId() {
+        return tweetId;
+    }
+
+    public void setTweetId(Long tweetId) {
+        this.tweetId = tweetId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+}
+package com.socialnetwork.dto.kafka;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.UUID;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class KafkaMessageRequest {
+
+    @JsonProperty("requestId")
+    private UUID requestId;
+
+    @JsonProperty("operation")
+    private String operation; // CREATE, UPDATE, DELETE, GET, GET_ALL, GET_BY_TWEET
+
+    @JsonProperty("messageId")
+    private Long messageId;
+
+    @JsonProperty("country")
+    private String country;
+
+    @JsonProperty("tweetId")
+    private Long tweetId;
+
+    @JsonProperty("content")
+    private String content;
+
+    public KafkaMessageRequest() {}
+
+    // Геттеры и сеттеры с @JsonProperty
+    @JsonProperty("requestId")
+    public UUID getRequestId() {
+        return requestId;
+    }
+
+    @JsonProperty("requestId")
+    public void setRequestId(UUID requestId) {
+        this.requestId = requestId;
+    }
+
+    @JsonProperty("operation")
+    public String getOperation() {
+        return operation;
+    }
+
+    @JsonProperty("operation")
+    public void setOperation(String operation) {
+        this.operation = operation;
+    }
+
+    @JsonProperty("messageId")
+    public Long getMessageId() {
+        return messageId;
+    }
+
+    @JsonProperty("messageId")
+    public void setMessageId(Long messageId) {
+        this.messageId = messageId;
+    }
+
+    @JsonProperty("country")
+    public String getCountry() {
+        return country;
+    }
+
+    @JsonProperty("country")
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    @JsonProperty("tweetId")
+    public Long getTweetId() {
+        return tweetId;
+    }
+
+    @JsonProperty("tweetId")
+    public void setTweetId(Long tweetId) {
+        this.tweetId = tweetId;
+    }
+
+    @JsonProperty("content")
+    public String getContent() {
+        return content;
+    }
+
+    @JsonProperty("content")
+    public void setContent(String content) {
+        this.content = content;
+    }
+}
+package com.socialnetwork.dto.kafka;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import java.util.List;
+import java.util.UUID;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class KafkaMessageResponse {
+    private UUID requestId;
+    private boolean success;
+    private String error;
+    private Long messageId;
+    private String country;
+    private Long tweetId;
+    private String content;
+    private String state; // PENDING, APPROVE, DECLINE
+    private List<KafkaMessageResponse> messages;
+
+    public KafkaMessageResponse() {}
+
+    // Геттеры и сеттеры
+    public UUID getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(UUID requestId) {
+        this.requestId = requestId;
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public Long getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(Long messageId) {
+        this.messageId = messageId;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public Long getTweetId() {
+        return tweetId;
+    }
+
+    public void setTweetId(Long tweetId) {
+        this.tweetId = tweetId;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public List<KafkaMessageResponse> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(List<KafkaMessageResponse> messages) {
+        this.messages = messages;
+    }
+}
+package com.socialnetwork.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public class LabelRequestTo {
+
+    @NotBlank(message = "Name cannot be blank")
+    @Size(min = 2, max = 32, message = "Name must be between 2 and 32 characters")
+    private String name;
+
+    public LabelRequestTo() {}
+
+    public LabelRequestTo(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+package com.socialnetwork.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+public class MessageRequestTo {
+
+    @NotBlank(message = "Country cannot be blank")
+    @Size(min = 2, max = 2, message = "Country code must be 2 characters")
+    private String country = "US"; // Значение по умолчанию
+
+    @NotNull(message = "Tweet ID is required")
+    private Long tweetId;
+
+    @NotBlank(message = "Content cannot be blank")
+    @Size(min = 2, max = 2048, message = "Content must be between 2 and 2048 characters")
+    private String content;
+
+    public MessageRequestTo() {}
+
+    public MessageRequestTo(String country, Long tweetId, String content) {
+        this.country = country;
+        this.tweetId = tweetId;
+        this.content = content;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public Long getTweetId() {
+        return tweetId;
+    }
+
+    public void setTweetId(Long tweetId) {
+        this.tweetId = tweetId;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+}
+package com.socialnetwork.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.util.Set;
+
+public class TweetRequestTo {
+
+    @NotNull(message = "User ID is required")
+    private Long userId;
+
+    @NotBlank(message = "Title cannot be blank")
+    @Size(min = 2, max = 64, message = "Title must be between 2 and 64 characters")
+    private String title;
+
+    @NotBlank(message = "Content cannot be blank")
+    @Size(min = 4, max = 2048, message = "Content must be between 4 and 2048 characters")
+    private String content;
+
+    private Set<Long> labelIds;
+
+    public TweetRequestTo() {}
+
+    public TweetRequestTo(Long userId, String title, String content, Set<Long> labelIds) {
+        this.userId = userId;
+        this.title = title;
+        this.content = content;
+        this.labelIds = labelIds;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public Set<Long> getLabelIds() {
+        return labelIds;
+    }
+
+    public void setLabelIds(Set<Long> labelIds) {
+        this.labelIds = labelIds;
+    }
+}
+package com.socialnetwork.dto.request;
+
+import jakarta.validation.constraints.Size;
+
+public class UserRequestTo {
+
+    @Size(min = 2, max = 64, message = "Login must be between 2 and 64 characters")
+    private String login;
+
+    @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
+    private String password;
+
+    @Size(min = 2, max = 64, message = "Firstname must be between 2 and 64 characters")
+    private String firstname;
+
+    @Size(min = 2, max = 64, message = "Lastname must be between 2 and 64 characters")
+    private String lastname;
+
+    public UserRequestTo() {}
+
+    public UserRequestTo(String login, String password, String firstname, String lastname) {
+        this.login = login;
+        this.password = password;
+        this.firstname = firstname;
+        this.lastname = lastname;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+}
+package com.socialnetwork.dto.response;
+
+public class LabelResponseTo {
+    private Long id;
+    private String name;
+
+    public LabelResponseTo() {}
+
+    public LabelResponseTo(Long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+package com.socialnetwork.dto.response;
+
+public class MessageResponseTo {
+    private Long id;
+    private Long tweetId;
+    private String content;
+
+    public MessageResponseTo() {}
+
+    public MessageResponseTo(Long id, Long tweetId, String content) {
+        this.id = id;
+        this.tweetId = tweetId;
+        this.content = content;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getTweetId() {
+        return tweetId;
+    }
+
+    public void setTweetId(Long tweetId) {
+        this.tweetId = tweetId;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+}
+package com.socialnetwork.dto.response;
+
+import java.time.LocalDateTime;
+import java.util.Set;
+
+public class TweetResponseTo {
+    private Long id;
+    private Long userId;
+    private String title;
+    private String content;
+    private LocalDateTime created;
+    private LocalDateTime modified;
+    private Set<Long> labelIds;
+
+    public TweetResponseTo() {}
+
+    public TweetResponseTo(Long id, Long userId, String title, String content,
+                           LocalDateTime created, LocalDateTime modified, Set<Long> labelIds) {
+        this.id = id;
+        this.userId = userId;
+        this.title = title;
+        this.content = content;
+        this.created = created;
+        this.modified = modified;
+        this.labelIds = labelIds;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    public void setCreated(LocalDateTime created) {
+        this.created = created;
+    }
+
+    public LocalDateTime getModified() {
+        return modified;
+    }
+
+    public void setModified(LocalDateTime modified) {
+        this.modified = modified;
+    }
+
+    public Set<Long> getLabelIds() {
+        return labelIds;
+    }
+
+    public void setLabelIds(Set<Long> labelIds) {
+        this.labelIds = labelIds;
+    }
+}
+package com.socialnetwork.dto.response;
+
+public class UserResponseTo {
+    private Long id;
+    private String login;
+    private String firstname;
+    private String lastname;
+
+    public UserResponseTo() {}
+
+    public UserResponseTo(Long id, String login, String firstname, String lastname) {
+        this.id = id;
+        this.login = login;
+        this.firstname = firstname;
+        this.lastname = lastname;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+}
+package com.socialnetwork.exception;
+
+public class DuplicateResourceException extends RuntimeException {
+
+    public DuplicateResourceException(String message) {
+        super(message);
+    }
+
+    public DuplicateResourceException(String resource, String field, String value) {
+        super(resource + " с " + field + " '" + value + "' уже существует");
+    }
+}
+package com.socialnetwork.exception;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+
+public class ErrorResponse {
+    private int errorCode;
+    private String errorMessage;
+    private LocalDateTime timestamp;
+    private Map<String, String> errors;
+
+    public ErrorResponse() {}
+
+    public ErrorResponse(int errorCode, String errorMessage, LocalDateTime timestamp) {
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+        this.timestamp = timestamp;
+    }
+
+    public ErrorResponse(int errorCode, String errorMessage, LocalDateTime timestamp, Map<String, String> errors) {
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+        this.timestamp = timestamp;
+        this.errors = errors;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(int errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public Map<String, String> getErrors() {
+        return errors;
+    }
+
+    public void setErrors(Map<String, String> errors) {
+        this.errors = errors;
+    }
+}
+package com.socialnetwork.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingPathVariableException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value() * 100 + 1,
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value() * 100 + 2,
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value() * 100 + 1,
+                "Validation failed",
+                LocalDateTime.now()
+        );
+        error.setErrors(errors);
+
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatchException(
+            MethodArgumentTypeMismatchException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value() * 100 + 3,
+                String.format("Parameter '%s': expected type %s",
+                        ex.getName(), ex.getRequiredType().getSimpleName()),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MissingPathVariableException.class)
+    public ResponseEntity<ErrorResponse> handleMissingPathVariableException(
+            MissingPathVariableException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value() * 100 + 4,
+                String.format("Missing path variable: %s", ex.getVariableName()),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value() * 100 + 2,
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.CONFLICT.value() * 100 + 1,
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateResourceException(DuplicateResourceException ex) {
+        ErrorResponse error = new ErrorResponse(
+                40301,
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+}
+package com.socialnetwork.exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+
+    public ResourceNotFoundException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+package com.socialnetwork.mapper;
+
+import com.socialnetwork.dto.request.LabelRequestTo;
+import com.socialnetwork.dto.response.LabelResponseTo;
+import com.socialnetwork.model.Label;
+import org.springframework.stereotype.Component;
+
+@Component
+public class LabelMapper {
+
+    public Label toEntity(LabelRequestTo request) {
+        if (request == null) {
+            return null;
+        }
+
+        Label label = new Label();
+        label.setName(request.getName());
+        return label;
+    }
+
+    public LabelResponseTo toResponse(Label entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        LabelResponseTo response = new LabelResponseTo();
+        response.setId(entity.getId());
+        response.setName(entity.getName());
+        return response;
+    }
+}
+package com.socialnetwork.mapper;
+
+import com.socialnetwork.dto.request.TweetRequestTo;
+import com.socialnetwork.dto.response.TweetResponseTo;
+import com.socialnetwork.model.Label;
+import com.socialnetwork.model.Tweet;
+import com.socialnetwork.model.User;
+import com.socialnetwork.repository.UserRepository;
+import com.socialnetwork.repository.LabelRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Component
+public class TweetMapper {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private LabelRepository labelRepository;
+
+    public Tweet toEntity(TweetRequestTo request) {
+        if (request == null) {
+            return null;
+        }
+
+        Tweet tweet = new Tweet();
+
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + request.getUserId()));
+        tweet.setUser(user);
+
+        tweet.setTitle(request.getTitle());
+        tweet.setContent(request.getContent());
+
+        if (request.getLabelIds() != null && !request.getLabelIds().isEmpty()) {
+            Set<Label> labels = new HashSet<>();
+            for (Long labelId : request.getLabelIds()) {
+                Label label = labelRepository.findById(labelId)
+                        .orElseThrow(() -> new IllegalArgumentException("Label not found with id: " + labelId));
+                labels.add(label);
+            }
+            tweet.setLabels(labels);
+        }
+
+        return tweet;
+    }
+
+    public TweetResponseTo toResponse(Tweet entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        TweetResponseTo response = new TweetResponseTo();
+        response.setId(entity.getId());
+        response.setUserId(entity.getUser().getId());
+        response.setTitle(entity.getTitle());
+        response.setContent(entity.getContent());
+        response.setCreated(entity.getCreated());
+        response.setModified(entity.getModified());
+
+        if (entity.getLabels() != null) {
+            Set<Long> labelIds = new HashSet<>();
+            for (Label label : entity.getLabels()) {
+                labelIds.add(label.getId());
+            }
+            response.setLabelIds(labelIds);
+        }
+
+        return response;
+    }
+}
+package com.socialnetwork.mapper;
+
+import com.socialnetwork.dto.request.UserRequestTo;
+import com.socialnetwork.dto.response.UserResponseTo;
+import com.socialnetwork.model.User;
+import org.springframework.stereotype.Component;
+
+@Component
+public class UserMapper {
+
+    public User toEntity(UserRequestTo request) {
+        if (request == null) {
+            return null;
+        }
+
+        User user = new User();
+        user.setLogin(request.getLogin());
+        user.setPassword(request.getPassword());
+        user.setFirstname(request.getFirstname());
+        user.setLastname(request.getLastname());
+        return user;
+    }
+
+    public UserResponseTo toResponse(User entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        UserResponseTo response = new UserResponseTo();
+        response.setId(entity.getId());
+        response.setLogin(entity.getLogin());
+        response.setFirstname(entity.getFirstname());
+        response.setLastname(entity.getLastname());
+        return response;
+    }
+}
+package com.socialnetwork.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@MappedSuperclass
+public abstract class BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+
+    @Column(name = "created", nullable = false, updatable = false)
+    private LocalDateTime created;
+
+    @Column(name = "modified", nullable = false)
+    private LocalDateTime modified;
+
+    @PrePersist
+    protected void onCreate() {
+        this.created = LocalDateTime.now();
+        this.modified = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.modified = LocalDateTime.now();
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    public void setCreated(LocalDateTime created) {
+        this.created = created;
+    }
+
+    public LocalDateTime getModified() {
+        return modified;
+    }
+
+    public void setModified(LocalDateTime modified) {
+        this.modified = modified;
+    }
+}
+package com.socialnetwork.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "tbl_label", schema = "distcomp")
+public class Label extends BaseEntity {
+
+    @Column(name = "name", nullable = false, unique = true, length = 32)
+    @Size(min = 2, max = 32)
+    private String name;
+
+    @ManyToMany(mappedBy = "labels", fetch = FetchType.LAZY)
+    private Set<Tweet> tweets = new HashSet<>();
+
+    public Label() {
+        super();
+    }
+
+    public Label(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Set<Tweet> getTweets() {
+        return tweets;
+    }
+
+    public void setTweets(Set<Tweet> tweets) {
+        this.tweets = tweets;
+    }
+}
+package com.socialnetwork.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+
+@Entity
+@Table(name = "tbl_message", schema = "distcomp")
+public class Message extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tweet_id", nullable = false)
+    private Tweet tweet;
+
+    @Column(name = "content", nullable = false, length = 2048)
+    @Size(min = 4, max = 2048)
+    private String content;
+
+    @Column(name = "state", nullable = false, length = 20)
+    private String state = "PENDING"; // PENDING, APPROVE, DECLINE
+
+    public Message() {
+        super();
+    }
+
+    public Message(Tweet tweet, String content) {
+        this.tweet = tweet;
+        this.content = content;
+        this.state = "PENDING";
+    }
+
+    public Message(Tweet tweet, String content, String state) {
+        this.tweet = tweet;
+        this.content = content;
+        this.state = state;
+    }
+
+    public Tweet getTweet() {
+        return tweet;
+    }
+
+    public void setTweet(Tweet tweet) {
+        this.tweet = tweet;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+}
+package com.socialnetwork.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "tbl_tweet", schema = "distcomp")
+public class Tweet extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(name = "title", nullable = false, length = 64)
+    @Size(min = 2, max = 64)
+    private String title;
+
+    @Column(name = "content", nullable = false, length = 2048)
+    @Size(min = 4, max = 2048)
+    private String content;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "tbl_tweet_label",
+            schema = "distcomp",
+            joinColumns = @JoinColumn(name = "tweet_id"),
+            inverseJoinColumns = @JoinColumn(name = "label_id")
+    )
+    private Set<Label> labels = new HashSet<>();
+
+    // Удаляем связь с Message, так как сообщения теперь в отдельном модуле
+    // @OneToMany(mappedBy = "tweet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // private Set<Message> messages = new HashSet<>();
+
+    public Tweet() {
+        super();
+    }
+
+    public void addLabel(Label label) {
+        labels.add(label);
+        label.getTweets().add(this);
+    }
+
+    public void removeLabel(Label label) {
+        labels.remove(label);
+        label.getTweets().remove(this);
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public Set<Label> getLabels() {
+        return labels;
+    }
+
+    public void setLabels(Set<Label> labels) {
+        this.labels = labels;
+    }
+}
+package com.socialnetwork.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "tbl_user", schema = "distcomp")
+public class User extends BaseEntity {
+
+    @Column(name = "login", nullable = false, unique = true, length = 64)
+    @Size(min = 2, max = 64)
+    private String login;
+
+    @Column(name = "password", nullable = false, length = 128)
+    @Size(min = 8, max = 128)
+    private String password;
+
+    @Column(name = "firstname", nullable = false, length = 64)
+    @Size(min = 2, max = 64)
+    private String firstname;
+
+    @Column(name = "lastname", nullable = false, length = 64)
+    @Size(min = 2, max = 64)
+    private String lastname;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Tweet> tweets = new ArrayList<>();
+
+    public User() {
+        super();
+    }
+
+    public User(String login, String password, String firstname, String lastname) {
+        this.login = login;
+        this.password = password;
+        this.firstname = firstname;
+        this.lastname = lastname;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+
+    public List<Tweet> getTweets() {
+        return tweets;
+    }
+
+    public void setTweets(List<Tweet> tweets) {
+        this.tweets = tweets;
+    }
+}
+package com.socialnetwork.repository;
+
+import com.socialnetwork.model.Label;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface LabelRepository extends JpaRepository<Label, Long> {
+
+    Optional<Label> findByName(String name);
+
+    boolean existsByName(String name);
+
+    Page<Label> findAll(Pageable pageable);
+
+    @Query("SELECT COUNT(l) > 0 FROM Label l WHERE l.id = :id")
+    boolean existsById(@Param("id") Long id);
+}
+package com.socialnetwork.repository;
+
+import com.socialnetwork.model.Tweet;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface TweetRepository extends JpaRepository<Tweet, Long> {
+
+    Page<Tweet> findAll(Pageable pageable);
+
+    List<Tweet> findByUserId(Long userId);
+
+    boolean existsByTitle(String title);
+
+    @Query("SELECT t FROM Tweet t WHERE t.user.id = :userId")
+    Page<Tweet> findByUserId(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("SELECT t FROM Tweet t JOIN t.labels label WHERE label.id = :labelId")
+    List<Tweet> findByLabelId(@Param("labelId") Long labelId);
+
+    @Query("SELECT t FROM Tweet t JOIN t.labels label WHERE label.id = :labelId")
+    Page<Tweet> findByLabelId(@Param("labelId") Long labelId, Pageable pageable);
+
+    @Query("SELECT COUNT(t) > 0 FROM Tweet t WHERE t.id = :id")
+    boolean existsById(@Param("id") Long id);
+
+    @Query("SELECT COUNT(t) > 0 FROM Tweet t WHERE t.user.id = :userId")
+    boolean existsByUserId(@Param("userId") Long userId);
+}
+package com.socialnetwork.repository;
+
+import com.socialnetwork.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    Optional<User> findByLogin(String login);
+
+    boolean existsByLogin(String login);
+
+    Page<User> findAll(Pageable pageable);
+
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.id = :id")
+    boolean existsById(@Param("id") Long id);
+}
+package com.socialnetwork.service.impl;
+
+import com.socialnetwork.dto.request.LabelRequestTo;
+import com.socialnetwork.dto.response.LabelResponseTo;
+import com.socialnetwork.exception.ResourceNotFoundException;
+import com.socialnetwork.mapper.LabelMapper;
+import com.socialnetwork.model.Label;
+import com.socialnetwork.repository.LabelRepository;
+import com.socialnetwork.service.LabelService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+public class LabelServiceImpl implements LabelService {
+
+    @Autowired
+    private LabelRepository labelRepository;
+
+    @Autowired
+    private LabelMapper labelMapper;
+
+    @Override
+    public List<LabelResponseTo> getAll() {
+        return labelRepository.findAll().stream()
+                .map(labelMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<LabelResponseTo> getAll(Pageable pageable) {
+        return labelRepository.findAll(pageable)
+                .map(labelMapper::toResponse);
+    }
+
+    @Override
+    public LabelResponseTo getById(Long id) {
+        Label label = labelRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Label not found with id: " + id));
+        return labelMapper.toResponse(label);
+    }
+
+    @Override
+    public LabelResponseTo create(LabelRequestTo request) {
+        if (labelRepository.existsByName(request.getName())) {
+            throw new IllegalArgumentException("Label with name '" + request.getName() + "' already exists");
+        }
+
+        Label label = labelMapper.toEntity(request);
+        Label savedLabel = labelRepository.save(label);
+        return labelMapper.toResponse(savedLabel);
+    }
+
+    @Override
+    public LabelResponseTo update(Long id, LabelRequestTo request) {
+        Label label = labelRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Label not found with id: " + id));
+
+        if (!label.getName().equals(request.getName()) &&
+                labelRepository.existsByName(request.getName())) {
+            throw new IllegalArgumentException("Label with name '" + request.getName() + "' already exists");
+        }
+
+        label.setName(request.getName());
+        Label updatedLabel = labelRepository.save(label);
+        return labelMapper.toResponse(updatedLabel);
+    }
+
+    @Override
+    public void delete(Long id) {
+        Label label = labelRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Label not found with id: " + id));
+
+        if (!label.getTweets().isEmpty()) {
+            throw new IllegalStateException("Cannot delete label with id " + id + " because it is used in tweets");
+        }
+
+        labelRepository.delete(label);
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return labelRepository.existsById(id);
+    }
+
+    @Override
+    public LabelResponseTo findByName(String name) {
+        Label label = labelRepository.findByName(name)
+                .orElseThrow(() -> new ResourceNotFoundException("Label not found with name: " + name));
+        return labelMapper.toResponse(label);
+    }
+
+    @Override
+    public boolean existsByName(String name) {
+        return labelRepository.existsByName(name);
+    }
+}
+package com.socialnetwork.service.impl;
+
+import com.socialnetwork.dto.kafka.KafkaMessageRequest;
+import com.socialnetwork.dto.kafka.KafkaMessageResponse;
+import com.socialnetwork.dto.request.MessageRequestTo;
+import com.socialnetwork.dto.response.MessageResponseTo;
+import com.socialnetwork.service.KafkaProducerService;
+import com.socialnetwork.service.MessageService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+@Service
+public class MessageServiceImpl implements MessageService {
+
+    @Autowired
+    private KafkaProducerService kafkaProducerService;
+
+    @Override
+    public List<MessageResponseTo> getAll() {
+        KafkaMessageRequest request = new KafkaMessageRequest();
+        request.setRequestId(UUID.randomUUID());
+        request.setOperation("GET_ALL");
+
+        return processListRequest(request);
+    }
+
+    @Override
+    public MessageResponseTo getById(Long id) {
+        KafkaMessageRequest request = new KafkaMessageRequest();
+        request.setRequestId(UUID.randomUUID());
+        request.setOperation("GET");
+        request.setMessageId(id);
+
+        return processSingleRequest(request);
+    }
+
+    @Override
+    public MessageResponseTo create(MessageRequestTo requestDto) {
+        KafkaMessageRequest request = new KafkaMessageRequest();
+        request.setRequestId(UUID.randomUUID());
+        request.setOperation("CREATE");
+        request.setCountry(requestDto.getCountry() != null ? requestDto.getCountry() : "US");
+        request.setTweetId(requestDto.getTweetId());
+        request.setContent(requestDto.getContent());
+
+        return processSingleRequest(request);
+    }
+
+    @Override
+    public MessageResponseTo update(Long id, MessageRequestTo requestDto) {
+        KafkaMessageRequest request = new KafkaMessageRequest();
+        request.setRequestId(UUID.randomUUID());
+        request.setOperation("UPDATE");
+        request.setMessageId(id);
+        request.setCountry(requestDto.getCountry() != null ? requestDto.getCountry() : "US");
+        request.setTweetId(requestDto.getTweetId());
+        request.setContent(requestDto.getContent());
+
+        return processSingleRequest(request);
+    }
+
+    @Override
+    public void delete(Long id) {
+        KafkaMessageRequest request = new KafkaMessageRequest();
+        request.setRequestId(UUID.randomUUID());
+        request.setOperation("DELETE");
+        request.setMessageId(id);
+
+        try {
+            CompletableFuture<KafkaMessageResponse> future = kafkaProducerService.sendMessageRequest(request);
+            KafkaMessageResponse response = future.get(2, TimeUnit.SECONDS);
+
+            if (!response.isSuccess()) {
+                throw new RuntimeException("Failed to delete message: " + response.getError());
+            }
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new RuntimeException("Failed to delete message: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<MessageResponseTo> getByTweetId(Long tweetId) {
+        KafkaMessageRequest request = new KafkaMessageRequest();
+        request.setRequestId(UUID.randomUUID());
+        request.setOperation("GET_BY_TWEET");
+        request.setTweetId(tweetId);
+
+        return processListRequest(request);
+    }
+
+    private MessageResponseTo processSingleRequest(KafkaMessageRequest request) {
+        try {
+            CompletableFuture<KafkaMessageResponse> future = kafkaProducerService.sendMessageRequest(request);
+            KafkaMessageResponse response = future.get(2, TimeUnit.SECONDS);
+
+            if (response.isSuccess()) {
+                MessageResponseTo dto = new MessageResponseTo();
+                dto.setId(response.getMessageId());
+                dto.setTweetId(response.getTweetId());
+                dto.setContent(response.getContent());
+                return dto;
+            } else {
+                throw new RuntimeException("Operation failed: " + response.getError());
+            }
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new RuntimeException("Operation failed: " + e.getMessage());
+        }
+    }
+
+    private List<MessageResponseTo> processListRequest(KafkaMessageRequest request) {
+        try {
+            CompletableFuture<KafkaMessageResponse> future = kafkaProducerService.sendMessageRequest(request);
+            KafkaMessageResponse response = future.get(2, TimeUnit.SECONDS);
+
+            if (response.isSuccess() && response.getMessages() != null) {
+                return response.getMessages().stream()
+                        .map(kafkaResponse -> {
+                            MessageResponseTo dto = new MessageResponseTo();
+                            dto.setId(kafkaResponse.getMessageId());
+                            dto.setTweetId(kafkaResponse.getTweetId());
+                            dto.setContent(kafkaResponse.getContent());
+                            return dto;
+                        })
+                        .toList();
+            } else {
+                throw new RuntimeException("Operation failed: " + response.getError());
+            }
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new RuntimeException("Operation failed: " + e.getMessage());
+        }
+    }
+}
+package com.socialnetwork.service.impl;
+
+import com.socialnetwork.dto.request.TweetRequestTo;
+import com.socialnetwork.dto.response.TweetResponseTo;
+import com.socialnetwork.exception.DuplicateResourceException;
+import com.socialnetwork.exception.ResourceNotFoundException;
+import com.socialnetwork.mapper.TweetMapper;
+import com.socialnetwork.model.Tweet;
+import com.socialnetwork.model.User;
+import com.socialnetwork.repository.TweetRepository;
+import com.socialnetwork.repository.UserRepository;
+import com.socialnetwork.service.TweetService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+public class TweetServiceImpl implements TweetService {
+
+    @Autowired
+    private TweetRepository tweetRepository;
+
+    @Autowired
+    private TweetMapper tweetMapper;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Override
+    public List<TweetResponseTo> getAll() {
+        return tweetRepository.findAll().stream()
+                .map(tweetMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<TweetResponseTo> getAll(Pageable pageable) {
+        return tweetRepository.findAll(pageable)
+                .map(tweetMapper::toResponse);
+    }
+
+    @Override
+    public TweetResponseTo getById(Long id) {
+        Tweet tweet = tweetRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tweet not found with id: " + id));
+        return tweetMapper.toResponse(tweet);
+    }
+
+    @Override
+    public TweetResponseTo create(TweetRequestTo request) {
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
+
+        if (tweetRepository.existsByTitle(request.getTitle())) {
+            throw new DuplicateResourceException("Tweet with title '" + request.getTitle() + "' already exists");
+        }
+
+        Tweet tweet = tweetMapper.toEntity(request);
+        tweet.setUser(user);
+
+        Tweet savedTweet = tweetRepository.save(tweet);
+        return tweetMapper.toResponse(savedTweet);
+    }
+
+    @Override
+    public TweetResponseTo update(Long id, TweetRequestTo request) {
+        Tweet tweet = tweetRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tweet not found with id: " + id));
+
+        if (!tweet.getUser().getId().equals(request.getUserId())) {
+            User user = userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
+            tweet.setUser(user);
+        }
+
+        tweet.setTitle(request.getTitle());
+        tweet.setContent(request.getContent());
+
+        Tweet updatedTweet = tweetRepository.save(tweet);
+        return tweetMapper.toResponse(updatedTweet);
+    }
+
+    @Override
+    public void delete(Long id) {
+        if (!tweetRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Tweet not found with id: " + id);
+        }
+        tweetRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return tweetRepository.existsById(id);
+    }
+
+    @Override
+    public List<TweetResponseTo> getByUserId(Long userId) {
+        List<Tweet> tweets = tweetRepository.findByUserId(userId);
+        return tweets.stream()
+                .map(tweetMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TweetResponseTo> getByLabelId(Long labelId) {
+        List<Tweet> tweets = tweetRepository.findByLabelId(labelId);
+        return tweets.stream()
+                .map(tweetMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<TweetResponseTo> getByUserId(Long userId, Pageable pageable) {
+        Page<Tweet> tweets = tweetRepository.findByUserId(userId, pageable);
+        return tweets.map(tweetMapper::toResponse);
+    }
+
+    @Override
+    public Page<TweetResponseTo> getByLabelId(Long labelId, Pageable pageable) {
+        Page<Tweet> tweets = tweetRepository.findByLabelId(labelId, pageable);
+        return tweets.map(tweetMapper::toResponse);
+    }
+}
+package com.socialnetwork.service.impl;
+
+import com.socialnetwork.dto.request.UserRequestTo;
+import com.socialnetwork.dto.response.UserResponseTo;
+import com.socialnetwork.exception.DuplicateResourceException;
+import com.socialnetwork.exception.ResourceNotFoundException;
+import com.socialnetwork.mapper.UserMapper;
+import com.socialnetwork.model.User;
+import com.socialnetwork.repository.UserRepository;
+import com.socialnetwork.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+public class UserServiceImpl implements UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Override
+    public List<UserResponseTo> getAll() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<UserResponseTo> getAll(Pageable pageable) {
+        return userRepository.findAll(pageable)
+                .map(userMapper::toResponse);
+    }
+
+    @Override
+    public UserResponseTo getById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        return userMapper.toResponse(user);
+    }
+
+    @Override
+    public UserResponseTo create(UserRequestTo request) {
+        if (userRepository.existsByLogin(request.getLogin())) {
+            throw new DuplicateResourceException("User with login '" + request.getLogin() + "' already exists");
+        }
+
+        User user = userMapper.toEntity(request);
+        User savedUser = userRepository.save(user);
+        return userMapper.toResponse(savedUser);
+    }
+
+    @Override
+    public UserResponseTo update(Long id, UserRequestTo request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+
+        if (!user.getLogin().equals(request.getLogin()) &&
+                userRepository.existsByLogin(request.getLogin())) {
+            throw new IllegalArgumentException("User with login '" + request.getLogin() + "' already exists");
+        }
+
+        user.setLogin(request.getLogin());
+        user.setPassword(request.getPassword());
+        user.setFirstname(request.getFirstname());
+        user.setLastname(request.getLastname());
+
+        User updatedUser = userRepository.save(user);
+        return userMapper.toResponse(updatedUser);
+    }
+
+    @Override
+    public void delete(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("User not found with id: " + id);
+        }
+        userRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return userRepository.existsById(id);
+    }
+}
+package com.socialnetwork.service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.socialnetwork.dto.kafka.KafkaMessageResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Service;
+
+@Service
+public class KafkaConsumerService {
+
+    private static final String OUT_TOPIC = "OutTopic";
+
+    @Autowired
+    private KafkaMessageService kafkaMessageService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @KafkaListener(topics = OUT_TOPIC)
+    public void listen(String messageJson) {
+        try {
+            System.out.println("Received Kafka response JSON: " + messageJson);
+
+            // Десериализуем JSON в объект
+            KafkaMessageResponse response = objectMapper.readValue(messageJson, KafkaMessageResponse.class);
+
+            System.out.println("Response RequestId: " + response.getRequestId());
+            System.out.println("Response Success: " + response.isSuccess());
+
+            if (response.getRequestId() != null) {
+                kafkaMessageService.completeRequest(response.getRequestId(), response);
+            } else {
+                System.err.println("Invalid Kafka response received - no requestId");
+            }
+        } catch (Exception e) {
+            System.err.println("Error processing Kafka response: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+}
+package com.socialnetwork.service;
+
+import com.socialnetwork.dto.kafka.KafkaMessageResponse;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+@Service
+public class KafkaMessageService {
+
+    private final ConcurrentHashMap<UUID, CompletableFuture<KafkaMessageResponse>> pendingRequests =
+            new ConcurrentHashMap<>();
+
+    public CompletableFuture<KafkaMessageResponse> waitForResponse(UUID requestId) {
+        CompletableFuture<KafkaMessageResponse> future = new CompletableFuture<>();
+        pendingRequests.put(requestId, future);
+
+        // Таймаут 1 секунда как в требованиях
+        future.completeOnTimeout(
+                createTimeoutResponse(requestId),
+                1,
+                TimeUnit.SECONDS
+        );
+
+        return future;
+    }
+
+    public void completeRequest(UUID requestId, KafkaMessageResponse response) {
+        CompletableFuture<KafkaMessageResponse> future = pendingRequests.remove(requestId);
+        if (future != null) {
+            future.complete(response);
+        }
+    }
+
+    private KafkaMessageResponse createTimeoutResponse(UUID requestId) {
+        KafkaMessageResponse response = new KafkaMessageResponse();
+        response.setRequestId(requestId);
+        response.setSuccess(false);
+        response.setError("Request timeout");
+        return response;
+    }
+
+    public String getPartitionKey(Long tweetId) {
+        // Гарантируем, что сообщения одного твита попадают в одну партицию
+        return "tweet-" + (tweetId != null ? tweetId : "all");
+    }
+}
+package com.socialnetwork.service;
+
+import com.socialnetwork.dto.kafka.KafkaMessageRequest;
+import com.socialnetwork.dto.kafka.KafkaMessageResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
+import org.springframework.stereotype.Service;
+
+import java.util.concurrent.CompletableFuture;
+
+@Service
+public class KafkaProducerService {
+
+    private static final String IN_TOPIC = "InTopic";
+
+    @Autowired
+    private KafkaTemplate<String, KafkaMessageRequest> kafkaTemplate;
+
+    @Autowired
+    private KafkaMessageService kafkaMessageService;
+
+    public CompletableFuture<KafkaMessageResponse> sendMessageRequest(KafkaMessageRequest request) {
+        String key = kafkaMessageService.getPartitionKey(request.getTweetId());
+
+        System.out.println("Sending Kafka request to InTopic");
+        System.out.println("RequestId: " + request.getRequestId());
+        System.out.println("Operation: " + request.getOperation());
+        System.out.println("Key: " + key);
+
+        CompletableFuture<SendResult<String, KafkaMessageRequest>> sendFuture =
+                kafkaTemplate.send(IN_TOPIC, key, request);
+
+        CompletableFuture<KafkaMessageResponse> responseFuture =
+                kafkaMessageService.waitForResponse(request.getRequestId());
+
+        return sendFuture.thenCompose(result -> {
+            System.out.println("Kafka message sent successfully");
+            return responseFuture;
+        });
+    }
+}
+package com.socialnetwork.service;
+
+import com.socialnetwork.dto.request.LabelRequestTo;
+import com.socialnetwork.dto.response.LabelResponseTo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.util.List;
+
+public interface LabelService {
+    List<LabelResponseTo> getAll();
+    Page<LabelResponseTo> getAll(Pageable pageable);
+    LabelResponseTo getById(Long id);
+    LabelResponseTo create(LabelRequestTo request);
+    LabelResponseTo update(Long id, LabelRequestTo request);
+    void delete(Long id);
+    boolean existsById(Long id);
+    LabelResponseTo findByName(String name);
+    boolean existsByName(String name);
+}
+package com.socialnetwork.service;
+
+import com.socialnetwork.dto.request.MessageRequestTo;
+import com.socialnetwork.dto.response.MessageResponseTo;
+import java.util.List;
+
+public interface MessageService {
+    List<MessageResponseTo> getAll();
+    MessageResponseTo getById(Long id);
+    MessageResponseTo create(MessageRequestTo request);
+    MessageResponseTo update(Long id, MessageRequestTo request);
+    void delete(Long id);
+    List<MessageResponseTo> getByTweetId(Long tweetId);
+}
+package com.socialnetwork.service;
+
+import com.socialnetwork.dto.request.TweetRequestTo;
+import com.socialnetwork.dto.response.TweetResponseTo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.util.List;
+
+public interface TweetService {
+    List<TweetResponseTo> getAll();
+    Page<TweetResponseTo> getAll(Pageable pageable);
+    TweetResponseTo getById(Long id);
+    TweetResponseTo create(TweetRequestTo request);
+    TweetResponseTo update(Long id, TweetRequestTo request);
+    void delete(Long id);
+    boolean existsById(Long id);
+    List<TweetResponseTo> getByUserId(Long userId);
+    List<TweetResponseTo> getByLabelId(Long labelId);
+    Page<TweetResponseTo> getByUserId(Long userId, Pageable pageable);
+    Page<TweetResponseTo> getByLabelId(Long labelId, Pageable pageable);
+}
+package com.socialnetwork.service;
+
+import com.socialnetwork.dto.request.UserRequestTo;
+import com.socialnetwork.dto.response.UserResponseTo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.util.List;
+
+public interface UserService {
+    List<UserResponseTo> getAll();
+    Page<UserResponseTo> getAll(Pageable pageable);
+    UserResponseTo getById(Long id);
+    UserResponseTo create(UserRequestTo request);
+    UserResponseTo update(Long id, UserRequestTo request);
+    void delete(Long id);
+    boolean existsById(Long id);
+}
+package com.socialnetwork;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+
+@SpringBootApplication
+@ComponentScan(basePackages = "com.socialnetwork")
+public class SocialnetworkApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SocialnetworkApplication.class, args);
+	}
+
+}
+# ===============================
+# Server Configuration
+# ===============================
+server.port=24110
+server.servlet.context-path=/
+
+# ===============================
+# Application Configuration
+# ===============================
+spring.application.name=publisher
+
+# ===============================
+# Database Configuration (PostgreSQL)
+# ===============================
+spring.datasource.url=jdbc:postgresql://localhost:5432/distcomp
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# ===============================
+# JPA Configuration
+# ===============================
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.format_sql=false
+spring.jpa.properties.hibernate.default_schema=distcomp
+
+# ===============================
+# Kafka Configuration - ??????????
+# ===============================
+spring.kafka.bootstrap-servers=localhost:29092
+spring.kafka.consumer.group-id=publisher-group
+spring.kafka.consumer.auto-offset-reset=earliest
+spring.kafka.consumer.key-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+spring.kafka.consumer.value-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+spring.kafka.consumer.enable-auto-commit=false
+
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer
+
+# ===============================
+# Table Prefix Naming Strategy
+# ===============================
+spring.jpa.hibernate.naming.physical-strategy=com.socialnetwork.config.TablePrefixNamingStrategy
+
+# ===============================
+# Jackson Configuration
+# ===============================
+spring.jackson.serialization.indent_output=false
+spring.jackson.default-property-inclusion=non_null
+spring.jackson.deserialization.fail-on-unknown-properties=false
+spring.jackson.date-format=yyyy-MM-dd'T'HH:mm:ss
+spring.jackson.time-zone=UTC
+spring.jackson.serialization.write-dates-as-timestamps=false
+spring.jackson.serialization.fail-on-empty-beans=false
+
+# ===============================
+# Logging Configuration
+# ===============================
+logging.level.com.socialnetwork=DEBUG
+logging.level.org.springframework.kafka=DEBUG
+logging.level.org.apache.kafka=INFO
+
+# Jackson Configuration
+spring.jackson.serialization.indent-output=true
+
+# ??????????? Jackson
+logging.level.com.fasterxml.jackson=DEBUG
+
+-- Установка схемы по умолчанию
+SET search_path TO distcomp;
+
+-- Добавление первого пользователя (требование задания)
+INSERT INTO tbl_user (login, password, firstname, lastname, created, modified)
+VALUES (
+    'su582004@gmail.com',
+    'securepassword123',
+    'Domina',
+    'Cympanosau',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+)
+ON CONFLICT (login) DO NOTHING;
+-- Создание схемы, если не существует
+CREATE SCHEMA IF NOT EXISTS distcomp;
+
+-- Установка схемы по умолчанию
+SET search_path TO distcomp;
+
+-- Таблица пользователей
+CREATE TABLE IF NOT EXISTS distcomp.tbl_user (
+    id BIGSERIAL PRIMARY KEY,
+    login VARCHAR(64) NOT NULL UNIQUE,
+    password VARCHAR(128) NOT NULL,
+    firstname VARCHAR(64) NOT NULL,
+    lastname VARCHAR(64) NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Таблица меток
+CREATE TABLE IF NOT EXISTS distcomp.tbl_label (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(32) NOT NULL UNIQUE,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Таблица твитов
+CREATE TABLE IF NOT EXISTS distcomp.tbl_tweet (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES distcomp.tbl_user(id) ON DELETE CASCADE,
+    title VARCHAR(64) NOT NULL,
+    content VARCHAR(2048) NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Таблица сообщений
+CREATE TABLE IF NOT EXISTS distcomp.tbl_message (
+    id BIGSERIAL PRIMARY KEY,
+    tweet_id BIGINT NOT NULL REFERENCES distcomp.tbl_tweet(id) ON DELETE CASCADE,
+    content VARCHAR(2048) NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Таблица связи твитов и меток
+CREATE TABLE IF NOT EXISTS distcomp.tbl_tweet_label (
+    tweet_id BIGINT NOT NULL REFERENCES distcomp.tbl_tweet(id) ON DELETE CASCADE,
+    label_id BIGINT NOT NULL REFERENCES distcomp.tbl_label(id) ON DELETE CASCADE,
+    PRIMARY KEY (tweet_id, label_id)
+);
+
+-- Создание индексов
+CREATE INDEX IF NOT EXISTS idx_tweet_user_id ON distcomp.tbl_tweet(user_id);
+CREATE INDEX IF NOT EXISTS idx_message_tweet_id ON distcomp.tbl_message(tweet_id);
+CREATE INDEX IF NOT EXISTS idx_tweet_label_tweet_id ON distcomp.tbl_tweet_label(tweet_id);
+CREATE INDEX IF NOT EXISTS idx_tweet_label_label_id ON distcomp.tbl_tweet_label(label_id);
+CREATE INDEX IF NOT EXISTS idx_user_login ON distcomp.tbl_user(login);
+CREATE INDEX IF NOT EXISTS idx_label_name ON distcomp.tbl_label(name);
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.socialnetwork</groupId>
+		<artifactId>social-network-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>publisher</artifactId>
+	<name>publisher</name>
+
+	<dependencies>
+		<!-- Spring Boot Starters -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- Kafka -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+
+		<!-- PostgreSQL Driver -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Тестирование -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SYNC_LIMIT: 2
+    ports:
+      - "2181:2181"
+    networks:
+      - kafka-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Для доступа с хоста
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_NUM_PARTITIONS: 3
+    networks:
+      - kafka-network
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: social_cluster
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_RACK: rack1
+    networks:
+      - kafka-network
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - kafka-network
+
+networks:
+  kafka-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.8</version>
+		<relativePath/>
+	</parent>
+
+	<groupId>com.socialnetwork</groupId>
+	<artifactId>social-network-parent</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>social-network-parent</name>
+	<description>Social Network Application</description>
+	<packaging>pom</packaging>
+
+	<properties>
+		<java.version>21</java.version>
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<modules>
+		<module>publisher</module>
+		<module>discussion</module>
+	</modules>
+
+</project>
+
