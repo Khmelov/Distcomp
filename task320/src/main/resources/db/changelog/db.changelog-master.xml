@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="001-create-tbl-writer" author="task320">
+        <createTable tableName="tbl_writer">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- 2) Sticker -->
+    <changeSet id="002-create-tbl-sticker" author="task320">
+        <createTable tableName="tbl_sticker">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- 3) News -->
+    <changeSet id="003-create-tbl-news" author="task320">
+        <createTable tableName="tbl_news">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="writer_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="title" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="content" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="modified" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_news"
+                baseColumnNames="writer_id"
+                referencedTableName="tbl_writer"
+                referencedColumnNames="id"
+                constraintName="fk_news_writer"/>
+
+        <createIndex tableName="tbl_news" indexName="idx_news_writer_id">
+            <column name="writer_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- 4) Notice -->
+    <changeSet id="004-create-tbl-notice" author="task320">
+        <createTable tableName="tbl_notice">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="news_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="content" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_notice"
+                baseColumnNames="news_id"
+                referencedTableName="tbl_news"
+                referencedColumnNames="id"
+                constraintName="fk_notice_news"/>
+
+        <createIndex tableName="tbl_notice" indexName="idx_notice_news_id">
+            <column name="news_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- 5) News <-> Sticker -->
+    <changeSet id="005-create-tbl-news-sticker" author="task320">
+        <createTable tableName="tbl_news_sticker">
+            <column name="news_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sticker_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+                tableName="tbl_news_sticker"
+                columnNames="news_id,sticker_id"
+                constraintName="pk_news_sticker"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_news_sticker"
+                baseColumnNames="news_id"
+                referencedTableName="tbl_news"
+                referencedColumnNames="id"
+                constraintName="fk_ns_news"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_news_sticker"
+                baseColumnNames="sticker_id"
+                referencedTableName="tbl_sticker"
+                referencedColumnNames="id"
+                constraintName="fk_ns_sticker"/>
+
+        <createIndex tableName="tbl_news_sticker" indexName="idx_ns_news">
+            <column name="news_id"/>
+        </createIndex>
+        <createIndex tableName="tbl_news_sticker" indexName="idx_ns_sticker">
+            <column name="sticker_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="006-unique-news-title" author="task320">
+        <addUniqueConstraint tableName="tbl_news"
+                             columnNames="title"
+                             constraintName="uq_news_title"/>
+    </changeSet>
+
+</databaseChangeLog>
