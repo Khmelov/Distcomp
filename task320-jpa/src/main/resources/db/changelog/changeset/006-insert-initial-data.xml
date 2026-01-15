@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="006-insert-initial-data" author="malakhov-nikita">
+        <insert tableName="tbl_user" schemaName="distcomp">
+            <column name="login" value="nikita.malakhov022@gmail.com"/>
+            <column name="password" value="password123"/>
+            <column name="firstname" value="Никита"/>
+            <column name="lastname" value="Малахов"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="tbl_user" schemaName="distcomp">
+                <where>login = 'nikita.malakhov022@gmail.com'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
