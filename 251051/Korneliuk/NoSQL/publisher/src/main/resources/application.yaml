@@ -1,0 +1,22 @@
+server:
+  port: 24110
+
+spring:
+  application:
+    name: jpa-app
+  datasource:
+    url: jdbc:postgresql://localhost:5432/distcomp
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/changelog-master.xml

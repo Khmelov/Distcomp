@@ -1,0 +1,22 @@
+server:
+  port: 24130
+
+spring:
+  cassandra:
+    #keyspace-name: distcomp
+    local-datacenter: datacenter1
+    contact-points: localhost
+    port: 9042
+    schema-action: none
+  cloud:
+    stream:
+      bindings:
+        moderateNotice-in-0:
+          destination: InTopic
+          group: discussion-group
+        moderateNotice-out-0:
+          destination: OutTopic
+          content-type: application/json
+      kafka:
+        binder:
+          brokers: localhost:9092

@@ -1,0 +1,10 @@
+server:
+  port: 24130
+
+spring:
+  cassandra:
+    #keyspace-name: distcomp
+    local-datacenter: datacenter1
+    contact-points: localhost
+    port: 9042
+    schema-action: none
