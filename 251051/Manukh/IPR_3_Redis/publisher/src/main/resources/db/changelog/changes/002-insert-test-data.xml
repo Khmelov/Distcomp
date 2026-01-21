@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <!-- Вставка тестовых меток -->
+    <changeSet id="101-insert-test-marks" author="system">
+        <insert tableName="tbl_mark" schemaName="distcomp">
+            <column name="name" value="red"/>
+            <column name="created_at" valueDate="CURRENT_TIMESTAMP"/>
+            <column name="modified_at" valueDate="CURRENT_TIMESTAMP"/>
+        </insert>
+        <insert tableName="tbl_mark" schemaName="distcomp">
+            <column name="name" value="green"/>
+            <column name="created_at" valueDate="CURRENT_TIMESTAMP"/>
+            <column name="modified_at" valueDate="CURRENT_TIMESTAMP"/>
+        </insert>
+        <insert tableName="tbl_mark" schemaName="distcomp">
+            <column name="name" value="blue"/>
+            <column name="created_at" valueDate="CURRENT_TIMESTAMP"/>
+            <column name="modified_at" valueDate="CURRENT_TIMESTAMP"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

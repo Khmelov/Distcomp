@@ -1,0 +1,5 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/001-initial-schema.xml
+  - include:
+      file: db/changelog/changes/002-insert-test-data.xml

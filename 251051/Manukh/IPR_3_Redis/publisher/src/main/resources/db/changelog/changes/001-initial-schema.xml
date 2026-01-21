@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <!-- Создание схемы distcomp -->
+    <changeSet id="000-create-schema" author="system">
+        <sql>
+            CREATE SCHEMA IF NOT EXISTS distcomp;
+        </sql>
+    </changeSet>
+
+    <!-- Таблица tbl_editor -->
+    <changeSet id="001-create-tbl-editor" author="system">
+        <createTable tableName="tbl_editor" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Таблица tbl_mark -->
+    <changeSet id="002-create-tbl-mark" author="system">
+        <createTable tableName="tbl_mark" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Таблица tbl_story -->
+    <changeSet id="003-create-tbl-story" author="system">
+        <createTable tableName="tbl_story" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="editor_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                constraintName="fk_story_editor"
+                baseTableName="tbl_story"
+                baseColumnNames="editor_id"
+                referencedTableName="tbl_editor"
+                referencedColumnNames="id"
+                baseTableSchemaName="distcomp"
+                referencedTableSchemaName="distcomp"/>
+    </changeSet>
+
+    <!-- Таблица tbl_story_mark (для связи многие-ко-многим) -->
+    <changeSet id="004-create-tbl-story-mark" author="system">
+        <createTable tableName="tbl_story_mark" schemaName="distcomp">
+            <column name="story_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mark_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+                tableName="tbl_story_mark"
+                columnNames="story_id, mark_id"
+                schemaName="distcomp"/>
+
+        <addForeignKeyConstraint
+                constraintName="fk_story_mark_story"
+                baseTableName="tbl_story_mark"
+                baseColumnNames="story_id"
+                referencedTableName="tbl_story"
+                referencedColumnNames="id"
+                baseTableSchemaName="distcomp"
+                referencedTableSchemaName="distcomp"/>
+
+        <addForeignKeyConstraint
+                constraintName="fk_story_mark_mark"
+                baseTableName="tbl_story_mark"
+                baseColumnNames="mark_id"
+                referencedTableName="tbl_mark"
+                referencedColumnNames="id"
+                baseTableSchemaName="distcomp"
+                referencedTableSchemaName="distcomp"/>
+    </changeSet>
+
+    <!-- Таблица tbl_reaction (для Publisher) -->
+    <changeSet id="005-create-tbl-reaction" author="system">
+        <createTable tableName="tbl_reaction" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="story_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                constraintName="fk_reaction_story"
+                baseTableName="tbl_reaction"
+                baseColumnNames="story_id"
+                referencedTableName="tbl_story"
+                referencedColumnNames="id"
+                baseTableSchemaName="distcomp"
+                referencedTableSchemaName="distcomp"/>
+    </changeSet>
+
+</databaseChangeLog>
