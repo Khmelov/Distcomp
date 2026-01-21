@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="001-create-tables" author="app">
+        <!-- Таблица авторов -->
+        <createTable tableName="tbl_author">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)"/>
+            <column name="lastname" type="VARCHAR(64)"/>
+        </createTable>
+
+        <!-- Таблица тегов -->
+        <createTable tableName="tbl_tag">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+
+        <!-- Таблица твитов -->
+        <createTable tableName="tbl_tweet">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="author_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP WITHOUT TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Таблица реакций -->
+        <createTable tableName="tbl_reaction">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tweet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Связующая таблица для связи многие-ко-многим между твитами и тегами -->
+        <createTable tableName="tbl_tweet_tag">
+            <column name="tweet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="tbl_tweet_tag" columnNames="tweet_id,tag_id" constraintName="pk_tweet_tag"/>
+        
+        <!-- Убрал уникальное ограничение для title, так как авторы могут иметь твиты с одинаковыми заголовками -->
+    </changeSet>
+
+    <!-- Отдельный changeSet для внешних ключей -->
+    <changeSet id="002-add-foreign-keys" author="app">
+        <!-- Внешний ключ от твита к автору -->
+        <addForeignKeyConstraint
+                baseTableName="tbl_tweet"
+                baseColumnNames="author_id"
+                constraintName="fk_tweet_author"
+                referencedTableName="tbl_author"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <!-- Внешний ключ от реакции к твиту -->
+        <addForeignKeyConstraint
+                baseTableName="tbl_reaction"
+                baseColumnNames="tweet_id"
+                constraintName="fk_reaction_tweet"
+                referencedTableName="tbl_tweet"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <!-- Внешние ключи для связующей таблицы твит-тег -->
+        <addForeignKeyConstraint
+                baseTableName="tbl_tweet_tag"
+                baseColumnNames="tweet_id"
+                constraintName="fk_tt_tweet"
+                referencedTableName="tbl_tweet"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_tweet_tag"
+                baseColumnNames="tag_id"
+                constraintName="fk_tt_tag"
+                referencedTableName="tbl_tag"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>

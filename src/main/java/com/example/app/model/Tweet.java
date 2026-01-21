@@ -1,18 +1,30 @@
 package com.example.app.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 
+@Entity
+@Table(name = "tbl_tweet")
 public class Tweet extends BaseEntity {
     @NotNull
-    private Long authorId;          // ID автора (было storyId)
+    @Column(name = "author_id", nullable = false)
+    private Long authorId;
+    
     @NotBlank @Size(min = 2, max = 64)
-    private String title;           // Заголовок твита (новое поле)
+    @Column(name = "title", nullable = false, length = 64)
+    private String title;
+    
     @NotBlank @Size(min = 2, max = 2048)
-    private String content;         // Содержание твита
+    @Column(name = "content", nullable = false, length = 2048)
+    private String content;
+    
+    @Column(name = "created", nullable = false)
     private Instant created = Instant.now();
+    
+    @Column(name = "modified", nullable = false)
     private Instant modified = Instant.now();
 
     //конструктор

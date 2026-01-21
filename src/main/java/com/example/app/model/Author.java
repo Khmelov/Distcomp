@@ -1,16 +1,26 @@
 package com.example.app.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+@Entity
+@Table(name = "tbl_author")
 public class Author extends BaseEntity {
     @NotBlank @Size(min = 2, max = 32)
+    @Column(name = "login", nullable = false, unique = true, length = 32)
     private String login;
+    
     @NotBlank @Size(min = 6, max = 128)
+    @Column(name = "password", nullable = false, length = 128)
     private String password;
+    
     @Size(min = 1, max = 64)
+    @Column(name = "firstname", length = 64)
     private String firstname;
+    
     @Size(min = 1, max = 64)
+    @Column(name = "lastname", length = 64)
     private String lastname;
 
     //конструктор

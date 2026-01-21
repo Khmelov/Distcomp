@@ -3,20 +3,21 @@ package com.example.app.service;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.app.dto.AuthorRequestDTO;
 import com.example.app.dto.AuthorResponseDTO;
 import com.example.app.exception.AppException;
 import com.example.app.model.Author;
-import com.example.app.repository.InMemoryAuthorRepository;
+import com.example.app.repository.AuthorRepository;
 
 import java.util.List;
 
 @Service
 public class AuthorService {
-    private final InMemoryAuthorRepository repository;
+    private final AuthorRepository repository;
 
-    public AuthorService(InMemoryAuthorRepository repository) {
+    public AuthorService(AuthorRepository repository) {
         this.repository = repository;
     }
 
@@ -32,8 +33,9 @@ public class AuthorService {
                 .orElseThrow(() -> new AppException("Author not found", 40401));
     }
 
+    @Transactional
     public AuthorResponseDTO createAuthor(@Valid AuthorRequestDTO request) {
-        if (repository.findByLogin(request.login()) != null) {
+        if (repository.existsByLogin(request.login())) {
             throw new AppException("Login already exists", 40902);
         }
         Author author = toEntity(request);
@@ -41,22 +43,35 @@ public class AuthorService {
         return toResponse(saved);
     }
 
+    @Transactional
     public AuthorResponseDTO updateAuthor(@Valid AuthorRequestDTO request) {
         if (request.id() == null) {
             throw new AppException("ID required for update", 40003);
         }
-        if (!repository.findById(request.id()).isPresent()) {
-            throw new AppException("Author not found for update", 40404);
+        Author existingAuthor = repository.findById(request.id())
+                .orElseThrow(() -> new AppException("Author not found for update", 40404));
+        
+        // Проверяем, не занят ли новый логин другим пользователем
+        if (!existingAuthor.getLogin().equals(request.login()) && 
+            repository.existsByLogin(request.login())) {
+            throw new AppException("Login already taken", 40902);
         }
-        Author author = toEntity(request);
-        Author updated = repository.save(author);
+        
+        existingAuthor.setLogin(request.login());
+        existingAuthor.setPassword(request.password());
+        existingAuthor.setFirstname(request.firstname());
+        existingAuthor.setLastname(request.lastname());
+        
+        Author updated = repository.save(existingAuthor);
         return toResponse(updated);
     }
 
+    @Transactional
     public void deleteAuthor(@NotNull Long id) {
-        if (!repository.deleteById(id)) {
+        if (!repository.existsById(id)) {
             throw new AppException("Author not found for deletion", 40405);
         }
+        repository.deleteById(id);
     }
 
     private Author toEntity(AuthorRequestDTO dto) {

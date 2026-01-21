@@ -1,12 +1,18 @@
 package com.example.app.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+@Entity
+@Table(name = "tbl_reaction")
 public class Reaction extends BaseEntity {
-    private Long tweetId;          // ID твита, к которому относится реакция
-    @NotBlank @Size(min = 2, max = 2048) 
-    private String content;       
+    @Column(name = "tweet_id", nullable = false)
+    private Long tweetId;
+    
+    @NotBlank @Size(min = 2, max = 2048)
+    @Column(name = "content", nullable = false, length = 2048)
+    private String content;
 
     //конструктор
     public Reaction() {}

@@ -1,8 +1,13 @@
 package com.example.app.model;
 
+import jakarta.persistence.*;
 import java.util.Objects;
 
+@MappedSuperclass
 public abstract class BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     protected Long id;
 
     public Long getId() { return id; }

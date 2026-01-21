@@ -3,24 +3,24 @@ package com.example.app.service;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.app.dto.TweetRequestDTO;
 import com.example.app.dto.TweetResponseDTO;
 import com.example.app.exception.AppException;
-import com.example.app.model.Author;
 import com.example.app.model.Tweet;
-import com.example.app.repository.InMemoryAuthorRepository;
-import com.example.app.repository.InMemoryTweetRepository;
+import com.example.app.repository.AuthorRepository;
+import com.example.app.repository.TweetRepository;
 
 import java.time.Instant;
 import java.util.List;
 
 @Service
 public class TweetService {
-    private final InMemoryTweetRepository tweetRepo;
-    private final InMemoryAuthorRepository authorRepo;
+    private final TweetRepository tweetRepo;
+    private final AuthorRepository authorRepo;
 
-    public TweetService(InMemoryTweetRepository tweetRepo, InMemoryAuthorRepository authorRepo) {
+    public TweetService(TweetRepository tweetRepo, AuthorRepository authorRepo) {
         this.tweetRepo = tweetRepo;
         this.authorRepo = authorRepo;
     }
@@ -37,9 +37,11 @@ public class TweetService {
                 .orElseThrow(() -> new AppException("Tweet not found", 40404));
     }
 
+    @Transactional
     public TweetResponseDTO createTweet(@Valid TweetRequestDTO request) {
-        Author author = authorRepo.findById(request.authorId())
-                .orElseThrow(() -> new AppException("Author not found for tweet", 40401));
+        if (!authorRepo.existsById(request.authorId())) {
+            throw new AppException("Author not found for tweet", 40401);
+        }
         
         Tweet tweet = toEntity(request);
         tweet.setCreated(Instant.now());
@@ -48,27 +50,34 @@ public class TweetService {
         return toResponse(saved);
     }
 
+    @Transactional
     public TweetResponseDTO updateTweet(@Valid TweetRequestDTO request) {
         if (request.id() == null) {
             throw new AppException("ID required for update", 40003);
         }
-        if (!tweetRepo.findById(request.id()).isPresent()) {
-            throw new AppException("Tweet not found for update", 40404);
+        
+        Tweet existingTweet = tweetRepo.findById(request.id())
+                .orElseThrow(() -> new AppException("Tweet not found for update", 40404));
+        
+        if (!authorRepo.existsById(request.authorId())) {
+            throw new AppException("Author not found for tweet update", 40401);
         }
         
-        authorRepo.findById(request.authorId())
-                .orElseThrow(() -> new AppException("Author not found for tweet update", 40401));
+        existingTweet.setAuthorId(request.authorId());
+        existingTweet.setTitle(request.title());
+        existingTweet.setContent(request.content());
+        existingTweet.setModified(Instant.now());
         
-        Tweet tweet = toEntity(request);
-        tweet.setModified(Instant.now());
-        Tweet updated = tweetRepo.save(tweet);
+        Tweet updated = tweetRepo.save(existingTweet);
         return toResponse(updated);
     }
 
+    @Transactional
     public void deleteTweet(@NotNull Long id) {
-        if (!tweetRepo.deleteById(id)) {
+        if (!tweetRepo.existsById(id)) {
             throw new AppException("Tweet not found for deletion", 40404);
         }
+        tweetRepo.deleteById(id);
     }
 
     private Tweet toEntity(TweetRequestDTO dto) {
