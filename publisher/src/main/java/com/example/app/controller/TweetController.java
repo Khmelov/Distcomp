@@ -30,6 +30,12 @@ public class TweetController {
         return ResponseEntity.ok(service.getTweetById(id));
     }
 
+    // НОВЫЙ ЭНДПОИНТ: получить твит с реакциями
+    @GetMapping("/{id}/with-reactions")
+    public ResponseEntity<TweetResponseDTO> getTweetWithReactions(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getTweetWithReactions(id));
+    }
+
     @PostMapping
     public ResponseEntity<TweetResponseDTO> createTweet(@Valid @RequestBody TweetRequestDTO request) {
         TweetResponseDTO created = service.createTweet(request);

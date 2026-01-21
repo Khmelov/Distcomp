@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+    
+    <changeSet id="002-create-tbl_reaction" author="your-name">
+        <comment>Create tbl_reaction table</comment>
+        
+        <createTable 
+            tableName="tbl_reaction"
+            keyspace="distcomp">
+            
+            <column name="country" type="text">
+                <constraints nullable="false"/>
+            </column>
+            
+            <column name="tweet_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            
+            <column name="id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            
+            <column name="content" type="text">
+                <constraints nullable="false"/>
+            </column>
+            
+            <column name="author_id" type="bigint"/>
+            
+            <column name="created_at" type="timestamp"/>
+            
+            <column name="updated_at" type="timestamp"/>
+            
+        </createTable>
+        
+        <addPrimaryKey 
+            tableName="tbl_reaction"
+            keyspace="distcomp"
+            columnNames="country, tweet_id, id"
+            constraintName="pk_tbl_reaction"/>
+            
+    </changeSet>
+    
+</databaseChangeLog>
