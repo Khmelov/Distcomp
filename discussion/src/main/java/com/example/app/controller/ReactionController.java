@@ -20,15 +20,13 @@ public class ReactionController {
         this.service = service;
     }
 
-    // 1. Получить все реакции (возможно, с пагинацией)
+    // 1. Получить все реакции
     @GetMapping
     public ResponseEntity<List<ReactionResponseDTO>> getAllReactions() {
-        // Внимание: в Cassandra получение всех записей - дорогая операция
-        // Лучше добавить пагинацию или ограничение
         return ResponseEntity.ok(service.getAllReactions());
     }
 
-    // 2. Получить реакцию по ID (требует tweetId)
+    // 2. Получить реакцию по ID
     @GetMapping("/{id}")
     public ResponseEntity<ReactionResponseDTO> getReaction(
             @PathVariable Long id,
@@ -41,7 +39,13 @@ public class ReactionController {
     @GetMapping("/tweet/{tweetId}")
     public ResponseEntity<List<ReactionResponseDTO>> getReactionsByTweetId(
             @PathVariable Long tweetId,
-            @RequestParam(required = false, defaultValue = "global") String country) {
+            @RequestParam(required = false, defaultValue = "global") String country,
+            @RequestParam(required = false) String state) { // Добавляем фильтр по состоянию
+        
+        if (state != null && "APPROVED".equalsIgnoreCase(state)) {
+            return ResponseEntity.ok(service.getApprovedReactionsByTweetId(country, tweetId));
+        }
+        
         return ResponseEntity.ok(service.getReactionsByTweetId(country, tweetId));
     }
 
@@ -80,5 +84,35 @@ public class ReactionController {
             @PathVariable Long tweetId,
             @RequestParam(required = false, defaultValue = "global") String country) {
         service.deleteReactionsByTweetId(country, tweetId);
+    }
+
+    // 8. НОВЫЙ ЭНДПОИНТ: Модерация реакции (ручная)
+    @PatchMapping("/{id}/moderate")
+    public ResponseEntity<ReactionResponseDTO> moderateReaction(
+            @PathVariable Long id,
+            @RequestParam Long tweetId,
+            @RequestParam(required = false, defaultValue = "global") String country,
+            @RequestParam String state) { // APPROVE или DECLINE
+        
+        if (!"APPROVE".equals(state) && !"DECLINE".equals(state)) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        ReactionResponseDTO moderated = service.moderateReaction(country, tweetId, id, state);
+        return ResponseEntity.ok(moderated);
+    }
+
+    // 9. НОВЫЙ ЭНДПОИНТ: Получить реакции по состоянию
+    @GetMapping("/state/{state}")
+    public ResponseEntity<List<ReactionResponseDTO>> getReactionsByState(
+            @PathVariable String state,
+            @RequestParam(required = false, defaultValue = "global") String country) {
+        
+        List<ReactionResponseDTO> reactions = service.getAllReactions().stream()
+            .filter(r -> state.equalsIgnoreCase(r.getState()))
+            .filter(r -> country.equals(r.getCountry()))
+            .toList();
+            
+        return ResponseEntity.ok(reactions);
     }
 }

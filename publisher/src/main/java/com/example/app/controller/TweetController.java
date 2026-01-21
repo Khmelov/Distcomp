@@ -30,7 +30,13 @@ public class TweetController {
         return ResponseEntity.ok(service.getTweetById(id));
     }
 
-    // НОВЫЙ ЭНДПОИНТ: получить твит с реакциями
+    // НОВЫЙ ЭНДПОИНТ: Получить твит только с APPROVED реакциями
+    @GetMapping("/{id}/approved")
+    public ResponseEntity<TweetResponseDTO> getTweetWithApprovedReactions(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getTweetWithApprovedReactions(id));
+    }
+
+    // Старый эндпоинт для обратной совместимости
     @GetMapping("/{id}/with-reactions")
     public ResponseEntity<TweetResponseDTO> getTweetWithReactions(@PathVariable Long id) {
         return ResponseEntity.ok(service.getTweetWithReactions(id));

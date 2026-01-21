@@ -23,7 +23,6 @@ public class TweetService {
     private final AuthorRepository authorRepo;
     private final DiscussionClient discussionClient;
 
-    // Добавляем DiscussionClient в конструктор
     public TweetService(TweetRepository tweetRepo, 
                        AuthorRepository authorRepo,
                        DiscussionClient discussionClient) {
@@ -42,14 +41,24 @@ public class TweetService {
         Tweet tweet = tweetRepo.findById(id)
                 .orElseThrow(() -> new AppException("Tweet not found", 40404));
         
-        // Получаем реакции из discussion модуля
+        // Получаем ВСЕ реакции (включая PENDING)
         List<ReactionResponseDTO> reactions = discussionClient.getReactionsByTweetId(id);
         
         TweetResponseDTO response = toResponse(tweet);
-        // Если у TweetResponseDTO есть поле для реакций, добавляем их
-        response.setReactions(reactions);
+        // Используем withReactions для добавления реакций
+        return response.withReactions(reactions);
+    }
+
+    // НОВЫЙ МЕТОД: Получить твит только с APPROVED реакциями
+    public TweetResponseDTO getTweetWithApprovedReactions(@NotNull Long id) {
+        Tweet tweet = tweetRepo.findById(id)
+                .orElseThrow(() -> new AppException("Tweet not found", 40404));
         
-        return response;
+        // Получаем только APPROVED реакции
+        List<ReactionResponseDTO> approvedReactions = discussionClient.getApprovedReactionsByTweetId(id);
+        
+        TweetResponseDTO response = toResponse(tweet);
+        return response.withReactions(approvedReactions);
     }
 
     @Transactional
@@ -64,7 +73,6 @@ public class TweetService {
         Tweet saved = tweetRepo.save(tweet);
         
         return toResponse(saved);
-        // Реакции создаются отдельно через discussion модуль
     }
 
     @Transactional
@@ -96,10 +104,9 @@ public class TweetService {
             throw new AppException("Tweet not found for deletion", 40404);
         }
         
-        // Удаляем все реакции для этого твита через discussion модуль
+        // Удаляем все реакции для этого твита
         discussionClient.deleteReactionsByTweetId(id);
         
-        // Удаляем сам твит
         tweetRepo.deleteById(id);
     }
 
@@ -113,7 +120,7 @@ public class TweetService {
     }
 
     private TweetResponseDTO toResponse(Tweet tweet) {
-        TweetResponseDTO response = new TweetResponseDTO(
+        return new TweetResponseDTO(
                 tweet.getId(),
                 tweet.getAuthorId(),
                 tweet.getTitle(),
@@ -121,14 +128,9 @@ public class TweetService {
                 tweet.getCreated(),
                 tweet.getModified()
         );
-        
-        // Не загружаем реакции здесь, чтобы избежать N+1 проблем
-        // Реакции загружаются только когда нужно (в getTweetById)
-        
-        return response;
     }
     
-    // Дополнительный метод для получения твита с реакциями
+    // Обновленный метод для получения твита с реакциями
     public TweetResponseDTO getTweetWithReactions(@NotNull Long id) {
         Tweet tweet = tweetRepo.findById(id)
                 .orElseThrow(() -> new AppException("Tweet not found", 40404));
@@ -136,8 +138,6 @@ public class TweetService {
         List<ReactionResponseDTO> reactions = discussionClient.getReactionsByTweetId(id);
         
         TweetResponseDTO response = toResponse(tweet);
-        response.setReactions(reactions);
-        
-        return response;
+        return response.withReactions(reactions);
     }
 }

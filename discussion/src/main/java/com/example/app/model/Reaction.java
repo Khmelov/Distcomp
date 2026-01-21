@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-@Table("tbl_reaction") // Для Cassandra используем @Table вместо @Entity
+@Table("tbl_reaction")
 public class Reaction {
     
     @PrimaryKey
@@ -24,10 +24,14 @@ public class Reaction {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
+    // НОВОЕ ПОЛЕ: состояние модерации
+    private String state = "PENDING"; // PENDING, APPROVE, DECLINE
+    
     // Конструкторы
     public Reaction() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.state = "PENDING";
     }
     
     public Reaction(ReactionKey key, String content) {
@@ -35,6 +39,15 @@ public class Reaction {
         this.content = content;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.state = "PENDING";
+    }
+    
+    public Reaction(ReactionKey key, String content, String state) {
+        this.key = key;
+        this.content = content;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        this.state = state;
     }
     
     // Геттеры и сеттеры
@@ -71,6 +84,29 @@ public class Reaction {
         this.updatedAt = updatedAt;
     }
     
+    // НОВЫЕ ГЕТТЕРЫ И СЕТТЕРЫ ДЛЯ STATE
+    public String getState() {
+        return state;
+    }
+    
+    public void setState(String state) {
+        this.state = state;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    // Вспомогательные методы для проверки состояния
+    public boolean isPending() {
+        return "PENDING".equals(state);
+    }
+    
+    public boolean isApproved() {
+        return "APPROVE".equals(state);
+    }
+    
+    public boolean isDeclined() {
+        return "DECLINE".equals(state);
+    }
+    
     // Вспомогательные методы для удобства
     public Long getId() {
         return key != null ? key.getId() : null;
@@ -104,13 +140,24 @@ public class Reaction {
         }
         key.setCountry(country);
     }
+    
+    @Override
+    public String toString() {
+        return "Reaction{" +
+                "key=" + key +
+                ", content='" + content + '\'' +
+                ", state='" + state + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
+    }
 }
 
 @PrimaryKeyClass
 public class ReactionKey implements Serializable {
     
     @PrimaryKeyColumn(name = "country", type = PrimaryKeyType.PARTITIONED)
-    private String country = "global"; // Значение по умолчанию
+    private String country = "global";
     
     @PrimaryKeyColumn(name = "tweet_id", type = PrimaryKeyType.PARTITIONED)
     private Long tweetId;
