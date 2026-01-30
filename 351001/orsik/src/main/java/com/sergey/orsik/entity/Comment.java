@@ -14,5 +14,4 @@ public class Comment implements Identifiable {
     private Long id;
     private Long tweetId;
     private String content;
-    private Instant created;
 }

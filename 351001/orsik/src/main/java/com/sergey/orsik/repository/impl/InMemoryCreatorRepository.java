@@ -24,6 +24,7 @@ public class InMemoryCreatorRepository implements CrudRepository<Creator> {
         storage.put(entity.getId(), new Creator(
                 entity.getId(),
                 entity.getLogin(),
+                entity.getPassword(),
                 entity.getFirstname(),
                 entity.getLastname()
         ));
@@ -38,7 +39,7 @@ public class InMemoryCreatorRepository implements CrudRepository<Creator> {
     @Override
     public java.util.List<Creator> findAll() {
         return storage.values().stream()
-                .map(c -> new Creator(c.getId(), c.getLogin(), c.getFirstname(), c.getLastname()))
+                .map(c -> new Creator(c.getId(), c.getLogin(), c.getPassword(), c.getFirstname(), c.getLastname()))
                 .toList();
     }
 
