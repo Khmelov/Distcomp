@@ -1,7 +1,7 @@
 package org.polozkov.exception.handler;
 
 import lombok.extern.slf4j.Slf4j;
-import org.fitnesstracker.dto.error.ErrorResponseDtoOut;
+import org.polozkov.dto.error.ErrorResponseDtoOut;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
