@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.user.UserRequestTo;
 import org.polozkov.dto.user.UserResponseTo;
 import org.polozkov.service.user.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class UserController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public UserResponseTo createUser(@Valid @RequestBody UserRequestTo userRequest) {
         return userService.createUser(userRequest);
     }
