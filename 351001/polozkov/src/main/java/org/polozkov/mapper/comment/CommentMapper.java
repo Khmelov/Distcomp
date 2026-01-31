@@ -12,7 +12,5 @@ public interface CommentMapper {
     CommentResponseTo commentToResponseDto(Comment comment);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "created", ignore = true)
-    @Mapping(target = "modified", ignore = true)
     Comment requestDtoToComment(CommentRequestTo commentRequest);
 }

@@ -24,7 +24,7 @@ public class Issue {
 
     private LocalDateTime created;
 
-    private LocalDateTime updated;
+    private LocalDateTime modified;
 
     @ManyToOne()
     @JoinColumn(name = "user_id")
