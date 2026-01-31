@@ -10,6 +10,7 @@ import org.polozkov.entity.comment.Comment;
 @Mapper(componentModel = "spring")
 public interface CommentMapper {
 
+    @Mapping(target = "issueId", source = "issue.id")
     CommentResponseTo commentToResponseDto(Comment comment);
 
     @Mapping(target = "id", ignore = true)

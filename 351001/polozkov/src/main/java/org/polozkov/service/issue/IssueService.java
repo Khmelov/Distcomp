@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -49,8 +50,8 @@ public class IssueService {
 
         issue.setUser(user);
 
-        issue.setComments(List.of());
-        issue.setLabels(List.of());
+        issue.setComments(new ArrayList<>());
+        issue.setLabels(new ArrayList<>());
 
         Issue savedIssue = issueRepository.save(issue);
         return issueMapper.issueToResponseDto(savedIssue);
