@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.label.LabelRequestTo;
 import org.polozkov.dto.label.LabelResponseTo;
 import org.polozkov.entity.label.Label;
+import org.polozkov.exception.NotFoundException;
 import org.polozkov.mapper.label.LabelMapper;
 import org.polozkov.repository.label.LabelRepository;
 import org.springframework.stereotype.Service;
@@ -30,11 +31,10 @@ public class LabelService {
     public LabelResponseTo getLabelById(Long id) {
         return labelRepository.findById(id)
                 .map(labelMapper::labelToResponseDto)
-                .orElseThrow(() -> new RuntimeException("Label not found with id: " + id));
+                .orElseThrow(() -> new NotFoundException("Label not found with id: " + id));
     }
 
     public LabelResponseTo createLabel(@Valid LabelRequestTo labelRequest) {
-        // Проверка уникальности имени
         labelRepository.findByName(labelRequest.getName())
                 .ifPresent(label -> {
                     throw new RuntimeException("Label with name " + labelRequest.getName() + " already exists");
@@ -47,17 +47,17 @@ public class LabelService {
 
     public LabelResponseTo updateLabel(@Valid LabelRequestTo labelRequest) {
         if (!labelRepository.existsById(labelRequest.getId())) {
-            throw new RuntimeException("Label not found with id: " + labelRequest.getId());
+            throw new NotFoundException("Label not found with id: " + labelRequest.getId());
         }
 
-        Label label = labelMapper.requestDtoToLabel(labelRequest);
-        Label updatedLabel = labelRepository.update(label);
-        return labelMapper.labelToResponseDto(updatedLabel);
+        Label label = labelRepository.findById(labelRequest.getId()).orElseThrow(() -> new NotFoundException("Label not found with id: " + labelRequest.getId()));
+        label = labelMapper.updateLabel(label, labelRequest);
+        return labelMapper.labelToResponseDto(label);
     }
 
     public void deleteLabel(Long id) {
         if (!labelRepository.existsById(id)) {
-            throw new RuntimeException("Label not found with id: " + id);
+            throw new NotFoundException("Label not found with id: " + id);
         }
         labelRepository.deleteById(id);
     }

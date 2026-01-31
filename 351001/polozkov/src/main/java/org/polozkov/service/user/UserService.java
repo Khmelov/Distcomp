@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.user.UserRequestTo;
 import org.polozkov.dto.user.UserResponseTo;
 import org.polozkov.entity.user.User;
+import org.polozkov.exception.NotFoundException;
 import org.polozkov.mapper.user.UserMapper;
 import org.polozkov.repository.user.UserRepository;
 import org.springframework.stereotype.Service;
@@ -49,14 +50,14 @@ public class UserService {
             throw new RuntimeException("User not found with id: " + userRequest.getId());
         }
 
-        User user = userMapper.requestDtoToUser(userRequest);
-        User updatedUser = userRepository.update(user);
-        return userMapper.userToResponseDto(updatedUser);
+        User user = userRepository.findById(userRequest.getId()).orElseThrow(() -> new NotFoundException("User not found with id: " + userRequest.getId()));
+        user = userMapper.updateUser(user, userRequest);
+        return userMapper.userToResponseDto(user);
     }
 
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found with id: " + id);
+            throw new NotFoundException("User not found with id: " + id);
         }
         userRepository.deleteById(id);
     }

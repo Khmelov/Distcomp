@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.issue.IssueRequestTo;
 import org.polozkov.dto.issue.IssueResponseTo;
 import org.polozkov.entity.issue.Issue;
+import org.polozkov.exception.NotFoundException;
 import org.polozkov.mapper.issue.IssueMapper;
 import org.polozkov.repository.issue.IssueRepository;
 import org.polozkov.repository.user.UserRepository;
@@ -58,11 +59,9 @@ public class IssueService {
             throw new RuntimeException("User not found with id: " + issueRequest.getUserId());
         }
 
-        Issue issue = issueMapper.requestDtoToIssue(issueRequest);
+        Issue issue = issueRepository.findById(issueRequest.getId()).orElseThrow(() -> new NotFoundException("Issue not found with id: " + issueRequest.getId()));
         issue.setModified(LocalDateTime.now());
-
-        issueRepository.findById(issueRequest.getId())
-                .ifPresent(existing -> issue.setCreated(existing.getCreated()));
+        issue = issueMapper.updateIssue(issue, issueRequest);
 
         Issue updatedIssue = issueRepository.update(issue);
         return issueMapper.issueToResponseDto(updatedIssue);
@@ -70,7 +69,7 @@ public class IssueService {
 
     public void deleteIssue(Long id) {
         if (!issueRepository.existsById(id)) {
-            throw new RuntimeException("Issue not found with id: " + id);
+            throw new NotFoundException("Issue not found with id: " + id);
         }
         issueRepository.deleteById(id);
     }

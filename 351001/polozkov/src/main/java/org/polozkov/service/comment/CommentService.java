@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.comment.CommentRequestTo;
 import org.polozkov.dto.comment.CommentResponseTo;
 import org.polozkov.entity.comment.Comment;
+import org.polozkov.exception.NotFoundException;
 import org.polozkov.mapper.comment.CommentMapper;
 import org.polozkov.repository.comment.CommentRepository;
 import org.polozkov.repository.issue.IssueRepository;
@@ -55,7 +56,8 @@ public class CommentService {
             throw new RuntimeException("Issue not found with id: " + commentRequest.getIssueId());
         }
 
-        Comment comment = commentMapper.requestDtoToComment(commentRequest);
+        Comment comment = commentRepository.findById(commentRequest.getId()).orElseThrow(() -> new NotFoundException("Comment not found with id: " + commentRequest.getId()));
+        comment = commentMapper.updateComment(comment, commentRequest);
 
         Comment updatedComment = commentRepository.update(comment);
         return commentMapper.commentToResponseDto(updatedComment);
@@ -63,7 +65,7 @@ public class CommentService {
 
     public void deleteComment(Long id) {
         if (!commentRepository.existsById(id)) {
-            throw new RuntimeException("Comment not found with id: " + id);
+            throw new NotFoundException("Comment not found with id: " + id);
         }
         commentRepository.deleteById(id);
     }
