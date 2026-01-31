@@ -5,11 +5,59 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
-  moduleFormat    = "cjs"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// --------------------------------------------------------- //
+model User {
+  id        BigInt    @id @default(autoincrement())
+  login     String
+  password  String
+  firstName String
+  lastName  String
+  articles  Article[]
+}
+
+model Article {
+  id        BigInt   @id @default(autoincrement())
+  title     String
+  content   String
+  createdAt DateTime @default(now()) @map("created")
+  updatedAt DateTime @default(now()) @updatedAt @map("modified")
+
+  user            User             @relation(fields: [userId], references: [id])
+  userId          BigInt
+  notices         Notice[]
+  articleStickers ArticleSticker[]
+}
+
+model Notice {
+  id      BigInt @id @default(autoincrement())
+  content String
+
+  article   Article @relation(fields: [articleId], references: [id])
+  articleId BigInt
+}
+
+model ArticleSticker {
+  article   Article @relation(fields: [articleId], references: [id])
+  articleId BigInt
+
+  sticker   Sticker @relation(fields: [stickerId], references: [id])
+  stickerId BigInt
+
+  @@unique([stickerId, articleId])
+  @@index([stickerId, articleId])
+}
+
+model Sticker {
+  id              BigInt           @id @default(autoincrement())
+  name            String
+  articleStickers ArticleSticker[]
 }
