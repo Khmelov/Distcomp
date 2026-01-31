@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.label.LabelRequestTo;
 import org.polozkov.dto.label.LabelResponseTo;
 import org.polozkov.service.label.LabelService;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class LabelController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public LabelResponseTo createLabel(@Valid @RequestBody LabelRequestTo labelRequest) {
         return labelService.createLabel(labelRequest);
     }
@@ -37,6 +39,7 @@ public class LabelController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteLabel(@PathVariable Long id) {
         labelService.deleteLabel(id);
     }

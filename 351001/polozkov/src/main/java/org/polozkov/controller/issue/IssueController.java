@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.issue.IssueRequestTo;
 import org.polozkov.dto.issue.IssueResponseTo;
 import org.polozkov.service.issue.IssueService;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class IssueController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public IssueResponseTo createIssue(@Valid @RequestBody IssueRequestTo issueRequest) {
         return issueService.createIssue(issueRequest);
     }
@@ -37,6 +39,7 @@ public class IssueController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteIssue(@PathVariable Long id) {
         issueService.deleteIssue(id);
     }

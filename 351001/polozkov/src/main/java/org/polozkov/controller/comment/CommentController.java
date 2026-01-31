@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.comment.CommentRequestTo;
 import org.polozkov.dto.comment.CommentResponseTo;
 import org.polozkov.service.comment.CommentService;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class CommentController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public CommentResponseTo createComment(@Valid @RequestBody CommentRequestTo commentRequest) {
         return commentService.createComment(commentRequest);
     }
@@ -37,6 +39,7 @@ public class CommentController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteComment(@PathVariable Long id) {
         commentService.deleteComment(id);
     }
