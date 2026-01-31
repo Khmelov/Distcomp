@@ -23,8 +23,8 @@ public class CommentController {
     }
 
     @GetMapping("/{id}")
-    public CommentResponseTo getCommentById(@PathVariable Long id) {
-        return commentService.getCommentById(id);
+    public CommentResponseTo getComment(@PathVariable Long id) {
+        return commentService.getComment(id);
     }
 
     @PostMapping

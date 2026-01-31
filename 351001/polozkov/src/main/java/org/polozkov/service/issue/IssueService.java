@@ -4,7 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.issue.IssueRequestTo;
 import org.polozkov.dto.issue.IssueResponseTo;
+import org.polozkov.entity.comment.Comment;
 import org.polozkov.entity.issue.Issue;
+import org.polozkov.entity.label.Label;
 import org.polozkov.entity.user.User;
 import org.polozkov.mapper.issue.IssueMapper;
 import org.polozkov.repository.issue.IssueRepository;
@@ -45,18 +47,29 @@ public class IssueService {
         issue.setCreated(LocalDateTime.now());
         issue.setModified(LocalDateTime.now());
 
+        issue.setUser(user);
+
+        issue.setComments(List.of());
+        issue.setLabels(List.of());
+
         Issue savedIssue = issueRepository.save(issue);
         return issueMapper.issueToResponseDto(savedIssue);
     }
 
     public IssueResponseTo updateIssue(@Valid IssueRequestTo issueRequest) {
-        issueRepository.getById(issueRequest.getId());
+        Issue existingIssue = issueRepository.getById(issueRequest.getId());
 
         User user = userService.getUserById(issueRequest.getUserId());
 
-        Issue issue = getIssueById(issueRequest.getId());
+        Issue issue = issueMapper.updateIssue(existingIssue, issueRequest);
         issue.setModified(LocalDateTime.now());
-        issue = issueMapper.updateIssue(issue, issueRequest);
+
+        issue.setCreated(existingIssue.getCreated());
+
+        issue.setUser(user);
+
+        issue.setComments(existingIssue.getComments());
+        issue.setLabels(existingIssue.getLabels());
 
         Issue updatedIssue = issueRepository.update(issue);
         return issueMapper.issueToResponseDto(updatedIssue);
@@ -65,5 +78,17 @@ public class IssueService {
     public void deleteIssue(Long id) {
         issueRepository.getById(id);
         issueRepository.deleteById(id);
+    }
+
+    public void addCommentToIssue(Long issueId, Comment comment) {
+        Issue issue = issueRepository.getById(issueId);
+        issue.getComments().add(comment);
+        issueRepository.update(issue);
+    }
+
+    public void addLabelToIssue(Long issueId, Label label) {
+        Issue issue = issueRepository.getById(issueId);
+        issue.getLabels().add(label);
+        issueRepository.update(issue);
     }
 }

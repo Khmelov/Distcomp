@@ -30,12 +30,12 @@ public class CommentService {
                 .toList();
     }
 
-    public CommentResponseTo getCommentById(Long id) {
+    public CommentResponseTo getComment(Long id) {
         Comment comment = commentRepository.getById(id);
         return commentMapper.commentToResponseDto(comment);
     }
 
-    public Comment getCommentEntityById(Long id) {
+    public Comment getCommentById(Long id) {
         return commentRepository.getById(id);
     }
 
@@ -44,30 +44,46 @@ public class CommentService {
 
         Comment comment = commentMapper.requestDtoToComment(commentRequest);
 
+        comment.setIssue(issue);
+
+
         Comment savedComment = commentRepository.save(comment);
+
+        issueService.addCommentToIssue(issue.getId(), savedComment);
+
         return commentMapper.commentToResponseDto(savedComment);
     }
 
     public CommentResponseTo updateComment(@Valid CommentRequestTo commentRequest) {
-        commentRepository.getById(commentRequest.getId());
+        Comment existingComment = commentRepository.getById(commentRequest.getId());
 
-        Issue issue = issueService.getIssueById(commentRequest.getIssueId());
+        Issue issue;
+        if (!existingComment.getIssue().getId().equals(commentRequest.getIssueId())) {
+            issue = issueService.getIssueById(commentRequest.getIssueId());
+        } else {
+            issue = existingComment.getIssue();
+        }
 
-        Comment comment = getCommentEntityById(commentRequest.getId());
+        Comment comment = getCommentById(commentRequest.getId());
         comment = commentMapper.updateComment(comment, commentRequest);
 
         Comment updatedComment = commentRepository.update(comment);
+
+        if (!existingComment.getIssue().getId().equals(commentRequest.getIssueId())) {
+            existingComment.getIssue().getComments().removeIf(c -> c.getId().equals(commentRequest.getId()));
+
+            issueService.addCommentToIssue(issue.getId(), updatedComment);
+        }
+
         return commentMapper.commentToResponseDto(updatedComment);
     }
 
     public void deleteComment(Long id) {
-        commentRepository.getById(id);
+        Comment comment = commentRepository.getById(id);
+
+        comment.getIssue().getComments().removeIf(c -> c.getId().equals(id));
+
         commentRepository.deleteById(id);
     }
 
-    public void validateCommentExists(Long id) {
-        if (!commentRepository.existsById(id)) {
-            throw new NotFoundException("Comment not found with id: " + id);
-        }
-    }
 }

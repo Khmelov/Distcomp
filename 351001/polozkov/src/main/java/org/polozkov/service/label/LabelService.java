@@ -6,12 +6,12 @@ import org.polozkov.dto.label.LabelRequestTo;
 import org.polozkov.dto.label.LabelResponseTo;
 import org.polozkov.entity.label.Label;
 import org.polozkov.exception.BadRequestException;
-import org.polozkov.exception.NotFoundException;
 import org.polozkov.mapper.label.LabelMapper;
 import org.polozkov.repository.label.LabelRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,20 +42,43 @@ public class LabelService {
         }
 
         Label label = labelMapper.requestDtoToLabel(labelRequest);
+
+        label.setIssues(new ArrayList<>());
+
         Label savedLabel = labelRepository.save(label);
         return labelMapper.labelToResponseDto(savedLabel);
     }
 
     public LabelResponseTo updateLabel(@Valid LabelRequestTo labelRequest) {
-        labelRepository.getById(labelRequest.getId());
+        Label existingLabel = labelRepository.getById(labelRequest.getId());
 
-        Label label = labelRepository.findById(labelRequest.getId()).orElseThrow(() -> new NotFoundException("Label not found with id: " + labelRequest.getId()));
-        label = labelMapper.updateLabel(label, labelRequest);
-        return labelMapper.labelToResponseDto(label);
+        Label label = labelMapper.updateLabel(existingLabel, labelRequest);
+
+        label.setIssues(existingLabel.getIssues());
+
+        Label updatedLabel = labelRepository.update(label);
+        return labelMapper.labelToResponseDto(updatedLabel);
     }
 
     public void deleteLabel(Long id) {
-        labelRepository.getById(id);
+        Label label = labelRepository.getById(id);
+
+        label.getIssues().forEach(issue ->
+                issue.getLabels().removeIf(l -> l.getId().equals(id))
+        );
+
         labelRepository.deleteById(id);
+    }
+
+    public void addLabelToIssue(Long labelId, org.polozkov.entity.issue.Issue issue) {
+        Label label = labelRepository.getById(labelId);
+        label.getIssues().add(issue);
+        labelRepository.update(label);
+    }
+
+    public void removeLabelFromIssue(Long labelId, org.polozkov.entity.issue.Issue issue) {
+        Label label = labelRepository.getById(labelId);
+        label.getIssues().removeIf(i -> i.getId().equals(issue.getId()));
+        labelRepository.update(label);
     }
 }
