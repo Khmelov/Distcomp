@@ -21,9 +21,9 @@ public class User {
 
     private String password;
 
-    private String firstName;
+    private String firstname;
 
-    private String lastName;
+    private String lastname;
 
     @OneToMany(mappedBy = "user")
     private List<Issue> issues;
