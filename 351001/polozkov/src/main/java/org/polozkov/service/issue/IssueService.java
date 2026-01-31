@@ -5,16 +5,15 @@ import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.issue.IssueRequestTo;
 import org.polozkov.dto.issue.IssueResponseTo;
 import org.polozkov.entity.issue.Issue;
-import org.polozkov.exception.NotFoundException;
+import org.polozkov.entity.user.User;
 import org.polozkov.mapper.issue.IssueMapper;
 import org.polozkov.repository.issue.IssueRepository;
-import org.polozkov.repository.user.UserRepository;
+import org.polozkov.service.user.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Validated
@@ -22,25 +21,25 @@ import java.util.stream.Collectors;
 public class IssueService {
 
     private final IssueRepository issueRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final IssueMapper issueMapper;
 
     public List<IssueResponseTo> getAllIssues() {
         return issueRepository.findAll().stream()
                 .map(issueMapper::issueToResponseDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    public IssueResponseTo getIssueById(Long id) {
-        return issueRepository.findById(id)
-                .map(issueMapper::issueToResponseDto)
-                .orElseThrow(() -> new RuntimeException("Issue not found with id: " + id));
+    public IssueResponseTo getIssue(Long id) {
+        return issueMapper.issueToResponseDto(getIssueById(id));
+    }
+
+    public Issue getIssueById(Long id) {
+        return issueRepository.getById(id);
     }
 
     public IssueResponseTo createIssue(@Valid IssueRequestTo issueRequest) {
-        if (!userRepository.existsById(issueRequest.getUserId())) {
-            throw new RuntimeException("User not found with id: " + issueRequest.getUserId());
-        }
+        User user = userService.getUserById(issueRequest.getUserId());
 
         Issue issue = issueMapper.requestDtoToIssue(issueRequest);
         issue.setCreated(LocalDateTime.now());
@@ -51,15 +50,11 @@ public class IssueService {
     }
 
     public IssueResponseTo updateIssue(@Valid IssueRequestTo issueRequest) {
-        if (!issueRepository.existsById(issueRequest.getId())) {
-            throw new RuntimeException("Issue not found with id: " + issueRequest.getId());
-        }
+        issueRepository.getById(issueRequest.getId());
 
-        if (!userRepository.existsById(issueRequest.getUserId())) {
-            throw new RuntimeException("User not found with id: " + issueRequest.getUserId());
-        }
+        User user = userService.getUserById(issueRequest.getUserId());
 
-        Issue issue = issueRepository.findById(issueRequest.getId()).orElseThrow(() -> new NotFoundException("Issue not found with id: " + issueRequest.getId()));
+        Issue issue = getIssueById(issueRequest.getId());
         issue.setModified(LocalDateTime.now());
         issue = issueMapper.updateIssue(issue, issueRequest);
 
@@ -68,9 +63,7 @@ public class IssueService {
     }
 
     public void deleteIssue(Long id) {
-        if (!issueRepository.existsById(id)) {
-            throw new NotFoundException("Issue not found with id: " + id);
-        }
+        issueRepository.getById(id);
         issueRepository.deleteById(id);
     }
 }

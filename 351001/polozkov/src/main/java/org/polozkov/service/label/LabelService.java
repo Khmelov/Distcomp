@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.label.LabelRequestTo;
 import org.polozkov.dto.label.LabelResponseTo;
 import org.polozkov.entity.label.Label;
+import org.polozkov.exception.BadRequestException;
 import org.polozkov.exception.NotFoundException;
 import org.polozkov.mapper.label.LabelMapper;
 import org.polozkov.repository.label.LabelRepository;
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Validated
@@ -25,20 +25,21 @@ public class LabelService {
     public List<LabelResponseTo> getAllLabels() {
         return labelRepository.findAll().stream()
                 .map(labelMapper::labelToResponseDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    public LabelResponseTo getLabelById(Long id) {
-        return labelRepository.findById(id)
-                .map(labelMapper::labelToResponseDto)
-                .orElseThrow(() -> new NotFoundException("Label not found with id: " + id));
+    public LabelResponseTo getLabel(Long id) {
+        return labelMapper.labelToResponseDto(getLabelById(id));
+    }
+
+    public Label getLabelById(Long id) {
+        return labelRepository.getById(id);
     }
 
     public LabelResponseTo createLabel(@Valid LabelRequestTo labelRequest) {
-        labelRepository.findByName(labelRequest.getName())
-                .ifPresent(label -> {
-                    throw new RuntimeException("Label with name " + labelRequest.getName() + " already exists");
-                });
+        if (labelRepository.findByName(labelRequest.getName()).isPresent()) {
+            throw new BadRequestException("Label with name " + labelRequest.getName() + " already exists");
+        }
 
         Label label = labelMapper.requestDtoToLabel(labelRequest);
         Label savedLabel = labelRepository.save(label);
@@ -46,9 +47,7 @@ public class LabelService {
     }
 
     public LabelResponseTo updateLabel(@Valid LabelRequestTo labelRequest) {
-        if (!labelRepository.existsById(labelRequest.getId())) {
-            throw new NotFoundException("Label not found with id: " + labelRequest.getId());
-        }
+        labelRepository.getById(labelRequest.getId());
 
         Label label = labelRepository.findById(labelRequest.getId()).orElseThrow(() -> new NotFoundException("Label not found with id: " + labelRequest.getId()));
         label = labelMapper.updateLabel(label, labelRequest);
@@ -56,9 +55,7 @@ public class LabelService {
     }
 
     public void deleteLabel(Long id) {
-        if (!labelRepository.existsById(id)) {
-            throw new NotFoundException("Label not found with id: " + id);
-        }
+        labelRepository.getById(id);
         labelRepository.deleteById(id);
     }
 }

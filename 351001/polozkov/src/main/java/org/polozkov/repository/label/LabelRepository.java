@@ -1,6 +1,7 @@
 package org.polozkov.repository.label;
 
 import org.polozkov.entity.label.Label;
+import org.polozkov.exception.NotFoundException;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -21,6 +22,11 @@ public class LabelRepository {
 
     public Optional<Label> findById(Long id) {
         return Optional.ofNullable(labels.get(id));
+    }
+
+    public Label getById(Long id) {
+        return findById(id).orElseThrow(() ->
+                new NotFoundException("Label not found with id: " + id));
     }
 
     public Label save(Label label) {

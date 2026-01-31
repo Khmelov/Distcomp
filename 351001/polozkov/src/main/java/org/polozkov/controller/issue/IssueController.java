@@ -23,8 +23,8 @@ public class IssueController {
     }
 
     @GetMapping("/{id}")
-    public IssueResponseTo getIssueById(@PathVariable Long id) {
-        return issueService.getIssueById(id);
+    public IssueResponseTo getIssue(@PathVariable Long id) {
+        return issueService.getIssue(id);
     }
 
     @PostMapping

@@ -1,6 +1,7 @@
 package org.polozkov.repository.comment;
 
 import org.polozkov.entity.comment.Comment;
+import org.polozkov.exception.NotFoundException;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -21,6 +22,11 @@ public class CommentRepository {
 
     public Optional<Comment> findById(Long id) {
         return Optional.ofNullable(comments.get(id));
+    }
+
+    public Comment getById(Long id) {
+        return findById(id).orElseThrow(() ->
+                new NotFoundException("Comment not found with id: " + id));
     }
 
     public Comment save(Comment comment) {

@@ -18,7 +18,7 @@ public class Issue {
     @Id
     private Long id;
 
-    private String text;
+    private String title;
 
     private String content;
 

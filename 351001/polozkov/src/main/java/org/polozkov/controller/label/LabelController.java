@@ -23,8 +23,8 @@ public class LabelController {
     }
 
     @GetMapping("/{id}")
-    public LabelResponseTo getLabelById(@PathVariable Long id) {
-        return labelService.getLabelById(id);
+    public LabelResponseTo getLabel(@PathVariable Long id) {
+        return labelService.getLabel(id);
     }
 
     @PostMapping

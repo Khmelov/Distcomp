@@ -1,6 +1,7 @@
 package org.polozkov.repository.user;
 
 import org.polozkov.entity.user.User;
+import org.polozkov.exception.NotFoundException;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -21,6 +22,11 @@ public class UserRepository {
 
     public Optional<User> findById(Long id) {
         return Optional.ofNullable(users.get(id));
+    }
+
+    public User getById(Long id) {
+        return findById(id).orElseThrow(() ->
+                new NotFoundException("User not found with id: " + id));
     }
 
     public User save(User user) {

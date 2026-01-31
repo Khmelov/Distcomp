@@ -10,6 +10,7 @@ import org.polozkov.entity.issue.Issue;
 @Mapper(componentModel = "spring")
 public interface IssueMapper {
 
+    @Mapping(target = "userId", source =  "user.id")
     IssueResponseTo issueToResponseDto(Issue issue);
 
     @Mapping(target = "id", ignore = true)

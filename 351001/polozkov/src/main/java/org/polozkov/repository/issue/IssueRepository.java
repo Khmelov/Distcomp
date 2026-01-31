@@ -1,6 +1,7 @@
 package org.polozkov.repository.issue;
 
 import org.polozkov.entity.issue.Issue;
+import org.polozkov.exception.NotFoundException;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -21,6 +22,11 @@ public class IssueRepository {
 
     public Optional<Issue> findById(Long id) {
         return Optional.ofNullable(issues.get(id));
+    }
+
+    public Issue getById(Long id) {
+        return findById(id).orElseThrow(() ->
+                new NotFoundException("Issue not found with id: " + id));
     }
 
     public Issue save(Issue issue) {
