@@ -45,10 +45,19 @@ CREATE TABLE "Sticker" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_login_key" ON "User"("login");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Article_title_key" ON "Article"("title");
+
+-- CreateIndex
 CREATE INDEX "ArticleSticker_stickerId_articleId_idx" ON "ArticleSticker"("stickerId", "articleId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ArticleSticker_stickerId_articleId_key" ON "ArticleSticker"("stickerId", "articleId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Sticker_id_name_key" ON "Sticker"("id", "name");
 
 -- AddForeignKey
 ALTER TABLE "Article" ADD CONSTRAINT "Article_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

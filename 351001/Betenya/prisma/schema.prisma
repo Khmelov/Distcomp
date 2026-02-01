@@ -19,22 +19,26 @@ model User {
   id        BigInt    @id @default(autoincrement())
   login     String
   password  String
-  firstName String
-  lastName  String
+  firstname String
+  lastname  String
   articles  Article[]
+
+  @@unique([login])
 }
 
 model Article {
-  id        BigInt   @id @default(autoincrement())
-  title     String
-  content   String
-  createdAt DateTime @default(now()) @map("created")
-  updatedAt DateTime @default(now()) @updatedAt @map("modified")
+  id       BigInt   @id @default(autoincrement())
+  title    String
+  content  String
+  created  DateTime @default(now()) @map("created")
+  modified DateTime @default(now()) @updatedAt @map("modified")
 
   user            User             @relation(fields: [userId], references: [id])
   userId          BigInt
   notices         Notice[]
   articleStickers ArticleSticker[]
+
+  @@unique([title])
 }
 
 model Notice {
@@ -60,4 +64,6 @@ model Sticker {
   id              BigInt           @id @default(autoincrement())
   name            String
   articleStickers ArticleSticker[]
+
+  @@unique([id, name])
 }

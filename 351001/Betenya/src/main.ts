@@ -2,13 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-
-declare module 'express' {
-  interface Request {
-    version?: string;
-  }
-}
+import { BigIntInterceptor } from './services/big-int.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,33 +11,20 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
 
-  const supportedVersions = ['v1.0.0'];
+  app.useGlobalInterceptors(new BigIntInterceptor());
 
-  app.use(
-    '/api/:version',
-    (req: Request, res: Response, next: NextFunction) => {
-      const version: string = req.params.version as string;
-
-      if (!supportedVersions.includes(version)) {
-        return res.status(400).json({
-          error: `Unsupported API version. Supported: ${supportedVersions.join(', ')}`,
-        });
-      }
-
-      req.version = version;
-      next();
-    },
-  );
+  app.setGlobalPrefix('api');
 
   const config = new DocumentBuilder()
     .setTitle('Multi-version API')
     .setDescription('Support multiple API versions')
     .setVersion('1.0')
-    .addServer('/api/v1.0', 'Version 1.0')
+    .addServer('', 'Version 1.0')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+
+  SwaggerModule.setup('api/docs', app, document);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -55,6 +36,11 @@ async function bootstrap() {
       },
     }),
   );
+  // app.useGlobalInterceptors(
+  //   new ClassSerializerInterceptor(app.get(Reflector), {
+  //     strategy: 'excludeAll',
+  //   }),
+  // );
 
   await app.listen(process.env.PORT ?? 24110);
 }
