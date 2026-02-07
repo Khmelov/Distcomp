@@ -1,15 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using ArticleHouse.DAO.Implementation.Creator;
-using ArticleHouse.DAO.Interface.Creator;
+using ArticleHouse;
 using ArticleHouse.ExcMiddleware;
-using ArticleHouse.Service.Implementation.Creator;
 using ArticleHouse.Service.Interface.Creator;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
-builder.Services.AddScoped<ICreatorService, CreatorService>();
-builder.Services.AddSingleton<ICreatorDAO, MemoryCreatorDAO>();
+builder.Services.AddArticleHouseServices();
 
 var app = builder.Build();
 
