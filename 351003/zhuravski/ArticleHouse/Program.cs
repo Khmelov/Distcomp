@@ -1,8 +1,10 @@
+using ArticleHouse.Service.CreatorService;
+using Microsoft.AspNetCore.Http.Json;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddScoped<ICreatorService, CreatorService>();
 
 var app = builder.Build();
 
@@ -19,7 +21,18 @@ app.MapGet("/", async (HttpContext context) =>
     context.Response.ContentType = "text/html";
     await context.Response.WriteAsync("<h1>Main page</h1>\n<img src=\"http://localhost:24110/static/img.jpg\">");
 });
+
 var v1Group = app.MapGroup("/api/v1.0");
-v1Group.MapGet("/creators", () => {});
+var creatorGroup = v1Group.MapGroup("/creators").WithParameterValidation();
+creatorGroup.MapGet("/", async (ICreatorService service) =>
+{
+    return Results.Ok(await service.GetAllCreatorsAsync());
+});
+creatorGroup.MapPost("/", async (ICreatorService service, CreatorRequestDTO dto) =>
+{
+    app.Logger.LogDebug(dto.LastName);
+    CreatorResponseDTO responseDTO = await service.CreateCreatorAsync(dto);
+    return Results.Created($"/creators/{responseDTO.Id}", responseDTO);
+});
 
 app.Run();
