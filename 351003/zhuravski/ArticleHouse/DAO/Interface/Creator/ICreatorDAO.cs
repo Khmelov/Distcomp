@@ -4,4 +4,5 @@ public interface ICreatorDAO
 {
     Task<CreatorModel[]> GetAllCreatorsAsync();
     Task<CreatorModel> AddNewCreatorAsync(CreatorModel model);
+    Task DeleteCreatorAsync(long creatorId);
 }

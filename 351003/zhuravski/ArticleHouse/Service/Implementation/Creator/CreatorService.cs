@@ -34,9 +34,28 @@ public class CreatorService : ICreatorService
 
     public async Task<CreatorResponseDTO> CreateCreatorAsync(CreatorRequestDTO dto)
     {
-        CreatorModel model = MakeModelFromRequest(dto);
-        CreatorModel result = await creatorDAO.AddNewCreatorAsync(model);
-        return MakeResponseFromModel(result);
+        try
+        {
+            CreatorModel model = MakeModelFromRequest(dto);
+            CreatorModel result = await creatorDAO.AddNewCreatorAsync(model);
+            return MakeResponseFromModel(result);
+        }
+        catch (DAOException e)
+        {
+            throw new ServiceException(e.Message);
+        }
+    }
+
+    public async Task DeleteCreatorAsync(long creatorId)
+    {
+        try
+        {
+            await creatorDAO.DeleteCreatorAsync(creatorId);
+        }
+        catch (DAOException e)
+        {
+            throw new ServiceException(e.Message);
+        }
     }
 
     private static CreatorModel MakeModelFromRequest(CreatorRequestDTO dto)

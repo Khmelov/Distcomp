@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using ArticleHouse.DAO.Exceptions;
 
 namespace ArticleHouse.DAO.CreatorDAO;
 
@@ -19,5 +20,13 @@ public class MemoryCreatorDAO : ICreatorDAO
         result.Id = id;
         models.GetOrAdd(id, result);
         return result;
+    }
+
+    public async Task DeleteCreatorAsync(long creatorId)
+    {
+        if (!models.TryRemove(creatorId, out CreatorModel? model))
+        {
+            throw new DAOException($"There is not a creator with id={creatorId}.");
+        }
     }
 }

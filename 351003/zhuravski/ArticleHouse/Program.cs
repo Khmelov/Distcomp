@@ -53,7 +53,8 @@ creatorGroup.MapPost("/", async (ICreatorService service, CreatorRequestDTO dto)
 });
 creatorGroup.MapDelete("/{id}", async (ICreatorService service, long id) =>
 {
-    app.Logger.LogDebug(id.ToString());
+    await service.DeleteCreatorAsync(id);
+    return Results.NoContent();
 });
 
 app.Run();
