@@ -1,3 +1,5 @@
+using System.Reflection;
+using ArticleHouse.DAO.CreatorDAO;
 using ArticleHouse.Service.CreatorService;
 using Microsoft.AspNetCore.Http.Json;
 
@@ -5,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<ICreatorService, CreatorService>();
+builder.Services.AddSingleton<ICreatorDAO, MemoryCreatorDAO>();
 
 var app = builder.Build();
 
