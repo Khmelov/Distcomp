@@ -4,7 +4,7 @@ namespace ArticleHouse.Service.CreatorService;
 
 public record CreatorRequestDTO
 {
-    public long Id {get; init;} = default!;
+    public long? Id {get; init;} = default!;
     [Required]
     public string Login {get; init;} = default!;
     [Required]

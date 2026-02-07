@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using ArticleHouse.DAO.CreatorDAO;
 using ArticleHouse.Service.CreatorService;
@@ -21,6 +22,15 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles("/static");
 
+static async Task HandleException(HttpContext context, Exception e, int code)
+{
+    context.Response.StatusCode = code;
+    context.Response.ContentType = "application/json";
+    await context.Response.WriteAsJsonAsync(new {
+        error = e.Message
+    });
+}
+
 app.Use(async (HttpContext context, RequestDelegate next) =>
 {
     try {
@@ -28,19 +38,15 @@ app.Use(async (HttpContext context, RequestDelegate next) =>
     }
     catch (ServiceObjectNotFoundException e)
     {
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(new {
-            error = e.Message
-        });
+        await HandleException(context, e, StatusCodes.Status404NotFound);
     }
     catch (ServiceException e)
     {
-        context.Response.StatusCode = StatusCodes.Status400BadRequest;
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(new {
-            error = e.Message
-        });
+        await HandleException(context, e, StatusCodes.Status400BadRequest);
+    }
+    catch (ValidationException e)
+    {
+        await HandleException(context, e, StatusCodes.Status400BadRequest);
     }
 });
 
@@ -69,6 +75,14 @@ creatorGroup.MapDelete("/{id}", async (ICreatorService service, long id) =>
 creatorGroup.MapGet("/{id}", async (ICreatorService service, long id) =>
 {
     return Results.Ok(await service.GetCreatorByIdAsync(id));
+});
+creatorGroup.MapPut("/", async (ICreatorService service, CreatorRequestDTO dto) =>
+{
+    if (null == dto.Id)
+    {
+        throw new ValidationException("Creator identifier is missing.");
+    }
+    return Results.Ok();
 });
 
 app.Run();
