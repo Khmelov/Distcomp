@@ -20,6 +20,20 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles("/static");
+
+app.Use(async (HttpContext context, RequestDelegate next) =>
+{
+    try {
+        await next(context);
+    }
+    catch (ServiceException e)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(e.Message);
+    }
+});
+
 app.MapGet("/", async (HttpContext context) =>
 {
     context.Response.ContentType = "text/html";
@@ -30,25 +44,12 @@ var v1Group = app.MapGroup("/api/v1.0");
 var creatorGroup = v1Group.MapGroup("/creators").WithParameterValidation();
 creatorGroup.MapGet("/", async (ICreatorService service) =>
 {
-    try
-    {
-        return Results.Ok(await service.GetAllCreatorsAsync());
-    }
-    catch (ServiceException e)
-    {
-        return Results.BadRequest(e.Message);
-    }
+    return Results.Ok(await service.GetAllCreatorsAsync());
 });
 creatorGroup.MapPost("/", async (ICreatorService service, CreatorRequestDTO dto) =>
 {
-    try {
-        CreatorResponseDTO responseDTO = await service.CreateCreatorAsync(dto);
-        return Results.Created($"/creators/{responseDTO.Id}", responseDTO);
-    }
-    catch (ServiceException e)
-    {
-        return Results.BadRequest(e.Message);
-    }
+    CreatorResponseDTO responseDTO = await service.CreateCreatorAsync(dto);
+    return Results.Created($"/creators/{responseDTO.Id}", responseDTO);
 });
 
 app.Run();
