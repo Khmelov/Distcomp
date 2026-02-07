@@ -42,6 +42,7 @@ public class CreatorService : ICreatorService
     {
         return new CreatorModel()
         {
+            Id = dto.Id,
             FirstName = dto.FirstName,
             LastName = dto.LastName,
             Login = dto.Login,
