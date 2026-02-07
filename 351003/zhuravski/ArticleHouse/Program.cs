@@ -19,9 +19,7 @@ app.MapGet("/", async (HttpContext context) =>
     context.Response.ContentType = "text/html";
     await context.Response.WriteAsync("<h1>Main page</h1>\n<img src=\"http://localhost:24110/img.jpg\">");
 });
-app.MapFallback(async (HttpContext context) =>
-{
-    context.Response.ContentType = "text/html";
-    await context.Response.WriteAsync("<h1>404</h1>");
-});
+var v1Group = app.MapGroup("/api/v1.0");
+v1Group.MapGet("/creators", () => {});
+
 app.Run();
