@@ -2,5 +2,6 @@ namespace ArticleHouse.DAO.CreatorDAO;
 
 public interface ICreatorDAO
 {
-    CreatorModel[] GetAllCreators();
+    Task<CreatorModel[]> GetAllCreators();
+    //CreatorModel AddNewCreator();
 }

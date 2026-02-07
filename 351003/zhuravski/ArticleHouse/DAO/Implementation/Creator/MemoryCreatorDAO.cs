@@ -7,7 +7,7 @@ public class MemoryCreatorDAO : ICreatorDAO
     private readonly ConcurrentDictionary<long, CreatorModel> models = [];
     private long nextModel = 0;
 
-    public CreatorModel[] GetAllCreators()
+    public async Task<CreatorModel[]> GetAllCreators()
     {
         return [.. models.Values];
     }
