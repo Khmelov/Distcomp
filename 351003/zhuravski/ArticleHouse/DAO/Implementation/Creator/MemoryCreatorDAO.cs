@@ -26,7 +26,7 @@ public class MemoryCreatorDAO : ICreatorDAO
     {
         if (!models.TryRemove(creatorId, out CreatorModel? model))
         {
-            throw new DAOException($"There is not a creator with id={creatorId}.");
+            throw new DAOObjectNotFoundException($"There is not a creator with id={creatorId}.");
         }
     }
 }
