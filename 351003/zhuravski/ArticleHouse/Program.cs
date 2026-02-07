@@ -30,13 +30,17 @@ app.Use(async (HttpContext context, RequestDelegate next) =>
     {
         context.Response.StatusCode = StatusCodes.Status404NotFound;
         context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(e.Message);
+        await context.Response.WriteAsJsonAsync(new {
+            error = e.Message
+        });
     }
     catch (ServiceException e)
     {
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
         context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(e.Message);
+        await context.Response.WriteAsJsonAsync(new {
+            error = e.Message
+        });
     }
 });
 
