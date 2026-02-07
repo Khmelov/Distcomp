@@ -38,6 +38,14 @@ public class CreatorService : ICreatorService
         return MakeResponseFromModel(model);
     }
 
+    public async Task<CreatorResponseDTO> UpdateCreatorByIdAsync(long creatorId, CreatorRequestDTO dto)
+    {
+        CreatorModel model = MakeModelFromRequest(dto);
+        model.Id = creatorId;
+        CreatorModel result = await InvokeDAOMethod(() => creatorDAO.UpdateCreatorAsync(model));
+        return MakeResponseFromModel(result);
+    }
+
     private static CreatorModel MakeModelFromRequest(CreatorRequestDTO dto)
     {
         return new CreatorModel()

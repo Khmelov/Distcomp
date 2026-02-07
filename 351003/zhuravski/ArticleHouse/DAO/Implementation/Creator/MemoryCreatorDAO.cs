@@ -39,4 +39,15 @@ public class MemoryCreatorDAO : ICreatorDAO
         }
         return result!;
     }
+
+    public async Task<CreatorModel> UpdateCreatorAsync(CreatorModel model)
+    {
+        CreatorModel result = model.Clone();
+        models.AddOrUpdate(
+            model.Id,
+            key => throw new DAOObjectNotFoundException($"There is not a creator with id={model.Id}."),
+            (key, oldVal) => result
+        );
+        return result;
+    }
 }

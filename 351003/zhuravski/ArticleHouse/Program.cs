@@ -84,11 +84,11 @@ creatorGroup.MapPut("/", async (ICreatorService service, CreatorRequestDTO dto) 
     {
         throw new ValidationException("Creator identifier is missing.");
     }
-    return Results.Ok();
+    return Results.Ok(await service.UpdateCreatorByIdAsync((long)dto.Id, dto));
 });
 creatorGroup.MapPut("/{id}", async (ICreatorService service, CreatorRequestDTO dto, long id) =>
 {
-    return Results.Ok();
+    return Results.Ok(await service.UpdateCreatorByIdAsync(id, dto));
 });
 
 app.Run();
