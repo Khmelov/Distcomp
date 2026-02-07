@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using System.Reflection;
 using ArticleHouse.DAO.CreatorDAO;
+using ArticleHouse.ExcMiddleware;
 using ArticleHouse.Service.CreatorService;
-using ArticleHouse.Service.Exceptions;
-using Microsoft.AspNetCore.Http.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,34 +19,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles("/static");
-
-static async Task HandleException(HttpContext context, Exception e, int code)
-{
-    context.Response.StatusCode = code;
-    context.Response.ContentType = "application/json";
-    await context.Response.WriteAsJsonAsync(new {
-        error = e.Message
-    });
-}
-
-app.Use(async (HttpContext context, RequestDelegate next) =>
-{
-    try {
-        await next(context);
-    }
-    catch (ServiceObjectNotFoundException e)
-    {
-        await HandleException(context, e, StatusCodes.Status404NotFound);
-    }
-    catch (ServiceException e)
-    {
-        await HandleException(context, e, StatusCodes.Status400BadRequest);
-    }
-    catch (ValidationException e)
-    {
-        await HandleException(context, e, StatusCodes.Status400BadRequest);
-    }
-});
+app.UseMiddleware<ExcMiddleware>();
 
 app.MapGet("/", async (HttpContext context) =>
 {
