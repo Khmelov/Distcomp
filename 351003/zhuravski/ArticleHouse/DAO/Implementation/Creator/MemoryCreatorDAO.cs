@@ -1,7 +1,8 @@
 using System.Collections.Concurrent;
 using ArticleHouse.DAO.Exceptions;
+using ArticleHouse.DAO.Interface.Creator;
 
-namespace ArticleHouse.DAO.CreatorDAO;
+namespace ArticleHouse.DAO.Implementation.Creator;
 
 public class MemoryCreatorDAO : ICreatorDAO
 {

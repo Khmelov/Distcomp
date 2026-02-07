@@ -1,8 +1,9 @@
-using ArticleHouse.DAO.CreatorDAO;
 using ArticleHouse.DAO.Exceptions;
+using ArticleHouse.DAO.Interface.Creator;
 using ArticleHouse.Service.Exceptions;
+using ArticleHouse.Service.Interface.Creator;
 
-namespace ArticleHouse.Service.CreatorService;
+namespace ArticleHouse.Service.Implementation.Creator;
 
 public class CreatorService : ICreatorService
 {

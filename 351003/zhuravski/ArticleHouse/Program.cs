@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-using ArticleHouse.DAO.CreatorDAO;
+using ArticleHouse.DAO.Implementation.Creator;
+using ArticleHouse.DAO.Interface.Creator;
 using ArticleHouse.ExcMiddleware;
-using ArticleHouse.Service.CreatorService;
+using ArticleHouse.Service.Implementation.Creator;
+using ArticleHouse.Service.Interface.Creator;
 
 var builder = WebApplication.CreateBuilder(args);
 

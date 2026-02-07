@@ -1,4 +1,4 @@
-namespace ArticleHouse.DAO.CreatorDAO;
+namespace ArticleHouse.DAO.Interface.Creator;
 
 public class CreatorModel
 {
