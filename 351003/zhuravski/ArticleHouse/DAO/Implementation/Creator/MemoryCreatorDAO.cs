@@ -11,4 +11,13 @@ public class MemoryCreatorDAO : ICreatorDAO
     {
         return [.. models.Values];
     }
+
+    public async Task<CreatorModel> AddNewCreator(CreatorModel model)
+    {
+        long id = Interlocked.Increment(ref nextModel);
+        CreatorModel result = model.Clone();
+        result.Id = id;
+        models.GetOrAdd(id, result);
+        return result;
+    }
 }

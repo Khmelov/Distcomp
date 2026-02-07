@@ -33,7 +33,6 @@ creatorGroup.MapGet("/", async (ICreatorService service) =>
 });
 creatorGroup.MapPost("/", async (ICreatorService service, CreatorRequestDTO dto) =>
 {
-    app.Logger.LogDebug(dto.LastName);
     CreatorResponseDTO responseDTO = await service.CreateCreatorAsync(dto);
     return Results.Created($"/creators/{responseDTO.Id}", responseDTO);
 });

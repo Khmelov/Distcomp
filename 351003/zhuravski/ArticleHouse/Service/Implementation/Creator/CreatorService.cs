@@ -25,13 +25,19 @@ public class CreatorService : ICreatorService
 
     public async Task<CreatorResponseDTO> CreateCreatorAsync(CreatorRequestDTO dto)
     {
-        return new CreatorResponseDTO()
+        CreatorModel model = MakeModelFromRequest(dto);
+        CreatorModel result = await creatorDAO.AddNewCreator(model);
+        return MakeResponseFromModel(result);
+    }
+
+    private static CreatorModel MakeModelFromRequest(CreatorRequestDTO dto)
+    {
+        return new CreatorModel()
         {
-            Password = dto.Password,
             FirstName = dto.FirstName,
-            Login = dto.Login,
             LastName = dto.LastName,
-            Id = 666
+            Login = dto.Login,
+            Password = dto.Password
         };
     }
 
