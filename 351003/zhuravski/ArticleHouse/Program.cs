@@ -1,6 +1,7 @@
 using System.Reflection;
 using ArticleHouse.DAO.CreatorDAO;
 using ArticleHouse.Service.CreatorService;
+using ArticleHouse.Service.Exceptions;
 using Microsoft.AspNetCore.Http.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,12 +30,25 @@ var v1Group = app.MapGroup("/api/v1.0");
 var creatorGroup = v1Group.MapGroup("/creators").WithParameterValidation();
 creatorGroup.MapGet("/", async (ICreatorService service) =>
 {
-    return Results.Ok(await service.GetAllCreatorsAsync());
+    try
+    {
+        return Results.Ok(await service.GetAllCreatorsAsync());
+    }
+    catch (ServiceException e)
+    {
+        return Results.BadRequest(e.Message);
+    }
 });
 creatorGroup.MapPost("/", async (ICreatorService service, CreatorRequestDTO dto) =>
 {
-    CreatorResponseDTO responseDTO = await service.CreateCreatorAsync(dto);
-    return Results.Created($"/creators/{responseDTO.Id}", responseDTO);
+    try {
+        CreatorResponseDTO responseDTO = await service.CreateCreatorAsync(dto);
+        return Results.Created($"/creators/{responseDTO.Id}", responseDTO);
+    }
+    catch (ServiceException e)
+    {
+        return Results.BadRequest(e.Message);
+    }
 });
 
 app.Run();

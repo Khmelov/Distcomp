@@ -1,4 +1,6 @@
 using ArticleHouse.DAO.CreatorDAO;
+using ArticleHouse.DAO.Exceptions;
+using ArticleHouse.Service.Exceptions;
 
 namespace ArticleHouse.Service.CreatorService;
 
@@ -14,13 +16,20 @@ public class CreatorService : ICreatorService
     }
     public async Task<CreatorResponseDTO[]> GetAllCreatorsAsync()
     {
-        CreatorModel[] daoModels = await creatorDAO.GetAllCreators();
-        CreatorResponseDTO[] result = new CreatorResponseDTO[daoModels.Length];
-        for (int i = 0; i < daoModels.Length; i++)
+        try
         {
-            result[i] = MakeResponseFromModel(daoModels[i]);
+            CreatorModel[] daoModels = await creatorDAO.GetAllCreators();
+            CreatorResponseDTO[] result = new CreatorResponseDTO[daoModels.Length];
+            for (int i = 0; i < daoModels.Length; i++)
+            {
+                result[i] = MakeResponseFromModel(daoModels[i]);
+            }
+            return result;
         }
-        return result;
+        catch (DAOException e)
+        {
+            throw new ServiceException(e.Message);
+        }
     }
 
     public async Task<CreatorResponseDTO> CreateCreatorAsync(CreatorRequestDTO dto)
