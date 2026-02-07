@@ -7,9 +7,10 @@ import com.example.demo.dto.responses.MessageResponseTo;
 import com.example.demo.model.Mark;
 import com.example.demo.model.Message;
 import com.example.demo.repository.MessageRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+@Service
 public class MessageService {
     private final MessageRepository repository;
     private final EntityMapper mapper;

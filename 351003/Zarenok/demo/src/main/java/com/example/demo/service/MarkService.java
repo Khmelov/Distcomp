@@ -6,9 +6,10 @@ import com.example.demo.dto.responses.IssueResponseTo;
 import com.example.demo.dto.responses.MarkResponseTo;
 import com.example.demo.model.Mark;
 import com.example.demo.repository.MarkRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+@Service
 public class MarkService {
     private final MarkRepository repository;
     private final EntityMapper mapper;
