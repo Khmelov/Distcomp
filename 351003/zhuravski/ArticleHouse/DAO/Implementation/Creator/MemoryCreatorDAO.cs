@@ -29,4 +29,14 @@ public class MemoryCreatorDAO : ICreatorDAO
             throw new DAOObjectNotFoundException($"There is not a creator with id={creatorId}.");
         }
     }
+
+    public async Task<CreatorModel> GetCreatorByIdAsync(long creatorId)
+    {
+        CreatorModel? result;
+        if (!models.TryGetValue(creatorId, out result))
+        {
+            throw new DAOObjectNotFoundException($"There is not a creator with id={creatorId}.");
+        }
+        return result!;
+    }
 }

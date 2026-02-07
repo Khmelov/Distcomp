@@ -32,6 +32,12 @@ public class CreatorService : ICreatorService
         await InvokeDAOMethod(() => creatorDAO.DeleteCreatorAsync(creatorId));
     }
 
+    public async Task<CreatorResponseDTO> GetCreatorByIdAsync(long creatorId)
+    {
+        CreatorModel model = await InvokeDAOMethod(() => creatorDAO.GetCreatorByIdAsync(creatorId));
+        return MakeResponseFromModel(model);
+    }
+
     private static CreatorModel MakeModelFromRequest(CreatorRequestDTO dto)
     {
         return new CreatorModel()

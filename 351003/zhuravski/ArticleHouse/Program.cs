@@ -64,7 +64,7 @@ creatorGroup.MapDelete("/{id}", async (ICreatorService service, long id) =>
 });
 creatorGroup.MapGet("/{id}", async (ICreatorService service, long id) =>
 {
-    return Results.Ok();
+    return Results.Ok(await service.GetCreatorByIdAsync(id));
 });
 
 app.Run();
