@@ -18,7 +18,7 @@ public class CreatorService : ICreatorService
     {
         try
         {
-            CreatorModel[] daoModels = await creatorDAO.GetAllCreators();
+            CreatorModel[] daoModels = await creatorDAO.GetAllCreatorsAsync();
             CreatorResponseDTO[] result = new CreatorResponseDTO[daoModels.Length];
             for (int i = 0; i < daoModels.Length; i++)
             {
@@ -35,7 +35,7 @@ public class CreatorService : ICreatorService
     public async Task<CreatorResponseDTO> CreateCreatorAsync(CreatorRequestDTO dto)
     {
         CreatorModel model = MakeModelFromRequest(dto);
-        CreatorModel result = await creatorDAO.AddNewCreator(model);
+        CreatorModel result = await creatorDAO.AddNewCreatorAsync(model);
         return MakeResponseFromModel(result);
     }
 

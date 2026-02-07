@@ -51,5 +51,9 @@ creatorGroup.MapPost("/", async (ICreatorService service, CreatorRequestDTO dto)
     CreatorResponseDTO responseDTO = await service.CreateCreatorAsync(dto);
     return Results.Created($"/creators/{responseDTO.Id}", responseDTO);
 });
+creatorGroup.MapDelete("/{id}", async (ICreatorService service, long id) =>
+{
+    app.Logger.LogDebug(id.ToString());
+});
 
 app.Run();
