@@ -76,12 +76,18 @@ creatorGroup.MapGet("/{id}", async (ICreatorService service, long id) =>
 {
     return Results.Ok(await service.GetCreatorByIdAsync(id));
 });
+//Колхоз - и я не одобряю.
+//Qwen тоже не одобряет.
 creatorGroup.MapPut("/", async (ICreatorService service, CreatorRequestDTO dto) =>
 {
     if (null == dto.Id)
     {
         throw new ValidationException("Creator identifier is missing.");
     }
+    return Results.Ok();
+});
+creatorGroup.MapPut("/{id}", async (ICreatorService service, CreatorRequestDTO dto, long id) =>
+{
     return Results.Ok();
 });
 
