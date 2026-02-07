@@ -13,11 +13,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseStaticFiles("/static");
 app.MapGet("/", async (HttpContext context) =>
 {
     context.Response.ContentType = "text/html";
-    await context.Response.WriteAsync("<h1>Main page</h1>\n<img src=\"http://localhost:24110/img.jpg\">");
+    await context.Response.WriteAsync("<h1>Main page</h1>\n<img src=\"http://localhost:24110/static/img.jpg\">");
 });
 var v1Group = app.MapGroup("/api/v1.0");
 v1Group.MapGet("/creators", () => {});
