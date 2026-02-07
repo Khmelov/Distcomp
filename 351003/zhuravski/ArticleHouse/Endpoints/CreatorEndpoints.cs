@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using ArticleHouse.Additions;
 using ArticleHouse.Service.Interface.Creator;
 
 namespace ArticleHouse.Endpoints;
@@ -16,10 +17,11 @@ public static class CreatorEndpoints
             return Results.Ok(await service.GetAllCreatorsAsync());
         });
 
-        creatorGroup.MapPost("/", async (ICreatorService service, CreatorRequestDTO dto) =>
+        creatorGroup.MapPost("/", async (ICreatorService service, HttpContext context, CreatorRequestDTO dto) =>
         {
             CreatorResponseDTO responseDTO = await service.CreateCreatorAsync(dto);
-            return Results.Created($"/creators/{responseDTO.Id}", responseDTO);
+            string path = UrlRoutines.BuildAbsoluteUrl(context, $"{GroupPrefix}/{responseDTO.Id}");
+            return Results.Created(path, responseDTO);
         });
 
         creatorGroup.MapDelete("/{id}", async (ICreatorService service, long id) =>
