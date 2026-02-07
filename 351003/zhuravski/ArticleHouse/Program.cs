@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using ArticleHouse;
 using ArticleHouse.ExcMiddleware;
+using ArticleHouse.Service.Interface.Article;
 using ArticleHouse.Service.Interface.Creator;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,6 +60,17 @@ creatorGroup.MapPut("/", async (ICreatorService service, CreatorRequestDTO dto) 
 creatorGroup.MapPut("/{id}", async (ICreatorService service, CreatorRequestDTO dto, long id) =>
 {
     return Results.Ok(await service.UpdateCreatorByIdAsync(id, dto));
+});
+
+var articleGroup = v1Group.MapGroup("/articles").WithParameterValidation();
+articleGroup.MapGet("/", async (IArticleService service) =>
+{
+    return Results.Ok(await service.GetAllArticlesAsync());
+});
+articleGroup.MapPost("/", async (IArticleService service, ArticleRequestDTO dto) =>
+{
+    ArticleResponseDTO result = await service.CreateArticleAsync(dto);
+    return Results.Created($"/articles/{result.Id}", result);
 });
 
 app.Run();
