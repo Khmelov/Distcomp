@@ -28,5 +28,11 @@ public static class ArticleEndpoints
         {
             return Results.Ok(await service.GetArticleByIdAsync(id));
         });
+
+        articleGroup.MapDelete("/{id}", async (IArticleService service, long id) =>
+        {
+            await service.DeleteArticleAsync(id);
+            return Results.NoContent();
+        });
     }
 }

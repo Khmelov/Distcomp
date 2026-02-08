@@ -33,6 +33,11 @@ public class ArticleService : Service, IArticleService
         return MakeResponseFromModel(model);
     }
 
+    public async Task DeleteArticleAsync(long id)
+    {
+        await InvokeDAOMethod(() => articleDAO.DeleteAsync(id));
+    }
+
     private static ArticleModel MakeModelFromRequest(ArticleRequestDTO dto)
     {
         return new ArticleModel()
