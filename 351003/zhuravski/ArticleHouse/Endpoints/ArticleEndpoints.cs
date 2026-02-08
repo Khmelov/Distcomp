@@ -42,7 +42,7 @@ public static class ArticleEndpoints
         {
             if (null == dto.Id)
             {
-                throw new ValidationException("Creator identifier is missing.");
+                throw new ValidationException("Article identifier is missing.");
             }
             return Results.Ok(await service.UpdateArticleByIdAsync((long)dto.Id, dto));
         });

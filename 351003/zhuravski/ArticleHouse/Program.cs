@@ -27,5 +27,6 @@ app.MapGet("/", async (HttpContext context) =>
 
 app.MapCreatorEndpoints();
 app.MapArticleEndpoints();
+app.MapCommentEndpoints();
 
 app.Run();
