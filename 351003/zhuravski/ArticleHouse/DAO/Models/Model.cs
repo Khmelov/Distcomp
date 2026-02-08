@@ -1,7 +1,10 @@
 namespace ArticleHouse.DAO.Models;
 
-public abstract class Model
+public abstract class Model<T> where T : Model<T>
 {
     public long Id {get; set;}
-    public abstract Model Clone();
+    public virtual T Clone()
+    {
+        return (T)MemberwiseClone();
+    }
 }

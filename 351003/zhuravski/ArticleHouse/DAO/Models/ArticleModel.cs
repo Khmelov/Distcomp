@@ -1,6 +1,5 @@
 namespace ArticleHouse.DAO.Models;
 
-public class ArticleModel
+public class ArticleModel : Model<ArticleModel>
 {
-    
 }

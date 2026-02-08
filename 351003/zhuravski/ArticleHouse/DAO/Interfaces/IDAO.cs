@@ -2,7 +2,7 @@ using ArticleHouse.DAO.Models;
 
 namespace ArticleHouse.DAO.Interfaces;
 
-public interface IDAO<T> where T : Model
+public interface IDAO<T> where T : Model<T>
 {
     Task<T[]> GetAllAsync();
     Task<T> AddNewAsync(T model);

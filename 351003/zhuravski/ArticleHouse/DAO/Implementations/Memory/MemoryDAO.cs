@@ -5,7 +5,7 @@ using ArticleHouse.DAO.Models;
 
 namespace ArticleHouse.DAO.Implementations.Memory;
 
-public class MemoryDAO<T> : IDAO<T> where T : Model
+public class MemoryDAO<T> : IDAO<T> where T : Model<T>
 {
     private readonly ConcurrentDictionary<long, T> models = [];
     private long nextModel = 0;
