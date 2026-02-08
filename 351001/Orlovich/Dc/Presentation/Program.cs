@@ -8,7 +8,16 @@ using Infrastructe.Repository;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<IRepository<Editor>,LocalEditorRepository>();
-builder.Services.AddScoped<IService,Service>();
+builder.Services.AddScoped<IService<EditorResponseTo,EditorRequestTo>,EditorService>();
+
+builder.Services.AddSingleton<IRepository<Story>,LocalStoryRepository>();
+builder.Services.AddScoped<IService<StoryResponseTo,StoryRequestTo>,StoryService>();
+
+builder.Services.AddSingleton<IRepository<Tag>,LocalTagRepository>();
+builder.Services.AddScoped<IService<TagResponseTo,TagRequestTo>,TagService>();
+
+builder.Services.AddSingleton<IRepository<Note>,LocalNoteRepository>();
+builder.Services.AddScoped<IService<NoteResponseTo,NoteRequestTo>,NoteService>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 

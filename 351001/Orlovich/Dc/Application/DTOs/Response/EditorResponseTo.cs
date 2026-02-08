@@ -1,6 +1,6 @@
 ﻿namespace Domain.Models;
 
-public class EditorResponseTo
+public class EditorResponseTo : IIdEntity
 {
     public long id { get; set; }
     public string login { get; set; }

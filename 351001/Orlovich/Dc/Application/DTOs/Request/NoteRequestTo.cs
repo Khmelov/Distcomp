@@ -1,7 +1,15 @@
-﻿namespace Domain.Models;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class NoteRequestTo
+namespace Domain.Models;
+
+public class NoteRequestTo : IIdNullEntity
 {
-    public long issueid { get; set; }
+    public long? id { get; set; }
+    public long authorId {get; set; }
+    
+    [StringLength(64, MinimumLength = 2)]
+    public string title { get; set; }
+    
+    [StringLength(2048, MinimumLength = 2)]
     public string content { get; set; }
 }

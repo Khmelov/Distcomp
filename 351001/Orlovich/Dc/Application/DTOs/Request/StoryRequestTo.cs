@@ -1,10 +1,12 @@
-﻿namespace Domain.Models;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class StoryRequestTo
+namespace Domain.Models;
+
+public class StoryRequestTo: IIdNullEntity
 {
-    public long EditorId {get; set; }
-    public string title { get; set; }
+    public long? id { get; set; }
+    public long issueId { get; set; }
+    
+    [StringLength(2048, MinimumLength = 2)]
     public string content { get; set; }
-    public DateTime created { get; set; }
-    public DateTime modified { get; set; }
 }

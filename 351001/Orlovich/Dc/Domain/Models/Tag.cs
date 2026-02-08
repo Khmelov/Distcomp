@@ -1,7 +1,8 @@
 ﻿namespace Domain.Models;
 
-public class Tag
+// Marker
+public class Tag: IIdEntity
 {
-    public long id { get; set; }
+    public long id { get; set; } = 0;
     public string name { get; set; }
 }

@@ -2,7 +2,7 @@
 
 namespace Domain.Models;
 
-public class EditorRequestTo
+public class EditorRequestTo: IIdNullEntity
 {
     public long? id { get; set; }
     

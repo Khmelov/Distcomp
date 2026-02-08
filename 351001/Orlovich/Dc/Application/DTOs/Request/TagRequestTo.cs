@@ -1,6 +1,11 @@
-﻿namespace Domain.Models;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class TagRequestTo
+namespace Domain.Models;
+
+public class TagRequestTo: IIdNullEntity
 {
+    public long? id { get; set; }
+    
+    [StringLength(32, MinimumLength = 2)]
     public string name { get; set; }
 }

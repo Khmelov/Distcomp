@@ -1,11 +1,9 @@
 ﻿namespace Domain.Models;
 
-public class Story
+// Comment
+public class Story: IIdEntity
 {
-    public long id { get; set; }
-    public Editor EditorId {get; set; }
-    public string title { get; set; }
+    public long id { get; set; } = 0;
+    public Story issueId { get; set; }
     public string content { get; set; }
-    public DateTime created { get; set; }
-    public DateTime modified { get; set; }
 }
