@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ArticleHouse.Service.Interface.Creator;
+namespace ArticleHouse.Service.DTOs;
 
 public record CreatorResponseDTO
 {

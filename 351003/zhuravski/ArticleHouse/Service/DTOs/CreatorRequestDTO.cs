@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ArticleHouse.Service.Interface.Creator;
+namespace ArticleHouse.Service.DTOs;
 
 public record CreatorRequestDTO
 {

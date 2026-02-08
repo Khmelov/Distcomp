@@ -1,10 +1,11 @@
 using ArticleHouse.DAO.Exceptions;
 using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
+using ArticleHouse.Service.DTOs;
 using ArticleHouse.Service.Exceptions;
-using ArticleHouse.Service.Interface.Creator;
+using ArticleHouse.Service.Interfaces;
 
-namespace ArticleHouse.Service.Implementation.Creator;
+namespace ArticleHouse.Service.Implementations;
 
 public class CreatorService : ICreatorService
 {

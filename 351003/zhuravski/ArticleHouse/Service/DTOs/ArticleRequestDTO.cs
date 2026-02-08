@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ArticleHouse.Service.Interface.Article;
+namespace ArticleHouse.Service.DTOs;
 
 public record ArticleRequestDTO
 {

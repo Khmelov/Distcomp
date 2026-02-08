@@ -1,6 +1,7 @@
-using ArticleHouse.Service.Interface.Article;
+using ArticleHouse.Service.DTOs;
+using ArticleHouse.Service.Interfaces;
 
-namespace ArticleHouse.Service.Implementation.Article;
+namespace ArticleHouse.Service.Implementations;
 
 public class ArticleService : IArticleService
 {

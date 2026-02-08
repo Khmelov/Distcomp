@@ -1,5 +1,6 @@
 using ArticleHouse.Additions;
-using ArticleHouse.Service.Interface.Article;
+using ArticleHouse.Service.DTOs;
+using ArticleHouse.Service.Interfaces;
 
 namespace ArticleHouse.Endpoints;
 

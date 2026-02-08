@@ -1,4 +1,6 @@
-namespace ArticleHouse.Service.Interface.Article;
+using ArticleHouse.Service.DTOs;
+
+namespace ArticleHouse.Service.Interfaces;
 
 public interface IArticleService
 {

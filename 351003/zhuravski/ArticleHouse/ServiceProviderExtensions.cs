@@ -1,9 +1,7 @@
 using ArticleHouse.DAO.Implementations.Memory;
 using ArticleHouse.DAO.Interfaces;
-using ArticleHouse.Service.Implementation.Article;
-using ArticleHouse.Service.Implementation.Creator;
-using ArticleHouse.Service.Interface.Article;
-using ArticleHouse.Service.Interface.Creator;
+using ArticleHouse.Service.Implementations;
+using ArticleHouse.Service.Interfaces;
 
 namespace ArticleHouse;
 
