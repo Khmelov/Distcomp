@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using ArticleHouse.Additions;
 using ArticleHouse.Service.DTOs;
 using ArticleHouse.Service.Interfaces;
@@ -33,6 +34,22 @@ public static class ArticleEndpoints
         {
             await service.DeleteArticleAsync(id);
             return Results.NoContent();
+        });
+
+        //Колхоз - и я не одобряю.
+        //Qwen тоже не одобряет.
+        articleGroup.MapPut("/", async (IArticleService service, ArticleRequestDTO dto) =>
+        {
+            if (null == dto.Id)
+            {
+                throw new ValidationException("Creator identifier is missing.");
+            }
+            return Results.Ok(await service.UpdateArticleByIdAsync((long)dto.Id, dto));
+        });
+        
+        articleGroup.MapPut("/{id}", async (IArticleService service, ArticleRequestDTO dto, long id) =>
+        {
+            return Results.Ok(await service.UpdateArticleByIdAsync(id, dto));
         });
     }
 }
