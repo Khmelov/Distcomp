@@ -23,5 +23,10 @@ public static class ArticleEndpoints
             string path = UrlRoutines.BuildAbsoluteUrl(context, $"{GroupPrefix}/{result.Id}");
             return Results.Created(path, result);
         });
+
+        articleGroup.MapGet("/{id}", async (IArticleService service, long id) =>
+        {
+            return Results.Ok(await service.GetArticleByIdAsync(id));
+        });
     }
 }

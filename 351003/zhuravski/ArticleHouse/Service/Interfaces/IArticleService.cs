@@ -6,4 +6,5 @@ public interface IArticleService
 {
     Task<ArticleResponseDTO[]> GetAllArticlesAsync();
     Task<ArticleResponseDTO> CreateArticleAsync(ArticleRequestDTO dto);
+    Task<ArticleResponseDTO> GetArticleByIdAsync(long id);
 }

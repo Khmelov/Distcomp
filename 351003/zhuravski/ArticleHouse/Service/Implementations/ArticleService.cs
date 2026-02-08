@@ -27,6 +27,12 @@ public class ArticleService : Service, IArticleService
         return MakeResponseFromModel(result);
     }
 
+    public async Task<ArticleResponseDTO> GetArticleByIdAsync(long id)
+    {
+        ArticleModel model = await InvokeDAOMethod(() => articleDAO.GetByIdAsync(id));
+        return MakeResponseFromModel(model);
+    }
+
     private static ArticleModel MakeModelFromRequest(ArticleRequestDTO dto)
     {
         return new ArticleModel()
