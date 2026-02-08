@@ -1,13 +1,11 @@
-using ArticleHouse.DAO.Exceptions;
 using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.DTOs;
-using ArticleHouse.Service.Exceptions;
 using ArticleHouse.Service.Interfaces;
 
 namespace ArticleHouse.Service.Implementations;
 
-public class CreatorService : ICreatorService
+public class CreatorService : Service, ICreatorService
 {
     private readonly ILogger<CreatorService> logger;
     private readonly ICreatorDAO creatorDAO;
@@ -71,39 +69,5 @@ public class CreatorService : ICreatorService
             Login = model.Login,
             Password = model.Password
         };
-    }
-
-    private static async Task InvokeDAOMethod(Func<Task> call)
-    {
-        try
-        {
-            await call();
-        }
-        catch (DAOException e)
-        {
-            HandleDAOException(e);
-        }
-    }
-
-    private static async Task<T> InvokeDAOMethod<T>(Func<Task<T>> call)
-    {
-        try
-        {
-            return await call();
-        }
-        catch (DAOException e)
-        {
-            HandleDAOException(e);
-            return default!;
-        }
-    }
-
-    private static void HandleDAOException(DAOException e)
-    {
-        if (e is DAOObjectNotFoundException)
-        {
-            throw new ServiceObjectNotFoundException(e.Message);
-        }
-        throw new ServiceException(e.Message);
     }
 }

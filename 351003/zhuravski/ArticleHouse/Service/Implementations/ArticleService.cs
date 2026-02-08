@@ -3,7 +3,7 @@ using ArticleHouse.Service.Interfaces;
 
 namespace ArticleHouse.Service.Implementations;
 
-public class ArticleService : IArticleService
+public class ArticleService : Service, IArticleService
 {
     public async Task<ArticleResponseDTO[]> GetAllArticlesAsync()
     {
