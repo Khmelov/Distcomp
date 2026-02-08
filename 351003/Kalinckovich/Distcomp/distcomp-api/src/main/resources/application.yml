@@ -1,0 +1,24 @@
+server:
+  port: 24110
+spring:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:migration/schema.sql
+  application:
+    name: distcomp-server
+
+  r2dbc:
+    url: r2dbc:postgresql://localhost:${DB_PORT:5432}/${DB_NAME:distcomp_db}
+    username: ${DB_USER:postgres}
+    password: fuau43fjasdkjfhe132_fd7as8f5421u3iendsacmsl03kmal
+    pool:
+      enabled: true
+      max-size: 20
+      initial-size: 10
+      max-idle-time: 30m
+
+logging:
+  level:
+    org.springframework.r2dbc.core: DEBUG
+    io.r2dbc.spi: DEBUG
