@@ -1,3 +1,6 @@
 spring:
   application:
-    name: 'distcomp'S
+    name: 'distcomp'
+
+server:
+  port: 24110
