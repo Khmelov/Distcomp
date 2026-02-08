@@ -14,12 +14,14 @@ public class CommentService : Service, ICommentService
     }
     public async Task<CommentResponseDTO> CreateCommentAsync(CommentRequestDTO dto)
     {
-        throw new NotImplementedException();
+        CommentModel model = MakeModelFromRequest(dto);
+        CommentModel result = await InvokeDAOMethod(() => commentDAO.AddNewAsync(model));
+        return MakeResponseFromModel(result);
     }
 
     public async Task DeleteCommentAsync(long id)
     {
-        throw new NotImplementedException();
+        await InvokeDAOMethod(() => commentDAO.DeleteAsync(id));
     }
 
     public async Task<CommentResponseDTO[]> GetAllCommentsAsync()
@@ -30,12 +32,16 @@ public class CommentService : Service, ICommentService
 
     public async Task<CommentResponseDTO> GetCommentByIdAsync(long id)
     {
-        throw new NotImplementedException();
+        CommentModel model = await InvokeDAOMethod(() => commentDAO.GetByIdAsync(id));
+        return MakeResponseFromModel(model);
     }
 
     public async Task<CommentResponseDTO> UpdateCommentByIdAsync(long id, CommentRequestDTO dto)
     {
-        throw new NotImplementedException();
+        CommentModel model = MakeModelFromRequest(dto);
+        model.Id = id;
+        CommentModel result = await InvokeDAOMethod(() => commentDAO.UpdateAsync(model));
+        return MakeResponseFromModel(result);
     }
 
     private static CommentModel MakeModelFromRequest(CommentRequestDTO dto)
