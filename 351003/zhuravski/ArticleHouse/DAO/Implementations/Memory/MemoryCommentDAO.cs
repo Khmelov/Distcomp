@@ -2,7 +2,7 @@ using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
 
 namespace ArticleHouse.DAO.Implementations.Memory;
-
+//В следующей лабе разберусь с этой жёсткой связью.
 class MemoryCommentDAO : ICommentDAO
 {
     private readonly MemoryDAO<CommentModel> memoryDAO = new();

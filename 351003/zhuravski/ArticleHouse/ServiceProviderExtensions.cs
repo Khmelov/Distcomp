@@ -17,6 +17,8 @@ static internal class ServiceProviderExtensions
 
         collection.AddScoped<ICommentService, CommentService>();
         collection.AddSingleton<ICommentDAO, MemoryCommentDAO>();
+
+        collection.AddSingleton<IMarkDAO, MemoryMarkDAO>();
         return collection;
     }
 }
