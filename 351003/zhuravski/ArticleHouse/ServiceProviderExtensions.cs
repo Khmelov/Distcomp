@@ -1,7 +1,5 @@
-using ArticleHouse.DAO.Implementation.Article;
-using ArticleHouse.DAO.Implementation.Creator;
-using ArticleHouse.DAO.Interface.Article;
-using ArticleHouse.DAO.Interface.Creator;
+using ArticleHouse.DAO.Implementations.Memory;
+using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.Service.Implementation.Article;
 using ArticleHouse.Service.Implementation.Creator;
 using ArticleHouse.Service.Interface.Article;

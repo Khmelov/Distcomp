@@ -1,5 +1,6 @@
 using ArticleHouse.DAO.Exceptions;
-using ArticleHouse.DAO.Interface.Creator;
+using ArticleHouse.DAO.Interfaces;
+using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.Exceptions;
 using ArticleHouse.Service.Interface.Creator;
 
@@ -17,25 +18,25 @@ public class CreatorService : ICreatorService
     }
     public async Task<CreatorResponseDTO[]> GetAllCreatorsAsync()
     {
-        CreatorModel[] daoModels = await InvokeDAOMethod(() => creatorDAO.GetAllCreatorsAsync());
+        CreatorModel[] daoModels = await InvokeDAOMethod(() => creatorDAO.GetAllAsync());
         return [.. daoModels.Select(MakeResponseFromModel)];
     }
 
     public async Task<CreatorResponseDTO> CreateCreatorAsync(CreatorRequestDTO dto)
     {
         CreatorModel model = MakeModelFromRequest(dto);
-        CreatorModel result = await InvokeDAOMethod(() => creatorDAO.AddNewCreatorAsync(model));
+        CreatorModel result = await InvokeDAOMethod(() => creatorDAO.AddNewAsync(model));
         return MakeResponseFromModel(result);
     }
 
     public async Task DeleteCreatorAsync(long creatorId)
     {
-        await InvokeDAOMethod(() => creatorDAO.DeleteCreatorAsync(creatorId));
+        await InvokeDAOMethod(() => creatorDAO.DeleteAsync(creatorId));
     }
 
     public async Task<CreatorResponseDTO> GetCreatorByIdAsync(long creatorId)
     {
-        CreatorModel model = await InvokeDAOMethod(() => creatorDAO.GetCreatorByIdAsync(creatorId));
+        CreatorModel model = await InvokeDAOMethod(() => creatorDAO.GetByIdAsync(creatorId));
         return MakeResponseFromModel(model);
     }
 
@@ -43,7 +44,7 @@ public class CreatorService : ICreatorService
     {
         CreatorModel model = MakeModelFromRequest(dto);
         model.Id = creatorId;
-        CreatorModel result = await InvokeDAOMethod(() => creatorDAO.UpdateCreatorAsync(model));
+        CreatorModel result = await InvokeDAOMethod(() => creatorDAO.UpdateAsync(model));
         return MakeResponseFromModel(result);
     }
 

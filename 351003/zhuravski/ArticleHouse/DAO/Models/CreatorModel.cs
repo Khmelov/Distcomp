@@ -1,13 +1,12 @@
-namespace ArticleHouse.DAO.Interface.Creator;
+namespace ArticleHouse.DAO.Models;
 
-public class CreatorModel
+public class CreatorModel : Model
 {
     public CreatorModel() {}
-    public CreatorModel Clone()
+    public override Model Clone()
     {
         return (CreatorModel)MemberwiseClone();
     }
-    public long Id {get; set;}
     public string Password {get; set;} = default!;
     public string Login {get; set;} = default!;
     public string FirstName {get; set;} = default!;
