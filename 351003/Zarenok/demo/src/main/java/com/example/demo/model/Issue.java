@@ -16,6 +16,7 @@ public class Issue {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private Long authorId;
     private String title;
     private String content;
     private ZonedDateTime created;

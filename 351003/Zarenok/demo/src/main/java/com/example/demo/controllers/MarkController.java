@@ -21,9 +21,8 @@ public class MarkController {
     }
 
     @PostMapping
-    public ResponseEntity<MarkResponseTo> create(@RequestBody MarkRequestTo dto){
-        MarkResponseTo response = markService.create(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<MarkResponseTo> create(@RequestBody MarkRequestTo dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(markService.create(dto));
     }
 
     @GetMapping
