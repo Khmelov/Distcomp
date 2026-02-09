@@ -1,0 +1,6 @@
+server:
+  port: 24110
+
+spring:
+  application:
+    name: task310-rest-api
