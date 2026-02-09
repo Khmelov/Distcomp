@@ -1,7 +1,7 @@
 package com.distcomp.dto.marker
 
 data class MarkerResponseTo(
-    var id: Long,
-    var name: String,
-    var newsId: Long
+    val id: Long,
+    val name: String,
+    val newsId: Long
 )

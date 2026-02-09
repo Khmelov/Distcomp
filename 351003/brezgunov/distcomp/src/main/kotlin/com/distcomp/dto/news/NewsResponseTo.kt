@@ -6,12 +6,12 @@ import com.distcomp.dto.user.UserResponseTo
 import java.time.LocalDateTime
 
 data class NewsResponseTo(
-    var id: Long,
-    var title: String,
-    var content: String,
-    var created: LocalDateTime,
-    var modified: LocalDateTime,
-    var user: UserResponseTo,
-    var notices: MutableList<NoticeResponseTo>,
-    var markers: MutableList<MarkerResponseTo>
+    val id: Long,
+    val title: String,
+    val content: String,
+    val created: LocalDateTime,
+    val modified: LocalDateTime,
+    val user: UserResponseTo,
+    val notices: MutableList<NoticeResponseTo>,
+    val markers: MutableList<MarkerResponseTo>
 )

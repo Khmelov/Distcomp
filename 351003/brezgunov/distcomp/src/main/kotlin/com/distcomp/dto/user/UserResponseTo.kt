@@ -1,7 +1,8 @@
 package com.distcomp.dto.user
 
 data class UserResponseTo (
-    var username: String,
-    var firstname: String,
-    var lastname: String,
+    val id: Long,
+    val login: String,
+    val firstname: String,
+    val lastname: String,
 )

@@ -1,7 +1,7 @@
 package com.distcomp.dto.notice
 
 data class NoticeResponseTo (
-    var id: Long,
-    var content: String,
-    var newsId: Long,
+    val id: Long,
+    val content: String,
+    val newsId: Long,
 )

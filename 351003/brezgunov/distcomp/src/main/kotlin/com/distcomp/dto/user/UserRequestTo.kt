@@ -1,8 +1,9 @@
 package com.distcomp.dto.user
 
 data class UserRequestTo(
-    var username: String? = null,
-    var password: String,
-    var firstname: String,
-    var lastname: String,
+    val id: Long? = null,
+    val login: String,
+    val password: String,
+    val firstname: String,
+    val lastname: String,
 )
