@@ -23,9 +23,10 @@ export const RequestModal = ({
     const [loading, setLoading] = useState(false)
     const [response, setResponse] = useState<string>('')
     const [requestBody, setRequestBody] = useState('{\n  "example": "data"\n}')
+    const [resultUrl, setResultUrl] = useState<string>(requestItem?.url || '')
     const FULL_API_URL = useMemo(() =>
-        `${API_URL}${apiVersion}${requestItem?.url || ''}`,
-    [apiVersion, requestItem?.url]);
+        `${API_URL}${apiVersion}${resultUrl}`,
+    [apiVersion, resultUrl]);
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -146,8 +147,8 @@ export const RequestModal = ({
                             <div className="flex gap-2">
                                 <input
                                     type="text"
-                                    readOnly
-                                    value={requestItem.url}
+                                    value={resultUrl}
+                                    onChange={(e) => { setResultUrl(e.target.value)}}
                                     className="flex-1 px-4 py-2 rounded-lg bg-gray-50 dark:bg-zinc-800
                                              border dark:border-zinc-700 text-gray-900 dark:text-zinc-100"
                                 />
