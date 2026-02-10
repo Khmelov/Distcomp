@@ -11,9 +11,9 @@ export const Button = ({
     return (
         <div className={"flex gap-2 items-center"}>
             <span className={`font-bold red ${getColor(method)}`}>{method}</span>
-            <button className={`cursor-pointer rounded-lg p-1 pl-4 pr-4 duration-150 ${getBcColor(method)}`}>
+            <div className={`cursor-pointer rounded-lg p-1 pl-4 pr-4 duration-150 ${getBcColor(method)}`}>
                 Run
-            </button>
+            </div>
         </div>
     )
 }

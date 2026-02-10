@@ -1,4 +1,4 @@
-export const API_VERSIONS = [ '/v1.0' ]
+export const API_VERSIONS = [ '/v1.0', '/v2.0' ]
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:24110/api'
 
 export type RequestMethod = "GET" | "POST" | "PUT" | "DELETE";
