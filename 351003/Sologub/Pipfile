@@ -8,6 +8,9 @@ django = "*"
 django-debug-toolbar = "*"
 psycopg2-binary = "*"
 flake8 = "*"
+djangorestframework = "*"
+pre-commit = "*"
+dotenv = "*"
 
 [dev-packages]
 

@@ -28,7 +28,7 @@ services:
       - .:/app
     working_dir: /app/src
     ports:
-      - "8000:8000"
+      - "24110:24110"
     environment:
       POSTGRES_HOST: db
       POSTGRES_DB: ${POSTGRES_DB}
@@ -38,10 +38,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_started
     healthcheck:
-      test: curl --fail http://localhost:8000 || exit 1
+      test: curl --fail http://localhost:24110 || exit 1
       interval: 10s
       timeout: 5s
       retries: 3
