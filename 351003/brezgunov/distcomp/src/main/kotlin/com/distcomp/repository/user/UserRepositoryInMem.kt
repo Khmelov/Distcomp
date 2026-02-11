@@ -1,23 +1,36 @@
 package com.distcomp.repository.user
 
 import com.distcomp.entity.User
-import jakarta.annotation.PostConstruct
 import org.springframework.stereotype.Repository
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 @Repository
-class UserRepositoryInMem : UserRepository {
+class UserRepositoryInMem : CrudRepository<User> {
     private val userMap = ConcurrentHashMap<Long, User>()
     private val counter = AtomicLong(0L)
 
     override fun save(user: User) {
-        val index = counter.incrementAndGet()
+        val index = if (user.id == null) {
+            val newId = counter.incrementAndGet()
+            user.id = newId
+            newId
+        } else {
+            user.id!!
+        }
+
         userMap[index] = user
-        user.id = index
     }
 
-    override fun findUserById(id: Long): User? {
+    override fun findById(id: Long): User? {
         return userMap[id]
+    }
+
+    override fun findAll(): List<User> {
+        return userMap.values.toList()
+    }
+
+    override fun removeById(id: Long) {
+        userMap.remove(id)
     }
 }

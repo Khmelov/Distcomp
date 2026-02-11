@@ -1,7 +1,7 @@
 package com.distcomp.entity
 
 class User (
-    var id: Long,
+    var id: Long? = null,
     var login: String,
     var password: String,
     var firstname: String,
