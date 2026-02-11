@@ -1,4 +1,4 @@
-package com.example.restApi.service;
+package com.example.restApi.services;
 
 import com.example.restApi.dto.request.CommentRequestTo;
 import com.example.restApi.dto.response.CommentResponseTo;

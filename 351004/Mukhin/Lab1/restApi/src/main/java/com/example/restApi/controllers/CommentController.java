@@ -2,7 +2,7 @@ package com.example.restApi.controllers;
 
 import com.example.restApi.dto.request.CommentRequestTo;
 import com.example.restApi.dto.response.CommentResponseTo;
-import com.example.restApi.service.CommentService;
+import com.example.restApi.services.CommentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

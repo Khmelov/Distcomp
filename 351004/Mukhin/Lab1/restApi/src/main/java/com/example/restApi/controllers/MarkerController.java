@@ -2,7 +2,7 @@ package com.example.restApi.controllers;
 
 import com.example.restApi.dto.request.MarkerRequestTo;
 import com.example.restApi.dto.response.MarkerResponseTo;
-import com.example.restApi.service.MarkerService;
+import com.example.restApi.services.MarkerService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

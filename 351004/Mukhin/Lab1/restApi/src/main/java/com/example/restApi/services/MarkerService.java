@@ -1,4 +1,4 @@
-package com.example.restApi.service;
+package com.example.restApi.services;
 
 import com.example.restApi.dto.request.MarkerRequestTo;
 import com.example.restApi.dto.response.MarkerResponseTo;
