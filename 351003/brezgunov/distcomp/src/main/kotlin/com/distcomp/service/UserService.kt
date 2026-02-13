@@ -5,7 +5,7 @@ import com.distcomp.dto.user.UserResponseTo
 import com.distcomp.entity.User
 import com.distcomp.exception.UserNotFoundException
 import com.distcomp.mapper.UserMapper
-import com.distcomp.repository.user.CrudRepository
+import com.distcomp.repository.CrudRepository
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 

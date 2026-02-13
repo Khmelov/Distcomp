@@ -14,6 +14,6 @@ class GlobalExceptionHandler {
             status = e.errorCode.value(),
             message = e.errorMsg
         )
-        return ResponseEntity(error, e.errorCode)
+        return ResponseEntity.status(e.errorCode).body(error)
     }
 }

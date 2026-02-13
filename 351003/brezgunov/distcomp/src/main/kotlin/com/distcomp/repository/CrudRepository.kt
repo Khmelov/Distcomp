@@ -1,7 +1,7 @@
-package com.distcomp.repository.user
+package com.distcomp.repository
 
 interface CrudRepository<T> {
-    fun save(user: T)
+    fun save(entity: T)
 
     fun findById(id: Long): T?
 

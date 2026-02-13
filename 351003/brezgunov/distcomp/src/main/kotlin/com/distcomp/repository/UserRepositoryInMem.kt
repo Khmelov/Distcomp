@@ -1,4 +1,4 @@
-package com.distcomp.repository.user
+package com.distcomp.repository
 
 import com.distcomp.entity.User
 import org.springframework.stereotype.Repository
