@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -26,7 +27,7 @@ export class ArticlesService {
     });
 
     if (articleWithTitle) {
-      throw new UnauthorizedException('Article with title already exists!');
+      throw new ForbiddenException('Article with title already exists!');
     }
 
     return this.prisma.article.create({
