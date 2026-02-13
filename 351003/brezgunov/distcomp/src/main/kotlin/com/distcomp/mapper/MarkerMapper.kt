@@ -14,5 +14,5 @@ import org.mapstruct.ReportingPolicy
 interface MarkerMapper {
     fun toMarkerResponse(marker: Marker) : MarkerResponseTo
 
-    fun toNewsEntity(markerRequestTo: MarkerRequestTo) : Marker
+    fun toMarkerEntity(markerRequestTo: MarkerRequestTo) : Marker
 }

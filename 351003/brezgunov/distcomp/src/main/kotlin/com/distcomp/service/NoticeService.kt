@@ -42,8 +42,10 @@ class NoticeService(
         val notice = noticeMapper.toNoticeEntity(noticeRequestTo)
         notice.id = noticeId
         noticeRepository.save(notice)
+
         val news = newsRepository.findById(noticeRequestTo.newsId)
         notice.news = news ?: throw NewsNotFoundException("News not found")
+
         return noticeMapper.toNoticeResponse(notice)
     }
 
