@@ -1,8 +1,8 @@
 import {
-  ConflictException,
+  ConflictException, ForbiddenException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
+  NotFoundException, UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../services/prisma.service';
 import { UserResponseTo } from '../../../dto/users/UserResponseTo.dto';
@@ -15,7 +15,7 @@ export class UsersService {
 
   async createUser(user: UserRequestTo): Promise<UserResponseTo> {
     if (await this.prisma.user.findUnique({ where: { login: user.login } }))
-      throw new ConflictException('User with this login already exists');
+      throw new ForbiddenException('User with this login already exists');
 
     const salt = await bcrypt.genSalt();
     user.password = await bcrypt.hash(user.password, salt);

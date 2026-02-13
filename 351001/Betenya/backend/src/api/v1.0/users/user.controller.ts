@@ -27,7 +27,7 @@ export class UsersController {
     type: UserResponseTo,
   })
   @ApiResponse({
-    status: 409,
+    status: 403,
     description: 'User with this login already exists',
   })
   async createUser(@Body() user: UserRequestTo): Promise<UserResponseTo> {

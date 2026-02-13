@@ -12,6 +12,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["distcomp"]
 }
 
 // --------------------------------------------------------- //
@@ -24,6 +25,8 @@ model User {
   articles  Article[]
 
   @@unique([login])
+  @@map("tbl_user")
+  @@schema("distcomp")
 }
 
 model Article {
@@ -34,11 +37,13 @@ model Article {
   modified DateTime @default(now()) @updatedAt @map("modified")
 
   user            User             @relation(fields: [userId], references: [id])
-  userId          BigInt
+  userId          BigInt           @map("user_id")
   notices         Notice[]
   articleStickers ArticleSticker[]
 
   @@unique([title])
+  @@map("tbl_article")
+  @@schema("distcomp")
 }
 
 model Notice {
@@ -47,6 +52,9 @@ model Notice {
 
   article   Article @relation(fields: [articleId], references: [id])
   articleId BigInt
+
+  @@map("tbl_notice")
+  @@schema("distcomp")
 }
 
 model ArticleSticker {
@@ -58,6 +66,8 @@ model ArticleSticker {
 
   @@unique([stickerId, articleId])
   @@index([stickerId, articleId])
+  @@map("tbl_article-sticker")
+  @@schema("distcomp")
 }
 
 model Sticker {
@@ -66,4 +76,6 @@ model Sticker {
   articleStickers ArticleSticker[]
 
   @@unique([id, name])
+  @@map("tbl_sticker")
+  @@schema("distcomp")
 }
