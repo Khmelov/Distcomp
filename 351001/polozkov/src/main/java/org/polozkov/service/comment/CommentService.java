@@ -31,12 +31,12 @@ public class CommentService {
     }
 
     public CommentResponseTo getComment(Long id) {
-        Comment comment = commentRepository.getById(id);
+        Comment comment = commentRepository.byId(id);
         return commentMapper.commentToResponseDto(comment);
     }
 
     public Comment getCommentById(Long id) {
-        return commentRepository.getById(id);
+        return commentRepository.byId(id);
     }
 
     public CommentResponseTo createComment(@Valid CommentRequestTo commentRequest) {
@@ -55,7 +55,7 @@ public class CommentService {
     }
 
     public CommentResponseTo updateComment(@Valid CommentRequestTo commentRequest) {
-        Comment existingComment = commentRepository.getById(commentRequest.getId());
+        Comment existingComment = commentRepository.byId(commentRequest.getId());
 
         Issue issue;
         if (!existingComment.getIssue().getId().equals(commentRequest.getIssueId())) {
@@ -67,7 +67,7 @@ public class CommentService {
         Comment comment = getCommentById(commentRequest.getId());
         comment = commentMapper.updateComment(comment, commentRequest);
 
-        Comment updatedComment = commentRepository.update(comment);
+        Comment updatedComment = commentRepository.save(comment);
 
         if (!existingComment.getIssue().getId().equals(commentRequest.getIssueId())) {
             existingComment.getIssue().getComments().removeIf(c -> c.getId().equals(commentRequest.getId()));
@@ -79,7 +79,7 @@ public class CommentService {
     }
 
     public void deleteComment(Long id) {
-        Comment comment = commentRepository.getById(id);
+        Comment comment = commentRepository.byId(id);
 
         comment.getIssue().getComments().removeIf(c -> c.getId().equals(id));
 

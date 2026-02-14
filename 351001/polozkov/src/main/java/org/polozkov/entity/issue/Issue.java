@@ -16,6 +16,7 @@ import java.util.List;
 public class Issue {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String title;
@@ -30,10 +31,10 @@ public class Issue {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "issue")
+    @OneToMany(mappedBy = "issue", fetch = FetchType.LAZY)
     private List<Comment> comments;
 
-    @ManyToMany(mappedBy = "issues")
+    @ManyToMany(mappedBy = "issues", fetch = FetchType.LAZY)
     private List<Label> labels;
 
 }

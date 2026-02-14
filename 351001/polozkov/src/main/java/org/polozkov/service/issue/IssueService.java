@@ -38,7 +38,7 @@ public class IssueService {
     }
 
     public Issue getIssueById(Long id) {
-        return issueRepository.getById(id);
+        return issueRepository.byId(id);
     }
 
     public IssueResponseTo createIssue(@Valid IssueRequestTo issueRequest) {
@@ -58,7 +58,7 @@ public class IssueService {
     }
 
     public IssueResponseTo updateIssue(@Valid IssueRequestTo issueRequest) {
-        Issue existingIssue = issueRepository.getById(issueRequest.getId());
+        Issue existingIssue = issueRepository.byId(issueRequest.getId());
 
         User user = userService.getUserById(issueRequest.getUserId());
 
@@ -72,24 +72,24 @@ public class IssueService {
         issue.setComments(existingIssue.getComments());
         issue.setLabels(existingIssue.getLabels());
 
-        Issue updatedIssue = issueRepository.update(issue);
+        Issue updatedIssue = issueRepository.save(issue);
         return issueMapper.issueToResponseDto(updatedIssue);
     }
 
     public void deleteIssue(Long id) {
-        issueRepository.getById(id);
+        issueRepository.byId(id);
         issueRepository.deleteById(id);
     }
 
     public void addCommentToIssue(Long issueId, Comment comment) {
-        Issue issue = issueRepository.getById(issueId);
+        Issue issue = issueRepository.byId(issueId);
         issue.getComments().add(comment);
-        issueRepository.update(issue);
+        issueRepository.save(issue);
     }
 
     public void addLabelToIssue(Long issueId, Label label) {
-        Issue issue = issueRepository.getById(issueId);
+        Issue issue = issueRepository.byId(issueId);
         issue.getLabels().add(label);
-        issueRepository.update(issue);
+        issueRepository.save(issue);
     }
 }

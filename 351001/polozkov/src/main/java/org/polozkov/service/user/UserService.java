@@ -1,5 +1,6 @@
 package org.polozkov.service.user;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.user.UserRequestTo;
@@ -29,11 +30,13 @@ public class UserService {
                 .toList();
     }
 
+    @Transactional
     public UserResponseTo getUser(Long id) {
-        User user = userRepository.getById(id);
+        User user = userRepository.byId(id);
         return userMapper.userToResponseDto(user);
     }
 
+    @Transactional
     public UserResponseTo createUser(@Valid UserRequestTo userRequest) {
         if (userRepository.findByLogin(userRequest.getLogin()).isPresent()) {
             throw new BadRequestException("User with login " + userRequest.getLogin() + " already exists");
@@ -47,34 +50,37 @@ public class UserService {
         return userMapper.userToResponseDto(savedUser);
     }
 
+    @Transactional
     public UserResponseTo updateUser(@Valid UserRequestTo userRequest) {
-        User existingUser = userRepository.getById(userRequest.getId());
+        User existingUser = userRepository.byId(userRequest.getId());
 
         User user = userMapper.updateUser(existingUser, userRequest);
 
         user.setIssues(existingUser.getIssues());
 
-        User updatedUser = userRepository.update(user);
+        User updatedUser = userRepository.save(user);
         return userMapper.userToResponseDto(updatedUser);
     }
 
+    @Transactional
     public void deleteUser(Long id) {
-        User user = userRepository.getById(id);
+        User user = userRepository.byId(id);
 
         if (!user.getIssues().isEmpty()) {
             throw new BadRequestException("Cannot delete user with existing issues. Delete issues first.");
         }
 
-        userRepository.deleteById(id);
+        userRepository.delete(user);
     }
 
+    @Transactional
     public User getUserById(Long id) {
-        return userRepository.getById(id);
+        return userRepository.byId(id);
     }
 
     public void addIssueToUser(Long userId, Issue issue) {
-        User user = userRepository.getById(userId);
+        User user = userRepository.byId(userId);
         user.getIssues().add(issue);
-        userRepository.update(user);
+        userRepository.save(user);
     }
 }
