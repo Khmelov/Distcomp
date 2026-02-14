@@ -8,6 +8,7 @@ import org.polozkov.dto.user.UserResponseTo;
 import org.polozkov.entity.issue.Issue;
 import org.polozkov.entity.user.User;
 import org.polozkov.exception.BadRequestException;
+import org.polozkov.exception.ForbiddenException;
 import org.polozkov.mapper.user.UserMapper;
 import org.polozkov.repository.user.UserRepository;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,7 @@ public class UserService {
     @Transactional
     public UserResponseTo createUser(@Valid UserRequestTo userRequest) {
         if (userRepository.findByLogin(userRequest.getLogin()).isPresent()) {
-            throw new BadRequestException("User with login " + userRequest.getLogin() + " already exists");
+            throw new ForbiddenException("User with login " + userRequest.getLogin() + " already exists");
         }
 
         User user = userMapper.requestDtoToUser(userRequest);

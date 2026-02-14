@@ -8,6 +8,7 @@ import org.polozkov.entity.issue.Issue;
 @Entity
 @Getter
 @Setter
+@Table(name = "tbl_comment")
 public class Comment {
 
     @Id

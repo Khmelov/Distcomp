@@ -8,6 +8,7 @@ import org.polozkov.entity.comment.Comment;
 import org.polozkov.entity.issue.Issue;
 import org.polozkov.entity.label.Label;
 import org.polozkov.entity.user.User;
+import org.polozkov.exception.ForbiddenException;
 import org.polozkov.mapper.issue.IssueMapper;
 import org.polozkov.repository.issue.IssueRepository;
 import org.polozkov.service.user.UserService;
@@ -43,6 +44,10 @@ public class IssueService {
 
     public IssueResponseTo createIssue(@Valid IssueRequestTo issueRequest) {
         User user = userService.getUserById(issueRequest.getUserId());
+
+        if (issueRepository.findByTitle(issueRequest.getTitle()).isPresent()) {
+            throw new ForbiddenException("Issue with title " + issueRequest.getTitle() + " already exists");
+        }
 
         Issue issue = issueMapper.requestDtoToIssue(issueRequest);
         issue.setCreated(LocalDateTime.now());

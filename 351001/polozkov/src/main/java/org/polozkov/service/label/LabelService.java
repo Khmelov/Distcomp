@@ -6,6 +6,7 @@ import org.polozkov.dto.label.LabelRequestTo;
 import org.polozkov.dto.label.LabelResponseTo;
 import org.polozkov.entity.label.Label;
 import org.polozkov.exception.BadRequestException;
+import org.polozkov.exception.ForbiddenException;
 import org.polozkov.mapper.label.LabelMapper;
 import org.polozkov.repository.label.LabelRepository;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,7 @@ public class LabelService {
 
     public LabelResponseTo createLabel(@Valid LabelRequestTo labelRequest) {
         if (labelRepository.findByName(labelRequest.getName()).isPresent()) {
-            throw new BadRequestException("Label with name " + labelRequest.getName() + " already exists");
+            throw new ForbiddenException("Label with name " + labelRequest.getName() + " already exists");
         }
 
         Label label = labelMapper.requestDtoToLabel(labelRequest);

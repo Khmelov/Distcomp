@@ -10,6 +10,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@Table(name = "tbl_label")
 public class Label {
 
     @Id
@@ -19,7 +20,7 @@ public class Label {
     private String name;
 
     @ManyToMany
-    @JoinTable( name = "label_issue",
+    @JoinTable( name = "tbl_label_issue",
             joinColumns = @JoinColumn(name = "label_id"),
             inverseJoinColumns = @JoinColumn(name = "issue_id")
 
