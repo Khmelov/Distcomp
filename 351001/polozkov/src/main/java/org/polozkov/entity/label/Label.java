@@ -19,11 +19,6 @@ public class Label {
 
     private String name;
 
-    @ManyToMany
-    @JoinTable( name = "tbl_label_issue",
-            joinColumns = @JoinColumn(name = "label_id"),
-            inverseJoinColumns = @JoinColumn(name = "issue_id")
-
-    )
+    @ManyToMany(mappedBy = "labels", fetch = FetchType.LAZY) // Указываем поле из класса Issue
     private List<Issue> issues;
 }

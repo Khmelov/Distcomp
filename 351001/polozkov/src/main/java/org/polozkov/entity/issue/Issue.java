@@ -35,7 +35,12 @@ public class Issue {
     @OneToMany(mappedBy = "issue", fetch = FetchType.LAZY)
     private List<Comment> comments;
 
-    @ManyToMany(mappedBy = "issues", fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "tbl_label_issue",
+            joinColumns = @JoinColumn(name = "issue_id"),      // Теперь текущий ID — это issue
+            inverseJoinColumns = @JoinColumn(name = "label_id") // Обратный — это label
+    )
     private List<Label> labels;
 
 }
