@@ -23,36 +23,36 @@ public class UserService {
     }
 
     public List<UserResponseTo> getAllUsers() {
-        return userRepository.getAllEntities().stream()
+        return userRepository.findAll().stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
 
     public UserResponseTo getUserById(Long id) {
-        return userRepository.getEntityById(id)
+        return userRepository.findById(id)
                 .map(mapper::toDto)
                 .orElseThrow(() -> new EntityNotFoundException("User not found", 40401));
     }
 
     public UserResponseTo createUser(UserRequestTo request) {
         User user = mapper.toEntity(request);
-        User saved = userRepository.createEntity(user);
+        User saved = userRepository.save(user);
         return mapper.toDto(saved);
     }
 
     public UserResponseTo updateUser(Long id, UserRequestTo request) {
-        User existing = userRepository.getEntityById(id)
+        User existing = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found", 40401));
         User updated = mapper.updateEntity(request, existing);
         updated.setId(id);
-        User saved = userRepository.createEntity(updated);
+        User saved = userRepository.save(updated);
         return mapper.toDto(saved);
     }
 
     public void deleteUser(Long id) {
-        if (!userRepository.existsEntity(id)) {
+        if (!userRepository.existsById(id)) {
             throw new EntityNotFoundException("User not found", 40401);
         }
-        userRepository.deleteEntity(id);
+        userRepository.deleteById(id);
     }
 }

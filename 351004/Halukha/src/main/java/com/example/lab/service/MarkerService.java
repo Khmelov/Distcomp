@@ -23,36 +23,36 @@ public class MarkerService {
     }
 
     public List<MarkerResponseTo> getAllMarker() {
-        return newsRepository.getAllEntities().stream()
+        return newsRepository.findAll().stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
 
     public MarkerResponseTo getMarkerById(Long id) {
-        return newsRepository.getEntityById(id)
+        return newsRepository.findById(id)
                 .map(mapper::toDto)
                 .orElseThrow(() -> new EntityNotFoundException("Marker not found", 40401));
     }
 
     public MarkerResponseTo createMarker(MarkerRequestTo request) {
         Marker news = mapper.toEntity(request);
-        Marker saved = newsRepository.createEntity(news);
+        Marker saved = newsRepository.save(news);
         return mapper.toDto(saved);
     }
 
     public MarkerResponseTo updateMarker(Long id, MarkerRequestTo request) {
-        Marker existing = newsRepository.getEntityById(id)
+        Marker existing = newsRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Marker not found", 40401));
         Marker updated = mapper.updateEntity(request, existing);
         updated.setId(id);
-        Marker saved = newsRepository.createEntity(updated);
+        Marker saved = newsRepository.save(updated);
         return mapper.toDto(saved);
     }
 
     public void deleteMarker(Long id) {
-        if (!newsRepository.existsEntity(id)) {
+        if (!newsRepository.existsById(id)) {
             throw new EntityNotFoundException("Marker not found", 40401);
         }
-        newsRepository.deleteEntity(id);
+        newsRepository.deleteById(id);
     }
 }

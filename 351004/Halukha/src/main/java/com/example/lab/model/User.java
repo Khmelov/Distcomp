@@ -10,11 +10,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = "users")
+@Table(name = "tbl_user")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @NotBlank
@@ -29,12 +30,12 @@ public class User {
 
     @NotBlank
     @Size(min = 2, max = 64)
-    @Column(name = "firstName")
+    @Column(name = "firstname")
     private String firstName;
 
     @NotBlank
     @Size(min = 2, max = 64)
-    @Column(name = "lastName")
+    @Column(name = "lastname")
     private String lastName;
 
     public User() {

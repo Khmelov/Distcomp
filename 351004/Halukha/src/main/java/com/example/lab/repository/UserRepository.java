@@ -1,10 +1,8 @@
 package com.example.lab.repository;
 
-import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.lab.model.User;
 
-public interface UserRepository extends CrudRepository<User> {
-    @Override
-    List<User> getAllEntities();
+public interface UserRepository extends JpaRepository<User, Long> {
 }

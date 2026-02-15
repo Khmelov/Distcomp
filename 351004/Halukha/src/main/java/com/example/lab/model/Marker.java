@@ -10,15 +10,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = "markers")
+@Table(name = "tbl_marker")
 public class Marker {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
-
-    @Column(name = "userId")
-    private Long userId;
 
     @NotBlank
     @Size(min = 2, max = 32)

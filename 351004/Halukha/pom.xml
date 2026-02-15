@@ -61,10 +61,10 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
-        <!-- In-memory DB (optional but useful for labs) -->
+        <!-- PostgreSQL Driver -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 

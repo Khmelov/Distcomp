@@ -1,6 +1,7 @@
 package com.example.lab.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
@@ -22,6 +23,8 @@ public class NewsRequestTo {
     @Size(min = 4, max = 2048)
     private String content;
 
+    private List<String> markers;
+
     @DateTimeFormat(iso = ISO.DATE_TIME)
     private LocalDateTime created;
 
@@ -32,11 +35,13 @@ public class NewsRequestTo {
             @JsonProperty("userId") Long userId,
             @JsonProperty("title") String title,
             @JsonProperty("content") String content,
+            @JsonProperty("markers") List<String> markers,
             @JsonProperty("created") LocalDateTime created,
             @JsonProperty("modified") LocalDateTime modified) {
         this.userId = userId;
         this.title = title;
         this.content = content;
+        this.markers = markers;
         this.created = created;
         this.modified = modified;
     }
@@ -51,6 +56,10 @@ public class NewsRequestTo {
 
     public String getContent() {
         return content;
+    }
+
+    public List<String> getMarkers() {
+        return markers;
     }
 
     public LocalDateTime getCreated() {

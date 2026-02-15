@@ -1,10 +1,8 @@
 package com.example.lab.repository;
 
-import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.lab.model.Marker;
 
-public interface MarkerRepository extends CrudRepository<Marker> {
-    @Override
-    List<Marker> getAllEntities();
+public interface MarkerRepository extends JpaRepository<Marker, Long> {
 }
