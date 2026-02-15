@@ -72,4 +72,9 @@ public:
             throw NotFoundException("Editor not found for deletion");
         }
     }
+
+    std::vector<EditorResponseTo> GetAll()
+    {
+        return Mapper::ToResponseList(m_dao->ReadAll());
+    }
 };

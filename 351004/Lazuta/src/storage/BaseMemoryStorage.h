@@ -23,7 +23,7 @@ public:
         return id;
     }
 
-    std::optional<T> Read(uint64_t id) override 
+    std::optional<T> GetByID(uint64_t id) override 
     {
         std::shared_lock lock(mutex);
         auto it = storage.find(id);
