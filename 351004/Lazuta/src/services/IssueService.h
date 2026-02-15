@@ -73,4 +73,9 @@ public:
         }
         return true;
     }
+
+    std::vector<IssueResponseTo> GetAll()
+    {
+        return Mapper::ToResponseList(m_dao->ReadAll());
+    }
 };

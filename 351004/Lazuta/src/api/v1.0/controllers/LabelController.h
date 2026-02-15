@@ -1,20 +1,37 @@
 #pragma once
 
 #include <drogon/HttpController.h>
+#include <services/LabelService.h>
+#include <dto/requests/LabelRequestTo.h>
+#include <dto/responses/LabelResponseTo.h>
+#include <exceptions/DatabaseException.h>
+#include <exceptions/NotFoundException.h>
+#include <exceptions/ValidationException.h>
 
 using namespace drogon;
 
-class LabelController : public drogon::HttpController<LabelController>
+class LabelController : public drogon::HttpController<LabelController, false>
 {
-  public:
+private:
+    std::unique_ptr<LabelService> m_service = nullptr;
+    
+public:
+    explicit LabelController(std::unique_ptr<LabelService> service);
+    
     METHOD_LIST_BEGIN
-    // use METHOD_ADD to add your custom processing function here;
-    // METHOD_ADD(LabelController::get, "/{2}/{1}", Get); // path is /LabelController/{arg2}/{arg1}
-    // METHOD_ADD(LabelController::your_method_name, "/{1}/{2}/list", Get); // path is /LabelController/{arg1}/{arg2}/list
-    // ADD_METHOD_TO(LabelController::your_method_name, "/absolute/path/{1}/{2}/list", Get); // path is /absolute/path/{arg1}/{arg2}/list
-
+        ADD_METHOD_TO(LabelController::CreateLabel, "/api/v1.0/labels", drogon::Post);
+        ADD_METHOD_TO(LabelController::ReadLabel, "/api/v1.0/labels/{id}", drogon::Get);
+        ADD_METHOD_TO(LabelController::UpdateLabelIdFromRoute, "/api/v1.0/labels/{id}", drogon::Put);
+        ADD_METHOD_TO(LabelController::UpdateLabelIdFromBody, "/api/v1.0/labels", drogon::Put);
+        ADD_METHOD_TO(LabelController::DeleteLabel, "/api/v1.0/labels/{id}", drogon::Delete);
+        ADD_METHOD_TO(LabelController::GetAllLabels, "/api/v1.0/labels", drogon::Get);
     METHOD_LIST_END
-    // your declaration of processing function maybe like this:
-    // void get(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, int p1, std::string p2);
-    // void your_method_name(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, double p1, int p2) const;
+
+private:
+    void CreateLabel(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& callback);
+    void ReadLabel(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& callback, uint64_t id);
+    void UpdateLabelIdFromRoute(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& callback, uint64_t id);
+    void UpdateLabelIdFromBody(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& callback);
+    void DeleteLabel(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& callback, uint64_t id);
+    void GetAllLabels(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& callback);
 };

@@ -143,9 +143,9 @@ public:
     }
 
     // Post mappings
-    static Post ToEntity(const PostRequestTo& dto) 
+    static ::Post ToEntity(const PostRequestTo& dto) 
     {
-        Post entity;
+        ::Post entity;
         entity.setEditorId(dto.editorId);
         entity.setTitle(dto.title);
         entity.setContent(dto.content);
@@ -154,9 +154,9 @@ public:
         return entity;
     }
 
-    static Post ToEntityForUpdate(const PostRequestTo& dto, unsigned long id) 
+    static ::Post ToEntityForUpdate(const PostRequestTo& dto, unsigned long id) 
     {
-        Post entity;
+        ::Post entity;
         entity.SetId(id);
         entity.setEditorId(dto.editorId);
         entity.setTitle(dto.title);
@@ -166,7 +166,7 @@ public:
         return entity;
     }
 
-    static PostResponseTo ToResponse(const Post& entity) 
+    static PostResponseTo ToResponse(const ::Post& entity) 
     {
         PostResponseTo dto;
         dto.id = entity.GetID();
@@ -178,7 +178,7 @@ public:
         return dto;
     }
 
-    static std::vector<PostResponseTo> ToResponseList(const std::vector<Post>& entities) 
+    static std::vector<PostResponseTo> ToResponseList(const std::vector<::Post>& entities) 
     {
         std::vector<PostResponseTo> dtos;
         dtos.reserve(entities.size());

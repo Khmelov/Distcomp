@@ -27,12 +27,6 @@ public:
         if (content.length() < 4 || content.length() > 2048) {
             throw ValidationException("Content must be between 4 and 2048 characters");
         }
-        if (created.empty()) {
-            throw ValidationException("Created date is required");
-        }
-        if (modified.empty()) {
-            throw ValidationException("Modified date is required");
-        }
     }
 
     static PostRequestTo fromJson(const Json::Value& json) 

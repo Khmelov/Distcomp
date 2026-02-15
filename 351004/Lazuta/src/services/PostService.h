@@ -12,19 +12,19 @@
 class PostService 
 {
 private:
-    std::unique_ptr<DAO<Post>> m_dao;
+    std::unique_ptr<DAO<::Post>> m_dao;
     
 public:
-    PostService(std::unique_ptr<DAO<Post>> storage): m_dao(std::move(storage)) 
+    PostService(std::unique_ptr<DAO<::Post>> storage): m_dao(std::move(storage)) 
     {
 
     }
         
     PostResponseTo Create(const PostRequestTo& request) 
     {
-        Post entity = Mapper::ToEntity(request);
+        ::Post entity = Mapper::ToEntity(request);
         auto id = m_dao->Create(entity);
-        std::optional<Post> newEntity = m_dao->GetByID(id);
+        std::optional<::Post> newEntity = m_dao->GetByID(id);
 
         if (!newEntity)
         {
@@ -36,7 +36,7 @@ public:
 
     PostResponseTo Read(uint64_t id) 
     {
-        std::optional<Post> entity = m_dao->GetByID(id);
+        std::optional<::Post> entity = m_dao->GetByID(id);
 
         if (!entity)
         {
@@ -48,14 +48,14 @@ public:
 
     PostResponseTo Update(const PostRequestTo& request, uint64_t id) 
     {
-        Post entity = Mapper::ToEntity(request);    
+        ::Post entity = Mapper::ToEntity(request);    
 
         if (!m_dao->Update(id, entity))
         {
             throw NotFoundException("Post not found for update");
         }
 
-        std::optional<Post> newEntity = m_dao->GetByID(id);
+        std::optional<::Post> newEntity = m_dao->GetByID(id);
 
         if (!newEntity)
         {
@@ -72,5 +72,10 @@ public:
             throw NotFoundException("Post not found for deletion");
         }
         return true;
+    }
+
+    std::vector<PostResponseTo> GetAll()
+    {
+        return Mapper::ToResponseList(m_dao->ReadAll());
     }
 };
