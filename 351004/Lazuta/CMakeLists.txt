@@ -7,6 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(GLOB_RECURSE SOURCE_FILES
     "src/*.cpp"
+    "src/*.cc"
 )
 
 find_package(Drogon REQUIRED)

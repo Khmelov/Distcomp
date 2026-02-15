@@ -1,4 +1,3 @@
-// dao/DAO.h
 #pragma once
 
 #include <functional>
@@ -13,7 +12,7 @@ public:
     virtual ~DAO() = default;
 
     virtual K Create(const T& entity) = 0;
-    virtual std::optional<T> Read(K id) = 0;
+    virtual std::optional<T> GetByID(K id) = 0;
     virtual bool Update(K id, const T& entity) = 0;
     virtual bool Delete(K id) = 0;
     virtual std::vector<T> ReadAll() = 0;

@@ -12,6 +12,6 @@ public:
     virtual ~Entity();
 
     void SetId(unsigned long id);
-    unsigned long GetID();
+    unsigned long GetID() const;
 
 };
