@@ -6,6 +6,7 @@
 #include <dto/responses/EditorResponseTo.h>
 #include <exceptions/DatabaseException.h>
 #include <exceptions/NotFoundException.h>
+#include <exceptions/ValidationException.h>
 
 using namespace drogon;
 

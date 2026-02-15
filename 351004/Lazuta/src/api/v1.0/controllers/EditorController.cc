@@ -18,6 +18,10 @@ void EditorController::CreateEditor(const HttpRequestPtr& req, std::function<voi
         if (!jsonFromRequest)
         {
             std::cout << "[ERROR] Invalid JSON in CreateEditor" << std::endl;
+            Json::Value errorResponse;
+            errorResponse["message"] = "Invalid JSON format";
+            httpResponse->setBody(Json::FastWriter().write(errorResponse));
+            httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
             httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
             callback(httpResponse);
             return;
@@ -34,19 +38,40 @@ void EditorController::CreateEditor(const HttpRequestPtr& req, std::function<voi
         httpResponse->setStatusCode(HttpStatusCode::k201Created);
         std::cout << "[INFO] Editor created successfully" << std::endl;
     }
+    catch(const ValidationException& e)
+    {
+        std::cout << "[ERROR] Validation error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = e.what();
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
+        httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
+    }
     catch(const NotFoundException& e)
     {
         std::cout << "[ERROR] Not found: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = e.what();
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k404NotFound);
     }
     catch(const DatabaseException& e)
     {
         std::cout << "[ERROR] Database error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = "Database error occurred";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k500InternalServerError);
     }
     catch(const std::exception& e)
     {
         std::cout << "[ERROR] Unknown error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = "Internal server error";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k500InternalServerError);    
     }
 
@@ -71,19 +96,40 @@ void EditorController::ReadEditor(const HttpRequestPtr& req, std::function<void(
         httpResponse->setStatusCode(HttpStatusCode::k200OK);
         std::cout << "[INFO] Editor retrieved successfully" << std::endl;
     }
+    catch(const ValidationException& e)
+    {
+        std::cout << "[ERROR] Validation error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = e.what();
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
+        httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
+    }
     catch(const NotFoundException& e)
     {
         std::cout << "[ERROR] Editor not found: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = e.what();
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k404NotFound);
     }
     catch(const DatabaseException& e)
     {
         std::cout << "[ERROR] Database error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = "Database error occurred";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k500InternalServerError);
     }
     catch(const std::exception& e)
     {
         std::cout << "[ERROR] Unknown error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = "Internal server error";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k500InternalServerError);    
     }
     
@@ -101,6 +147,10 @@ void EditorController::UpdateEditorIdFromRoute(const HttpRequestPtr& req, std::f
         if (!jsonFromRequest)
         {
             std::cout << "[ERROR] Invalid JSON in UpdateEditorWithId" << std::endl;
+            Json::Value errorResponse;
+            errorResponse["message"] = "Invalid JSON format";
+            httpResponse->setBody(Json::FastWriter().write(errorResponse));
+            httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
             httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
             callback(httpResponse);
             return;
@@ -118,19 +168,40 @@ void EditorController::UpdateEditorIdFromRoute(const HttpRequestPtr& req, std::f
         httpResponse->setStatusCode(HttpStatusCode::k200OK);
         std::cout << "[INFO] Editor updated successfully" << std::endl;
     }
+    catch(const ValidationException& e)
+    {
+        std::cout << "[ERROR] Validation error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = e.what();
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
+        httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
+    }
     catch(const NotFoundException& e)
     {
         std::cout << "[ERROR] Editor not found for update: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = e.what();
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k404NotFound);
     }
     catch(const DatabaseException& e)
     {
         std::cout << "[ERROR] Database error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = "Database error occurred";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k500InternalServerError);
     }
     catch(const std::exception& e)
     {
         std::cout << "[ERROR] Unknown error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = "Internal server error";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k500InternalServerError);    
     }
     
@@ -148,6 +219,10 @@ void EditorController::UpdateEditorIdFromBody(const HttpRequestPtr& req, std::fu
         if (!jsonFromRequest)
         {
             std::cout << "[ERROR] Invalid JSON in UpdateEditor" << std::endl;
+            Json::Value errorResponse;
+            errorResponse["message"] = "Invalid JSON format";
+            httpResponse->setBody(Json::FastWriter().write(errorResponse));
+            httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
             httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
             callback(httpResponse);
             return;
@@ -157,6 +232,10 @@ void EditorController::UpdateEditorIdFromBody(const HttpRequestPtr& req, std::fu
         if (!requestDto.id.has_value())
         {
             std::cout << "[ERROR] No ID in JSON" << std::endl;
+            Json::Value errorResponse;
+            errorResponse["message"] = "ID is required in request body";
+            httpResponse->setBody(Json::FastWriter().write(errorResponse));
+            httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
             httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
             callback(httpResponse);
             return;
@@ -173,19 +252,40 @@ void EditorController::UpdateEditorIdFromBody(const HttpRequestPtr& req, std::fu
         httpResponse->setStatusCode(HttpStatusCode::k200OK);
         std::cout << "[INFO] Editor updated successfully" << std::endl;
     }
+    catch(const ValidationException& e)
+    {
+        std::cout << "[ERROR] Validation error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = e.what();
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
+        httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
+    }
     catch(const NotFoundException& e)
     {
         std::cout << "[ERROR] Editor not found for update: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = e.what();
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k404NotFound);
     }
     catch(const DatabaseException& e)
     {
         std::cout << "[ERROR] Database error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = "Database error occurred";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k500InternalServerError);
     }
     catch(const std::exception& e)
     {
         std::cout << "[ERROR] Unknown error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = "Internal server error";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k500InternalServerError);    
     }
     
@@ -208,22 +308,47 @@ void EditorController::DeleteEditor(const HttpRequestPtr& req, std::function<voi
         else
         {
             std::cout << "[ERROR] Editor not found for deletion" << std::endl;
+            Json::Value errorResponse;
+            errorResponse["message"] = "Editor not found";
+            httpResponse->setBody(Json::FastWriter().write(errorResponse));
+            httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
             httpResponse->setStatusCode(HttpStatusCode::k404NotFound);
         }
+    }
+    catch(const ValidationException& e)
+    {
+        std::cout << "[ERROR] Validation error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = e.what();
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
+        httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
     }
     catch(const NotFoundException& e)
     {
         std::cout << "[ERROR] Editor not found: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = e.what();
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k404NotFound);
     }
     catch(const DatabaseException& e)
     {
         std::cout << "[ERROR] Database error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = "Database error occurred";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k500InternalServerError);
     }
     catch(const std::exception& e)
     {
         std::cout << "[ERROR] Unknown error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = "Internal server error";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k500InternalServerError);    
     }
     
@@ -252,19 +377,40 @@ void EditorController::GetAllEditors(const HttpRequestPtr& req, std::function<vo
         httpResponse->setStatusCode(HttpStatusCode::k200OK);
         std::cout << "[INFO] Retrieved " << dtos.size() << " editors" << std::endl;
     }
+    catch(const ValidationException& e)
+    {
+        std::cout << "[ERROR] Validation error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = e.what();
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
+        httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
+    }
     catch(const NotFoundException& e)
     {
         std::cout << "[ERROR] Not found: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = e.what();
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k404NotFound);
     }
     catch(const DatabaseException& e)
     {
         std::cout << "[ERROR] Database error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = "Database error occurred";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k500InternalServerError);
     }
     catch(const std::exception& e)
     {
         std::cout << "[ERROR] Unknown error: " << e.what() << std::endl;
+        Json::Value errorResponse;
+        errorResponse["message"] = "Internal server error";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         httpResponse->setStatusCode(HttpStatusCode::k500InternalServerError);    
     }
     
