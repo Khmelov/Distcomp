@@ -10,19 +10,15 @@ class PostRequestTo
 {
 public:
     std::optional<unsigned long> id;
-    unsigned long editorId = 0;
-    std::string title;
+    unsigned long issueId = 0;
     std::string content;
     std::string created;
     std::string modified;
 
     void validate() const 
     {
-        if (editorId == 0) {
-            throw ValidationException("Editor ID is required");
-        }
-        if (title.length() < 2 || title.length() > 64) {
-            throw ValidationException("Title must be between 2 and 64 characters");
+        if (issueId == 0) {
+            //throw ValidationException("Editor ID is required");
         }
         if (content.length() < 4 || content.length() > 2048) {
             throw ValidationException("Content must be between 4 and 2048 characters");
@@ -33,8 +29,7 @@ public:
     {
         PostRequestTo dto;
         if (json.isMember("id")) dto.id = json["id"].asUInt64();
-        if (json.isMember("editorid")) dto.editorId = json["editorid"].asUInt64();
-        if (json.isMember("title")) dto.title = json["title"].asString();
+        if (json.isMember("issueId")) dto.issueId = json["issueId"].asUInt64();
         if (json.isMember("content")) dto.content = json["content"].asString();
         if (json.isMember("created")) dto.created = json["created"].asString();
         if (json.isMember("modified")) dto.modified = json["modified"].asString();

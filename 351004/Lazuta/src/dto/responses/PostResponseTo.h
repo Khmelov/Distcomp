@@ -7,8 +7,7 @@ class PostResponseTo
 {
 public:
     unsigned long id;
-    unsigned long editorId;
-    std::string title;
+    unsigned long issueId;
     std::string content;
     std::string created;
     std::string modified;
@@ -17,8 +16,7 @@ public:
     {
         Json::Value json;
         json["id"] = id;
-        json["editorid"] = editorId;
-        json["title"] = title;
+        json["issueId"] = issueId;
         json["content"] = content;
         json["created"] = created;
         json["modified"] = modified;

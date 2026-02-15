@@ -146,8 +146,7 @@ public:
     static ::Post ToEntity(const PostRequestTo& dto) 
     {
         ::Post entity;
-        entity.setEditorId(dto.editorId);
-        entity.setTitle(dto.title);
+        entity.setEditorId(dto.issueId);
         entity.setContent(dto.content);
         entity.setCreated(dto.created);
         entity.setModified(dto.modified);
@@ -158,8 +157,7 @@ public:
     {
         ::Post entity;
         entity.SetId(id);
-        entity.setEditorId(dto.editorId);
-        entity.setTitle(dto.title);
+        entity.setEditorId(dto.issueId);
         entity.setContent(dto.content);
         entity.setCreated(dto.created);
         entity.setModified(dto.modified);
@@ -170,8 +168,7 @@ public:
     {
         PostResponseTo dto;
         dto.id = entity.GetID();
-        dto.editorId = entity.getEditorId();
-        dto.title = entity.getTitle();
+        dto.issueId = entity.getEditorId();
         dto.content = entity.getContent();
         dto.created = entity.getCreated();
         dto.modified = entity.getModified();

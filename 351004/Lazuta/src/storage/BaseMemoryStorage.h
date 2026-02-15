@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <shared_mutex>
 #include <algorithm>
+#include <ctime>
 
 template <typename T>
 class BaseInMemoryStorage : public DAO<T> 
@@ -12,6 +13,19 @@ protected:
     std::shared_mutex mutex;
     std::atomic<uint64_t> nextId{1};
 
+    std::string getCurrentDateTime() 
+    {
+        time_t rawtime;
+        struct tm * timeinfo;
+        char buffer[80];
+
+        time(&rawtime);
+        timeinfo = localtime(&rawtime);
+        strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+        
+        return std::string(buffer);
+    }
+
 public:
     uint64_t Create(const T& entity) override 
     {
@@ -19,6 +33,17 @@ public:
         uint64_t id = nextId.fetch_add(1);
         T copy = entity;
         copy.SetId(id);
+        
+        if constexpr (requires { copy.SetCreated(getCurrentDateTime()); }) 
+        {
+            copy.SetCreated(getCurrentDateTime());
+        }
+        
+        if constexpr (requires { copy.SetModified(getCurrentDateTime()); }) 
+        {
+            copy.SetModified(getCurrentDateTime());
+        }
+        
         storage[id] = copy;
         return id;
     }
@@ -42,6 +67,17 @@ public:
         {
             T updated = entity;
             updated.SetId(id);
+            
+            if constexpr (requires { updated.SetModified(getCurrentDateTime()); }) 
+            {
+                updated.SetModified(getCurrentDateTime());
+            }
+            
+            if constexpr (requires { updated.SetCreated(it->second.GetCreated()); }) 
+            {
+                updated.SetCreated(it->second.GetCreated());
+            }
+            
             storage[id] = std::move(updated);
             return true;
         }

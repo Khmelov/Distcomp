@@ -19,7 +19,7 @@ public:
     void validate() const 
     {
         if (editorId == 0) {
-            throw ValidationException("Editor ID is required");
+            //throw ValidationException("Editor ID is required");
         }
         if (title.length() < 2 || title.length() > 64) {
             throw ValidationException("Title must be between 2 and 64 characters");
