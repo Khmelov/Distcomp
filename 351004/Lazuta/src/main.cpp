@@ -21,6 +21,7 @@ int main()
     //auto labelController = std::make_shared<LabelController>(std::move(labelService));
    // auto postController = std::make_shared<PostController>(std::move(postService));
 
+    //std::cout << "zzz";
     drogon::app().registerController(editorController);
     //drogon::app().registerController(issueController);
     //drogon::app().registerController(labelController);

@@ -16,8 +16,8 @@ public:
         Json::Value json;
         json["id"] = id;
         json["login"] = login;
-        json["firstName"] = firstName;
-        json["lastName"] = lastName;
+        json["firstname"] = firstName;
+        json["lastname"] = lastName;
         return json;
     }
 };

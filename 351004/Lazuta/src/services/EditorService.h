@@ -67,10 +67,12 @@ public:
 
     bool Delete(uint64_t id)
     {
-        if (!m_dao->Delete(id))
+        bool result = m_dao->Delete(id);
+        if (!result)
         {
             throw NotFoundException("Editor not found for deletion");
         }
+        return result;
     }
 
     std::vector<EditorResponseTo> GetAll()

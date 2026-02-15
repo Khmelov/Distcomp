@@ -17,17 +17,19 @@ public:
     explicit EditorController(std::unique_ptr<EditorService> service);
     
     METHOD_LIST_BEGIN
-        METHOD_ADD(EditorController::CreateEditor, "/api/v1.0/editors", drogon::Post);
-        METHOD_ADD(EditorController::ReadEditor, "/api/v1.0/editors/{id}", drogon::Get);
-        METHOD_ADD(EditorController::UpdateEditor, "/api/v1.0/editors/", drogon::Put);
-        METHOD_ADD(EditorController::DeleteEditor, "/api/v1.0/editors/{id}", drogon::Delete);
-        METHOD_ADD(EditorController::GetAllEditors, "/api/v1.0/editors", drogon::Get);
+        ADD_METHOD_TO(EditorController::CreateEditor, "/api/v1.0/editors", drogon::Post);
+        ADD_METHOD_TO(EditorController::ReadEditor, "/api/v1.0/editors/{id}", drogon::Get);
+        ADD_METHOD_TO(EditorController::UpdateEditorIdFromRoute, "/api/v1.0/editors/{id}", drogon::Put);
+        ADD_METHOD_TO(EditorController::UpdateEditorIdFromBody, "/api/v1.0/editors", drogon::Put);
+        ADD_METHOD_TO(EditorController::DeleteEditor, "/api/v1.0/editors/{id}", drogon::Delete);
+        ADD_METHOD_TO(EditorController::GetAllEditors, "/api/v1.0/editors", drogon::Get);
     METHOD_LIST_END
 
 private:
     void CreateEditor(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback);
     void ReadEditor(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, uint64_t id);
-    void UpdateEditor(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback);
+    void UpdateEditorIdFromRoute(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, uint64_t id);
+    void UpdateEditorIdFromBody(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback);
     void DeleteEditor(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, uint64_t id);
     void GetAllEditors(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback);
 };

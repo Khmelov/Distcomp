@@ -18,7 +18,7 @@ public:
     {
         PostRequestTo dto;
         if (json.isMember("id")) dto.id = json["id"].asUInt64();
-        if (json.isMember("editorId")) dto.editorId = json["editorId"].asUInt64();
+        if (json.isMember("editorid")) dto.editorId = json["editorid"].asUInt64();
         if (json.isMember("title")) dto.title = json["title"].asString();
         if (json.isMember("content")) dto.content = json["content"].asString();
         if (json.isMember("created")) dto.created = json["created"].asString();

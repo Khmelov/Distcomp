@@ -19,8 +19,8 @@ public:
         if (json.isMember("id")) dto.id = json["id"].asUInt64();
         if (json.isMember("login")) dto.login = json["login"].asString();
         if (json.isMember("password")) dto.password = json["password"].asString();
-        if (json.isMember("firstName")) dto.firstName = json["firstName"].asString();
-        if (json.isMember("lastName")) dto.lastName = json["lastName"].asString();
+        if (json.isMember("firstname")) dto.firstName = json["firstname"].asString();
+        if (json.isMember("lastname")) dto.lastName = json["lastname"].asString();
         return dto;
     }
 };

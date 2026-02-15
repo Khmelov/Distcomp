@@ -40,9 +40,9 @@ public:
         auto it = storage.find(id);
         if (it != storage.end()) 
         {
-            T copy = entity;
-            copy.SetId(id);
-            storage[id] = copy;
+            T updated = entity;
+            updated.SetId(id);
+            storage[id] = std::move(updated);
             return true;
         }
         return false;

@@ -17,7 +17,7 @@ public:
     {
         Json::Value json;
         json["id"] = id;
-        json["editorId"] = editorId;
+        json["editorid"] = editorId;
         json["title"] = title;
         json["content"] = content;
         json["created"] = created;
