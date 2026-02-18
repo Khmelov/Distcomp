@@ -13,26 +13,37 @@ import com.example.demo.model.Issue;
 import com.example.demo.model.Mark;
 import com.example.demo.model.Message;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface EntityMapper {
+
+    // AUTHOR
     Author toEntity(AuthorRequestTo dto);
-    AuthorResponseTo toResponse(Author author);
-    void updateEntity(AuthorRequestTo dto, @MappingTarget Author entity);
+    AuthorResponseTo toAuthorResponse(Author author);
+    List<AuthorResponseTo> toAuthorResponseList(List<Author> authors);
+    void updateAuthor(AuthorRequestTo dto, @MappingTarget Author entity);
 
-    Issue toIssueEntity(IssueRequestTo dto);
+    // ISSUE
+    @Mapping(target = "author.id", source = "authorId")
+    Issue toEntity(IssueRequestTo dto);
+    @Mapping(source = "author.id", target = "authorId")
     IssueResponseTo toIssueResponse(Issue issue);
-    void updateEntity(IssueRequestTo dto, @MappingTarget Issue entity);
+    List<IssueResponseTo> toIssueResponseList(List<Issue> issues);
+    void updateIssue(IssueRequestTo dto, @MappingTarget Issue entity);
 
-    Mark toMarkEntity(MarkRequestTo dto);
+    // MARK
+    Mark toEntity(MarkRequestTo dto);
     MarkResponseTo toMarkResponse(Mark mark);
-    void updateEntity(MarkRequestTo dto, @MappingTarget Mark entity);
+    List<MarkResponseTo> toMarkResponseList(List<Mark> marks);
+    void updateMark(MarkRequestTo dto, @MappingTarget Mark entity);
 
-    Message toMessageEntity(MessageRequestTo dto);
-    MessageResponseTo toMessageResponse(Message entity);
-    void updateEntity(MessageRequestTo dto, @MappingTarget Message entity);
-
+    // MESSAGE
+    Message toEntity(MessageRequestTo dto);
+    MessageResponseTo toMessageResponse(Message message);
+    List<MessageResponseTo> toMessageResponseList(List<Message> messages);
+    void updateMessage(MessageRequestTo dto, @MappingTarget Message entity);
 }

@@ -11,70 +11,39 @@ import java.util.List;
 @Service
 public class AuthorService {
     private final AuthorRepository authorRepository;
+    private final EntityMapper mapper;
 
-    public AuthorService(AuthorRepository authorRepository) {
+    public AuthorService(AuthorRepository authorRepository, EntityMapper mapper) {
         this.authorRepository = authorRepository;
+        this.mapper = mapper;
     }
 
     //CREATE
     public AuthorResponseTo create(AuthorRequestTo dto){
-        Author author = new Author();
-
-        author.setFirstname(dto.getFirstname());
-        author.setLastname(dto.getLastname());
-        author.setLogin(dto.getLogin());
-        author.setPassword(dto.getPassword());
-
-        Author saved = authorRepository.save(author);
-
-        return new AuthorResponseTo(
-                saved.getId(),
-                saved.getLogin(),
-                saved.getFirstname(),
-                saved.getLastname()
-        );
+        Author entity = mapper.toEntity(dto);
+        Author saved = authorRepository.save(entity);
+        return mapper.toAuthorResponse(saved);
     }
     //READ
     public AuthorResponseTo findById(Long id){
-        Author entity = authorRepository.findById(id).orElseThrow(()->
-                new RuntimeException("Author not found: " + id));
-
-        return new AuthorResponseTo(
-                entity.getId(),
-                entity.getLogin(),
-                entity.getFirstname(),
-                entity.getLastname()
-        );
+        Author entity = authorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Author not found: " + id));
+        return mapper.toAuthorResponse(entity);
     }
 
     public List<AuthorResponseTo> findAll(){
-        return authorRepository.findAll()
-                .stream().map(author -> new AuthorResponseTo(
-                        author.getId(),
-                        author.getLogin(),
-                        author.getFirstname(),
-                        author.getLastname())).toList();
+        List<Author> entities = authorRepository.findAll();
+        return mapper.toAuthorResponseList(entities);
     }
 
     //UPDATE
     public AuthorResponseTo update(Long id, AuthorRequestTo dto){
-        Author entity = authorRepository.findById(id).orElseThrow(()->
-                new RuntimeException("Author not found: " + id));
+        Author entity = authorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Author not found: " + id));
 
-
-        entity.setFirstname(dto.getFirstname());
-        entity.setLastname(dto.getLastname());
-        entity.setLogin(dto.getLogin());
-        entity.setPassword(dto.getPassword());
-
+        mapper.updateAuthor(dto, entity);
         Author updated = authorRepository.save(entity);
-
-        return new AuthorResponseTo(
-                entity.getId(),
-                entity.getLogin(),
-                entity.getFirstname(),
-                entity.getLastname()
-        );
+        return mapper.toAuthorResponse(updated);
     }
 
     public void delete(Long id){
