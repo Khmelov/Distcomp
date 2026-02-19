@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import java.time.LocalDateTime;
 
-@Table("topics")
+@Table(name = "tbl_topic", schema = "distcomp")
 @Getter
 @Setter
 @EqualsAndHashCode

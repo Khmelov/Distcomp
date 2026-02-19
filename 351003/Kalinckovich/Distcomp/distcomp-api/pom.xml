@@ -20,7 +20,13 @@
 
         <dependency>
             <groupId>com.distcomp</groupId>
-            <artifactId>distcom-data</artifactId>
+            <artifactId>distcomp-data</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.distcomp</groupId>
+            <artifactId>distcomp-errorhandling</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
@@ -28,6 +34,22 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
 
         <dependency>

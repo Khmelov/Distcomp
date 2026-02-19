@@ -6,7 +6,7 @@ import org.springframework.data.relational.core.mapping.Table;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-@Table("notes")
+@Table(name = "tbl_note", schema = "distcomp")
 @Getter
 @Setter
 @EqualsAndHashCode

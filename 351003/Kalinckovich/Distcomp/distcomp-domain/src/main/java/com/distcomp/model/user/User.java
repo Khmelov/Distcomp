@@ -6,7 +6,7 @@ import org.springframework.data.relational.core.mapping.Table;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-@Table("users")
+@Table(name = "tbl_user", schema = "distcomp")
 @Getter
 @Setter
 @EqualsAndHashCode
@@ -20,11 +20,11 @@ public class User {
     private String login;
 
     @Size(min = 2, max = 64)
-    @Column("first_name")
+    @Column("firstname")
     private String firstname;
 
     @Size(min = 2, max = 64)
-    @Column("last_name")
+    @Column("lastname")
     private String lastname;
 
     @Size(min = 8, max = 128)

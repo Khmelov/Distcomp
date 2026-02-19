@@ -7,14 +7,14 @@ import com.distcomp.dto.user.UserResponseDto;
 import com.distcomp.dto.user.UserUpdateRequest;
 import com.distcomp.mapper.user.UserMapper;
 import com.distcomp.model.user.User;
+import com.distcomp.validator.model.ValidationArgs;
+import com.distcomp.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -22,15 +22,17 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserService {
     private final UserReactiveRepository userRepository;
+    private final UserValidator userValidator;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public Mono<UserResponseDto> create(final UserCreateRequest request) {
-        final User entity = userMapper.toEntity(request);
-
-        entity.setPassword(passwordEncoder.encode(entity.getPassword()));
-
-        return userRepository.save(entity)
+        return userValidator.validateCreate(request, ValidationArgs.empty())
+                .flatMap(validationResult -> {
+                    final User entity = userMapper.toEntity(request);
+                    entity.setPassword(passwordEncoder.encode(entity.getPassword()));
+                    return userRepository.save(entity);
+                })
                 .map(userMapper::toResponse);
     }
 
@@ -41,7 +43,8 @@ public class UserService {
     }
 
     public Mono<UserResponseDto> findById(final Long id) {
-        return userRepository.findById(id)
+        return userValidator.validateUserExists(id)
+                .then(userRepository.findById(id))
                 .map(userMapper::toResponse);
     }
 
@@ -51,21 +54,21 @@ public class UserService {
     }
 
     public Mono<UserResponseDto> update(final Long id, final UserUpdateRequest request) {
-        return userRepository.findById(id)
-                .flatMap((final User existing) -> {
+        return userValidator.validateUpdate(request, ValidationArgs.withId(id))
+                .flatMap(validationResult -> userRepository.findById(id))
+                .flatMap(existing -> {
                     final User userToUpdate = userMapper.updateFromDto(request, existing);
-
                     if (request.getPassword() != null && !request.getPassword().isBlank()) {
                         userToUpdate.setPassword(passwordEncoder.encode(request.getPassword()));
                     }
-
                     return userRepository.save(userToUpdate);
                 })
                 .map(userMapper::toResponse);
     }
 
     public Mono<UserResponseDto> patch(final Long id, final UserPatchRequest request) {
-        return userRepository.findById(id)
+        return userValidator.validateUserExists(id)
+                .then(userRepository.findById(id))
                 .flatMap(existing -> {
                     final User userToUpdate = userMapper.updateFromPatch(request, existing);
                     if (request.getPassword() != null && !request.getPassword().isBlank()) {
@@ -77,15 +80,7 @@ public class UserService {
     }
 
     public Mono<Void> delete(final Long id) {
-        return userRepository.existsById(id)
-                .flatMap(exists -> {
-                    if (!exists) {
-                        return Mono.error(new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Note not found with id: " + id
-                        ));
-                    }
-                    return userRepository.deleteById(id);
-                });
+        return userValidator.validateUserExists(id)
+                .then(userRepository.deleteById(id));
     }
 }

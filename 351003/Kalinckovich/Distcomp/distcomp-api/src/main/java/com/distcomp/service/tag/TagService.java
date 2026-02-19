@@ -7,12 +7,13 @@ import com.distcomp.dto.tag.TagResponseDto;
 import com.distcomp.dto.tag.TagUpdateRequest;
 import com.distcomp.mapper.tag.TagMapper;
 import com.distcomp.model.tag.Tag;
+import com.distcomp.validator.model.ValidationArgs;
+import com.distcomp.validator.tag.TagValidator;
 import lombok.RequiredArgsConstructor;
+import org.reactivestreams.Publisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -21,9 +22,14 @@ import reactor.core.publisher.Mono;
 public class TagService {
     private final TagReactiveRepository tagRepository;
     private final TagMapper tagMapper;
+    private final TagValidator tagValidator;
 
     public Mono<TagResponseDto> create(final TagCreateRequest request) {
-        return tagRepository.save(tagMapper.toEntity(request))
+        return tagValidator.validateCreate(request, ValidationArgs.empty())
+                .flatMap(validationResult -> {
+                    final Tag entity = tagMapper.toEntity(request);
+                    return tagRepository.save(entity);
+                })
                 .map(tagMapper::toResponse);
     }
 
@@ -33,7 +39,8 @@ public class TagService {
     }
 
     public Mono<TagResponseDto> findById(final Long id) {
-        return tagRepository.findById(id)
+        return tagValidator.validateTagExists(id)
+                .then(tagRepository.findById(id))
                 .map(tagMapper::toResponse);
     }
 
@@ -43,36 +50,38 @@ public class TagService {
     }
 
     public Mono<TagResponseDto> update(final Long id, final TagUpdateRequest request) {
-        return tagRepository.findById(id)
-                .flatMap((final Tag existing) -> {
+        return tagValidator.validateUpdate(request, ValidationArgs.withId(id))
+                .flatMap(validationResult -> tagRepository.findById(id))
+                .flatMap(existing -> {
                     final Tag updated = tagMapper.updateFromDto(request, existing);
-
                     return tagRepository.save(updated);
                 })
                 .map(tagMapper::toResponse);
     }
 
     public Mono<TagResponseDto> patch(final Long id, final TagPatchRequest request) {
-        return tagRepository.findById(id)
-                .flatMap((final Tag existing) -> {
-
+        return tagValidator.validateTagExists(id)
+                .then(tagRepository.findById(id))
+                .flatMap(existing -> {
                     final Tag updated = tagMapper.updateFromPatch(request, existing);
-
                     return tagRepository.save(updated);
                 })
                 .map(tagMapper::toResponse);
     }
 
     public Mono<Void> delete(final Long id) {
-        return tagRepository.existsById(id)
-                .flatMap(exists -> {
-                    if (!exists) {
-                        return Mono.error(new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Note not found with id: " + id
-                        ));
-                    }
-                    return tagRepository.deleteById(id);
-                });
+        return tagValidator.validateTagExists(id)
+                .then(tagRepository.deleteById(id));
+    }
+
+    public Mono<Void> deleteTagIfUnused(final Long tagId) {
+        return tagRepository.deleteById(tagId)
+                .onErrorResume(DataIntegrityViolationException.class,
+                        _ -> Mono.empty());
+    }
+
+    public Mono<Tag> findOrCreateByName(final String name) {
+        return tagRepository.findByName(name)
+                .switchIfEmpty(tagRepository.save(new Tag(null, name)));
     }
 }
