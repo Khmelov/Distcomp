@@ -10,17 +10,15 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@Table(name = "tbl_label")
 public class Label {
+
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
 
-    @ManyToMany
-    @JoinTable( name = "label_issue",
-            joinColumns = @JoinColumn(name = "label_id"),
-            inverseJoinColumns = @JoinColumn(name = "issue_id")
-
-    )
+    @ManyToMany(mappedBy = "labels", fetch = FetchType.LAZY) // Указываем поле из класса Issue
     private List<Issue> issues;
 }

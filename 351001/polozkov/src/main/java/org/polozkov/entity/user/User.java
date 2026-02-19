@@ -1,8 +1,6 @@
 package org.polozkov.entity.user;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.polozkov.entity.issue.Issue;
@@ -12,9 +10,11 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@Table(name = "tbl_user")
 public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String login;
@@ -25,6 +25,6 @@ public class User {
 
     private String lastname;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Issue> issues;
 }

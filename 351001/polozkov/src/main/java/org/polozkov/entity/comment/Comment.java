@@ -1,9 +1,6 @@
 package org.polozkov.entity.comment;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.polozkov.entity.issue.Issue;
@@ -11,9 +8,11 @@ import org.polozkov.entity.issue.Issue;
 @Entity
 @Getter
 @Setter
+@Table(name = "tbl_comment")
 public class Comment {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String content;
