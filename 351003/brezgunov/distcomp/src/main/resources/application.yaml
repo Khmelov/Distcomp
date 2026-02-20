@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: 'distcomp'
+  mvc:
+    apiversion:
+      use:
+        path-segment: 1
+      supported: 1.0, 2.0
+      default: 1.0
+
+server:
+  port: 24110
