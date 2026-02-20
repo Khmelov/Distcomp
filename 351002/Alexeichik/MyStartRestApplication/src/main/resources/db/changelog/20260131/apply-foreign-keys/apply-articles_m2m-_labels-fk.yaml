@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: apply-articles_m2m-_labels-fk
+      author: YanaAliakseichyk
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: articles_m2m_labels
+            baseColumnNames: article_id
+            constraintName: art_m2m_lab_art_id_fk
+            referencedTableName: articles
+            referencedColumnNames: id
+            onDelete: NO ACTION
+            onUpdate: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: articles_m2m_labels
+            baseColumnNames: label_id
+            constraintName: art_m2m_lab_lab_id_fk
+            referencedTableName: labels
+            referencedColumnNames: id
+            onDelete: NO ACTION
+            onUpdate: CASCADE
