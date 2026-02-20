@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  distcomp-db:
+    image: postgres
+    container_name: distcomp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - distcomp_db_data:/var/lib/postgresql/data
+    networks:
+      - distcomp-network
+
+#  user-service:
+#    build: .
+#    container_name: user-service-app
+#    restart: unless-stopped
+#    ports:
+#      - "24110:24110"
+#    environment:
+#      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://user-db:5432/${DB_NAME}
+#      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+#      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+#    depends_on:
+#      - user-db
+#    networks:
+#      - user-network
+
+networks:
+  distcomp-network:
+    driver: bridge
+
+volumes:
+  distcomp_db_data:

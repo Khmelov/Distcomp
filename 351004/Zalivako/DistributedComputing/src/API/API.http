@@ -1,0 +1,44 @@
+@API_HostAddress = http://localhost:24110
+
+GET {{API_HostAddress}}/api/v1.0/news/
+Accept: application/json
+
+###
+
+POST {{API_HostAddress}}/api/v1.0/news/
+Content-Type: application/json
+
+{
+    "editorId": "Id_error_in_previous_steps",
+    "title": "title9549",
+    "content": "content1502"
+}
+###
+
+POST {{API_HostAddress}}/api/v1.0/news/
+Content-Type: application/json
+{
+    "editorId": 0,
+    "title": "title2910",
+    "content": "content4815"
+}
+###
+
+PUT {{API_HostAddress}}/api/v1.0/news
+Content-Type: application/json
+{
+    "id": 0,
+    "editorId": 0,
+    "title": "updatedTitle3932",
+    "content": "updatedContent1140"
+}
+###
+
+POST {{API_HostAddress}}/api/v1.0/editors
+Content-Type: application/json
+{
+    "login": "editor4608",
+    "password": "asdfghj4173",
+    "firstname": "firstname9175",
+    "lastname": "lastname4219"
+}
