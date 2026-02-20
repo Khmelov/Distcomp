@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["distcomp"]
+}
+
+// --------------------------------------------------------- //
+model User {
+  id        BigInt    @id @default(autoincrement())
+  login     String
+  password  String
+  firstname String
+  lastname  String
+  articles  Article[]
+
+  @@unique([login])
+  @@map("tbl_user")
+  @@schema("distcomp")
+}
+
+model Article {
+  id       BigInt   @id @default(autoincrement())
+  title    String
+  content  String
+  created  DateTime @default(now()) @map("created")
+  modified DateTime @default(now()) @updatedAt @map("modified")
+
+  user            User             @relation(fields: [userId], references: [id])
+  userId          BigInt           @map("user_id")
+  notices         Notice[]
+  articleStickers ArticleSticker[]
+
+  @@unique([title])
+  @@map("tbl_article")
+  @@schema("distcomp")
+}
+
+model Notice {
+  id      BigInt @id @default(autoincrement())
+  content String
+
+  article   Article @relation(fields: [articleId], references: [id])
+  articleId BigInt
+
+  @@map("tbl_notice")
+  @@schema("distcomp")
+}
+
+model ArticleSticker {
+  article   Article @relation(fields: [articleId], references: [id])
+  articleId BigInt
+
+  sticker   Sticker @relation(fields: [stickerId], references: [id])
+  stickerId BigInt
+
+  @@unique([stickerId, articleId])
+  @@index([stickerId, articleId])
+  @@map("tbl_article-sticker")
+  @@schema("distcomp")
+}
+
+model Sticker {
+  id              BigInt           @id @default(autoincrement())
+  name            String
+  articleStickers ArticleSticker[]
+
+  @@unique([id, name])
+  @@map("tbl_sticker")
+  @@schema("distcomp")
+}

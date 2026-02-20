@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: apply-notices-fk
+      author: YanaAliakseichyk
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: notices
+            baseColumnNames: article_id
+            constraintName: not_art_id_fk
+            referencedTableName: articles
+            referencedColumnNames: id
+            onDelete: NO ACTION
+            onUpdate: CASCADE
