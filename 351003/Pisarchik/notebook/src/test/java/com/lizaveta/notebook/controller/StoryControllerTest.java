@@ -1,5 +1,6 @@
 package com.lizaveta.notebook.controller;
 
+import com.lizaveta.notebook.config.PostgresTestContainerConfig;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +12,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.notNullValue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class StoryControllerTest {
+class StoryControllerTest extends PostgresTestContainerConfig {
 
     @LocalServerPort
     private int port;
@@ -53,12 +54,15 @@ class StoryControllerTest {
     }
 
     @Test
-    void getStories_ShouldReturn200() {
+    void getStories_ShouldReturn200AndPage() {
         given()
                 .when()
                 .get("/api/v1.0/stories")
                 .then()
-                .statusCode(200);
+                .statusCode(200)
+                .body("content", notNullValue())
+                .body("totalElements", notNullValue())
+                .body("totalPages", notNullValue());
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.lizaveta.notebook.controller;
 
 import com.lizaveta.notebook.model.dto.request.MarkerRequestTo;
 import com.lizaveta.notebook.model.dto.response.MarkerResponseTo;
+import com.lizaveta.notebook.model.dto.response.PageResponseTo;
 import com.lizaveta.notebook.service.MarkerService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -12,14 +13,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * REST controller for Marker CRUD operations.
- */
 @RestController
 @RequestMapping("/api/v1.0/markers")
 public class MarkerController {
@@ -37,8 +36,18 @@ public class MarkerController {
     }
 
     @GetMapping
-    public List<MarkerResponseTo> findAll() {
-        return markerService.findAll();
+    public Object findAll(
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "20") final int size,
+            @RequestParam(required = false) final String sortBy,
+            @RequestParam(defaultValue = "asc") final String sortOrder,
+            @RequestParam(value = "format", required = false) final String format) {
+        boolean wantList = "list".equalsIgnoreCase(format)
+                || (format == null && page == 0 && size == 20 && (sortBy == null || sortBy.isBlank()));
+        if (wantList) {
+            return markerService.findAll();
+        }
+        return markerService.findAll(page, size, sortBy, sortOrder);
     }
 
     @GetMapping("/{id}")

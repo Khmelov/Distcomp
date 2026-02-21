@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet id="001-1-create-schema-distcomp" author="notebook">
+        <sql>CREATE SCHEMA IF NOT EXISTS distcomp;</sql>
+    </changeSet>
+    <changeSet id="001-2-create-tbl-writer" author="notebook">
+        <createTable tableName="tbl_writer" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="001-3-create-tbl-marker" author="notebook">
+        <createTable tableName="tbl_marker" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="001-4-create-tbl-story" author="notebook">
+        <createTable tableName="tbl_story" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="writer_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_story_writer"
+                        references="distcomp.tbl_writer(id)"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="001-5-create-tbl-notice" author="notebook">
+        <createTable tableName="tbl_notice" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="story_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_notice_story"
+                        references="distcomp.tbl_story(id)"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="001-6-create-tbl-story-marker" author="notebook">
+        <createTable tableName="tbl_story_marker" schemaName="distcomp">
+            <column name="story_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_story_marker_story"
+                        references="distcomp.tbl_story(id)"/>
+            </column>
+            <column name="marker_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_story_marker_marker"
+                        references="distcomp.tbl_marker(id)"/>
+            </column>
+        </createTable>
+        <addPrimaryKey constraintName="pk_tbl_story_marker" tableName="tbl_story_marker" schemaName="distcomp"
+                columnNames="story_id, marker_id"/>
+    </changeSet>
+</databaseChangeLog>

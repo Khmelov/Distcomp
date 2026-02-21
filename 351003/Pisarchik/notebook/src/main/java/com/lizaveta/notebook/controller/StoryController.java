@@ -3,6 +3,7 @@ package com.lizaveta.notebook.controller;
 import com.lizaveta.notebook.model.dto.request.StoryRequestTo;
 import com.lizaveta.notebook.model.dto.response.MarkerResponseTo;
 import com.lizaveta.notebook.model.dto.response.NoticeResponseTo;
+import com.lizaveta.notebook.model.dto.response.PageResponseTo;
 import com.lizaveta.notebook.model.dto.response.StoryResponseTo;
 import com.lizaveta.notebook.model.dto.response.WriterResponseTo;
 import com.lizaveta.notebook.service.MarkerService;
@@ -25,9 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Set;
 
-/**
- * REST controller for Story CRUD operations.
- */
 @RestController
 @RequestMapping("/api/v1.0/stories")
 public class StoryController {
@@ -55,16 +53,32 @@ public class StoryController {
     }
 
     @GetMapping
-    public List<StoryResponseTo> findAll(
+    public Object findAll(
             @RequestParam(required = false) final Set<Long> markerIds,
             @RequestParam(required = false) final String writerLogin,
             @RequestParam(required = false) final String title,
-            @RequestParam(required = false) final String content) {
+            @RequestParam(required = false) final String content,
+            @RequestParam(defaultValue = "0") final int page,
+            @RequestParam(defaultValue = "20") final int size,
+            @RequestParam(required = false) final String sortBy,
+            @RequestParam(defaultValue = "asc") final String sortOrder,
+            @RequestParam(value = "format", required = false) final String format) {
         if (markerIds != null || writerLogin != null || title != null || content != null) {
-            return storyService.findByMarkerIdsAndWriterLoginAndTitleAndContent(
+            List<StoryResponseTo> list = storyService.findByMarkerIdsAndWriterLoginAndTitleAndContent(
                     markerIds, writerLogin, title, content);
+            int total = list.size();
+            int from = Math.min(page * size, total);
+            int to = Math.min(from + size, total);
+            List<StoryResponseTo> contentPage = list.subList(from, to);
+            int totalPages = size > 0 ? (int) Math.ceil((double) total / size) : 0;
+            return new PageResponseTo<>(contentPage, total, totalPages, size, page);
         }
-        return storyService.findAll();
+        boolean wantList = "list".equalsIgnoreCase(format)
+                || (format == null && page == 0 && size == 20 && (sortBy == null || sortBy.isBlank()));
+        if (wantList) {
+            return storyService.findAll();
+        }
+        return storyService.findAll(page, size, sortBy, sortOrder);
     }
 
     @GetMapping("/{id}")

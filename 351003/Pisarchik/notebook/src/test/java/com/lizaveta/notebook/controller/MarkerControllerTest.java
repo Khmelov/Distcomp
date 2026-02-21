@@ -1,5 +1,6 @@
 package com.lizaveta.notebook.controller;
 
+import com.lizaveta.notebook.config.PostgresTestContainerConfig;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +13,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class MarkerControllerTest {
+class MarkerControllerTest extends PostgresTestContainerConfig {
 
     @LocalServerPort
     private int port;
@@ -37,12 +38,15 @@ class MarkerControllerTest {
     }
 
     @Test
-    void getMarkers_ShouldReturn200() {
+    void getMarkers_ShouldReturn200AndPage() {
         given()
                 .when()
                 .get("/api/v1.0/markers")
                 .then()
-                .statusCode(200);
+                .statusCode(200)
+                .body("content", notNullValue())
+                .body("totalElements", notNullValue())
+                .body("totalPages", notNullValue());
     }
 
     @Test

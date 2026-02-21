@@ -1,8 +1,5 @@
 package com.lizaveta.notebook.model.entity;
 
-/**
- * Domain entity representing a notice/comment.
- */
 public final class Notice {
 
     private final Long id;
