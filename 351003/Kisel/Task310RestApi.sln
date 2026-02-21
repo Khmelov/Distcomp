@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# 
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Task310RestApi", "Task310RestApi\Task310RestApi.csproj", "{04700DC6-6998-413E-ADE5-E0093E9F51F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Task310RestApi.Tests", "Task310RestApi.Tests\Task310RestApi.Tests.csproj", "{D3DFF2A8-8687-44E1-A73E-D01BCB0A5FC9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{04700DC6-6998-413E-ADE5-E0093E9F51F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04700DC6-6998-413E-ADE5-E0093E9F51F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04700DC6-6998-413E-ADE5-E0093E9F51F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04700DC6-6998-413E-ADE5-E0093E9F51F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3DFF2A8-8687-44E1-A73E-D01BCB0A5FC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3DFF2A8-8687-44E1-A73E-D01BCB0A5FC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3DFF2A8-8687-44E1-A73E-D01BCB0A5FC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3DFF2A8-8687-44E1-A73E-D01BCB0A5FC9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
