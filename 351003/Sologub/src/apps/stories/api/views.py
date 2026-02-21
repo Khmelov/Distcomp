@@ -15,3 +15,10 @@ class StoryViewSet(viewsets.GenericViewSet,
 
     def get_serializer_class(self):
         return StorySerializer
+
+    def perform_destroy(self, instance):
+        markers = list(instance.markers.all())
+        instance.delete()
+        for marker in markers:
+            if marker.story_set.count() == 0:
+                marker.delete()
