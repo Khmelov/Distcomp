@@ -3,9 +3,6 @@ package com.lizaveta.notebook.model.entity;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-/**
- * Domain entity representing a story/tale.
- */
 public final class Story {
 
     private final Long id;

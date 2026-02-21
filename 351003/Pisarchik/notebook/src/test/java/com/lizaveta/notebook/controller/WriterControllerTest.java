@@ -1,5 +1,6 @@
 package com.lizaveta.notebook.controller;
 
+import com.lizaveta.notebook.config.PostgresTestContainerConfig;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +13,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class WriterControllerTest {
+class WriterControllerTest extends PostgresTestContainerConfig {
 
     @LocalServerPort
     private int port;
@@ -42,13 +43,15 @@ class WriterControllerTest {
     }
 
     @Test
-    void getWriters_ShouldReturn200AndList() {
+    void getWriters_ShouldReturn200AndPage() {
         given()
                 .when()
                 .get("/api/v1.0/writers")
                 .then()
                 .statusCode(200)
-                .body("", notNullValue());
+                .body("content", notNullValue())
+                .body("totalElements", notNullValue())
+                .body("totalPages", notNullValue());
     }
 
     @Test
@@ -153,5 +156,16 @@ class WriterControllerTest {
                 .statusCode(400)
                 .body("errorMessage", notNullValue())
                 .body("errorCode", equalTo(40001));
+    }
+
+    @Test
+    void getWriterById_WhenInvalidId_ShouldReturn400() {
+        given()
+                .when()
+                .get("/api/v1.0/writers/0")
+                .then()
+                .statusCode(400)
+                .body("errorMessage", notNullValue())
+                .body("errorCode", equalTo(40004));
     }
 }

@@ -1,10 +1,5 @@
 package com.lizaveta.notebook.model.entity;
 
-import java.util.Set;
-
-/**
- * Domain entity representing a marker/tag.
- */
 public final class Marker {
 
     private final Long id;

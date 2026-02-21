@@ -1,8 +1,5 @@
 package com.lizaveta.notebook.model.entity;
 
-/**
- * Domain entity representing a writer/author.
- */
 public final class Writer {
 
     private final Long id;
