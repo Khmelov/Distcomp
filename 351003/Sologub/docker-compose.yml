@@ -2,22 +2,24 @@ version: '3.8'
 
 services:
 
-  db:
-    container_name: django-task-db
-    image: postgres:18-alpine
+  postgres:
+    image: postgres:15
+    container_name: postgres-distcomp
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d distcomp" ]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
 
   web:
     container_name: dc
@@ -30,13 +32,14 @@ services:
     ports:
       - "24110:24110"
     environment:
-      POSTGRES_HOST: db
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_PORT: 5432
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/distcomp?options=-csearch_path%3Ddistcomp,public
+        - POSTGRES_HOST=postgres
+        - POSTGRES_DB=distcomp
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=postgres
+        - POSTGRES_PORT=5432
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
     healthcheck:
       test: curl --fail http://localhost:24110 || exit 1
