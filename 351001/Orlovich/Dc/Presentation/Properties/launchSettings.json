@@ -1,9 +1,0 @@
-﻿{
-  "$schema": "https://json.schemastore.org/launchsettings.json",
-  "profiles": {
-    "http": {
-      "commandName": "Project",
-      "applicationUrl": "http://localhost:24110"
-    }
-  }
-}
