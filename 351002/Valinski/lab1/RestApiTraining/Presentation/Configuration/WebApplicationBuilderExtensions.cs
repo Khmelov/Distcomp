@@ -21,13 +21,19 @@ public static class WebApplicationBuilderExtensions
         services.AddOpenApi();
 
         services.AddAutoMapper(typeof(TopicProfile).Assembly,
-            typeof(UserDtoProfile).Assembly);
+            typeof(UserDtoProfile).Assembly,
+            typeof(LabelProfile).Assembly,
+            typeof(ReactionProfile).Assembly);
 
         services.AddScoped<ITopicRepository, TopicRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ILabelRepository, LabelRepository>();
+        services.AddScoped<IReactionRepository, ReactionRepository>();
         
         services.AddScoped<ITopicService, TopicService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<ILabelService, LabelService>();
+        services.AddScoped<IReactionService, ReactionService>();
 
         services.AddValidatorsFromAssembly(typeof(UserRequestTo).Assembly);
         

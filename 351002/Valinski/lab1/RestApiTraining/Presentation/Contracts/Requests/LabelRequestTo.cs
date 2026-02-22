@@ -1,3 +1,6 @@
 ﻿namespace Presentation.Contracts.Requests;
 
-public record LabelRequestTo();
+public class LabelRequestTo
+{
+    public string Name { get; set; }
+}
