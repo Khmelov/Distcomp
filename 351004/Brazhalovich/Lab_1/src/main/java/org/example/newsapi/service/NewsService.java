@@ -33,32 +33,36 @@ public class NewsService {
 
     @Transactional
     public NewsResponseTo create(NewsRequestTo request) {
-        // Если userId null (т.е. тестер не прислал поле "user" или прислал "userId")
+        // 1. Проверка юзера (для возврата 403, если его нет)
         if (request.getUserId() == null || !userRepository.existsById(request.getUserId())) {
-            throw new NotFoundException("User not found or missing");
+            throw new org.example.newsapi.exception.NotFoundException("User not found");
         }
 
-        // Проверка уникальности заголовка (важно!)
+        // 2. Проверка уникальности заголовка (предотвращает дубликаты)
         if (newsRepository.existsByTitle(request.getTitle())) {
-            throw new AlreadyExistsException("News title already exists");
+            throw new org.example.newsapi.exception.AlreadyExistsException("Title exists");
         }
 
-        User user = userRepository.getReferenceById(request.getUserId());
         News news = newsMapper.toEntity(request);
-        news.setUser(user);
+        news.setUser(userRepository.getReferenceById(request.getUserId()));
 
-        // Принудительно ставим даты для ответа
-        news.setCreated(java.time.LocalDateTime.now());
-        news.setModified(java.time.LocalDateTime.now());
+        // Принудительно ставим время
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        news.setCreated(now);
+        news.setModified(now);
 
+        // 3. ПРИВЯЗКА МАРКЕРОВ
+        // Если наши "умные" сеттеры сработали, markerIds не будет пустым
         if (request.getMarkerIds() != null && !request.getMarkerIds().isEmpty()) {
-            java.util.List<Marker> markers = markerRepository.findAllById(request.getMarkerIds());
+            java.util.List<org.example.newsapi.entity.Marker> markers =
+                    markerRepository.findAllById(request.getMarkerIds());
             news.setMarkers(new java.util.HashSet<>(markers));
         }
 
         News saved = newsRepository.save(news);
         return newsMapper.toDto(saved);
     }
+
 
     public Page<NewsResponseTo> findAll(Pageable pageable) {
         return newsRepository.findAll(pageable).map(newsMapper::toDto);

@@ -20,4 +20,14 @@ public class NewsRequestTo {
 
     //@JsonProperty("marker")
     private Set<Long> markerIds;
+
+    // Джексон увидит этот метод и положит данные из JSON-поля "user" в твой "userId"
+    public void setUser(Long user) {
+        this.userId = user;
+    }
+
+    // Джексон увидит этот метод и положит данные из JSON-поля "marker" в твой "markerIds"
+    public void setMarker(java.util.Set<Long> marker) {
+        this.markerIds = marker;
+    }
 }

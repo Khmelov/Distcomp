@@ -23,4 +23,13 @@ public class NewsResponseTo {
 
     //@JsonProperty("marker")
     private Set<Long> markerIds = new HashSet<>();
+
+    public Long getUser() {
+        return this.userId;
+    }
+
+    // Jackson создаст поле "marker" в JSON ответе
+    public Set<Long> getMarker() {
+        return this.markerIds;
+    }
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.newsapi.dto.request.MarkerRequestTo;
 import org.example.newsapi.dto.response.MarkerResponseTo;
 import org.example.newsapi.entity.Marker;
+import org.example.newsapi.exception.AlreadyExistsException;
 import org.example.newsapi.exception.NotFoundException;
 import org.example.newsapi.mapper.MarkerMapper;
 import org.example.newsapi.repository.MarkerRepository;
@@ -22,10 +23,13 @@ public class MarkerService {
 
     @Transactional
     public MarkerResponseTo create(MarkerRequestTo request) {
+        // 1. ПРОВЕРКА НА ДУБЛИКАТ: Если маркер с таким именем уже есть, тестер ждет 403.
+        if (markerRepository.existsByName(request.getName())) {
+            throw new AlreadyExistsException("Marker already exists: " + request.getName());
+        }
+
         Marker marker = markerMapper.toEntity(request);
         Marker saved = markerRepository.save(marker);
-        // Добавь лог, чтобы видеть в консоли, что маркер реально сохранился
-        System.out.println("Saved marker: " + saved.getName() + " with ID: " + saved.getId());
         return markerMapper.toDto(saved);
     }
 

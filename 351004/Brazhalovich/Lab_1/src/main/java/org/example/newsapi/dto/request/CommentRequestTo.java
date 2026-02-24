@@ -14,4 +14,8 @@ public class CommentRequestTo {
 
     @Size(min = 2, max = 2048)
     private String content;
+
+    public void setNews(Long news) {
+        this.newsId = news;
+    }
 }

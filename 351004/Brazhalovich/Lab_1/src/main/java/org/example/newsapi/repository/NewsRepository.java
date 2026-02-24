@@ -7,6 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface NewsRepository extends JpaRepository<News, Long>, JpaSpecificationExecutor<News> {
-    // Добавь этот метод:
     boolean existsByTitle(String title);
 }

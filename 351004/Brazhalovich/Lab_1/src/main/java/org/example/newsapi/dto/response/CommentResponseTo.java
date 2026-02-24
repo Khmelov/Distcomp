@@ -12,4 +12,8 @@ public class CommentResponseTo {
     private Long newsId;
 
     private String content;
+
+    public Long getNews() {
+        return this.newsId;
+    }
 }
