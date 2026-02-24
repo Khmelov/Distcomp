@@ -33,12 +33,10 @@ public class NewsService {
 
     @Transactional
     public NewsResponseTo create(NewsRequestTo request) {
-        // 1. Проверка юзера (Если его нет - бросаем ошибку)
         if (request.getUserId() == null || !userRepository.existsById(request.getUserId())) {
             throw new NotFoundException("User not found");
         }
 
-        // 2. Проверка дубликата заголовка (ИМЕННО ЭТО ВАЛИЛО ТЕСТ №9)
         if (newsRepository.existsByTitle(request.getTitle())) {
             throw new AlreadyExistsException("News title already exists");
         }
@@ -46,26 +44,18 @@ public class NewsService {
         User user = userRepository.getReferenceById(request.getUserId());
         News news = newsMapper.toEntity(request);
         news.setUser(user);
+        news.setCreated(LocalDateTime.now());
+        news.setModified(LocalDateTime.now());
 
-        // Ставим даты
-        news.setCreated(java.time.LocalDateTime.now());
-        news.setModified(java.time.LocalDateTime.now());
-
-        // 3. Обработка маркеров (Проверяем, что ID маркеров реально есть в базе)
         if (request.getMarkerIds() != null && !request.getMarkerIds().isEmpty()) {
-            java.util.List<Marker> markers = markerRepository.findAllById(request.getMarkerIds());
-            // Если тестер прислал несуществующий маркер, можно тоже выкинуть 403
-            if (markers.size() != request.getMarkerIds().size()) {
-                throw new NotFoundException("One or more markers not found");
-            }
-            news.setMarkers(new java.util.HashSet<>(markers));
+            List<Marker> markers = markerRepository.findAllById(request.getMarkerIds());
+            news.setMarkers(new HashSet<>(markers));
         }
 
-        News saved = newsRepository.save(news);
+        // ИСПОЛЬЗУЕМ saveAndFlush чтобы данные мгновенно попали в БД
+        News saved = newsRepository.saveAndFlush(news);
         return newsMapper.toDto(saved);
     }
-
-
     public Page<NewsResponseTo> findAll(Pageable pageable) {
         return newsRepository.findAll(pageable).map(newsMapper::toDto);
     }

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -23,35 +25,34 @@ public class News {
     @SequenceGenerator(name = "news_seq_gen", sequenceName = "news_seq", allocationSize = 1)
     private Long id;
 
-    // Связь многие-к-одному с User
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @ToString.Exclude
+    // ВАЖНО: это удалит новость, когда удаляется юзер
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
     private User user;
 
-    @Column(nullable = false, length = 64)
+    @Column(nullable = false, unique = true, length = 64)
     private String title;
 
     @Column(nullable = false, length = 2048)
     private String content;
 
-    @CreationTimestamp // Автоматически ставит дату при создании
+    @CreationTimestamp
     private LocalDateTime created;
 
-    @UpdateTimestamp // Автоматически обновляет дату при изменении
+    @UpdateTimestamp
     private LocalDateTime modified;
 
-    // Связь один-ко-многим с комментариями
-    @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
-    private List<Comment> comments;
-
-    // Связь многие-ко-многим с маркерами через промежуточную таблицу
-    @ManyToMany(fetch = FetchType.EAGER) // Поставь EAGER для тестов, чтобы маппер всегда видел маркеры
+    @Builder.Default
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "tbl_news_marker",
+            name = "tbl_news_marker", // ТЕПЕРЬ ТАБЛИЦА БУДЕТ БЕЗ "S"
             joinColumns = @JoinColumn(name = "news_id"),
             inverseJoinColumns = @JoinColumn(name = "marker_id")
     )
     private Set<Marker> markers = new HashSet<>();
+
+    @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private List<Comment> comments;
 }

@@ -13,12 +13,12 @@ public class GlobalExceptionHandler {
     // 1. БИЗНЕС-ОШИБКИ (Не найдено или Дубликат логина/заголовка) -> 403
     // Объединяем их в один метод, чтобы не было конфликтов
 
-        @ExceptionHandler({NotFoundException.class, AlreadyExistsException.class})
-        public ResponseEntity<ErrorResponse> handleBusinessError(RuntimeException e) {
-            // Обязательно FORBIDDEN (403) и 40301
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new ErrorResponse(e.getMessage(), 40301));
-        }
+    @ExceptionHandler({NotFoundException.class, AlreadyExistsException.class})
+    public ResponseEntity<ErrorResponse> handleBusinessError(RuntimeException e) {
+        System.out.println(">>> HANDLED BUSINESS ERROR: " + e.getMessage()); // ЛОГ ДЛЯ НАС
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(e.getMessage(), 40301));
+    }
 
         @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
         public ResponseEntity<ErrorResponse> handleSqlError(Exception e) {

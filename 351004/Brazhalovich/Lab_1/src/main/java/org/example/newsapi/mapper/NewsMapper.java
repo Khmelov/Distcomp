@@ -22,6 +22,7 @@ public interface NewsMapper {
     @Mapping(target = "comments", ignore = true)
     News toEntity(NewsRequestTo request);
 
+    @Mapping(target = "marker", ignore = true) // Чтобы MapStruct не искал это поле
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "markerIds", expression = "java(news.getMarkers() != null ? news.getMarkers().stream().map(Marker::getId).collect(Collectors.toSet()) : new java.util.HashSet<>())")
     NewsResponseTo toDto(News news);
