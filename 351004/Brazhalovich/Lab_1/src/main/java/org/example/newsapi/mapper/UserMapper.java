@@ -9,9 +9,14 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "news", ignore = true) // Игнорируем список новостей при создании
     User toEntity(UserRequestTo request);
+
     UserResponseTo toDto(User user);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "news", ignore = true)
     void updateEntityFromDto(UserRequestTo request, @MappingTarget User user);
 }

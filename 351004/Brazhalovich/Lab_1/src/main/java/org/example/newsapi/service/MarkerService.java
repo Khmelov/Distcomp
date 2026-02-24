@@ -1,35 +1,37 @@
 package org.example.newsapi.service;
 
-
 import lombok.RequiredArgsConstructor;
 import org.example.newsapi.dto.request.MarkerRequestTo;
 import org.example.newsapi.dto.response.MarkerResponseTo;
 import org.example.newsapi.entity.Marker;
 import org.example.newsapi.exception.NotFoundException;
 import org.example.newsapi.mapper.MarkerMapper;
-import org.example.newsapi.mapper.MarkerMapper;
-import org.example.newsapi.repository.impl.MarkerRepository;
-import org.example.newsapi.repository.impl.MarkerRepository;
+import org.example.newsapi.repository.MarkerRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MarkerService {
+
     private final MarkerRepository markerRepository;
     private final MarkerMapper markerMapper;
 
+    @Transactional
     public MarkerResponseTo create(MarkerRequestTo request) {
         Marker marker = markerMapper.toEntity(request);
-        return markerMapper.toDto(markerRepository.save(marker));
+        Marker saved = markerRepository.save(marker);
+        // Добавь лог, чтобы видеть в консоли, что маркер реально сохранился
+        System.out.println("Saved marker: " + saved.getName() + " with ID: " + saved.getId());
+        return markerMapper.toDto(saved);
     }
 
-    public List<MarkerResponseTo> findAll() {
-        return markerRepository.findAll().stream()
-                .map(markerMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<MarkerResponseTo> findAll(Pageable pageable) {
+        return markerRepository.findAll(pageable)
+                .map(markerMapper::toDto);
     }
 
     public MarkerResponseTo findById(Long id) {
@@ -38,15 +40,18 @@ public class MarkerService {
                 .orElseThrow(() -> new NotFoundException("Marker not found with id: " + id));
     }
 
+    @Transactional
     public MarkerResponseTo update(Long id, MarkerRequestTo request) {
         Marker marker = markerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Marker not found with id: " + id));
+
         markerMapper.updateEntityFromDto(request, marker);
-        return markerMapper.toDto(markerRepository.update(marker));
+        return markerMapper.toDto(markerRepository.save(marker));
     }
 
+    @Transactional
     public void delete(Long id) {
-        if (markerRepository.findById(id).isEmpty()) {
+        if (!markerRepository.existsById(id)) {
             throw new NotFoundException("Marker not found with id: " + id);
         }
         markerRepository.deleteById(id);

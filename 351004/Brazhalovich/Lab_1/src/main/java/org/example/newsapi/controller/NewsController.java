@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.newsapi.dto.request.NewsRequestTo;
 import org.example.newsapi.dto.response.NewsResponseTo;
 import org.example.newsapi.service.NewsService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +17,7 @@ import java.util.List;
 @RequestMapping("/api/v1.0/news")
 @RequiredArgsConstructor
 public class NewsController {
+
     private final NewsService newsService;
 
     @PostMapping
@@ -23,8 +27,8 @@ public class NewsController {
     }
 
     @GetMapping
-    public List<NewsResponseTo> getAll() {
-        return newsService.findAll();
+    public List<NewsResponseTo> getAll(@PageableDefault(size = 50) Pageable pageable) {
+        return newsService.findAll(pageable).getContent();
     }
 
     @GetMapping("/{id}")
