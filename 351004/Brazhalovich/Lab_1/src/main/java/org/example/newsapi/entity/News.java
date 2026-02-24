@@ -44,9 +44,9 @@ public class News {
     private LocalDateTime modified;
 
     @Builder.Default
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(
-            name = "tbl_news_marker", // ТЕПЕРЬ ТАБЛИЦА БУДЕТ БЕЗ "S"
+            name = "tbl_news_marker",
             joinColumns = @JoinColumn(name = "news_id"),
             inverseJoinColumns = @JoinColumn(name = "marker_id")
     )

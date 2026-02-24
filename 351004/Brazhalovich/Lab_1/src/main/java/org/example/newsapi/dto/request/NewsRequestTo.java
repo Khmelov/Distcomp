@@ -8,7 +8,6 @@ import java.util.Set;
 
 @Data
 public class NewsRequestTo {
-    //@JsonProperty("user") // Тестер будет слать "user", а Jackson запишет это в userId
     @NotNull
     private Long userId;
 
@@ -18,17 +17,18 @@ public class NewsRequestTo {
     @Size(min = 4, max = 2048)
     private String content;
 
-    //@JsonProperty("marker")
-    private Set<Long> markerIds;
+    // Это поле будет заполняться через сеттеры ниже
+    private Set<String> markerNames;
 
-    // Джексон увидит этот метод и положит данные из JSON-поля "user" в твой "userId"
-    public void setUser(Long user) {
-        this.userId = user;
+    // Сеттер для JSON-поля "marker"
+    public void setMarker(Set<String> markerNames) {
+        System.out.println(">>> setMarker called with: " + markerNames);
+        this.markerNames = markerNames;
     }
 
-    // Джексон увидит этот метод и положит данные из JSON-поля "marker" в твой "markerIds"
-    public void setMarker(java.util.Set<Long> marker) {
-        System.out.println(">>> RECEIVED MARKER IDs FOR NEWS: " + marker);
-        this.markerIds = marker;
+    // Сеттер для JSON-поля "markers" (на случай множественного числа)
+    public void setMarkers(Set<String> markerNames) {
+        System.out.println(">>> setMarkers called with: " + markerNames);
+        this.markerNames = markerNames;
     }
 }

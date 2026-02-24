@@ -23,6 +23,8 @@ public class NewsController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public NewsResponseTo create(@RequestBody @Valid NewsRequestTo request) {
+        System.out.println(">>> CREATE NEWS REQUEST: " + request);
+        System.out.println(">>> markerNames: " + request.getMarkerNames());
         return newsService.create(request);
     }
 
