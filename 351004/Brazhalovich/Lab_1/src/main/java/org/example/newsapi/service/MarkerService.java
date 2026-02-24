@@ -23,13 +23,18 @@ public class MarkerService {
 
     @Transactional
     public MarkerResponseTo create(MarkerRequestTo request) {
-        // 1. ПРОВЕРКА НА ДУБЛИКАТ: Если маркер с таким именем уже есть, тестер ждет 403.
+        System.out.println(">>> ATTEMPTING TO CREATE MARKER WITH NAME: " + request.getName());
+
         if (markerRepository.existsByName(request.getName())) {
-            throw new AlreadyExistsException("Marker already exists: " + request.getName());
+            System.out.println(">>> MARKER ALREADY EXISTS: " + request.getName());
+            throw new AlreadyExistsException("Marker already exists");
         }
 
         Marker marker = markerMapper.toEntity(request);
         Marker saved = markerRepository.save(marker);
+
+        System.out.println(">>> SUCCESSFULLY SAVED MARKER: " + saved.getName() + " WITH ID: " + saved.getId());
+
         return markerMapper.toDto(saved);
     }
 

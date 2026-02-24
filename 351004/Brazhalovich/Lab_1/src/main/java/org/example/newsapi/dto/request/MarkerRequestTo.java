@@ -7,8 +7,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor // Обязательно для правильной работы Jackson
+@AllArgsConstructor
 public class MarkerRequestTo {
-//    @NotBlank
-//    @Size(min = 2, max = 32)
+    @NotBlank
+    @Size(min = 2, max = 32)
     private String name;
 }

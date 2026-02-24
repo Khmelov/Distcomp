@@ -28,6 +28,7 @@ public class NewsRequestTo {
 
     // Джексон увидит этот метод и положит данные из JSON-поля "marker" в твой "markerIds"
     public void setMarker(java.util.Set<Long> marker) {
+        System.out.println(">>> RECEIVED MARKER IDs FOR NEWS: " + marker);
         this.markerIds = marker;
     }
 }

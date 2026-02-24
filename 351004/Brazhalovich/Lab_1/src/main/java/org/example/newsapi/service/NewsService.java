@@ -33,29 +33,31 @@ public class NewsService {
 
     @Transactional
     public NewsResponseTo create(NewsRequestTo request) {
-        // 1. Проверка юзера (для возврата 403, если его нет)
+        // 1. Проверка юзера (Если его нет - бросаем ошибку)
         if (request.getUserId() == null || !userRepository.existsById(request.getUserId())) {
-            throw new org.example.newsapi.exception.NotFoundException("User not found");
+            throw new NotFoundException("User not found");
         }
 
-        // 2. Проверка уникальности заголовка (предотвращает дубликаты)
+        // 2. Проверка дубликата заголовка (ИМЕННО ЭТО ВАЛИЛО ТЕСТ №9)
         if (newsRepository.existsByTitle(request.getTitle())) {
-            throw new org.example.newsapi.exception.AlreadyExistsException("Title exists");
+            throw new AlreadyExistsException("News title already exists");
         }
 
+        User user = userRepository.getReferenceById(request.getUserId());
         News news = newsMapper.toEntity(request);
-        news.setUser(userRepository.getReferenceById(request.getUserId()));
+        news.setUser(user);
 
-        // Принудительно ставим время
-        java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        news.setCreated(now);
-        news.setModified(now);
+        // Ставим даты
+        news.setCreated(java.time.LocalDateTime.now());
+        news.setModified(java.time.LocalDateTime.now());
 
-        // 3. ПРИВЯЗКА МАРКЕРОВ
-        // Если наши "умные" сеттеры сработали, markerIds не будет пустым
+        // 3. Обработка маркеров (Проверяем, что ID маркеров реально есть в базе)
         if (request.getMarkerIds() != null && !request.getMarkerIds().isEmpty()) {
-            java.util.List<org.example.newsapi.entity.Marker> markers =
-                    markerRepository.findAllById(request.getMarkerIds());
+            java.util.List<Marker> markers = markerRepository.findAllById(request.getMarkerIds());
+            // Если тестер прислал несуществующий маркер, можно тоже выкинуть 403
+            if (markers.size() != request.getMarkerIds().size()) {
+                throw new NotFoundException("One or more markers not found");
+            }
             news.setMarkers(new java.util.HashSet<>(markers));
         }
 
