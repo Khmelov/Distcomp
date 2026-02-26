@@ -1,5 +1,6 @@
 package com.distcomp.dto.news
 
+import com.distcomp.dto.marker.MarkerRequestTo
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
@@ -13,5 +14,6 @@ data class NewsRequestTo (
     @field:Size(min = 4, max = 2048)
     val content: String,
     @field:NotNull
-    val userId: Long
+    val userId: Long,
+    val markers: List<String>?,
 )

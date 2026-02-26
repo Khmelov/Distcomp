@@ -9,6 +9,7 @@ import com.distcomp.repository.NewsRepository
 import com.distcomp.repository.NoticeRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class NoticeService(
@@ -16,11 +17,12 @@ class NoticeService(
     val noticeRepository: NoticeRepository,
     val newsRepository: NewsRepository
 ) {
+    @Transactional
     fun createNotice(noticeRequestTo: NoticeRequestTo): NoticeResponseTo {
         val notice = noticeMapper.toNoticeEntity(noticeRequestTo)
-        noticeRepository.save(notice)
         val news = newsRepository.findByIdOrNull(noticeRequestTo.newsId)
         notice.news = news ?: throw NewsNotFoundException("News not found")
+        noticeRepository.save(notice)
         return noticeMapper.toNoticeResponse(notice)
     }
 
@@ -34,6 +36,7 @@ class NoticeService(
         return noticeRepository.findAll().map { noticeMapper.toNoticeResponse(it) }
     }
 
+    @Transactional
     fun updateNotice(noticeRequestTo: NoticeRequestTo, noticeId: Long?): NoticeResponseTo {
         if (noticeId == null || noticeRepository.findByIdOrNull(noticeId) == null) {
             throw NoticeNotFoundException("Notice with id $noticeId not found")
@@ -41,14 +44,15 @@ class NoticeService(
 
         val notice = noticeMapper.toNoticeEntity(noticeRequestTo)
         notice.id = noticeId
-        noticeRepository.save(notice)
 
         val news = newsRepository.findByIdOrNull(noticeRequestTo.newsId)
         notice.news = news ?: throw NewsNotFoundException("News not found")
 
+        noticeRepository.save(notice)
         return noticeMapper.toNoticeResponse(notice)
     }
 
+    @Transactional
     fun removeNoticeById(id: Long) {
         if (noticeRepository.findByIdOrNull(id) == null) {
             throw NoticeNotFoundException("Notice with id $id not found")

@@ -17,5 +17,7 @@ class News(
     var modified: LocalDateTime = LocalDateTime.now(),
     @ManyToOne
     @JoinColumn(name = "user_id")
-    var user: User? = null
+    var user: User? = null,
+    @OneToMany(cascade = [(CascadeType.ALL)], orphanRemoval = true)
+    var markers: MutableList<Marker> = mutableListOf(),
 )
