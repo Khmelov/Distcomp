@@ -1,0 +1,88 @@
+{
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "debug",
+            "displayName": "Debug",
+            "description": "Debug конфигурация с отладочными символами",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/out/build/debug",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/debug",
+                "CMAKE_C_COMPILER": "/usr/bin/gcc",
+                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_VERBOSE_MAKEFILE": "ON"
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Release",
+            "description": "Release конфигурация с оптимизациями",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/out/build/release",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/release",
+                "CMAKE_C_COMPILER": "/usr/bin/gcc",
+                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_VERBOSE_MAKEFILE": "OFF"
+            }
+        },
+        {
+            "name": "relwithdebinfo",
+            "displayName": "RelWithDebInfo",
+            "description": "Release с отладочной информацией",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/out/build/relwithdebinfo",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/relwithdebinfo",
+                "CMAKE_C_COMPILER": "/usr/bin/gcc",
+                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "minsizerel",
+            "displayName": "MinSizeRel",
+            "description": "Release с оптимизацией на размер",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/out/build/minsizerel",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/minsizerel",
+                "CMAKE_C_COMPILER": "/usr/bin/gcc",
+                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug-build",
+            "configurePreset": "debug",
+            "displayName": "Build Debug",
+            "description": "Сборка Debug версии"
+        },
+        {
+            "name": "release-build",
+            "configurePreset": "release",
+            "displayName": "Build Release",
+            "description": "Сборка Release версии"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "debug-test",
+            "configurePreset": "debug",
+            "displayName": "Test Debug",
+            "description": "Запуск тестов для Debug сборки",
+            "output": {"outputOnFailure": true}
+        },
+        {
+            "name": "release-test",
+            "configurePreset": "release",
+            "displayName": "Test Release",
+            "description": "Запуск тестов для Release сборки"
+        }
+    ]
+}

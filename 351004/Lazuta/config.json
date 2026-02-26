@@ -1,0 +1,16 @@
+{
+    "listeners": [
+        {
+        "address": "0.0.0.0",
+        "port": 24110,
+        "https": false
+        }
+    ],
+    "app": 
+    {        
+        "threads_num": 1,
+        "document_root": "/home/dmitry/Distcomp/351004/Lazuta/http",
+        "implicit_page": "index.html"
+    }
+   
+}
