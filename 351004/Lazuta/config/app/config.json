@@ -6,6 +6,18 @@
         "https": false
         }
     ],
+    "db_clients":[
+    {
+      "rdbms": "postgresql",
+      "host": "127.0.0.1",
+      "port": 5432,
+      "dbname": "myapp_dev",
+      "user": "postgres",
+      "passwd": "postgres",
+      "is_fast": false,
+      "connection_number": 1
+    }
+    ],
     "app": 
     {        
         "threads_num": 1,

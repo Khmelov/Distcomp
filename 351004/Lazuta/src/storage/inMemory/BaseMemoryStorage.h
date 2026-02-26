@@ -100,7 +100,7 @@ public:
         return result;
     }
 
-    std::vector<T> FindBy(std::function<bool(const T&)> predicate) override 
+    std::vector<T> FindBy(std::function<bool(const T&)> predicate)
     {
         std::shared_lock lock(mutex);
         std::vector<T> result;

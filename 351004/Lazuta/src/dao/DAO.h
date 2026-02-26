@@ -16,7 +16,5 @@ public:
     virtual bool Update(K id, const T& entity) = 0;
     virtual bool Delete(K id) = 0;
     virtual std::vector<T> ReadAll() = 0;
-
-    virtual std::vector<T> FindBy(std::function<bool(const T&)> predicate) = 0;
     virtual bool Exists(K id) = 0;
 };
