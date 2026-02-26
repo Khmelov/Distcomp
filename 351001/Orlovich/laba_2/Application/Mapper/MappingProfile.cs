@@ -13,7 +13,11 @@ public class MappingProfile : Profile
         CreateMap<MarkerRequestTo, Marker>();
         CreateMap<Marker, MarkerResponseTo>();
 
-        CreateMap<IssueRequestTo, Issue>();
+        CreateMap<IssueRequestTo, Issue>()
+                 .ForMember(dest => dest.markers, opt => opt.MapFrom(src =>
+                     src.markers != null
+                         ? src.markers.Select(m => new Marker { name = m }).ToList()
+                         : new List<Marker>()));
         CreateMap<Issue, IssueResponseTo>();
 
         CreateMap<CommentRequestTo, Comment>();

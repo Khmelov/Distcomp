@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Models;
 
@@ -12,4 +13,6 @@ public class IssueRequestTo : IIdNullEntity
     
     [StringLength(2048, MinimumLength = 2)]
     public string content { get; set; }
+
+    public ICollection<string>? markers { get; set; }
 }

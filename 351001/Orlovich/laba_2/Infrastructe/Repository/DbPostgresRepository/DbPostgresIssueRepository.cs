@@ -22,13 +22,21 @@ public class DbPostgresIssueRepository : IIssueRepository
 
     public async Task<int> DeleteAsync(long id)
     {
-        var entity = await _context.Note.FindAsync(id);
+        var issue = await _context.Note
+            .Include(i => i.markers)
+            .FirstOrDefaultAsync(i => i.id == id);
 
-        if (entity == null)
-            return 0;
+        if (issue != null)
+        {
+            _context.Tag.RemoveRange(issue.markers);
+            _context.Note.Remove(issue);
 
-        _context.Note.Remove(entity);
-        return await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+            return 1;
+        }
+
+        await _context.SaveChangesAsync();
+        return 0;
     }
 
     public async Task<IList<Issue>> GetAllAsync()
