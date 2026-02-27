@@ -24,7 +24,7 @@ int main()
     auto postDAO = std::make_shared<PostRepository>();
 
     auto issueLabelService = std::make_unique<IssueLabelService>(issueLabelDAO, issueDAO, labelDAO);
-    auto issueService = std::make_unique<IssueService>(issueDAO, editorDAO);
+    auto issueService = std::make_unique<IssueService>(issueDAO, editorDAO, labelDAO, issueLabelDAO);
     auto postService = std::make_unique<PostService>(postDAO, issueDAO);
     auto editorService = std::make_unique<EditorService>(editorDAO);
     auto labelService = std::make_unique<LabelService>(labelDAO);
