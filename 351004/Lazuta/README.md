@@ -34,3 +34,5 @@ mv postgresql-42.7.1.jar tools/liquibase/lib/
 
 # Посмотреть историю
 ./liquibase history
+
+# Запустите скрипт migrate.sh в папке scripts, предварительно создав БД
