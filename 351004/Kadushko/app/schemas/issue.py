@@ -26,7 +26,7 @@ class IssueBase(BaseModel):
 
 
 class IssueCreate(IssueBase):
-    pass
+    markers: Optional[List[str]] = None
 
 
 class IssueUpdate(IssueBase):

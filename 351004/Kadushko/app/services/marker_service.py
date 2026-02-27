@@ -29,7 +29,7 @@ class MarkerService:
     def create(self, data: MarkerCreate) -> MarkerResponse:
         existing = self.repo.get_by_field("name", data.name)
         if existing:
-            raise EntityAlreadyExistsException("Marker", "name", data.name)
+            return MarkerResponse.model_validate(existing)
         marker = Marker(name=data.name)
         created = self.repo.create(marker)
         return MarkerResponse.model_validate(created)
