@@ -1,31 +1,99 @@
-#include "IssueLabelRepository.h"
+#include "storage/database/IssueLabelRepository.h"
+#include <drogon/orm/Mapper.h>
+#include <drogon/orm/Criteria.h>
+#include <exceptions/DatabaseException.h>
 
-uint64_t IssuelabelRepository::Create(const IssueLabel& entity)
+namespace myapp
 {
+
+int64_t IssueLabelRepository::Create(const TblIssueLabel& entity)
+{
+    // TODO: Implement using Drogon ORM
     return 0;
 }
 
-std::optional<IssueLabel> IssuelabelRepository::GetByID(uint64_t id)
+std::optional<TblIssueLabel> IssueLabelRepository::GetByID(int64_t id)
 {
-    return std::optional<IssueLabel>();
+    // TODO: Implement using Drogon ORM
+    return std::nullopt;
 }
 
-bool IssuelabelRepository::Update(uint64_t id, const IssueLabel& entity)
+bool IssueLabelRepository::Update(int64_t id, const TblIssueLabel& entity)
 {
+    // TODO: Implement using Drogon ORM
     return false;
 }
 
-bool IssuelabelRepository::Delete(uint64_t id)
+bool IssueLabelRepository::Delete(int64_t id)
 {
+    // TODO: Implement using Drogon ORM
     return false;
 }
 
-std::vector<IssueLabel> IssuelabelRepository::ReadAll()
+std::vector<TblIssueLabel> IssueLabelRepository::ReadAll()
 {
-    return std::vector<IssueLabel>();
+    // TODO: Implement using Drogon ORM
+    return {};
 }
 
-bool IssuelabelRepository::Exists(uint64_t id)
+bool IssueLabelRepository::Exists(int64_t id)
 {
+    // TODO: Implement using Drogon ORM
     return false;
+}
+
+std::vector<TblIssueLabel> IssueLabelRepository::FindByIssueId(int64_t issueId)
+{
+    // TODO: Implement using Drogon ORM
+    return {};
+}
+
+std::vector<TblIssueLabel> IssueLabelRepository::FindByLabelId(int64_t labelId)
+{
+    // TODO: Implement using Drogon ORM
+    return {};
+}
+
+std::optional<TblIssueLabel> IssueLabelRepository::FindByIssueAndLabel(int64_t issueId, int64_t labelId)
+{
+    // TODO: Implement using Drogon ORM
+    return std::nullopt;
+}
+
+std::vector<int64_t> IssueLabelRepository::FindLabelIdsByIssueId(int64_t issueId)
+{
+    // TODO: Implement using Drogon ORM
+    return {};
+}
+
+std::vector<int64_t> IssueLabelRepository::FindIssueIdsByLabelId(int64_t labelId)
+{
+    // TODO: Implement using Drogon ORM
+    return {};
+}
+
+bool IssueLabelRepository::DeleteByIssueAndLabel(int64_t issueId, int64_t labelId)
+{
+    // TODO: Implement using Drogon ORM
+    return false;
+}
+
+bool IssueLabelRepository::DeleteByIssueId(int64_t issueId)
+{
+    // TODO: Implement using Drogon ORM
+    return false;
+}
+
+bool IssueLabelRepository::DeleteByLabelId(int64_t labelId)
+{
+    // TODO: Implement using Drogon ORM
+    return false;
+}
+
+bool IssueLabelRepository::Exists(int64_t issueId, int64_t labelId)
+{
+    // TODO: Implement using Drogon ORM
+    return false;
+}
+
 }

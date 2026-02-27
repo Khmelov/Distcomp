@@ -1,5 +1,8 @@
 #include "Entity.h"
 
+namespace myapp::entities
+{
+
 Entity::Entity()
 {
 }
@@ -17,3 +20,5 @@ unsigned long Entity::GetID() const
 {
     return m_id;
 }
+
+};

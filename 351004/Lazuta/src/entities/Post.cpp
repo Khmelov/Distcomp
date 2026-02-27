@@ -1,5 +1,8 @@
 #include "Post.h"
 
+namespace myapp::entities
+{
+
 Post::Post() : Entity()
 {
     m_editorId = 0;
@@ -74,3 +77,5 @@ void Post::setModified(const std::string& modified)
 {
     m_modified = modified;
 }
+
+};

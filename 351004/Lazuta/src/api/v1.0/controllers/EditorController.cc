@@ -1,6 +1,9 @@
 #include "EditorController.h"
 #include <iostream>
 
+using namespace myapp;
+using namespace myapp::dto;
+
 EditorController::EditorController(std::unique_ptr<EditorService> service)
 {
     m_service = std::move(service);

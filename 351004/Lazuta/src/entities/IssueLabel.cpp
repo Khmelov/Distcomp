@@ -1,5 +1,8 @@
 #include "IssueLabel.h"
 
+namespace myapp::entities
+{
+
 IssueLabel::IssueLabel()
 {
 }
@@ -33,3 +36,5 @@ void IssueLabel::setLabelId(unsigned long labelId)
 {
     m_labelId = labelId;
 }
+
+};

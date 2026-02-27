@@ -1,6 +1,9 @@
 #include "Editor.h"
 #include <iostream>
 
+namespace myapp::entities
+{
+
 Editor::Editor() : Entity()
 {
     m_login = "";
@@ -62,3 +65,5 @@ void Editor::setLastName(const std::string& lastName)
 {
     m_lastName = lastName;
 }
+
+};

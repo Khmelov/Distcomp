@@ -5,7 +5,7 @@
 #include <optional>
 #include <cstdint>
 
-template <typename T, typename K = uint64_t>
+template <typename T, typename K = int64_t>
 class DAO 
 {
 public:

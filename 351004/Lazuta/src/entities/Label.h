@@ -3,6 +3,9 @@
 #include "Entity.h"
 #include <string>
 
+namespace myapp::entities
+{
+
 class Label : public Entity
 {
 private:
@@ -17,4 +20,6 @@ public:
     std::string getName() const;
     
     void setName(const std::string& name);
+};
+
 };

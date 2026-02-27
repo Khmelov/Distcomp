@@ -3,6 +3,9 @@
 #include "Entity.h"
 #include <string>
 
+namespace myapp::entities
+{
+
 class Editor : public Entity
 {
 private:
@@ -27,4 +30,6 @@ public:
     void setPassword(const std::string& password);
     void setFirstName(const std::string& firstName);
     void setLastName(const std::string& lastName);
+};
+
 };

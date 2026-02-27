@@ -3,6 +3,9 @@
 #include "Entity.h"
 #include <string>
 
+namespace myapp::entities
+{
+
 class IssueLabel : public Entity
 {
 private:
@@ -17,4 +20,6 @@ public:
     unsigned long getLabelId() const;
     void setIssueId(unsigned long issueId);
     void setLabelId(unsigned long labelId);
+};
+
 };

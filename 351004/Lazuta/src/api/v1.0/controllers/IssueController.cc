@@ -2,6 +2,9 @@
 #include "IssueController.h"
 #include <iostream>
 
+using namespace myapp;
+using namespace myapp::dto;
+
 IssueController::IssueController(std::unique_ptr<IssueService> service)
 {
     m_service = std::move(service);

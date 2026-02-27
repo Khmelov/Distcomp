@@ -1,31 +1,63 @@
-#include "IssueRepository.h"
+#include "storage/database/IssueRepository.h"
+#include <drogon/orm/Mapper.h>
+#include <drogon/orm/Criteria.h>
+#include <exceptions/DatabaseException.h>
 
-uint64_t IssueRepository::Create(const Issue& entity)
+namespace myapp
 {
+
+int64_t IssueRepository::Create(const TblIssue& entity)
+{
+    // TODO: Implement using Drogon ORM
     return 0;
 }
 
-std::optional<Issue> IssueRepository::GetByID(uint64_t id)
+std::optional<TblIssue> IssueRepository::GetByID(int64_t id)
 {
-    return std::optional<Issue>();
+    // TODO: Implement using Drogon ORM
+    return std::nullopt;
 }
 
-bool IssueRepository::Update(uint64_t id, const Issue& entity)
+bool IssueRepository::Update(int64_t id, const TblIssue& entity)
 {
+    // TODO: Implement using Drogon ORM
     return false;
 }
 
-bool IssueRepository::Delete(uint64_t id)
+bool IssueRepository::Delete(int64_t id)
 {
+    // TODO: Implement using Drogon ORM
     return false;
 }
 
-std::vector<Issue> IssueRepository::ReadAll()
+std::vector<TblIssue> IssueRepository::ReadAll()
 {
-    return std::vector<Issue>();
+    // TODO: Implement using Drogon ORM
+    return {};
 }
 
-bool IssueRepository::Exists(uint64_t id)
+bool IssueRepository::Exists(int64_t id)
 {
+    // TODO: Implement using Drogon ORM
     return false;
+}
+
+std::vector<TblIssue> IssueRepository::FindByEditorId(int64_t editorId)
+{
+    // TODO: Implement using Drogon ORM
+    return {};
+}
+
+std::vector<TblIssue> IssueRepository::FindRecent(int limit)
+{
+    // TODO: Implement using Drogon ORM
+    return {};
+}
+
+std::vector<TblIssue> IssueRepository::FindByDateRange(const trantor::Date& from, const trantor::Date& to)
+{
+    // TODO: Implement using Drogon ORM
+    return {};
+}
+
 }

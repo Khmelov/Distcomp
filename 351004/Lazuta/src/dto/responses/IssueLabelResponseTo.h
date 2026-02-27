@@ -6,23 +6,19 @@
 namespace myapp::dto
 {
 
-class PostResponseTo 
+class IssueLabelResponseTo 
 {
 public:
     unsigned long id;
     unsigned long issueId;
-    std::string content;
-    std::string created;
-    std::string modified;
+    unsigned long labelId;
 
     Json::Value toJson() const 
     {
         Json::Value json;
         json["id"] = id;
         json["issueId"] = issueId;
-        json["content"] = content;
-        json["created"] = created;
-        json["modified"] = modified;
+        json["labelId"] = labelId;
         return json;
     }
 };

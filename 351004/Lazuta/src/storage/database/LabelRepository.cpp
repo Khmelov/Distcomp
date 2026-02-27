@@ -1,31 +1,57 @@
-#include "LabelRepository.h"
+#include "storage/database/LabelRepository.h"
+#include <drogon/orm/Mapper.h>
+#include <drogon/orm/Criteria.h>
+#include <exceptions/DatabaseException.h>
 
-uint64_t LabelRepository::Create(const Label& entity)
+namespace myapp
 {
+
+int64_t LabelRepository::Create(const TblLabel& entity)
+{
+    // TODO: Implement using Drogon ORM
     return 0;
 }
 
-std::optional<Label> LabelRepository::GetByID(uint64_t id)
+std::optional<TblLabel> LabelRepository::GetByID(int64_t id)
 {
-    return std::optional<Label>();
+    // TODO: Implement using Drogon ORM
+    return std::nullopt;
 }
 
-bool LabelRepository::Update(uint64_t id, const Label& entity)
+bool LabelRepository::Update(int64_t id, const TblLabel& entity)
 {
+    // TODO: Implement using Drogon ORM
     return false;
 }
 
-bool LabelRepository::Delete(uint64_t id)
+bool LabelRepository::Delete(int64_t id)
 {
+    // TODO: Implement using Drogon ORM
     return false;
 }
 
-std::vector<Label> LabelRepository::ReadAll()
+std::vector<TblLabel> LabelRepository::ReadAll()
 {
-    return std::vector<Label>();
+    // TODO: Implement using Drogon ORM
+    return {};
 }
 
-bool LabelRepository::Exists(uint64_t id)
+bool LabelRepository::Exists(int64_t id)
 {
+    // TODO: Implement using Drogon ORM
     return false;
+}
+
+std::optional<TblLabel> LabelRepository::FindByName(const std::string& name)
+{
+    // TODO: Implement using Drogon ORM
+    return std::nullopt;
+}
+
+std::vector<TblLabel> LabelRepository::FindByNameContaining(const std::string& substring)
+{
+    // TODO: Implement using Drogon ORM
+    return {};
+}
+
 }

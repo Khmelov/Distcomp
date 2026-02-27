@@ -1,5 +1,8 @@
 #include "Label.h"
 
+namespace myapp::entities
+{
+
 Label::Label() : Entity()
 {
     m_name = "";
@@ -24,3 +27,5 @@ void Label::setName(const std::string& name)
 {
     m_name = name;
 }
+
+};

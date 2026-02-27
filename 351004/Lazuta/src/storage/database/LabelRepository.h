@@ -1,14 +1,36 @@
 #pragma once
 
-#include "IDatabaseRepository.h"
-#include <entities/Label.h>
+#include <optional>
+#include <vector>
+#include <cstdint>
+#include <drogon/orm/DbClient.h>
+#include <drogon/orm/Mapper.h>
+#include <drogon/HttpAppFramework.h>
 
-class LabelRepository : public IDatabaseRepository<Label>
+#include "IDatabaseRepository.h"
+#include <models/TblLabel.h>
+
+namespace myapp 
 {
-    uint64_t Create(const Label& entity) override;
-    std::optional<Label> GetByID(uint64_t id) override;
-    bool Update(uint64_t id, const Label& entity) override;
-    bool Delete(uint64_t id) override;
-    std::vector<Label> ReadAll() override;
-    bool Exists(uint64_t id) override;
+
+using namespace drogon_model::myapp_dev;
+
+class LabelRepository : public IDatabaseRepository<TblLabel>
+{  
+public:
+    LabelRepository() = default;
+    ~LabelRepository() = default;
+    
+    int64_t Create(const TblLabel& entity) override;
+    std::optional<TblLabel> GetByID(int64_t id) override;
+    bool Update(int64_t id, const TblLabel& entity) override;
+    bool Delete(int64_t id) override;
+    std::vector<TblLabel> ReadAll() override;
+    bool Exists(int64_t id) override;
+    
+    // Дополнительные методы
+    std::optional<TblLabel> FindByName(const std::string& name);
+    std::vector<TblLabel> FindByNameContaining(const std::string& substring);
+};
+
 };

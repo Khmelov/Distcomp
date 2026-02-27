@@ -1,5 +1,8 @@
 #include "Issue.h"
 
+namespace myapp::entities
+{
+
 Issue::Issue() : Entity()
 {
     m_editorId = 0;
@@ -74,3 +77,5 @@ void Issue::setModified(const std::string& modified)
 {
     m_modified = modified;
 }
+
+};

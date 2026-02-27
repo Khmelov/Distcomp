@@ -3,6 +3,9 @@
 #include "Entity.h"
 #include <string>
 
+namespace myapp::entities
+{
+
 class Issue : public Entity
 {
 private:
@@ -31,4 +34,6 @@ public:
     void setContent(const std::string& content);
     void setCreated(const std::string& created);
     void setModified(const std::string& modified);
+};
+
 };

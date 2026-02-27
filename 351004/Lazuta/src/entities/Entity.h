@@ -3,6 +3,9 @@
 #include <vector>
 #include <cstdint>
 
+namespace myapp::entities
+{
+
 class Entity
 {
 private:
@@ -13,5 +16,6 @@ public:
 
     void SetId(unsigned long id);
     unsigned long GetID() const;
+};
 
 };
