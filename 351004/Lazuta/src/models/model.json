@@ -2,7 +2,7 @@
     "rdbms": "postgresql",
     "host": "127.0.0.1",
     "port": 5432,
-    "dbname": "myapp_dev",
+    "dbname": "distcomp",
     "user": "postgres",
     "passwd": "postgres",
     "tables": [],

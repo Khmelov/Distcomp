@@ -36,7 +36,7 @@ using DbClientPtr = std::shared_ptr<DbClient>;
 }
 namespace drogon_model
 {
-namespace myapp_dev
+namespace distcomp
 {
 
 class Databasechangeloglock
@@ -256,5 +256,5 @@ class Databasechangeloglock
         return sql;
     }
 };
-} // namespace myapp_dev
+} // namespace distcomp
 } // namespace drogon_model

@@ -13,7 +13,7 @@
 namespace myapp 
 {
 
-using namespace drogon_model::myapp_dev;
+using namespace drogon_model::distcomp;
 
 class IssueRepository : public IDatabaseRepository<TblIssue>
 {

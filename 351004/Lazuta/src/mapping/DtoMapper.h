@@ -25,7 +25,7 @@
 namespace myapp
 {
 
-using namespace drogon_model::myapp_dev;
+using namespace drogon_model::distcomp;
 using namespace dto;
 
 class DtoMapper

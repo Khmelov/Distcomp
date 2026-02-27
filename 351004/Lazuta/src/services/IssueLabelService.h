@@ -19,7 +19,7 @@
 namespace myapp 
 {
 
-using namespace drogon_model::myapp_dev;
+using namespace drogon_model::distcomp;
 using namespace myapp::dto;
 
 class IssueLabelService 

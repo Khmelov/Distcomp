@@ -13,7 +13,7 @@
 namespace myapp 
 {
 
-using namespace drogon_model::myapp_dev;
+using namespace drogon_model::distcomp;
 
 class EditorRepository : public IDatabaseRepository<TblEditor>
 {  
@@ -27,10 +27,6 @@ public:
     bool Delete(int64_t id) override;
     std::vector<TblEditor> ReadAll() override;
     bool Exists(int64_t id) override;
-    
-    // Дополнительные методы
-    std::optional<TblEditor> FindByLogin(const std::string& login);
-    std::optional<TblEditor> FindByLoginAndPassword(const std::string& login, const std::string& password);
 };
 
 };

@@ -17,7 +17,7 @@
 namespace myapp 
 {
 
-using namespace drogon_model::myapp_dev;
+using namespace drogon_model::distcomp;
 using namespace myapp::dto;
 
 class EditorService 
@@ -90,17 +90,6 @@ public:
     {
         auto entities = m_dao->ReadAll();
         return DtoMapper::ToResponseList(entities);
-    }
-
-    // Дополнительный метод для авторизации
-    std::optional<EditorResponseTo> FindByLogin(const std::string& login)
-    {
-        auto entity = m_dao->FindByLogin(login);
-        if (!entity)
-        {
-            return std::nullopt;
-        }
-        return DtoMapper::ToResponse(entity.value());
     }
 };
 

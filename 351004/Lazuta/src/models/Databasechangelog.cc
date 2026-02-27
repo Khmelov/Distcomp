@@ -11,7 +11,7 @@
 
 using namespace drogon;
 using namespace drogon::orm;
-using namespace drogon_model::myapp_dev;
+using namespace drogon_model::distcomp;
 
 const std::string Databasechangelog::Cols::_id = "id";
 const std::string Databasechangelog::Cols::_author = "author";

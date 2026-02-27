@@ -1,57 +1,111 @@
 #include "storage/database/LabelRepository.h"
-#include <drogon/orm/Mapper.h>
 #include <drogon/orm/Criteria.h>
-#include <exceptions/DatabaseException.h>
 
 namespace myapp
 {
 
+using namespace drogon::orm;
+
 int64_t LabelRepository::Create(const TblLabel& entity)
 {
-    // TODO: Implement using Drogon ORM
-    return 0;
+    try
+    {
+        return mapper.insertFuture(entity).get().getValueOfId();
+    }
+    catch(const std::exception& e)
+    {
+        return 0;
+    }
 }
 
 std::optional<TblLabel> LabelRepository::GetByID(int64_t id)
 {
-    // TODO: Implement using Drogon ORM
-    return std::nullopt;
+    try
+    {
+        auto result = mapper.findByPrimaryKey(id);
+        return result;
+    }
+    catch(const std::exception& e)
+    {
+        return std::nullopt;
+    }
 }
 
 bool LabelRepository::Update(int64_t id, const TblLabel& entity)
 {
-    // TODO: Implement using Drogon ORM
-    return false;
+    try
+    {
+        auto numUpdated = mapper.update(entity);
+        return numUpdated ? true : false;
+    }
+    catch(const std::exception& e)
+    {
+        return false;
+    }
 }
 
 bool LabelRepository::Delete(int64_t id)
 {
-    // TODO: Implement using Drogon ORM
-    return false;
+    try
+    {
+        return mapper.deleteByPrimaryKey(id) ? true : false;
+    }
+    catch(const std::exception& e)
+    {
+        return false;
+    }
 }
 
 std::vector<TblLabel> LabelRepository::ReadAll()
 {
-    // TODO: Implement using Drogon ORM
-    return {};
+    try
+    {
+        return mapper.findAll();
+    }
+    catch(const std::exception& e)
+    {
+        return {};
+    }
 }
 
 bool LabelRepository::Exists(int64_t id)
 {
-    // TODO: Implement using Drogon ORM
-    return false;
+    try
+    {
+        mapper.findByPrimaryKey(id);
+        return true;
+    }
+    catch(const std::exception& e)
+    {
+        return false;
+    }
 }
 
 std::optional<TblLabel> LabelRepository::FindByName(const std::string& name)
 {
-    // TODO: Implement using Drogon ORM
-    return std::nullopt;
+    try
+    {
+        auto criteria = Criteria(TblLabel::Cols::_name, CompareOperator::EQ, name);
+        auto result = mapper.findOne(criteria);
+        return result;
+    }
+    catch(const std::exception& e)
+    {
+        return std::nullopt;
+    }
 }
 
 std::vector<TblLabel> LabelRepository::FindByNameContaining(const std::string& substring)
 {
-    // TODO: Implement using Drogon ORM
-    return {};
+    try
+    {
+        auto criteria = Criteria(TblLabel::Cols::_name, CompareOperator::Like, "%" + substring + "%");
+        return mapper.findBy(criteria);
+    }
+    catch(const std::exception& e)
+    {
+        return {};
+    }
 }
 
 }

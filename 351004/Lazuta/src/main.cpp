@@ -14,6 +14,9 @@
 
 int main() 
 {
+    drogon::app().loadConfigFile("/home/dmitry/Distcomp/351004/Lazuta/config/app/config.json");
+    auto aaa = drogon::app().getDbClient("bibidjon");
+    
     auto issueLabelDAO = std::make_shared<IssueLabelRepository>();
     auto editorDAO = std::make_shared<EditorRepository>();
     auto issueDAO = std::make_shared<IssueRepository>();
@@ -37,7 +40,6 @@ int main()
     drogon::app().registerController(labelController);
     drogon::app().registerController(postController);
 
-    drogon::app().loadConfigFile("/home/dmitry/Distcomp/351004/Lazuta/config/app/config.json");
     drogon::app().run();
     return 0;
 }
