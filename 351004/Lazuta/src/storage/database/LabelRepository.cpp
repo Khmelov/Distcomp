@@ -6,105 +6,120 @@ namespace myapp
 
 using namespace drogon::orm;
 
-int64_t LabelRepository::Create(const TblLabel& entity)
+std::variant<int64_t, DatabaseError> LabelRepository::Create(const TblLabel& entity)
 {
     try
     {
-        return mapper.insertFuture(entity).get().getValueOfId();
+        return Mapper().insertFuture(entity).get().getValueOfId();
     }
     catch(const std::exception& e)
     {
-        return 0;
+        return DatabaseError::DatabaseError;
     }
 }
 
-std::optional<TblLabel> LabelRepository::GetByID(int64_t id)
+std::variant<TblLabel, DatabaseError> LabelRepository::GetByID(int64_t id)
 {
     try
     {
-        auto result = mapper.findByPrimaryKey(id);
+        auto result = Mapper().findByPrimaryKey(id);
         return result;
     }
-    catch(const std::exception& e)
+    catch (const UnexpectedRows& e)
     {
-        return std::nullopt;
-    }
-}
-
-bool LabelRepository::Update(int64_t id, const TblLabel& entity)
-{
-    try
-    {
-        auto numUpdated = mapper.update(entity);
-        return numUpdated ? true : false;
+        return DatabaseError::NotFound;
     }
     catch(const std::exception& e)
     {
-        return false;
+        return DatabaseError::DatabaseError;
     }
 }
 
-bool LabelRepository::Delete(int64_t id)
+std::variant<bool, DatabaseError> LabelRepository::Update(int64_t id, const TblLabel& entity)
 {
     try
     {
-        return mapper.deleteByPrimaryKey(id) ? true : false;
+        auto numUpdated = Mapper().update(entity);
+        if (numUpdated)
+            return true;
+
+        return DatabaseError::NotFound;
     }
     catch(const std::exception& e)
     {
-        return false;
+        return DatabaseError::DatabaseError;
     }
 }
 
-std::vector<TblLabel> LabelRepository::ReadAll()
+std::variant<bool, DatabaseError> LabelRepository::Delete(int64_t id)
 {
     try
     {
-        return mapper.findAll();
+        return Mapper().deleteByPrimaryKey(id) ? true : false;
     }
     catch(const std::exception& e)
     {
-        return {};
+        return DatabaseError::DatabaseError;
     }
 }
 
-bool LabelRepository::Exists(int64_t id)
+std::variant<std::vector<TblLabel>, DatabaseError> LabelRepository::ReadAll()
 {
     try
     {
-        mapper.findByPrimaryKey(id);
+        return Mapper().findAll();
+    }
+    catch(const std::exception& e)
+    {
+        return DatabaseError::DatabaseError;
+    }
+}
+
+std::variant<bool, DatabaseError> LabelRepository::Exists(int64_t id)
+{
+    try
+    {
+        Mapper().findByPrimaryKey(id);
         return true;
     }
-    catch(const std::exception& e)
+    catch (const UnexpectedRows& e)
     {
         return false;
     }
+    catch(const std::exception& e)
+    {
+        return DatabaseError::DatabaseError;
+    }
 }
 
-std::optional<TblLabel> LabelRepository::FindByName(const std::string& name)
+std::variant<TblLabel, DatabaseError> LabelRepository::FindByName(const std::string& name)
 {
     try
     {
         auto criteria = Criteria(TblLabel::Cols::_name, CompareOperator::EQ, name);
-        auto result = mapper.findOne(criteria);
+        auto result = Mapper().findOne(criteria);
         return result;
+    }
+    catch (const UnexpectedRows& e)
+    {
+        return DatabaseError::NotFound;
     }
     catch(const std::exception& e)
     {
-        return std::nullopt;
+        return DatabaseError::DatabaseError;
     }
 }
 
-std::vector<TblLabel> LabelRepository::FindByNameContaining(const std::string& substring)
+std::variant<std::vector<TblLabel>, DatabaseError> LabelRepository::FindByNameContaining(const std::string& substring)
 {
     try
     {
         auto criteria = Criteria(TblLabel::Cols::_name, CompareOperator::Like, "%" + substring + "%");
-        return mapper.findBy(criteria);
+        return Mapper().findBy(criteria);
     }
     catch(const std::exception& e)
     {
-        return {};
+        return DatabaseError::DatabaseError;
     }
 }
 

@@ -225,15 +225,17 @@ class TblIssue
             sql += "content,";
             ++parametersCount;
         }
-        if(dirtyFlag_[4])
+        sql += "created,";
+        ++parametersCount;
+        if(!dirtyFlag_[4])
         {
-            sql += "created,";
-            ++parametersCount;
+            needSelection=true;
         }
-        if(dirtyFlag_[5])
+        sql += "modified,";
+        ++parametersCount;
+        if(!dirtyFlag_[5])
         {
-            sql += "modified,";
-            ++parametersCount;
+            needSelection=true;
         }
         needSelection=true;
         if(parametersCount > 0)
@@ -268,10 +270,18 @@ class TblIssue
             n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
+        else
+        {
+            sql +="default,";
+        }
         if(dirtyFlag_[5])
         {
             n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
+        }
+        else
+        {
+            sql +="default,";
         }
         if(parametersCount > 0)
         {

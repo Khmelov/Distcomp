@@ -6,117 +6,125 @@ namespace myapp
 
 using namespace drogon::orm;
 
-int64_t PostRepository::Create(const TblPost& entity)
+std::variant<int64_t, DatabaseError> PostRepository::Create(const TblPost& entity)
 {
     try
     {
-        return mapper.insertFuture(entity).get().getValueOfId();
+        return Mapper().insertFuture(entity).get().getValueOfId();
     }
     catch(const std::exception& e)
     {
-        return 0;
+        return DatabaseError::DatabaseError;
     }
 }
 
-std::optional<TblPost> PostRepository::GetByID(int64_t id)
+std::variant<TblPost, DatabaseError> PostRepository::GetByID(int64_t id)
 {
     try
     {
-        auto result = mapper.findByPrimaryKey(id);
+        auto result = Mapper().findByPrimaryKey(id);
         return result;
     }
+    catch (const UnexpectedRows& e)
+    {
+        return DatabaseError::NotFound;
+    }
     catch(const std::exception& e)
     {
-        return std::nullopt;
+        return DatabaseError::DatabaseError;
     }
 }
 
-bool PostRepository::Update(int64_t id, const TblPost& entity)
+std::variant<bool, DatabaseError> PostRepository::Update(int64_t id, const TblPost& entity)
 {
     try
     {
-        auto numUpdated = mapper.update(entity);
+        auto numUpdated = Mapper().update(entity);
         return numUpdated ? true : false;
     }
     catch(const std::exception& e)
     {
-        return false;
+        return DatabaseError::DatabaseError;
     }
 }
 
-bool PostRepository::Delete(int64_t id)
+std::variant<bool, DatabaseError> PostRepository::Delete(int64_t id)
 {
     try
     {
-        return mapper.deleteByPrimaryKey(id) ? true : false;
+        return Mapper().deleteByPrimaryKey(id) ? true : false;
     }
     catch(const std::exception& e)
     {
-        return false;
+        return DatabaseError::DatabaseError;
     }
 }
 
-std::vector<TblPost> PostRepository::ReadAll()
+std::variant<std::vector<TblPost>, DatabaseError> PostRepository::ReadAll()
 {
     try
     {
-        return mapper.findAll();
+        return Mapper().findAll();
     }
     catch(const std::exception& e)
     {
-        return {};
+        return DatabaseError::DatabaseError;
     }
 }
 
-bool PostRepository::Exists(int64_t id)
+std::variant<bool, DatabaseError> PostRepository::Exists(int64_t id)
 {
     try
     {
-        mapper.findByPrimaryKey(id);
+        Mapper().findByPrimaryKey(id);
         return true;
     }
-    catch(const std::exception& e)
+    catch (const UnexpectedRows& e)
     {
         return false;
     }
+    catch(const std::exception& e)
+    {
+        return DatabaseError::DatabaseError;
+    }
 }
 
-std::vector<TblPost> PostRepository::FindByIssueId(int64_t issueId)
+std::variant<std::vector<TblPost>, DatabaseError> PostRepository::FindByIssueId(int64_t issueId)
 {
     try
     {
         auto criteria = Criteria(TblPost::Cols::_issue_id, CompareOperator::EQ, issueId);
-        return mapper.findBy(criteria);
+        return Mapper().findBy(criteria);
     }
     catch(const std::exception& e)
     {
-        return {};
+        return DatabaseError::DatabaseError;
     }
 }
 
-std::vector<TblPost> PostRepository::FindRecentByIssue(int64_t issueId, int limit)
+std::variant<std::vector<TblPost>, DatabaseError> PostRepository::FindRecentByIssue(int64_t issueId, int limit)
 {
     try
     {
         auto criteria = Criteria(TblPost::Cols::_issue_id, CompareOperator::EQ, issueId);
-        return mapper.orderBy(TblPost::Cols::_id, SortOrder::DESC).limit(limit).findBy(criteria);
+        return Mapper().orderBy(TblPost::Cols::_id, SortOrder::DESC).limit(limit).findBy(criteria);
     }
     catch(const std::exception& e)
     {
-        return {};
+        return DatabaseError::DatabaseError;
     }
 }
 
-std::vector<TblPost> PostRepository::FindByContentContaining(const std::string& searchText)
+std::variant<std::vector<TblPost>, DatabaseError> PostRepository::FindByContentContaining(const std::string& searchText)
 {
     try
     {
         auto criteria = Criteria(TblPost::Cols::_content, CompareOperator::Like, "%" + searchText + "%");
-        return mapper.findBy(criteria);
+        return Mapper().findBy(criteria);
     }
     catch(const std::exception& e)
     {
-        return {};
+        return DatabaseError::DatabaseError;
     }
 }
 

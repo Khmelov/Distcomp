@@ -25,7 +25,6 @@
             </column>
         </createTable>
 
-        <!-- Добавляем CHECK constraints для минимальной длины -->
         <sql>
             ALTER TABLE tbl_editor 
             ADD CONSTRAINT chk_editor_login_length 
@@ -44,7 +43,6 @@
             CHECK (LENGTH(lastname) BETWEEN 2 AND 64);
         </sql>
 
-        <!-- Добавляем комментарии к таблице и колонкам -->
         <sql>
             COMMENT ON TABLE tbl_editor IS 'Редакторы/пользователи системы';
             COMMENT ON COLUMN tbl_editor.id IS 'Уникальный идентификатор';
@@ -66,7 +64,6 @@
             </column>
         </createTable>
 
-        <!-- CHECK constraint для длины name -->
         <sql>
             ALTER TABLE tbl_label 
             ADD CONSTRAINT chk_label_name_length 
@@ -95,15 +92,14 @@
             <column name="content" type="VARCHAR(2048)">
                 <constraints nullable="false"/>
             </column>
-            <column name="created" type="TIMESTAMP WITH TIME ZONE">
+            <column name="created" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
-            <column name="modified" type="TIMESTAMP WITH TIME ZONE">
+            <column name="modified" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
         </createTable>
 
-        <!-- Индексы для оптимизации поиска -->
         <createIndex indexName="idx_issue_editor_id" tableName="tbl_issue">
             <column name="editor_id"/>
         </createIndex>
@@ -112,7 +108,6 @@
             <column name="created"/>
         </createIndex>
 
-        <!-- CHECK constraints и комментарии -->
         <sql>
             ALTER TABLE tbl_issue 
             ADD CONSTRAINT chk_issue_title_length 
@@ -136,8 +131,48 @@
         </sql>
     </changeSet>
 
-    <!-- Изменение 4: Создание таблицы постов (комментариев) -->
+    <!-- Изменение 4: Создание функции для триггера -->
+    <!-- Изменение 4: Создание функции для триггера -->
     <changeSet id="4" author="developer">
+        <sql endDelimiter="&#x000A;--;;">
+    CREATE OR REPLACE FUNCTION update_modified_column()
+    RETURNS TRIGGER AS $function_body$
+    BEGIN
+        NEW.modified = CURRENT_TIMESTAMP;
+        RETURN NEW;
+    END;
+    $function_body$ LANGUAGE plpgsql;
+    --;;
+        </sql>
+        <rollback>
+            <sql>
+                DROP FUNCTION IF EXISTS update_modified_column() CASCADE;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Изменение 5: Создание триггера на tbl_issue -->
+    <changeSet id="5" author="developer">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="tbl_issue"/>
+        </preConditions>
+        <sql>
+            DROP TRIGGER IF EXISTS trigger_update_issue_modified ON tbl_issue;
+            
+            CREATE TRIGGER trigger_update_issue_modified
+                BEFORE UPDATE ON tbl_issue
+                FOR EACH ROW
+                EXECUTE FUNCTION update_modified_column();
+        </sql>
+        <rollback>
+            <sql>
+                DROP TRIGGER IF EXISTS trigger_update_issue_modified ON tbl_issue;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Изменение 6: Создание таблицы постов (комментариев) -->
+    <changeSet id="6" author="developer">
         <createTable tableName="tbl_post">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
@@ -152,12 +187,10 @@
             </column>
         </createTable>
 
-        <!-- Индекс для быстрого поиска комментариев по задаче -->
         <createIndex indexName="idx_post_issue_id" tableName="tbl_post">
             <column name="issue_id"/>
         </createIndex>
 
-        <!-- CHECK constraint и комментарии -->
         <sql>
             ALTER TABLE tbl_post 
             ADD CONSTRAINT chk_post_content_length 
@@ -170,8 +203,8 @@
         </sql>
     </changeSet>
 
-    <!-- Изменение 5: Создание связующей таблицы для задачи-метки -->
-    <changeSet id="5" author="developer">
+    <!-- Изменение 7: Создание связующей таблицы для задачи-метки -->
+    <changeSet id="7" author="developer">
         <createTable tableName="tbl_issue_label">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
@@ -188,13 +221,11 @@
             </column>
         </createTable>
 
-        <!-- Уникальный индекс для предотвращения дублирования связей -->
         <addUniqueConstraint 
             constraintName="uq_issue_label"
             tableName="tbl_issue_label"
             columnNames="issue_id, label_id"/>
 
-        <!-- Индексы для оптимизации -->
         <createIndex indexName="idx_issuelabel_issue_id" tableName="tbl_issue_label">
             <column name="issue_id"/>
         </createIndex>
@@ -203,7 +234,6 @@
             <column name="label_id"/>
         </createIndex>
 
-        <!-- Комментарии -->
         <sql>
             COMMENT ON TABLE tbl_issue_label IS 'Связь задач с метками';
             COMMENT ON COLUMN tbl_issue_label.id IS 'Уникальный идентификатор связи';
@@ -211,6 +241,5 @@
             COMMENT ON COLUMN tbl_issue_label.label_id IS 'ID метки';
         </sql>
     </changeSet>
-
 
 </databaseChangeLog>

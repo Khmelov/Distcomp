@@ -1039,20 +1039,10 @@ bool TblIssue::validateJsonForCreation(const Json::Value &pJson, std::string &er
         if(!validJsonOfField(4, "created", pJson["created"], err, true))
             return false;
     }
-    else
-    {
-        err="The created column cannot be null";
-        return false;
-    }
     if(pJson.isMember("modified"))
     {
         if(!validJsonOfField(5, "modified", pJson["modified"], err, true))
             return false;
-    }
-    else
-    {
-        err="The modified column cannot be null";
-        return false;
     }
     return true;
 }
@@ -1120,11 +1110,6 @@ bool TblIssue::validateMasqueradedJsonForCreation(const Json::Value &pJson,
               if(!validJsonOfField(4, pMasqueradingVector[4], pJson[pMasqueradingVector[4]], err, true))
                   return false;
           }
-        else
-        {
-            err="The " + pMasqueradingVector[4] + " column cannot be null";
-            return false;
-        }
       }
       if(!pMasqueradingVector[5].empty())
       {
@@ -1133,11 +1118,6 @@ bool TblIssue::validateMasqueradedJsonForCreation(const Json::Value &pJson,
               if(!validJsonOfField(5, pMasqueradingVector[5], pJson[pMasqueradingVector[5]], err, true))
                   return false;
           }
-        else
-        {
-            err="The " + pMasqueradingVector[5] + " column cannot be null";
-            return false;
-        }
       }
     }
     catch(const Json::LogicError &e)

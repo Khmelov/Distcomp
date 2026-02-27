@@ -15,7 +15,7 @@
 int main() 
 {
     drogon::app().loadConfigFile("/home/dmitry/Distcomp/351004/Lazuta/config/app/config.json");
-    auto aaa = drogon::app().getDbClient("bibidjon");
+    auto aaa = drogon::app().getDbClient("default");
     
     auto issueLabelDAO = std::make_shared<IssueLabelRepository>();
     auto editorDAO = std::make_shared<EditorRepository>();

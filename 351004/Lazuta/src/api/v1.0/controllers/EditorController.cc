@@ -46,18 +46,9 @@ void EditorController::CreateEditor(const HttpRequestPtr& req, std::function<voi
         std::cout << "[ERROR] Validation error: " << e.what() << std::endl;
         Json::Value errorResponse;
         errorResponse["message"] = e.what();
+        httpResponse->setStatusCode(HttpStatusCode::k403Forbidden);
         httpResponse->setBody(Json::FastWriter().write(errorResponse));
-        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
-        httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
-    }
-    catch(const NotFoundException& e)
-    {
-        std::cout << "[ERROR] Not found: " << e.what() << std::endl;
-        Json::Value errorResponse;
-        errorResponse["message"] = e.what();
-        httpResponse->setBody(Json::FastWriter().write(errorResponse));
-        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
-        httpResponse->setStatusCode(HttpStatusCode::k404NotFound);
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);      
     }
     catch(const DatabaseException& e)
     {

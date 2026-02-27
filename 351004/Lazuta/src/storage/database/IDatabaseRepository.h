@@ -6,14 +6,12 @@
 namespace myapp 
 {
 
-using namespace drogon::orm;
-
 template <typename T>
 class IDatabaseRepository : public DAO<T>
 {
 protected:
-    Mapper<T> mapper = Mapper<T>(GetDbClient());
-    DbClientPtr GetDbClient() const { return drogon::app().getDbClient(); };
+    drogon::orm::DbClientPtr GetDbClient() const { return drogon::app().getDbClient(); };
+    drogon::orm::Mapper<T> Mapper() { return drogon::orm::Mapper<T>(GetDbClient()); };
 };
 
 };

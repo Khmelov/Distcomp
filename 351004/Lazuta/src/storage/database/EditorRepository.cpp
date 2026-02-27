@@ -1,87 +1,101 @@
 #include "storage/database/EditorRepository.h"
-#include <drogon/orm/Mapper.h>
-#include <drogon/orm/Criteria.h>
-#include <exceptions/DatabaseException.h>
+#include "EditorRepository.h"
 
 namespace myapp
 {
 
 using namespace drogon::orm;
 
-int64_t EditorRepository::Create(const TblEditor& entity)
+std::variant<int64_t, DatabaseError> EditorRepository::Create(const TblEditor& entity)
 {
     try
     {
-        return mapper.insertFuture(entity).get().getValueOfId();
+        auto editorsWithSameLogin = Mapper().findBy(Criteria(TblEditor::Cols::_login, CompareOperator::Like, entity.getValueOfLogin()));
+        if (editorsWithSameLogin.size())
+        {
+            return DatabaseError::AlreadyExists;
+        }
+        
+        return Mapper().insertFuture(entity).get().getValueOfId();
     }
     catch(const std::exception& e)
     {
-        return 0;
+        return DatabaseError::DatabaseError;
     }
 }
 
-std::optional<TblEditor> EditorRepository::GetByID(int64_t id)
+std::variant<TblEditor, DatabaseError> EditorRepository::GetByID(int64_t id)
 {
     try
     {
-        auto result = mapper.findByPrimaryKey(id);
+        auto result = Mapper().findByPrimaryKey(id);
         return result;
     }
+    catch (const UnexpectedRows& e)
+    {
+        return DatabaseError::NotFound;
+    }
     catch(const std::exception& e)
     {
-        return std::nullopt;
+        return DatabaseError::DatabaseError;
     }
 }
 
-bool EditorRepository::Update(int64_t id, const TblEditor& entity)
+std::variant<bool, DatabaseError> EditorRepository::Update(int64_t id, const TblEditor& entity)
 {
     try
     {
-        auto numUpdated = mapper.update(entity);
+        auto numUpdated = Mapper().update(entity);
         return numUpdated ? true : false;
     }
     catch(const std::exception& e)
     {
-        return false;
+        return DatabaseError::DatabaseError;
     }
 }
 
-bool EditorRepository::Delete(int64_t id)
+std::variant<bool, DatabaseError> EditorRepository::Delete(int64_t id)
 {
     try
     {
-        return mapper.deleteByPrimaryKey(id) ? true : false;
+        if (Mapper().deleteByPrimaryKey(id))
+            return true;
+        else
+            return DatabaseError::NotFound;
     }
     catch(const std::exception& e)
     {
-        return false;
+        return DatabaseError::DatabaseError;
     }
 }
 
-std::vector<TblEditor> EditorRepository::ReadAll()
+std::variant<std::vector<TblEditor>, DatabaseError> EditorRepository::ReadAll()
 {
     try
     {
-        return mapper.findAll();
+        return Mapper().findAll();
     }
     catch(const std::exception& e)
     {
-        return {};
+        return DatabaseError::DatabaseError;
     }   
 }
 
-bool EditorRepository::Exists(int64_t id)
+std::variant<bool, DatabaseError> EditorRepository::Exists(int64_t id)
 {
     try
     {
-        mapper.findByPrimaryKey(id);
+        Mapper().findByPrimaryKey(id);
         return true;
     }
-    catch(const std::exception& e)
+    catch (const UnexpectedRows& e)
     {
         return false;
     }
-    
+    catch(const std::exception& e)
+    {
+        return DatabaseError::DatabaseError;
+    }
 }
 
 }

@@ -1,37 +1,37 @@
 #pragma once
 
-#include <optional>
 #include <vector>
 #include <cstdint>
+#include <variant>
 #include <drogon/orm/DbClient.h>
 #include <drogon/orm/Mapper.h>
 #include <drogon/HttpAppFramework.h>
 
 #include "IDatabaseRepository.h"
 #include <models/TblPost.h>
+#include <exceptions/DatabaseError.h>
 
-namespace myapp 
+namespace myapp
 {
 
 using namespace drogon_model::distcomp;
 
 class PostRepository : public IDatabaseRepository<TblPost>
-{  
+{
 public:
     PostRepository() = default;
     ~PostRepository() = default;
     
-    int64_t Create(const TblPost& entity) override;
-    std::optional<TblPost> GetByID(int64_t id) override;
-    bool Update(int64_t id, const TblPost& entity) override;
-    bool Delete(int64_t id) override;
-    std::vector<TblPost> ReadAll() override;
-    bool Exists(int64_t id) override;
+    std::variant<int64_t, DatabaseError> Create(const TblPost& entity) override;
+    std::variant<TblPost, DatabaseError> GetByID(int64_t id) override;
+    std::variant<bool, DatabaseError> Update(int64_t id, const TblPost& entity) override;
+    std::variant<bool, DatabaseError> Delete(int64_t id) override;
+    std::variant<std::vector<TblPost>, DatabaseError> ReadAll() override;
+    std::variant<bool, DatabaseError> Exists(int64_t id) override;
     
-    // Дополнительные методы
-    std::vector<TblPost> FindByIssueId(int64_t issueId);
-    std::vector<TblPost> FindRecentByIssue(int64_t issueId, int limit = 10);
-    std::vector<TblPost> FindByContentContaining(const std::string& searchText);
+    std::variant<std::vector<TblPost>, DatabaseError> FindByIssueId(int64_t issueId);
+    std::variant<std::vector<TblPost>, DatabaseError> FindRecentByIssue(int64_t issueId, int limit = 10);
+    std::variant<std::vector<TblPost>, DatabaseError> FindByContentContaining(const std::string& searchText);
 };
 
 };
