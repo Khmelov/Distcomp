@@ -14,15 +14,6 @@ public class LocalTagRepository : BaseRepository<Tag>
         
         a.name = tag.name;
         
-        return Copy(a);
-    }
-
-    public override Tag Copy(Tag src)
-    {
-        return new Tag()
-        {
-            id = src.id,
-            name = src.name,
-        };
+        return a;
     }
 }

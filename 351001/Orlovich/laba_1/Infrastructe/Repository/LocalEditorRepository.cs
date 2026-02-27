@@ -19,18 +19,6 @@ public class LocalEditorRepository : BaseRepository<Editor>
         a.login = editor.login;
         a.password = editor.password;
         
-        return Copy(a);
-    }
-    
-    public override Editor Copy(Editor src)
-    {
-        return new Editor()
-        {
-            id = src.id,
-            firstname = src.firstname,
-            lastname = src.lastname,
-            login = src.login,
-            password = src.password
-        };
+        return a;
     }
 }

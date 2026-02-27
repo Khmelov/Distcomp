@@ -15,16 +15,6 @@ public class LocalStoryRepository : BaseRepository<Story>
         a.content = story.content;
         a.issueId = story.issueId;
         
-        return Copy(a);
-    }
-
-    public override Story Copy(Story src)
-    {
-        return new Story()
-        {
-            id = src.id,
-            content = src.content,
-            issueId = src.issueId
-        };
+        return a;
     }
 }

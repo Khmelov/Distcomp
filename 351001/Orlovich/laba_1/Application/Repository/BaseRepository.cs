@@ -22,7 +22,7 @@ public abstract class BaseRepository<T> : IRepository<T>
         if(src == null)
             return null;
 
-        return Copy(src);
+        return src;
     }
 
     public virtual async Task AddAsync(T editor)
@@ -40,6 +40,4 @@ public abstract class BaseRepository<T> : IRepository<T>
         var count = _storage.RemoveAll(a => a.id == id);
         return count;
     }
-    
-    public abstract T Copy(T src);
 }

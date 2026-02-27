@@ -17,19 +17,6 @@ public class LocalNoteRepository : BaseRepository<Note>
         a.created = note.created;
         a.modified = note.modified;
         
-        return Copy(a);
-    }
-
-    public override Note Copy(Note src)
-    {
-        return new Note()
-        {
-            id = src.id,
-            authorId =  src.authorId,
-            title = src.title,
-            content = src.content,
-            created = src.created,
-            modified = src.modified,
-        };
+        return a;
     }
 }
