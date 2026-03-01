@@ -4,6 +4,7 @@ import com.example.demo.dto.requests.MessageRequestTo;
 import com.example.demo.dto.responses.MessageResponseTo;
 import com.example.demo.model.Message;
 import com.example.demo.repository.MessageRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,8 +24,8 @@ public class MessageService {
         return mapper.toMessageResponse(saved);
     }
 
-    public List<MessageResponseTo> findAll() {
-        List<Message> list = repository.findAll();
+    public List<MessageResponseTo> findAll(Pageable pageable) {
+        List<Message> list = (List<Message>) repository.findAll(pageable);
         return mapper.toMessageResponseList(list);
     }
 

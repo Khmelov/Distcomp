@@ -3,6 +3,9 @@ package com.example.demo.controllers;
 import com.example.demo.dto.requests.MarkRequestTo;
 import com.example.demo.dto.responses.MarkResponseTo;
 import com.example.demo.service.MarkService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -26,9 +29,19 @@ public class MarkController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MarkResponseTo>> findAll(){
-        List<MarkResponseTo> list = markService.findAll();
-        return ResponseEntity.ok(list);
+    public ResponseEntity<List<MarkResponseTo>> findAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ){
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                sortDir.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortBy
+        );
+        return ResponseEntity.ok(markService.findAll(pageable));
     }
 
     @GetMapping("/{id}")

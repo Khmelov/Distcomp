@@ -4,6 +4,7 @@ import com.example.demo.dto.requests.AuthorRequestTo;
 import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.model.Author;
 import com.example.demo.repository.AuthorRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,8 +32,8 @@ public class AuthorService {
         return mapper.toAuthorResponse(entity);
     }
 
-    public List<AuthorResponseTo> findAll(){
-        List<Author> entities = authorRepository.findAll();
+    public List<AuthorResponseTo> findAll(Pageable pageable){
+        List<Author> entities = (List<Author>) authorRepository.findAll(pageable);
         return mapper.toAuthorResponseList(entities);
     }
 

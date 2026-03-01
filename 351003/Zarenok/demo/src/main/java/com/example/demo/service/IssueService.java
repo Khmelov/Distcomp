@@ -6,6 +6,7 @@ import com.example.demo.model.Author;
 import com.example.demo.model.Issue;
 import com.example.demo.repository.AuthorRepository;
 import com.example.demo.repository.IssueRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
@@ -39,8 +40,8 @@ public class IssueService {
         return mapper.toIssueResponse(issue);
     }
 
-    public List<IssueResponseTo> findAll() {
-        List<Issue> list = repository.findAll();
+    public List<IssueResponseTo> findAll(Pageable pageable) {
+        List<Issue> list = (List<Issue>) repository.findAll(pageable);
         return mapper.toIssueResponseList(list);
 
     }

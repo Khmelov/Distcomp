@@ -3,6 +3,9 @@ package com.example.demo.controllers;
 import com.example.demo.dto.requests.AuthorRequestTo;
 import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.service.AuthorService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -29,9 +32,21 @@ public class AuthorController {
 
     //READ ALL - GET /authors
     @GetMapping
-    public ResponseEntity<List<AuthorResponseTo>> findAll(){
+    public ResponseEntity<List<AuthorResponseTo>> findAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ){
+        /*
         List<AuthorResponseTo> list = authorService.findAll();
         return ResponseEntity.ok(list);
+
+         */
+        Pageable pageable = PageRequest.of(page, size,
+                sortDir.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortBy);
+        return ResponseEntity.ok(authorService.findAll(pageable));
     }
 
     //READ BY ID - GET /authors/1

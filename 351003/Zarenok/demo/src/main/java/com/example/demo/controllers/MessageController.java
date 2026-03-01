@@ -5,6 +5,9 @@ import com.example.demo.dto.requests.MessageRequestTo;
 import com.example.demo.dto.responses.IssueResponseTo;
 import com.example.demo.dto.responses.MessageResponseTo;
 import com.example.demo.service.MessageService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -28,9 +31,19 @@ public class MessageController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MessageResponseTo>> findAll(){
-        List<MessageResponseTo> list = messageService.findAll();
-        return ResponseEntity.ok(list);
+    public ResponseEntity<List<MessageResponseTo>> findAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ){
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                sortDir.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortBy
+        );
+        return ResponseEntity.ok(messageService.findAll(pageable));
     }
 
     @GetMapping("/{id}")

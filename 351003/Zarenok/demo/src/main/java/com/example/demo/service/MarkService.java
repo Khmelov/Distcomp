@@ -4,6 +4,7 @@ import com.example.demo.dto.requests.MarkRequestTo;
 import com.example.demo.dto.responses.MarkResponseTo;
 import com.example.demo.model.Mark;
 import com.example.demo.repository.MarkRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
@@ -26,8 +27,8 @@ public class MarkService {
         return mapper.toMarkResponse(saved);
     }
 
-    public List<MarkResponseTo> findAll() {
-        List<Mark> list = repository.findAll();
+    public List<MarkResponseTo> findAll(Pageable pageable) {
+        List<Mark> list = (List<Mark>) repository.findAll(pageable);
         return mapper.toMarkResponseList(list);
     }
 

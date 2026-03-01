@@ -1,9 +1,9 @@
 package com.example.demo.model;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import javax.persistence.*;
+import jakarta.persistence.Id;
 
 @Entity
 @Setter
@@ -13,7 +13,6 @@ public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long issueId;
     @Column(name = "content")
     private String content;
 
