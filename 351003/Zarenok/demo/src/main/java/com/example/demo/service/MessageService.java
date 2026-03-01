@@ -4,11 +4,14 @@ import com.example.demo.dto.requests.MessageRequestTo;
 import com.example.demo.dto.responses.MessageResponseTo;
 import com.example.demo.model.Message;
 import com.example.demo.repository.MessageRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 @Service
+@Transactional
 public class MessageService {
     private final MessageRepository repository;
     private final EntityMapper mapper;
@@ -24,20 +27,20 @@ public class MessageService {
         return mapper.toMessageResponse(saved);
     }
 
-    public List<MessageResponseTo> findAll(Pageable pageable) {
-        List<Message> list = (List<Message>) repository.findAll(pageable);
-        return mapper.toMessageResponseList(list);
+    public Page<MessageResponseTo> findAll(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(mapper::toMessageResponse);
     }
 
     public MessageResponseTo findById(Long id) {
         Message msg = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Message not found: " + id));
+                .orElseThrow(() -> new NotFoundException("Message not found: " + id));
         return mapper.toMessageResponse(msg);
     }
 
     public MessageResponseTo update(Long id, MessageRequestTo dto) {
         Message existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Message not found: " + id));
+                .orElseThrow(() -> new NotFoundException("Message not found: " + id));
 
         mapper.updateMessage(dto, existing);
         Message updated = repository.save(existing);
@@ -45,7 +48,7 @@ public class MessageService {
     }
     public void delete(Long id){
         if(!repository.existsById(id)){
-            throw new RuntimeException("Message not found: " + id);
+            throw new NotFoundException("Message not found: " + id);
         }
         repository.deleteById(id);
     }

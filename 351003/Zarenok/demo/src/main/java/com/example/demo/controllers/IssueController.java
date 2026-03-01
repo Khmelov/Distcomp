@@ -3,6 +3,7 @@ package com.example.demo.controllers;
 import com.example.demo.dto.requests.IssueRequestTo;
 import com.example.demo.dto.responses.IssueResponseTo;
 import com.example.demo.service.IssueService;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -30,18 +31,19 @@ public class IssueController {
     }
 
     @GetMapping
-    public ResponseEntity<List<IssueResponseTo>> findAll(
+    public ResponseEntity<Page<IssueResponseTo>> findAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir
     ){
-        Pageable pageable = PageRequest.of(
-                page,
-                size,
-                sortDir.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
-                sortBy
-        );
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc")
+                        ? Sort.Direction.DESC
+                        : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, size, direction, sortBy);
+
         return ResponseEntity.ok(issueService.findAll(pageable));
     }
 

@@ -4,6 +4,8 @@ import com.example.demo.dto.requests.MarkRequestTo;
 import com.example.demo.dto.responses.MarkResponseTo;
 import com.example.demo.model.Mark;
 import com.example.demo.repository.MarkRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +13,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
+@Transactional
 public class MarkService {
     private final MarkRepository repository;
     private final EntityMapper mapper;
@@ -27,20 +30,20 @@ public class MarkService {
         return mapper.toMarkResponse(saved);
     }
 
-    public List<MarkResponseTo> findAll(Pageable pageable) {
-        List<Mark> list = (List<Mark>) repository.findAll(pageable);
-        return mapper.toMarkResponseList(list);
+    public Page<MarkResponseTo> findAll(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(mapper::toMarkResponse);
     }
 
     public MarkResponseTo findById(Long id) {
         Mark mark = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Mark not found: " + id));
+                .orElseThrow(() -> new NotFoundException("Mark not found: " + id));
         return mapper.toMarkResponse(mark);
     }
 
     public MarkResponseTo update(Long id, MarkRequestTo dto) {
         Mark existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Mark not found: " + id));
+                .orElseThrow(() -> new NotFoundException("Mark not found: " + id));
 
         mapper.updateMark(dto, existing);
         Mark updated = repository.save(existing);
@@ -49,7 +52,7 @@ public class MarkService {
 
     public void delete(Long id) {
         if (!repository.existsById(id)) {
-            throw new RuntimeException("Mark not found: " + id);
+            throw new NotFoundException("Mark not found: " + id);
         }
         repository.deleteById(id);
     }

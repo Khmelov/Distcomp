@@ -3,6 +3,7 @@ package com.example.demo.controllers;
 import com.example.demo.dto.requests.AuthorRequestTo;
 import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.service.AuthorService;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,27 +26,26 @@ public class AuthorController {
 
     //CREATE - POST /authors
     @PostMapping
-    public ResponseEntity<AuthorResponseTo> create( @RequestBody AuthorRequestTo dto){
+    public ResponseEntity<AuthorResponseTo> create(@RequestBody AuthorRequestTo dto){
         AuthorResponseTo response = authorService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     //READ ALL - GET /authors
     @GetMapping
-    public ResponseEntity<List<AuthorResponseTo>> findAll(
+    public ResponseEntity<Page<AuthorResponseTo>> findAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir
     ){
-        /*
-        List<AuthorResponseTo> list = authorService.findAll();
-        return ResponseEntity.ok(list);
+        Sort.Direction direction =
+                sortDir.equalsIgnoreCase("desc")
+                        ? Sort.Direction.DESC
+                        : Sort.Direction.ASC;
 
-         */
-        Pageable pageable = PageRequest.of(page, size,
-                sortDir.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
-                sortBy);
+        Pageable pageable = PageRequest.of(page, size, direction, sortBy);
+
         return ResponseEntity.ok(authorService.findAll(pageable));
     }
 
