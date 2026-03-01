@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.stream.Collectors;
 
@@ -40,5 +41,14 @@ public class GlobalExceptionHandler {
                 ErrorCode.ERR_INTERNAL_SERVER.getCode()
         );
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    // Добавьте этот метод в класс GlobalExceptionHandler
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "Data integrity violation: " + ex.getRootCause().getMessage(),
+                40301
+        );
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 }
