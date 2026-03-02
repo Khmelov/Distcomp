@@ -16,7 +16,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles("/static");
 app.UseMiddleware<ExcMiddleware>();
 
