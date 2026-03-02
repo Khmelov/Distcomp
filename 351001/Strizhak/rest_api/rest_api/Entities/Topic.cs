@@ -1,16 +1,17 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using rest_api.Entities;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace rest_api
 {
-    public class Topic
+    public class Topic: IEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
 
         [Required]
-        public long UserId { get; set; } // Внешний ключ на User
+        public long UserId { get; set; } 
 
         [Required]
         [StringLength(64, MinimumLength = 2)]
@@ -21,7 +22,7 @@ namespace rest_api
         public string Content { get; set; } = null!;
 
         [Required]
-        public DateTime Created { get; set; } // ISO8601 дата+время
+        public DateTime Created { get; set; } 
 
         [Required]
         public DateTime Modified { get; set; }
