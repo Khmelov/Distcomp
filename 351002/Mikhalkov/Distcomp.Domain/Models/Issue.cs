@@ -9,6 +9,8 @@
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-        public List<long> MarkerIds { get; set; } = new();
+        public virtual User User { get; set; } = null!;
+        public virtual ICollection<Marker> Markers { get; set; } = new List<Marker>();
+        public virtual ICollection<Note> Notes { get; set; } = new List<Note>();
     }
 }

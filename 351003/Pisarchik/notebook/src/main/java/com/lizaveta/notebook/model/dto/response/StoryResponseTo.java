@@ -5,9 +5,6 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-/**
- * Response DTO for Story entity.
- */
 @JsonRootName("story")
 public record StoryResponseTo(
         Long id,
