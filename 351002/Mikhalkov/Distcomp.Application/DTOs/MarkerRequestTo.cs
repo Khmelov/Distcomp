@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Distcomp.Application.DTOs
 {
     public record MarkerRequestTo(
-        long? Id,
-        string Name
+    [property: JsonPropertyName("id")] long? Id,
+    [property: JsonPropertyName("name")] string Name
     );
 }

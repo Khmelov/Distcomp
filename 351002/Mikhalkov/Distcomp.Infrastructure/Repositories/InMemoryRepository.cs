@@ -36,5 +36,18 @@ namespace Distcomp.Infrastructure.Repositories
         }
 
         public bool Delete(long id) => _storage.TryRemove(id, out _);
+
+        public IEnumerable<T> GetPaged(int page, int pageSize, string sortBy)
+        {
+            var query = _storage.Values.AsQueryable();
+
+            var prop = typeof(T).GetProperty(sortBy ?? "Id");
+            if (prop != null)
+            {
+                query = query.OrderBy(x => prop.GetValue(x, null));
+            }
+
+            return query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        }
     }
 }
