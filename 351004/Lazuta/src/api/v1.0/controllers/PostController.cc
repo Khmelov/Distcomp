@@ -2,6 +2,9 @@
 #include "PostController.h"
 #include <iostream>
 
+using namespace myapp;
+using namespace myapp::dto;
+
 PostController::PostController(std::unique_ptr<PostService> service)
 {
     m_service = std::move(service);
