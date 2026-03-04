@@ -14,4 +14,5 @@ public record ArticleRequestDTO
     MinLength(4),
     MaxLength(2048)]
     public string Content {get; init;} = default!;
+    public string[]? Marks {get; init;} = default!;
 }
