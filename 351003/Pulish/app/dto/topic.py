@@ -3,10 +3,10 @@ from typing import List
 
 
 class TopicRequestTo(BaseModel):
-    title: str = Field(min_length=1)
-    content: str = Field(min_length=1)
+    title: str = Field(min_length=2, max_length=64)
+    content: str = Field(min_length=2, max_length=2048)
     userId: int
-    markIds: List[int] = []
+    marks: List[str] = []
 
 
 class TopicResponseTo(BaseModel):
