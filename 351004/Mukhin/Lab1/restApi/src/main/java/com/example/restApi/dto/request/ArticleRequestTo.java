@@ -3,6 +3,7 @@ package com.example.restApi.dto.request;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.util.Set;
@@ -20,6 +21,7 @@ public class ArticleRequestTo {
     @JsonProperty("content")
     @NotBlank(message = "Content cannot be blank")
     @Size(min = 4, max = 2048, message = "Content must be between 4 and 2048 characters")
+    @Pattern(regexp = "^(?!other-).*", message = "Content cannot start with 'other-'")
     private String content;
 
     @JsonProperty("markerIds")

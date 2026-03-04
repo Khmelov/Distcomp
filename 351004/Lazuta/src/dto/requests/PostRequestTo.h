@@ -6,6 +6,9 @@
 #include <stdexcept>
 #include <exceptions/ValidationException.h>
 
+namespace myapp::dto
+{
+
 class PostRequestTo
 {
 public:
@@ -36,4 +39,6 @@ public:
         dto.validate();
         return dto;
     }
+};
+
 };
