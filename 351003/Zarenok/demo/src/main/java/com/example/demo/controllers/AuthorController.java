@@ -40,7 +40,7 @@ public class AuthorController {
 
     //READ BY ID - GET /authors/1
     @GetMapping("/{id}")
-    public ResponseEntity<AuthorResponseTo> findById(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
+    public ResponseEntity<AuthorResponseTo> findById(@PathVariable Long id) {
         AuthorResponseTo author = authorService.findById(id);
         return ResponseEntity.ok(author);
     }
@@ -49,14 +49,14 @@ public class AuthorController {
     @PutMapping("/{id}")
     public ResponseEntity<AuthorResponseTo> update(@PathVariable Long id,
                                                    @Valid
-                                                   @RequestBody AuthorRequestTo dto) throws ChangeSetPersister.NotFoundException {
+                                                   @RequestBody AuthorRequestTo dto) {
         AuthorResponseTo updated = authorService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     //DELETE - DELETE /authors/1
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         authorService.delete(id);
         return ResponseEntity.noContent().build();
     }

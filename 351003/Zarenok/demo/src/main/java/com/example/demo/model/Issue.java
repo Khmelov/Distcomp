@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import jakarta.persistence.Id;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -26,9 +28,11 @@ public class Issue {
     @Column(name = "content", unique = true)
     private String content;
 
+    @CreationTimestamp
     @Column(name = "created", nullable = false)
     private ZonedDateTime created;
 
+    @UpdateTimestamp
     @Column(name = "modified", nullable = false)
     private ZonedDateTime modified;
 

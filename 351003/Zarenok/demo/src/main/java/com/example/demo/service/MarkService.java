@@ -3,6 +3,8 @@ package com.example.demo.service;
 import com.example.demo.dto.requests.MarkRequestTo;
 import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.dto.responses.MarkResponseTo;
+import com.example.demo.exception.DuplicateException;
+import com.example.demo.exception.NotFoundException;
 import com.example.demo.model.Mark;
 import com.example.demo.repository.MarkRepository;
 import jakarta.transaction.Transactional;
@@ -28,6 +30,10 @@ public class MarkService {
 
 
     public MarkResponseTo create(MarkRequestTo dto) {
+        if (repository.existsByName(dto.getName())) {
+            throw new DuplicateException("Mark with this title already exists");
+        }
+
         Mark mark = mapper.toEntity(dto);
         Mark saved = repository.save(mark);
         return mapper.toMarkResponse(saved);
@@ -39,17 +45,18 @@ public class MarkService {
                 .collect(Collectors.toList());
     }
 
-    public MarkResponseTo findById(Long id)
-            throws ChangeSetPersister.NotFoundException {
+    public MarkResponseTo findById(Long id) {
         Mark mark = repository.findById(id)
-                .orElseThrow(ChangeSetPersister.NotFoundException::new);
+                .orElseThrow(() -> new NotFoundException("Mark not found"));
         return mapper.toMarkResponse(mark);
     }
 
-    public MarkResponseTo update(Long id, MarkRequestTo dto)
-            throws ChangeSetPersister.NotFoundException{
+    public MarkResponseTo update(Long id, MarkRequestTo dto) {
+        if (repository.existsByName(dto.getName())) {
+            throw new DuplicateException("Mark with this title already exists");
+        }
         Mark existing = repository.findById(id)
-                .orElseThrow(ChangeSetPersister.NotFoundException::new);
+                .orElseThrow(() -> new NotFoundException("Mark not found"));
 
         mapper.updateMark(dto, existing);
         Mark updated = repository.save(existing);
@@ -59,7 +66,7 @@ public class MarkService {
     public void delete(Long id)
             throws ChangeSetPersister.NotFoundException{
         if (!repository.existsById(id)) {
-            throw new ChangeSetPersister.NotFoundException();
+            throw new NotFoundException("Mark not found");
         }
         repository.deleteById(id);
     }

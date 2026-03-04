@@ -32,8 +32,7 @@ public class IssueService {
         this.authorRepository = authorRepository;
     }
 
-    public IssueResponseTo create(IssueRequestTo dto)
-            throws ChangeSetPersister.NotFoundException {
+    public IssueResponseTo create(IssueRequestTo dto) {
 
         Author author = authorRepository.findById(dto.getAuthorId())
                 .orElseThrow(() -> new NotFoundException("Author not found"));
@@ -47,10 +46,9 @@ public class IssueService {
         return mapper.toIssueResponse(saved);
     }
 
-    public IssueResponseTo findById(Long id)
-            throws ChangeSetPersister.NotFoundException {
+    public IssueResponseTo findById(Long id) {
         Issue issue = repository.findById(id)
-                .orElseThrow(ChangeSetPersister.NotFoundException::new);
+                .orElseThrow(() -> new NotFoundException("Issue not found"));
 
         return mapper.toIssueResponse(issue);
     }
@@ -61,9 +59,7 @@ public class IssueService {
                 .collect(Collectors.toList());
     }
 
-    public IssueResponseTo update(Long id, IssueRequestTo dto)
-            throws ChangeSetPersister.NotFoundException {
-
+    public IssueResponseTo update(Long id, IssueRequestTo dto) {
         if (repository.existsByTitle(dto.getTitle())) {
             throw new DuplicateException("Issue with this title already exists");
         }
@@ -76,9 +72,9 @@ public class IssueService {
     }
 
 
-    public void delete(Long id) throws ChangeSetPersister.NotFoundException {
+    public void delete(Long id) {
         if(!repository.existsById(id)){
-            throw new ChangeSetPersister.NotFoundException();
+            throw new NotFoundException("Issue not found");
         }
         repository.deleteById(id);
     }

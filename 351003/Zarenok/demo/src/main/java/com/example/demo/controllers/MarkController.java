@@ -38,14 +38,14 @@ public class MarkController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MarkResponseTo> findById(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
+    public ResponseEntity<MarkResponseTo> findById(@PathVariable Long id) {
         MarkResponseTo mark = markService.findById(id);
         return ResponseEntity.ok(mark);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MarkResponseTo> update(@Valid @PathVariable Long id,
-                                                  @RequestBody MarkRequestTo dto) throws ChangeSetPersister.NotFoundException {
+    public ResponseEntity<MarkResponseTo> update(@PathVariable Long id,
+                                                 @Valid @RequestBody MarkRequestTo dto) {
         MarkResponseTo updated = markService.update(id, dto);
         return ResponseEntity.ok(updated);
     }

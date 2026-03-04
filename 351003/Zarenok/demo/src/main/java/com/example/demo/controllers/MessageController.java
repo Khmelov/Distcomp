@@ -39,20 +39,20 @@ public class MessageController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MessageResponseTo> findById(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
+    public ResponseEntity<MessageResponseTo> findById(@PathVariable Long id) {
         MessageResponseTo message = messageService.findById(id);
         return ResponseEntity.ok(message);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MessageResponseTo> update(@Valid @PathVariable Long id,
-                                                  @RequestBody MessageRequestTo dto) throws ChangeSetPersister.NotFoundException {
+    public ResponseEntity<MessageResponseTo> update(@PathVariable Long id,
+                                                    @Valid @RequestBody MessageRequestTo dto) {
         MessageResponseTo updated = messageService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         messageService.delete(id);
         return ResponseEntity.noContent().build();
     }

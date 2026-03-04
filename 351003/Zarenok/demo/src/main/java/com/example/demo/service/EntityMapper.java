@@ -28,11 +28,12 @@ public interface EntityMapper {
     void updateAuthor(AuthorRequestTo dto, @MappingTarget Author entity);
 
     // ISSUE
-    @Mapping(target = "author.id", source = "authorId")
+    @Mapping(target = "author", ignore = true)
     Issue toEntity(IssueRequestTo dto);
     @Mapping(source = "author.id", target = "authorId")
     IssueResponseTo toIssueResponse(Issue issue);
     List<IssueResponseTo> toIssueResponseList(List<Issue> issues);
+    @Mapping(target = "author", ignore = true)
     void updateIssue(IssueRequestTo dto, @MappingTarget Issue entity);
 
     // MARK
@@ -42,8 +43,13 @@ public interface EntityMapper {
     void updateMark(MarkRequestTo dto, @MappingTarget Mark entity);
 
     // MESSAGE
-    Message toEntity(MessageRequestTo dto);
+
+    @Mapping(source = "issue.id", target = "issueId")
     MessageResponseTo toMessageResponse(Message message);
     List<MessageResponseTo> toMessageResponseList(List<Message> messages);
+    @Mapping(target = "issue", ignore = true)
+    Message toEntity(MessageRequestTo dto);
+
+    @Mapping(target = "issue", ignore = true)
     void updateMessage(MessageRequestTo dto, @MappingTarget Message entity);
 }

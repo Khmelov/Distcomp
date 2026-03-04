@@ -1,12 +1,13 @@
 package com.example.demo.exception;
 
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.validation.ObjectError;
+import java.util.stream.Collectors;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,35 +15,50 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ChangeSetPersister.NotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNotFound(
-            ChangeSetPersister.NotFoundException ex) {
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(NotFoundException ex) {
+        return buildResponse(404, ex.getMessage(), 40401);
+    }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("errorMessage", "Resource not found");
-        response.put("errorCode", 40401);
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    @ExceptionHandler(DuplicateException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicate(DuplicateException ex) {
+        return buildResponse(403, ex.getMessage(), 40301);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(
-            MethodArgumentNotValidException ex) {
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("errorMessage", "Validation failed");
-        response.put("errorCode", 40001);
-
-        return ResponseEntity.badRequest().body(response);
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getAllErrors().stream()
+                .map(ObjectError::getDefaultMessage)
+                .collect(Collectors.joining(", "));
+        return buildResponse(400, message, 40001);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<Map<String, Object>> handleDuplicate() {
-
+    public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        String message = ex.getMostSpecificCause().getMessage().toLowerCase();
         Map<String, Object> response = new HashMap<>();
-        response.put("errorMessage", "Duplicate resource");
-        response.put("errorCode", 40301);
+        if (message.contains("foreign key")) {
+            response.put("errorMessage", "Referenced entity not found");
+            response.put("errorCode", 40001);
+            return ResponseEntity.badRequest().body(response);
+        } else if (message.contains("unique constraint") || message.contains("duplicate key")) {
+            response.put("errorMessage", "Duplicate resource");
+            response.put("errorCode", 40301);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        } else if (message.contains("not null")) {
+            response.put("errorMessage", "Missing required field");
+            response.put("errorCode", 40002); // или 40001
+            return ResponseEntity.badRequest().body(response);
+        }
+        response.put("errorMessage", "Database error");
+        response.put("errorCode", 50001);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
 
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    private ResponseEntity<Map<String, Object>> buildResponse(int status, String message, int code) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("errorMessage", message);
+        response.put("errorCode", code);
+        return ResponseEntity.status(status).body(response);
     }
 }

@@ -15,4 +15,6 @@ public class MarkResponseTo {
     private ZonedDateTime created;
     @JsonProperty("modified")
     private ZonedDateTime modified;
+    @JsonProperty("issueId")
+    Long issueId;
 }

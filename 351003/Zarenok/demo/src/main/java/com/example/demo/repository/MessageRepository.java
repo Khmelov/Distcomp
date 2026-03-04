@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
     List<Message> findByIssueId(Long issueId);
+    boolean existsByContent(String content);
+    boolean existsByContentAndIdNot(String content, Long id);
 }

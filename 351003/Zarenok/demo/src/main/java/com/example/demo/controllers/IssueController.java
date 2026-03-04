@@ -39,20 +39,19 @@ public class IssueController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<IssueResponseTo> findById(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
-        IssueResponseTo issue = issueService.findById(id);
-        return ResponseEntity.status(HttpStatus.CREATED).body(issue);
+    public ResponseEntity<IssueResponseTo> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(issueService.findById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<IssueResponseTo> update(@Valid @PathVariable Long id,
-                                                   @RequestBody IssueRequestTo dto) throws ChangeSetPersister.NotFoundException {
+    public ResponseEntity<IssueResponseTo> update(@PathVariable Long id,
+                                                  @Valid @RequestBody IssueRequestTo dto) {
         IssueResponseTo updated = issueService.update(id, dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(updated);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         issueService.delete(id);
         return ResponseEntity.noContent().build();
     }

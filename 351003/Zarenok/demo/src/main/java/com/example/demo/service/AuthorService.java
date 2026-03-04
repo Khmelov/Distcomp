@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.requests.AuthorRequestTo;
 import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.exception.DuplicateException;
+import com.example.demo.exception.NotFoundException;
 import com.example.demo.model.Author;
 import com.example.demo.repository.AuthorRepository;
 import jakarta.transaction.Transactional;
@@ -35,11 +36,9 @@ public class AuthorService {
         return mapper.toAuthorResponse(saved);
     }
     //READ
-    public AuthorResponseTo findById(Long id)
-            throws ChangeSetPersister.NotFoundException {
-
+    public AuthorResponseTo findById(Long id) {
         Author entity = authorRepository.findById(id)
-                .orElseThrow(ChangeSetPersister.NotFoundException::new);
+                .orElseThrow(() -> new NotFoundException("Author not found"));
 
         return mapper.toAuthorResponse(entity);
     }
@@ -51,15 +50,13 @@ public class AuthorService {
     }
 
     //UPDATE
-    public AuthorResponseTo update(Long id, AuthorRequestTo dto)
-            throws ChangeSetPersister.NotFoundException {
-
+    public AuthorResponseTo update(Long id, AuthorRequestTo dto) {
         if (authorRepository.existsByLogin(dto.getLogin())) {
             throw new DuplicateException("Login already exists");
         }
 
         Author entity = authorRepository.findById(id)
-                .orElseThrow(ChangeSetPersister.NotFoundException::new);
+                .orElseThrow(() -> new NotFoundException("Author not found"));
 
         mapper.updateAuthor(dto, entity);
         Author updated = authorRepository.save(entity);
@@ -67,11 +64,10 @@ public class AuthorService {
         return mapper.toAuthorResponse(updated);
     }
 
-    public void delete(Long id)
-            throws ChangeSetPersister.NotFoundException {
+    public void delete(Long id) {
 
         if (!authorRepository.existsById(id)) {
-            throw new ChangeSetPersister.NotFoundException();
+            throw new NotFoundException("Mark not found");
         }
 
         authorRepository.deleteById(id);
