@@ -1,10 +1,9 @@
 package com.example.demo.controllers;
 
-import com.example.demo.dto.requests.IssueRequestTo;
 import com.example.demo.dto.requests.MessageRequestTo;
-import com.example.demo.dto.responses.IssueResponseTo;
 import com.example.demo.dto.responses.MessageResponseTo;
 import com.example.demo.service.MessageService;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,8 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
-import java.util.List;
 @RestController
 @RequestMapping("/api/v1.0/messages")
 @Validated
@@ -26,7 +25,7 @@ public class MessageController {
     }
 
     @PostMapping
-    public ResponseEntity<MessageResponseTo> create(@RequestBody MessageRequestTo dto){
+    public ResponseEntity<MessageResponseTo> create(@Valid @RequestBody MessageRequestTo dto){
         MessageResponseTo response = messageService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -49,20 +48,20 @@ public class MessageController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MessageResponseTo> findById(@PathVariable Long id){
+    public ResponseEntity<MessageResponseTo> findById(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
         MessageResponseTo message = messageService.findById(id);
         return ResponseEntity.ok(message);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MessageResponseTo> update(@PathVariable Long id,
-                                                  @RequestBody MessageRequestTo dto){
+    public ResponseEntity<MessageResponseTo> update(@Valid @PathVariable Long id,
+                                                  @RequestBody MessageRequestTo dto) throws ChangeSetPersister.NotFoundException {
         MessageResponseTo updated = messageService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id){
+    public ResponseEntity<Void> delete(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
         messageService.delete(id);
         return ResponseEntity.noContent().build();
     }

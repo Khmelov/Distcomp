@@ -10,8 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 @Transactional
 public class AuthorService {
@@ -30,9 +28,12 @@ public class AuthorService {
         return mapper.toAuthorResponse(saved);
     }
     //READ
-    public AuthorResponseTo findById(Long id){
+    public AuthorResponseTo findById(Long id)
+            throws ChangeSetPersister.NotFoundException {
+
         Author entity = authorRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Author not found: " + id));
+                .orElseThrow(ChangeSetPersister.NotFoundException::new);
+
         return mapper.toAuthorResponse(entity);
     }
 
@@ -42,19 +43,25 @@ public class AuthorService {
     }
 
     //UPDATE
-    public AuthorResponseTo update(Long id, AuthorRequestTo dto){
+    public AuthorResponseTo update(Long id, AuthorRequestTo dto)
+            throws ChangeSetPersister.NotFoundException {
+
         Author entity = authorRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Author not found: " + id));
+                .orElseThrow(ChangeSetPersister.NotFoundException::new);
 
         mapper.updateAuthor(dto, entity);
         Author updated = authorRepository.save(entity);
+
         return mapper.toAuthorResponse(updated);
     }
 
-    public void delete(Long id){
-        if(!authorRepository.existsById(id)){
-            throw new NotFoundException("Author not found: " + id);
+    public void delete(Long id)
+            throws ChangeSetPersister.NotFoundException {
+
+        if (!authorRepository.existsById(id)) {
+            throw new ChangeSetPersister.NotFoundException();
         }
+
         authorRepository.deleteById(id);
     }
 }

@@ -3,6 +3,7 @@ package com.example.demo.controllers;
 import com.example.demo.dto.requests.IssueRequestTo;
 import com.example.demo.dto.responses.IssueResponseTo;
 import com.example.demo.service.IssueService;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -25,7 +27,7 @@ public class IssueController {
     }
 
     @PostMapping
-    public ResponseEntity<IssueResponseTo> create(@RequestBody IssueRequestTo dto){
+    public ResponseEntity<IssueResponseTo> create(@Valid @RequestBody IssueRequestTo dto) throws ChangeSetPersister.NotFoundException {
         IssueResponseTo response = issueService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -44,24 +46,24 @@ public class IssueController {
 
         Pageable pageable = PageRequest.of(page, size, direction, sortBy);
 
-        return ResponseEntity.ok(issueService.findAll(pageable));
+        return ResponseEntity.status(HttpStatus.CREATED).body(issueService.findAll(pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<IssueResponseTo> findById(@PathVariable Long id){
+    public ResponseEntity<IssueResponseTo> findById(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
         IssueResponseTo issue = issueService.findById(id);
-        return ResponseEntity.ok(issue);
+        return ResponseEntity.status(HttpStatus.CREATED).body(issue);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<IssueResponseTo> update(@PathVariable Long id,
-                                                   @RequestBody IssueRequestTo dto){
+    public ResponseEntity<IssueResponseTo> update(@Valid @PathVariable Long id,
+                                                   @RequestBody IssueRequestTo dto) throws ChangeSetPersister.NotFoundException {
         IssueResponseTo updated = issueService.update(id, dto);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.status(HttpStatus.CREATED).body(updated);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id){
+    public ResponseEntity<Void> delete(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
         issueService.delete(id);
         return ResponseEntity.noContent().build();
     }

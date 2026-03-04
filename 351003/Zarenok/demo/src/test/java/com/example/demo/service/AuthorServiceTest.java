@@ -7,32 +7,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.crossstore.ChangeSetPersister;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.junit.Assert.*;
 
-@Testcontainers
 @SpringBootTest
 @Transactional
 public class AuthorServiceTest {
-    @Container
-    static PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:15")
-                    .withDatabaseName("test")
-                    .withUsername("postgres")
-                    .withPassword("postgres");
-
-    @DynamicPropertySource
-    static void configure(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
 
     @Autowired
     private AuthorService authorService;
@@ -58,7 +39,7 @@ public class AuthorServiceTest {
     }
 
     @Test
-    void deleteAuthor_shouldRemoveEntity() {
+    void deleteAuthor_shouldRemoveEntity() throws ChangeSetPersister.NotFoundException {
         AuthorRequestTo request = new AuthorRequestTo();
         request.setLogin("delete@mail.com");
         request.setPassword("password123");

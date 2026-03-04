@@ -14,26 +14,26 @@ import java.util.Set;
 @Entity
 @Setter
 @Getter
-@Table(name = "tbl_issue", schema = "distcomp")
+@Table(name = "tbl_issue", schema = "dictcomp")
 public class Issue {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "title", nullable = false, length = 64)
+    @Column(name = "title", nullable = false, length = 64, unique = true)
     private String title;
 
-    @Column(name = "content")
+    @Column(name = "content", unique = true)
     private String content;
 
-    @Column(name = "created")
+    @Column(name = "created", nullable = false)
     private ZonedDateTime created;
 
-    @Column(name = "modified")
+    @Column(name = "modified", nullable = false)
     private ZonedDateTime modified;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "author_id", nullable = false)
     private Author author;
 
     @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL)
@@ -45,5 +45,5 @@ public class Issue {
             joinColumns = @JoinColumn(name = "issue_id"),
             inverseJoinColumns = @JoinColumn(name = "mark_id")
     )
-    private Set<Mark> marks = new HashSet<>();
+    private List<Mark> marks;
 }

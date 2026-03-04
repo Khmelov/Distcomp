@@ -8,15 +8,15 @@ import jakarta.persistence.Id;
 @Entity
 @Setter
 @Getter
-@Table(name = "tbl_message", schema = "distcomp")
+@Table(name = "tbl_message", schema = "dictcomp")
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "content")
+    @Column(name = "content", nullable = false)
     private String content;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "issue_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "issue_id", nullable = false)
     private Issue issue;
 }

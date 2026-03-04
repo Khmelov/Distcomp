@@ -6,7 +6,7 @@
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
 
     <changeSet id="1-create-tbl_author" author="palina">
-        <createTable tableName="tbl_author" schemaName="distcomp">
+        <createTable tableName="tbl_author" schemaName="dictcomp">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -23,13 +23,13 @@
 
 
     <changeSet id="2-create-tbl_issue" author="palina">
-        <createTable tableName="tbl_issue" schemaName="distcomp">
+        <createTable tableName="tbl_issue" schemaName="dictcomp">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true"/>
             </column>
             <column name="author_id" type="BIGINT">
                 <constraints foreignKeyName="fk_issue_author"
-                             references="distcomp.tbl_author(id)"
+                             references="dictcomp.tbl_author(id)"
                              nullable="false"/>
             </column>
             <column name="title" type="VARCHAR(64)">
@@ -42,7 +42,7 @@
     </changeSet>
 
     <changeSet id="3-create-tbl_mark" author="palina">
-        <createTable tableName="tbl_mark" schemaName="distcomp">
+        <createTable tableName="tbl_mark" schemaName="dictcomp">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true"/>
             </column>
@@ -54,13 +54,13 @@
 
 
     <changeSet id="4-create-tbl_message" author="palina">
-        <createTable tableName="tbl_message" schemaName="distcomp">
+        <createTable tableName="tbl_message" schemaName="dictcomp">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true"/>
             </column>
             <column name="issue_id" type="BIGINT">
                 <constraints foreignKeyName="fk_message_issue"
-                             references="distcomp.tbl_issue(id)"
+                             references="dictcomp.tbl_issue(id)"
                              nullable="false"/>
             </column>
             <column name="content" type="TEXT"/>
@@ -68,20 +68,20 @@
     </changeSet>
 
     <changeSet id="5-create-tbl_issue_mark" author="palina">
-        <createTable tableName="tbl_issue_mark" schemaName="distcomp">
+        <createTable tableName="tbl_issue_mark" schemaName="dictcomp">
             <column name="issue_id" type="BIGINT">
                 <constraints foreignKeyName="fk_issue_mark_issue"
-                             references="distcomp.tbl_issue(id)"/>
+                             references="dictcomp.tbl_issue(id)"/>
             </column>
             <column name="mark_id" type="BIGINT">
                 <constraints foreignKeyName="fk_issue_mark_mark"
-                             references="distcomp.tbl_mark(id)"/>
+                             references="dictcomp.tbl_mark(id)"/>
             </column>
         </createTable>
     </changeSet>
 
     <changeSet id="6-init-data" author="palina">
-        <insert tableName="tbl_author" schemaName="distcomp">
+        <insert tableName="tbl_author" schemaName="dictcomp">
             <column name="login">palina.zaranok@gmail.com</column>
             <column name="firstname">Полина</column>
             <column name="lastname">Заренок</column>

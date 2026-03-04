@@ -5,6 +5,7 @@ import com.example.demo.dto.responses.MarkResponseTo;
 import com.example.demo.model.Mark;
 import com.example.demo.repository.MarkRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,24 +36,27 @@ public class MarkService {
                 .map(mapper::toMarkResponse);
     }
 
-    public MarkResponseTo findById(Long id) {
+    public MarkResponseTo findById(Long id)
+            throws ChangeSetPersister.NotFoundException {
         Mark mark = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Mark not found: " + id));
+                .orElseThrow(ChangeSetPersister.NotFoundException::new);
         return mapper.toMarkResponse(mark);
     }
 
-    public MarkResponseTo update(Long id, MarkRequestTo dto) {
+    public MarkResponseTo update(Long id, MarkRequestTo dto)
+            throws ChangeSetPersister.NotFoundException{
         Mark existing = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Mark not found: " + id));
+                .orElseThrow(ChangeSetPersister.NotFoundException::new);
 
         mapper.updateMark(dto, existing);
         Mark updated = repository.save(existing);
         return mapper.toMarkResponse(updated);
     }
 
-    public void delete(Long id) {
+    public void delete(Long id)
+            throws ChangeSetPersister.NotFoundException{
         if (!repository.existsById(id)) {
-            throw new NotFoundException("Mark not found: " + id);
+            throw new ChangeSetPersister.NotFoundException();
         }
         repository.deleteById(id);
     }

@@ -5,6 +5,7 @@ import com.example.demo.dto.responses.MessageResponseTo;
 import com.example.demo.model.Message;
 import com.example.demo.repository.MessageRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,23 +33,26 @@ public class MessageService {
                 .map(mapper::toMessageResponse);
     }
 
-    public MessageResponseTo findById(Long id) {
+    public MessageResponseTo findById(Long id)
+            throws ChangeSetPersister.NotFoundException {
         Message msg = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Message not found: " + id));
+                .orElseThrow(ChangeSetPersister.NotFoundException::new);
         return mapper.toMessageResponse(msg);
     }
 
-    public MessageResponseTo update(Long id, MessageRequestTo dto) {
+    public MessageResponseTo update(Long id, MessageRequestTo dto)
+            throws ChangeSetPersister.NotFoundException {
         Message existing = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Message not found: " + id));
+                .orElseThrow(ChangeSetPersister.NotFoundException::new);
 
         mapper.updateMessage(dto, existing);
         Message updated = repository.save(existing);
         return mapper.toMessageResponse(updated);
     }
-    public void delete(Long id){
+    public void delete(Long id) throws ChangeSetPersister.NotFoundException
+    {
         if(!repository.existsById(id)){
-            throw new NotFoundException("Message not found: " + id);
+            throw new ChangeSetPersister.NotFoundException();
         }
         repository.deleteById(id);
     }

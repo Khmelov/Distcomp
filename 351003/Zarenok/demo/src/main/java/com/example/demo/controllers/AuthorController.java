@@ -3,6 +3,7 @@ package com.example.demo.controllers;
 import com.example.demo.dto.requests.AuthorRequestTo;
 import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.service.AuthorService;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -11,12 +12,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1.0/authors")
-@Validated
 public class AuthorController {
     private final AuthorService authorService;
 
@@ -26,7 +27,7 @@ public class AuthorController {
 
     //CREATE - POST /authors
     @PostMapping
-    public ResponseEntity<AuthorResponseTo> create(@RequestBody AuthorRequestTo dto){
+    public ResponseEntity<AuthorResponseTo> create(@Valid @RequestBody AuthorRequestTo dto){
         AuthorResponseTo response = authorService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -51,7 +52,7 @@ public class AuthorController {
 
     //READ BY ID - GET /authors/1
     @GetMapping("/{id}")
-    public ResponseEntity<AuthorResponseTo> findById(@PathVariable Long id){
+    public ResponseEntity<AuthorResponseTo> findById(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
         AuthorResponseTo author = authorService.findById(id);
         return ResponseEntity.ok(author);
     }
@@ -59,14 +60,15 @@ public class AuthorController {
     // UPDATE - PUT /authors/1
     @PutMapping("/{id}")
     public ResponseEntity<AuthorResponseTo> update(@PathVariable Long id,
-                                                   @RequestBody AuthorRequestTo dto){
+                                                   @Valid
+                                                   @RequestBody AuthorRequestTo dto) throws ChangeSetPersister.NotFoundException {
         AuthorResponseTo updated = authorService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     //DELETE - DELETE /authors/1
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id){
+    public ResponseEntity<Void> delete(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
         authorService.delete(id);
         return ResponseEntity.noContent().build();
     }

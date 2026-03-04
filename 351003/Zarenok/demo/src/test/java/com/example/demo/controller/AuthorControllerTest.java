@@ -13,19 +13,16 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
 public class AuthorControllerTest {
     @LocalServerPort
     private int port;
 
-    @Container
     static PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>("postgres:15")
                     .withDatabaseName("test")
                     .withUsername("postgres")
                     .withPassword("postgres");
 
-    @DynamicPropertySource
     static void configure(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
@@ -34,6 +31,7 @@ public class AuthorControllerTest {
     @Test
     void createAuthor_shouldReturn201AndResponseTo() {
         given()
+                .port(port)
                 .contentType(ContentType.JSON)
                 .body("""
                     {
@@ -54,6 +52,7 @@ public class AuthorControllerTest {
     @Test
     void getAuthor_whenNotExists_shouldReturn404() {
         given()
+                .port(port)
                 .when()
                 .get("/api/v1.0/authors/999999")
                 .then()
@@ -65,6 +64,7 @@ public class AuthorControllerTest {
     @Test
     void createAuthor_withInvalidData_shouldReturn400() {
         given()
+                .port(port)
                 .contentType(ContentType.JSON)
                 .body("""
                 {

@@ -7,6 +7,7 @@ import com.example.demo.model.Issue;
 import com.example.demo.repository.AuthorRepository;
 import com.example.demo.repository.IssueRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,18 +28,20 @@ public class IssueService {
         this.authorRepository = authorRepository;
     }
 
-    public IssueResponseTo create(IssueRequestTo dto){
+    public IssueResponseTo create(IssueRequestTo dto)
+            throws ChangeSetPersister.NotFoundException {
         Author author = authorRepository.findById(dto.getAuthorId())
-                .orElseThrow(() -> new NotFoundException("Author not found"));
+                .orElseThrow(ChangeSetPersister.NotFoundException::new);
         Issue issue = mapper.toEntity(dto);
         issue.setAuthor(author);
         Issue saved = repository.save(issue);
         return mapper.toIssueResponse(saved);
     }
 
-    public IssueResponseTo findById(Long id) {
+    public IssueResponseTo findById(Long id)
+            throws ChangeSetPersister.NotFoundException {
         Issue issue = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Issue not found: " + id));
+                .orElseThrow(ChangeSetPersister.NotFoundException::new);
 
         return mapper.toIssueResponse(issue);
     }
@@ -48,9 +51,10 @@ public class IssueService {
                 .map(mapper::toIssueResponse);
     }
 
-    public IssueResponseTo update(Long id, IssueRequestTo dto) {
+    public IssueResponseTo update(Long id, IssueRequestTo dto)
+            throws ChangeSetPersister.NotFoundException {
         Issue existing = repository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Issue not found: " + id));
+                .orElseThrow(ChangeSetPersister.NotFoundException::new);
 
         mapper.updateIssue(dto, existing);
         Issue updated = repository.save(existing);
@@ -58,9 +62,9 @@ public class IssueService {
     }
 
 
-    public void delete(Long id) {
+    public void delete(Long id) throws ChangeSetPersister.NotFoundException {
         if(!repository.existsById(id)){
-            throw new NotFoundException("Issue not found: " + id);
+            throw new ChangeSetPersister.NotFoundException();
         }
         repository.deleteById(id);
     }
