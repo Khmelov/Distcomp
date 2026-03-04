@@ -5,9 +5,7 @@ using System.Linq;
 
 namespace rest_api.InMemory
 {
-    /// <summary>
-    /// InMemory-реализация репозитория для сущности Reaction.
-    /// </summary>
+ 
     public class IReactionRepository : IRepository<Reaction>
     {
         private readonly Dictionary<long, Reaction> _reactions;
