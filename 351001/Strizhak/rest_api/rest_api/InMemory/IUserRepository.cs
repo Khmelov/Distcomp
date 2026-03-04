@@ -1,6 +1,6 @@
 ﻿namespace rest_api.InMemory
 {
-    public class InMemoryUserRepository : IRepository<User>
+    public class IUserRepository : IRepository<User>
     {
         private Dictionary<long, User> _users;
         public User GetById(long id)
@@ -11,17 +11,19 @@
         }
         public void Add(User user)
         {
-            if (user == null) throw new ArgumentNullException(nameof(user));
-            if (_users.ContainsKey(user.Id)) throw new InvalidOperationException($"User with id {user.Id} already exists");
+            if (user == null) 
+                throw new ArgumentNullException(nameof(user));
+            if (_users.ContainsKey(user.Id)) 
+                throw new InvalidOperationException($"User with id {user.Id} already exists");
             _users.Add(user.Id, user);
         }
-        public void UpdateById(User user)
+        public void Update(User user)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
             if (!_users.ContainsKey(user.Id)) throw new InvalidOperationException($"User with id {user.Id} not found");
             _users[user.Id] = user;
         }
-        public void DeleteById(long id)
+        public void Delete(long id)
         {
             if (!_users.Remove(id))
                 throw new KeyNotFoundException($"User with id {id} not found");
