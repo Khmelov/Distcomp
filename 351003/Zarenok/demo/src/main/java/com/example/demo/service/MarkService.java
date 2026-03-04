@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.requests.MarkRequestTo;
+import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.dto.responses.MarkResponseTo;
 import com.example.demo.model.Mark;
 import com.example.demo.repository.MarkRepository;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -31,9 +33,10 @@ public class MarkService {
         return mapper.toMarkResponse(saved);
     }
 
-    public Page<MarkResponseTo> findAll(Pageable pageable) {
-        return repository.findAll(pageable)
-                .map(mapper::toMarkResponse);
+    public List<MarkResponseTo> findAll() {
+        return repository.findAll().stream()
+                .map(mapper::toMarkResponse)
+                .collect(Collectors.toList());
     }
 
     public MarkResponseTo findById(Long id)

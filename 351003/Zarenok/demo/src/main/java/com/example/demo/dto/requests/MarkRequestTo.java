@@ -9,7 +9,7 @@ import lombok.Data;
 public class MarkRequestTo {
 
     @NotBlank
-    @Size(min = 2, max = 50)
+    @Size(min = 2, max = 32)
     @JsonProperty("name")
     private String name;
 

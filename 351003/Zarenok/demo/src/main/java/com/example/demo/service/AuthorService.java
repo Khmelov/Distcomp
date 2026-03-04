@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.requests.AuthorRequestTo;
 import com.example.demo.dto.responses.AuthorResponseTo;
+import com.example.demo.exception.DuplicateException;
 import com.example.demo.model.Author;
 import com.example.demo.repository.AuthorRepository;
 import jakarta.transaction.Transactional;
@@ -9,6 +10,9 @@ import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -23,6 +27,9 @@ public class AuthorService {
 
     //CREATE
     public AuthorResponseTo create(AuthorRequestTo dto){
+        if (authorRepository.existsByLogin(dto.getLogin())) {
+            throw new DuplicateException("Login already exists");
+        }
         Author entity = mapper.toEntity(dto);
         Author saved = authorRepository.save(entity);
         return mapper.toAuthorResponse(saved);
@@ -37,14 +44,19 @@ public class AuthorService {
         return mapper.toAuthorResponse(entity);
     }
 
-    public Page<AuthorResponseTo> findAll(Pageable pageable){
-        return authorRepository.findAll(pageable)
-                .map(mapper::toAuthorResponse);
+    public List<AuthorResponseTo> findAll() {
+        return authorRepository.findAll().stream()
+                .map(mapper::toAuthorResponse)
+                .collect(Collectors.toList());
     }
 
     //UPDATE
     public AuthorResponseTo update(Long id, AuthorRequestTo dto)
             throws ChangeSetPersister.NotFoundException {
+
+        if (authorRepository.existsByLogin(dto.getLogin())) {
+            throw new DuplicateException("Login already exists");
+        }
 
         Author entity = authorRepository.findById(id)
                 .orElseThrow(ChangeSetPersister.NotFoundException::new);

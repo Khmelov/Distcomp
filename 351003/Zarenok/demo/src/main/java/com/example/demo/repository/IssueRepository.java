@@ -11,4 +11,5 @@ import java.util.stream.Collectors;
 public interface IssueRepository extends JpaRepository<Issue, Long> {
     List<Issue> findByAuthorId(Long authorId);
     List<Issue> findAllByMarksId(Long markId);
+    boolean existsByTitle(String title);
 }

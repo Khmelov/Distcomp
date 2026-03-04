@@ -1,6 +1,7 @@
 package com.example.demo.controllers;
 
 import com.example.demo.dto.requests.IssueRequestTo;
+import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.dto.responses.IssueResponseTo;
 import com.example.demo.service.IssueService;
 import org.springframework.data.crossstore.ChangeSetPersister;
@@ -33,20 +34,8 @@ public class IssueController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<IssueResponseTo>> findAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir
-    ){
-        Sort.Direction direction =
-                sortDir.equalsIgnoreCase("desc")
-                        ? Sort.Direction.DESC
-                        : Sort.Direction.ASC;
-
-        Pageable pageable = PageRequest.of(page, size, direction, sortBy);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(issueService.findAll(pageable));
+    public ResponseEntity<List<IssueResponseTo>> findAll() {
+        return ResponseEntity.ok(issueService.findAll());
     }
 
     @GetMapping("/{id}")

@@ -1,6 +1,7 @@
 package com.example.demo.controllers;
 
 import com.example.demo.dto.requests.MessageRequestTo;
+import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.dto.responses.MessageResponseTo;
 import com.example.demo.service.MessageService;
 import org.springframework.data.crossstore.ChangeSetPersister;
@@ -13,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1.0/messages")
@@ -31,20 +34,8 @@ public class MessageController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<MessageResponseTo>> findAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir
-    ){
-        Sort.Direction direction =
-                sortDir.equalsIgnoreCase("desc")
-                        ? Sort.Direction.DESC
-                        : Sort.Direction.ASC;
-
-        Pageable pageable = PageRequest.of(page, size, direction, sortBy);
-
-        return ResponseEntity.ok(messageService.findAll(pageable));
+    public ResponseEntity<List<MessageResponseTo>> findAll() {
+        return ResponseEntity.ok(messageService.findAll());
     }
 
     @GetMapping("/{id}")

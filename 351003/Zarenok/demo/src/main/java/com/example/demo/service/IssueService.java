@@ -1,7 +1,10 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.requests.IssueRequestTo;
+import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.dto.responses.IssueResponseTo;
+import com.example.demo.exception.DuplicateException;
+import com.example.demo.exception.NotFoundException;
 import com.example.demo.model.Author;
 import com.example.demo.model.Issue;
 import com.example.demo.repository.AuthorRepository;
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -30,8 +34,13 @@ public class IssueService {
 
     public IssueResponseTo create(IssueRequestTo dto)
             throws ChangeSetPersister.NotFoundException {
+
         Author author = authorRepository.findById(dto.getAuthorId())
-                .orElseThrow(ChangeSetPersister.NotFoundException::new);
+                .orElseThrow(() -> new NotFoundException("Author not found"));
+        if (repository.existsByTitle(dto.getTitle())) {
+            throw new DuplicateException("Issue with this title already exists");
+        }
+
         Issue issue = mapper.toEntity(dto);
         issue.setAuthor(author);
         Issue saved = repository.save(issue);
@@ -46,15 +55,20 @@ public class IssueService {
         return mapper.toIssueResponse(issue);
     }
 
-    public Page<IssueResponseTo> findAll(Pageable pageable) {
-        return repository.findAll(pageable)
-                .map(mapper::toIssueResponse);
+    public List<IssueResponseTo> findAll() {
+        return repository.findAll().stream()
+                .map(mapper::toIssueResponse)
+                .collect(Collectors.toList());
     }
 
     public IssueResponseTo update(Long id, IssueRequestTo dto)
             throws ChangeSetPersister.NotFoundException {
+
+        if (repository.existsByTitle(dto.getTitle())) {
+            throw new DuplicateException("Issue with this title already exists");
+        }
         Issue existing = repository.findById(id)
-                .orElseThrow(ChangeSetPersister.NotFoundException::new);
+                .orElseThrow(() -> new NotFoundException("Issue not found"));
 
         mapper.updateIssue(dto, existing);
         Issue updated = repository.save(existing);

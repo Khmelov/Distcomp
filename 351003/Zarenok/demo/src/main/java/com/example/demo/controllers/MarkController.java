@@ -1,6 +1,7 @@
 package com.example.demo.controllers;
 
 import com.example.demo.dto.requests.MarkRequestTo;
+import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.dto.responses.MarkResponseTo;
 import com.example.demo.service.MarkService;
 import org.springframework.data.crossstore.ChangeSetPersister;
@@ -32,20 +33,8 @@ public class MarkController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<MarkResponseTo>> findAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir
-    ){
-        Sort.Direction direction =
-                sortDir.equalsIgnoreCase("desc")
-                        ? Sort.Direction.DESC
-                        : Sort.Direction.ASC;
-
-        Pageable pageable = PageRequest.of(page, size, direction, sortBy);
-
-        return ResponseEntity.ok(markService.findAll(pageable));
+    public ResponseEntity<List<MarkResponseTo>> findAll() {
+        return ResponseEntity.ok(markService.findAll());
     }
 
     @GetMapping("/{id}")

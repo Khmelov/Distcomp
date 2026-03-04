@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.requests.MessageRequestTo;
+import com.example.demo.dto.responses.MarkResponseTo;
 import com.example.demo.dto.responses.MessageResponseTo;
 import com.example.demo.model.Message;
 import com.example.demo.repository.MessageRepository;
@@ -11,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @Transactional
 public class MessageService {
@@ -28,9 +31,10 @@ public class MessageService {
         return mapper.toMessageResponse(saved);
     }
 
-    public Page<MessageResponseTo> findAll(Pageable pageable) {
-        return repository.findAll(pageable)
-                .map(mapper::toMessageResponse);
+    public List<MessageResponseTo> findAll() {
+        return repository.findAll().stream()
+                .map(mapper::toMessageResponse)
+                .collect(Collectors.toList());
     }
 
     public MessageResponseTo findById(Long id)
