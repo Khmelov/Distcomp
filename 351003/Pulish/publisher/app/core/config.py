@@ -13,9 +13,10 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 
+    DISCUSSION_SERVICE_URL: str = "http://localhost:24130/api/v1.0"
+
     @property
     def DATABASE_URL(self) -> str:
-        """Формируем строку подключения к БД"""
         return (
             f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

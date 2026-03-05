@@ -7,8 +7,7 @@ from app.services.mark_service import MarkService
 router = APIRouter()
 
 
-@router.post("/marks",
-             response_model=MarkResponseTo,
+@router.post("/marks", response_model=MarkResponseTo,
              status_code=status.HTTP_201_CREATED)
 def create_mark(dto: MarkRequestTo, db: Session = Depends(get_db)):
     return MarkService(db).create(dto)
@@ -24,9 +23,9 @@ def get_mark(id: int, db: Session = Depends(get_db)):
     return MarkService(db).find_by_id(id)
 
 
-@router.put("/marks/{id}", response_model=MarkResponseTo)
-def update_mark(id: int, dto: MarkRequestTo, db: Session = Depends(get_db)):
-    return MarkService(db).update(id, dto)
+@router.put("/marks", response_model=MarkResponseTo)
+def update_mark(dto: MarkRequestTo, db: Session = Depends(get_db)):
+    return MarkService(db).update(dto)
 
 
 @router.delete("/marks/{id}", status_code=status.HTTP_204_NO_CONTENT)

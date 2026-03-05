@@ -7,8 +7,7 @@ from app.services.comment_service import CommentService
 router = APIRouter()
 
 
-@router.post("/comments",
-             response_model=CommentResponseTo,
+@router.post("/comments", response_model=CommentResponseTo,
              status_code=status.HTTP_201_CREATED)
 def create_comment(dto: CommentRequestTo, db: Session = Depends(get_db)):
     return CommentService(db).create(dto)
@@ -25,10 +24,10 @@ def get_comment(id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/comments/{id}", response_model=CommentResponseTo)
-def update_comment(id: int,
-                   dto: CommentRequestTo,
+def update_comment(id: int, dto: CommentRequestTo,
                    db: Session = Depends(get_db)):
-    return CommentService(db).update(id, dto)
+    dto.id = id
+    return CommentService(db).update(dto)
 
 
 @router.delete("/comments/{id}", status_code=status.HTTP_204_NO_CONTENT)

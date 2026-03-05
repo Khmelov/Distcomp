@@ -7,8 +7,7 @@ from app.services.user_service import UserService
 router = APIRouter()
 
 
-@router.post("/users",
-             response_model=UserResponseTo,
+@router.post("/users", response_model=UserResponseTo,
              status_code=status.HTTP_201_CREATED)
 def create_user(dto: UserRequestTo, db: Session = Depends(get_db)):
     return UserService(db).create(dto)
@@ -24,9 +23,9 @@ def get_user(id: int, db: Session = Depends(get_db)):
     return UserService(db).find_by_id(id)
 
 
-@router.put("/users/{id}", response_model=UserResponseTo)
-def update_user(id: int, dto: UserRequestTo, db: Session = Depends(get_db)):
-    return UserService(db).update(id, dto)
+@router.put("/users", response_model=UserResponseTo)
+def update_user(dto: UserRequestTo, db: Session = Depends(get_db)):
+    return UserService(db).update(dto)
 
 
 @router.delete("/users/{id}", status_code=status.HTTP_204_NO_CONTENT)

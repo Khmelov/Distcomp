@@ -3,6 +3,7 @@ from typing import List
 
 
 class TopicRequestTo(BaseModel):
+    id: int | None = None
     title: str = Field(min_length=2, max_length=64)
     content: str = Field(min_length=2, max_length=2048)
     userId: int
