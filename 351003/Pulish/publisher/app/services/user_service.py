@@ -32,8 +32,8 @@ class UserService:
             raise NotFoundException("User not found", 40401)
         return self._to_response(user)
 
-    def update(self, id: int, dto: UserRequestTo):
-        user = self.db.query(User).filter(User.id == id).first()
+    def update(self, dto: UserRequestTo):
+        user = self.db.query(User).filter(User.id == dto.id).first()
         if not user:
             raise NotFoundException("User not found", 40401)
 
@@ -68,7 +68,6 @@ class UserService:
         self.db.commit()
 
     def _to_response(self, user: User) -> UserResponseTo:
-        return UserResponseTo(id=user.id,
-                              login=user.login,
+        return UserResponseTo(id=user.id, login=user.login,
                               firstname=user.firstname,
                               lastname=user.lastname)
