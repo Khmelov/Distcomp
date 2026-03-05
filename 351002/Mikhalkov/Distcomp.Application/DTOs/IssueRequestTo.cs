@@ -7,6 +7,7 @@ namespace Distcomp.Application.DTOs
         long UserId,
         string Title,
         string Content,
-        List<long>? MarkerIds
+        List<long>? MarkerIds,
+        List<string>? Markers
     );
 }

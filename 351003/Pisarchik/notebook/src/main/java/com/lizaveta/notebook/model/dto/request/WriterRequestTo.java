@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Request DTO for Writer entity.
- */
 @JsonRootName("writer")
 public record WriterRequestTo(
         @NotBlank(message = "Login must not be blank")

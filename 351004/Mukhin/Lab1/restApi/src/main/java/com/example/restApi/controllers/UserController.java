@@ -13,6 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1.0/users")
 public class UserController {
+
     private final UserService userService;
 
     public UserController(UserService userService) {
@@ -20,8 +21,11 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResponseTo>> getAll() {
-        return ResponseEntity.ok(userService.getAll());
+    public ResponseEntity<List<UserResponseTo>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size,
+            @RequestParam(defaultValue = "id") String sort) {
+        return ResponseEntity.ok(userService.getAll(page, size, sort).getContent());
     }
 
     @GetMapping("/{id}")

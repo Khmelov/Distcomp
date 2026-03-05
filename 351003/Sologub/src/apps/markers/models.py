@@ -4,6 +4,9 @@ from apps.core.models import BaseModel
 
 
 class Marker(BaseModel):
+    class Meta:
+        db_table = 'tbl_marker'
+
     name = models.CharField(max_length=32,
                             unique=True,
                             validators=[MinLengthValidator(2)])

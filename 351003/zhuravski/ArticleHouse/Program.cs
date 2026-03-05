@@ -3,9 +3,10 @@ using ArticleHouse.ExcMiddleware;
 using ArticleHouse.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
+var connection = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddOpenApi();
-builder.Services.AddArticleHouseServices();
+builder.Services.AddArticleHouseServices(connection);
 
 var app = builder.Build();
 
@@ -15,7 +16,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles("/static");
 app.UseMiddleware<ExcMiddleware>();
 

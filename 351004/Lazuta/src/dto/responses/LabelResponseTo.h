@@ -3,6 +3,9 @@
 #include <string>
 #include <jsoncpp/json/json.h>
 
+namespace myapp::dto
+{
+
 class LabelResponseTo 
 {
 public:
@@ -16,4 +19,6 @@ public:
         json["name"] = name;
         return json;
     }
+};
+
 };

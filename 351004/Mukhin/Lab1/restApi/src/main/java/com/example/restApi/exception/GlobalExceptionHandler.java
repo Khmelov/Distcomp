@@ -1,35 +1,54 @@
 package com.example.restApi.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.stream.Collectors;
+import java.util.Map;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorInfo> handleNotFound(NotFoundException ex) {
-        ErrorInfo error = new ErrorInfo(ex.getMessage(), 40401);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    public ResponseEntity<Map<String, Object>> handleNotFound(NotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                        "errorMessage", ex.getMessage(),
+                        "errorCode", 40401
+                ));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorInfo> handleValidationErrors(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(", "));
-        ErrorInfo error = new ErrorInfo(message, 40001);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+                .map(e -> e.getDefaultMessage())
+                .findFirst()
+                .orElse("Validation error");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of(
+                        "errorMessage", message,
+                        "errorCode", 40301
+                ));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicate(DataIntegrityViolationException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of(
+                        "errorMessage", "Duplicate entry: " + ex.getMostSpecificCause().getMessage(),
+                        "errorCode", 40301
+                ));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorInfo> handleGenericException(Exception ex) {
-        ErrorInfo error = new ErrorInfo("Internal server error: " + ex.getMessage(), 50001);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                        "errorMessage", "Internal server error: " + ex.getMessage(),
+                        "errorCode", 50001
+                ));
     }
 }
