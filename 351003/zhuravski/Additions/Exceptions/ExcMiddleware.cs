@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using ArticleHouse.Service.Exceptions;
+using Microsoft.AspNetCore.Http;
 
-namespace ArticleHouse.ExcMiddleware;
+namespace Additions.Exceptions;
 
 public class ExcMiddleware
 {

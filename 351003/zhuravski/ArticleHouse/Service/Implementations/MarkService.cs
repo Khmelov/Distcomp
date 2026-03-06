@@ -1,7 +1,7 @@
+using Additions.Exceptions;
 using ArticleHouse.DAO;
 using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.DTOs;
-using ArticleHouse.Service.Exceptions;
 using ArticleHouse.Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
 

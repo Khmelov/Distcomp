@@ -1,4 +1,4 @@
-using ArticleHouse.Service.Exceptions;
+using Additions.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArticleHouse.Service.Implementations;
