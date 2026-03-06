@@ -1,9 +1,4 @@
-using System.ComponentModel.DataAnnotations;
-using ArticleHouse.Service.DTOs;
-using ArticleHouse.Service.Interfaces;
-using Additions;
-
-namespace ArticleHouse.Endpoints;
+namespace CommentService.Endpoints;
 
 public static class MarkEndpoints
 {

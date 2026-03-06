@@ -1,6 +1,7 @@
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 
-namespace ArticleHouse.Additions;
+namespace Additions;
 
 public static class UrlRoutines
 {
