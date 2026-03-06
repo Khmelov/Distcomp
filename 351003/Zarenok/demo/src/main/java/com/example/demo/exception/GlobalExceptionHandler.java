@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         return buildResponse(400, message, 40001);
     }
-
+    
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex) {
         String message = ex.getMostSpecificCause().getMessage().toLowerCase();
@@ -54,6 +54,8 @@ public class GlobalExceptionHandler {
         response.put("errorCode", 50001);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
+
+
 
     private ResponseEntity<Map<String, Object>> buildResponse(int status, String message, int code) {
         Map<String, Object> response = new HashMap<>();

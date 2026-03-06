@@ -67,7 +67,7 @@ public class AuthorService {
     public void delete(Long id) {
 
         if (!authorRepository.existsById(id)) {
-            throw new NotFoundException("Mark not found");
+            throw new NotFoundException("Author not found");
         }
 
         authorRepository.deleteById(id);
