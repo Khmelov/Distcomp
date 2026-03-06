@@ -1,4 +1,7 @@
-namespace CommentService;
+using CommentMicroservice.Service.Interfaces;
+using CommentMicroservice.Service.Implementations;
+
+namespace CommentMicroservice;
 
 static internal class ServiceProviderExtensions
 {

@@ -1,4 +1,9 @@
-namespace CommentService.Endpoints;
+using System.ComponentModel.DataAnnotations;
+using Additions;
+using CommentMicroservice.Service.DTOs;
+using CommentMicroservice.Service.Interfaces;
+
+namespace CommentMicroservice.Endpoints;
 
 public static class CommentEndpoints
 {
@@ -8,32 +13,32 @@ public static class CommentEndpoints
     {
         var group = app.MapGroup(GroupPrefix).WithParameterValidation();
 
-        group.MapGet("/", async (ICommentService service) =>
+        group.MapGet("/", async (ICommentMicroservice service) =>
         {
             return Results.Ok(await service.GetAllCommentsAsync());
         });
 
-        group.MapPost("/", async (ICommentService service, HttpContext context, CommentRequestDTO dto) =>
+        group.MapPost("/", async (ICommentMicroservice service, HttpContext context, CommentRequestDTO dto) =>
         {
             CommentResponseDTO responseDTO = await service.CreateCommentAsync(dto);
             string path = UrlRoutines.BuildAbsoluteUrl(context, $"{GroupPrefix}/{responseDTO.Id}");
             return Results.Created(path, responseDTO);
         });
 
-        group.MapDelete("/{id}", async (ICommentService service, long id) =>
+        group.MapDelete("/{id}", async (ICommentMicroservice service, long id) =>
         {
             await service.DeleteCommentAsync(id);
             return Results.NoContent();
         });
 
-        group.MapGet("/{id}", async (ICommentService service, long id) =>
+        group.MapGet("/{id}", async (ICommentMicroservice service, long id) =>
         {
             return Results.Ok(await service.GetCommentByIdAsync(id));
         });
 
         //Колхоз - и я не одобряю.
         //Qwen тоже не одобряет.
-        group.MapPut("/", async (ICommentService service, CommentRequestDTO dto) =>
+        group.MapPut("/", async (ICommentMicroservice service, CommentRequestDTO dto) =>
         {
             if (null == dto.Id)
             {
@@ -42,7 +47,7 @@ public static class CommentEndpoints
             return Results.Ok(await service.UpdateCommentByIdAsync((long)dto.Id, dto));
         });
         
-        group.MapPut("/{id}", async (ICommentService service, CommentRequestDTO dto, long id) =>
+        group.MapPut("/{id}", async (ICommentMicroservice service, CommentRequestDTO dto, long id) =>
         {
             return Results.Ok(await service.UpdateCommentByIdAsync(id, dto));
         });

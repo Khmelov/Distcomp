@@ -1,8 +1,8 @@
 using Additions.Exceptions;
-using CommentService;
+using CommentMicroservice;
+using CommentMicroservice.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
-var connection = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddOpenApi();
 builder.Services.AddCustomServices();

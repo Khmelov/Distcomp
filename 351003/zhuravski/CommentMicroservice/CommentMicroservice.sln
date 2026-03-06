@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommentService", "CommentService.csproj", "{5C35A55E-2452-063E-E8A6-D9530638A15C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommentMicroservice", "CommentMicroservice.csproj", "{58E9E200-6539-7332-9550-42868175E3E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,15 +10,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5C35A55E-2452-063E-E8A6-D9530638A15C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5C35A55E-2452-063E-E8A6-D9530638A15C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5C35A55E-2452-063E-E8A6-D9530638A15C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5C35A55E-2452-063E-E8A6-D9530638A15C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58E9E200-6539-7332-9550-42868175E3E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58E9E200-6539-7332-9550-42868175E3E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58E9E200-6539-7332-9550-42868175E3E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58E9E200-6539-7332-9550-42868175E3E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {169073C4-9519-4788-9398-A1BCADB4F50E}
+		SolutionGuid = {9D0A8F9A-9CF6-4525-85A2-7C37417C1718}
 	EndGlobalSection
 EndGlobal
