@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace Additions.DAO;
 
-public abstract class Model<T> where T : Model<T>
+public abstract class Model<T, X> where T : Model<T, X>
 {
     public long Id {get; set;}
     public virtual T Clone()
@@ -12,11 +12,11 @@ public abstract class Model<T> where T : Model<T>
     }
 
     private static readonly Dictionary<Type, Action<T, T>> copiers = [];
-    private static readonly object copiersLock = new();
+    private static readonly Lock copiersLock = new();
     
     public void CopyTo(T target)
     {
-        var copier = Model<T>.GetCopier();
+        var copier = Model<T, X>.GetCopier();
         copier((T)this, target);
     }
     
@@ -39,7 +39,7 @@ public abstract class Model<T> where T : Model<T>
             if (copiers.TryGetValue(type, out copier))
                 return copier;
             
-            copier = Model<T>.CompileCopier();
+            copier = Model<T, X>.CompileCopier();
             copiers[type] = copier;
             return copier;
         }

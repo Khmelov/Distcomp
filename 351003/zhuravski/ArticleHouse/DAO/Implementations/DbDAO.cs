@@ -1,11 +1,13 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Additions.DAO;
+using ArticleHouse.DAO.Interfaces;
+using ArticleHouse.DAO.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArticleHouse.DAO.Implementations;
 
-public class DbDAO<T> : IBasicDAO<T> where T : Model<T>
+public class DbDAO<T> : ILongIdDAO<T> where T : LongIdModel<T>
 {
     protected readonly ApplicationContext db;
     protected readonly DbSet<T> dbSet;

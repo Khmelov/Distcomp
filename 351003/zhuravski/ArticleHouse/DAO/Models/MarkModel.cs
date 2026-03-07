@@ -6,7 +6,7 @@ namespace ArticleHouse.DAO.Models;
 
 [Table("tbl_mark")]
 [Index(nameof(Name), IsUnique = true)]
-public class MarkModel : Model<MarkModel>
+public class MarkModel : LongIdModel<MarkModel>
 {
     public string Name {get; set;} = default!;
     public List<ArticleMark> ArticleMarks { get; set; } = [];

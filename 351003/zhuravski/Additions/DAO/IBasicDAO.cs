@@ -1,10 +1,10 @@
 namespace Additions.DAO;
 
-public interface IBasicDAO<T> where T : Model<T>
+public interface IBasicDAO<T, X> where T : Model<T, X>
 {
     Task<T[]> GetAllAsync();
     Task<T> AddNewAsync(T model);
-    Task DeleteAsync(long id);
-    Task<T> GetByIdAsync(long id);
+    Task DeleteAsync(X id);
+    Task<T> GetByIdAsync(X id);
     Task<T> UpdateAsync(T model);
 }

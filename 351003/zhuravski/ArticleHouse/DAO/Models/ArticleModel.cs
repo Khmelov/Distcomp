@@ -6,7 +6,7 @@ namespace ArticleHouse.DAO.Models;
 
 [Table("tbl_article")]
 [Index(nameof(Title), IsUnique = true)]
-public class ArticleModel : Model<ArticleModel>
+public class ArticleModel : LongIdModel<ArticleModel>
 {
     public long CreatorId {get; set;}
     public CreatorModel Creator {get; set;} = null!;
