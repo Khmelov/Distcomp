@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArticleHouse.DAO.Implementations;
 
-public class DbMarkDAO : DbDAO<MarkModel, DbSet<MarkModel>>, IMarkDAO
+public class DbMarkDAO : DbDAO<MarkModel>, IMarkDAO
 {
     public DbMarkDAO(ApplicationContext db) : base(db, (x) => x.Marks) {}
 

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArticleHouse.DAO.Implementations;
 
-public class DbArticleDAO : DbDAO<ArticleModel, DbSet<ArticleModel>>, IArticleDAO
+public class DbArticleDAO : DbDAO<ArticleModel>, IArticleDAO
 {
     public DbArticleDAO(ApplicationContext db) : base(db, (x) => x.Articles) {}
 

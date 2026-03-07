@@ -5,17 +5,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ArticleHouse.DAO.Implementations;
 
-public class DbDAO<T, Property> : IBasicDAO<T> where T : Model<T>
+public class DbDAO<T> : IBasicDAO<T> where T : Model<T>
 {
     protected readonly ApplicationContext db;
     protected readonly DbSet<T> dbSet;
 
-    public DbDAO(ApplicationContext db, Expression<Func<ApplicationContext, Property>> propertyFinder) {
+    public DbDAO(ApplicationContext db, Expression<Func<ApplicationContext, DbSet<T>>> propertyFinder) {
         this.db = db;
         dbSet = FindDbSet(propertyFinder);
     }
 
-    private DbSet<T> FindDbSet(Expression<Func<ApplicationContext, Property>> propertyFinder)
+    private DbSet<T> FindDbSet(Expression<Func<ApplicationContext, DbSet<T>>> propertyFinder)
     {
         if (propertyFinder.Body is MemberExpression expression)
         {
