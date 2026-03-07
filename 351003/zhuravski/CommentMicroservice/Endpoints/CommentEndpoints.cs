@@ -13,41 +13,41 @@ public static class CommentEndpoints
     {
         var group = app.MapGroup(GroupPrefix).WithParameterValidation();
 
-        group.MapGet("/", async (ICommentMicroservice service) =>
+        group.MapGet("/", async (ICommentService service) =>
         {
             return Results.Ok(await service.GetAllCommentsAsync());
         });
 
-        group.MapPost("/", async (ICommentMicroservice service, HttpContext context, CommentRequestDTO dto) =>
+        group.MapPost("/", async (ICommentService service, HttpContext context, CommentRequestDTO dto) =>
         {
             CommentResponseDTO responseDTO = await service.CreateCommentAsync(dto);
             string path = UrlRoutines.BuildAbsoluteUrl(context, $"{GroupPrefix}/{responseDTO.Id}");
             return Results.Created(path, responseDTO);
         });
 
-        group.MapDelete("/{id}", async (ICommentMicroservice service, long id) =>
+        group.MapDelete("/{id}", async (ICommentService service, Guid id) =>
         {
             await service.DeleteCommentAsync(id);
             return Results.NoContent();
         });
 
-        group.MapGet("/{id}", async (ICommentMicroservice service, long id) =>
+        group.MapGet("/{id}", async (ICommentService service, Guid id) =>
         {
             return Results.Ok(await service.GetCommentByIdAsync(id));
         });
 
         //Колхоз - и я не одобряю.
         //Qwen тоже не одобряет.
-        group.MapPut("/", async (ICommentMicroservice service, CommentRequestDTO dto) =>
+        group.MapPut("/", async (ICommentService service, CommentRequestDTO dto) =>
         {
             if (null == dto.Id)
             {
                 throw new ValidationException("Comment identifier is missing.");
             }
-            return Results.Ok(await service.UpdateCommentByIdAsync((long)dto.Id, dto));
+            return Results.Ok(await service.UpdateCommentByIdAsync((Guid)dto.Id, dto));
         });
         
-        group.MapPut("/{id}", async (ICommentMicroservice service, CommentRequestDTO dto, long id) =>
+        group.MapPut("/{id}", async (ICommentService service, CommentRequestDTO dto, Guid id) =>
         {
             return Results.Ok(await service.UpdateCommentByIdAsync(id, dto));
         });

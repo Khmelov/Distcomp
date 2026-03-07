@@ -5,7 +5,7 @@ namespace Additions.DAO;
 
 public abstract class Model<T, X> where T : Model<T, X>
 {
-    public long Id {get; set;}
+    public X Id {get; set;} = default!;
     public virtual T Clone()
     {
         return (T)MemberwiseClone();

@@ -4,7 +4,7 @@ namespace CommentMicroservice.Service.DTOs;
 
 public record CommentRequestDTO
 {
-    public long? Id {get; init;} = default!;
+    public Guid? Id {get; init;} = default!;
     public long ArticleId {get; init;} = default!;
     [Required,
     MinLength(2),

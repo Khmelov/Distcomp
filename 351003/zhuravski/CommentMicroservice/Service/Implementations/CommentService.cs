@@ -20,7 +20,7 @@ public class CommentService : BasicService, ICommentService
         return MakeResponseFromModel(result);
     }
 
-    public async Task DeleteCommentAsync(long id)
+    public async Task DeleteCommentAsync(Guid id)
     {
         await InvokeDAOMethod(() => dao.DeleteAsync(id));
     }
@@ -31,13 +31,13 @@ public class CommentService : BasicService, ICommentService
         return [.. daoModels.Select(MakeResponseFromModel)];
     }
 
-    public async Task<CommentResponseDTO> GetCommentByIdAsync(long id)
+    public async Task<CommentResponseDTO> GetCommentByIdAsync(Guid id)
     {
         CommentModel model = await InvokeDAOMethod(() => dao.GetByIdAsync(id));
         return MakeResponseFromModel(model);
     }
 
-    public async Task<CommentResponseDTO> UpdateCommentByIdAsync(long id, CommentRequestDTO dto)
+    public async Task<CommentResponseDTO> UpdateCommentByIdAsync(Guid id, CommentRequestDTO dto)
     {
         CommentModel model = MakeModelFromRequest(dto);
         model.Id = id;
@@ -54,7 +54,7 @@ public class CommentService : BasicService, ICommentService
 
     private static void ShapeModelFromRequest(ref CommentModel model, CommentRequestDTO dto)
     {
-        model.Id = dto.Id ?? 0;
+        model.Id = dto.Id ?? default!;
         model.ArticleId = dto.ArticleId;
         model.Content = dto.Content;
     }
