@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+
+  # ── Databases ──────────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:15
+    container_name: postgres-distcomp
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d distcomp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cassandra:
+    image: cassandra:4
+    container_name: cassandra-distcomp
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: distcomp
+      CASSANDRA_DC: datacenter1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  # ── Microservices ──────────────────────────────────────────────────────────
+
+  discussion:
+    build:
+      context: ./discussion
+      dockerfile: Dockerfile
+    container_name: discussion-distcomp
+    ports:
+      - "24130:24130"
+    environment:
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: "9042"
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    restart: unless-stopped
+
+  publisher:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: publisher-distcomp
+    ports:
+      - "24110:24110"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/distcomp?schema=distcomp
+      DISCUSSION_URL: http://discussion:24130
+      PORT: "24110"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discussion:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend-distcomp
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:24110
+    depends_on:
+      - publisher
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  cassandra_data:
