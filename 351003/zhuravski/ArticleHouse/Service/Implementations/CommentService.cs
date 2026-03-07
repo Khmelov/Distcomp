@@ -6,7 +6,7 @@ using ArticleHouse.Service.Interfaces;
 
 namespace ArticleHouse.Service.Implementations;
 
-public class CommentService : Service, ICommentService
+public class CommentService : BasicService, ICommentService
 {
     private readonly ICommentDAO dao;
     public CommentService(ICommentDAO dao)

@@ -6,7 +6,7 @@ using ArticleHouse.Service.Interfaces;
 
 namespace ArticleHouse.Service.Implementations;
 
-public class MarkService : Service, IMarkService
+public class MarkService : BasicService, IMarkService
 {
     private readonly IMarkDAO dao;
     public MarkService(IMarkDAO dao)

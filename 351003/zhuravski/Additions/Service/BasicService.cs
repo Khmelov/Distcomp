@@ -1,9 +1,8 @@
 using Additions.DAO;
-using Additions.Service;
 
-namespace ArticleHouse.Service.Implementations;
+namespace Additions.Service;
 
-public abstract class Service
+public abstract class BasicService
 {
     protected static async Task InvokeDAOMethod(Func<Task> call)
     {

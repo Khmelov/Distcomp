@@ -6,7 +6,7 @@ using ArticleHouse.Service.Interfaces;
 
 namespace ArticleHouse.Service.Implementations;
 
-public class ArticleService : Service, IArticleService
+public class ArticleService : BasicService, IArticleService
 {
     private readonly IArticleDAO dao;
     private readonly IArticleMarkDAO m2mDAO;

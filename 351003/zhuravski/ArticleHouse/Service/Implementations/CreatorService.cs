@@ -6,7 +6,7 @@ using ArticleHouse.Service.Interfaces;
 
 namespace ArticleHouse.Service.Implementations;
 
-public class CreatorService : Service, ICreatorService
+public class CreatorService : BasicService, ICreatorService
 {
     private readonly ICreatorDAO dao;
 
