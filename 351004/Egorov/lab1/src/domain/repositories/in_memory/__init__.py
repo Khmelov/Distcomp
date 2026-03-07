@@ -1,6 +1,6 @@
-from lab1.src.domain.models import Author, Note, Tag
-from lab1.src.domain.repositories.in_memory.in_memory_topic import InMemoryTopicRepository
-from lab1.src.domain.repositories.interfaces import InMemoryRepository
+from src.domain.models import Author, Note, Tag
+from src.domain.repositories.in_memory.in_memory_topic import InMemoryTopicRepository
+from src.domain.repositories.interfaces import InMemoryRepository
 
 
 class InMemoryAuthorRepository(InMemoryRepository[Author]):

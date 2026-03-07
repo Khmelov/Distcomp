@@ -3,9 +3,9 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from lab1.src.api.v1.dep import get_note_service
-from lab1.src.schemas.note import NoteResponseTo, NoteRequestTo
-from lab1.src.services import NoteService
+from src.api.v1.dep import get_note_service
+from src.schemas.note import NoteResponseTo, NoteRequestTo
+from src.services import NoteService
 
 router = APIRouter(prefix="/notes")
 

@@ -1,8 +1,8 @@
 from functools import lru_cache
 
-from lab1.src.domain.repositories.in_memory import InMemoryAuthorRepository, InMemoryNoteRepository, \
+from src.domain.repositories.in_memory import InMemoryAuthorRepository, InMemoryNoteRepository, \
     InMemoryTopicRepository
-from lab1.src.services import AuthorService, TopicService, NoteService, TagService
+from src.services import AuthorService, TopicService, NoteService, TagService
 
 
 @lru_cache

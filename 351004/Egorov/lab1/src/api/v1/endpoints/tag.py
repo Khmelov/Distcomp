@@ -4,9 +4,9 @@ from typing import List
 from fastapi import APIRouter
 from fastapi.params import Depends
 
-from lab1.src.api.v1.dep import get_tag_service
-from lab1.src.schemas.tag import TagResponseTo, TagRequestTo
-from lab1.src.services import TagService
+from src.api.v1.dep import get_tag_service
+from src.schemas.tag import TagResponseTo, TagRequestTo
+from src.services import TagService
 
 router = APIRouter(prefix="/tags")
 

@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 from starlette.responses import JSONResponse
 
-from lab1.src.core.errors.errors import HttpNotFoundError
+from src.core.errors.errors import HttpNotFoundError
 
 
 def not_found_handler(_, exc: HttpNotFoundError):

@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from lab1.src.domain.models import Topic
-from lab1.src.domain.repositories.interfaces import InMemoryRepository
+from src.domain.models import Topic
+from src.domain.repositories.interfaces import InMemoryRepository
 
 
 class InMemoryTopicRepository(InMemoryRepository[Topic]):

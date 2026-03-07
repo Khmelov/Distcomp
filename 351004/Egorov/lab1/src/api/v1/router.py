@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from lab1.src.api.v1.endpoints import topic, tag, note, author
+from src.api.v1.endpoints import topic, tag, note, author
 
 router_v1 = APIRouter(prefix="/v1.0")
 

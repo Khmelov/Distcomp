@@ -1,1 +1,1 @@
-from lab1.src.api.v1.router import router_v1
+from src.api.v1.router import router_v1
