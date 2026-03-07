@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Additions.DAO;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArticleHouse.DAO.Models;

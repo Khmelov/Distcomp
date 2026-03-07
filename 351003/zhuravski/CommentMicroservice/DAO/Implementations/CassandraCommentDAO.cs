@@ -8,10 +8,12 @@ namespace CommentMicroservice.DAO.Implementations;
 class CassandraCommentDAO : ICommentDAO
 {
     private readonly CassandraContext context;
+    private readonly IArticleDAO articleDAO;
 
-    public CassandraCommentDAO(CassandraContext context)
+    public CassandraCommentDAO(CassandraContext context, IArticleDAO articleDAO)
     {
         this.context = context;
+        this.articleDAO = articleDAO;
         context.Session.Execute(@"
             CREATE KEYSPACE IF NOT EXISTS distcomp 
             WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
@@ -41,6 +43,15 @@ class CassandraCommentDAO : ICommentDAO
 
     public async Task<CommentModel> AddNewAsync(CommentModel model)
     {
+        try
+        {
+            await articleDAO.GetByIdAsync(model.ArticleId);
+        }
+        catch (DAOException)
+        {
+            throw new DAOUpdateException("Mentioned article does not exist.");
+        }
+
         model.Id = Random.Shared.NextInt64(1000000000, long.MaxValue);
 
         var stmt = new SimpleStatement(
@@ -85,6 +96,15 @@ class CassandraCommentDAO : ICommentDAO
 
     public async Task<CommentModel> UpdateAsync(CommentModel model)
     {
+        try
+        {
+            await articleDAO.GetByIdAsync(model.ArticleId);
+        }
+        catch (DAOException)
+        {
+            throw new DAOUpdateException("Mentioned article does not exist.");
+        }
+
         var stmt = new SimpleStatement(
             "UPDATE distcomp.tbl_comments SET article_id = ?, content = ? WHERE id = ?",
             model.ArticleId,

@@ -22,7 +22,13 @@ class RestCommentDAO : ICommentDAO
     public async Task<CommentModel> AddNewAsync(CommentModel model)
     {
         HttpResponseMessage? response = await httpClient.PostAsJsonAsync("api/v1.0/comments", model);
-        response.EnsureSuccessStatusCode();
+        try {
+            response.EnsureSuccessStatusCode();
+        }
+        catch (HttpRequestException)
+        {
+            throw new DAOUpdateException("Object creation failure.");
+        }
         CommentModel? result = await response.Content.ReadFromJsonAsync<CommentModel>();
         if (null == result)
         {

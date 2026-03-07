@@ -3,4 +3,4 @@ using CommentMicroservice.DAO.Models;
 
 namespace CommentMicroservice.DAO.Interfaces;
 
-public interface ICommentDAO : IBasicDAO<CommentModel, long> {}
+public interface ICommentDAO : ILongIdDAO<CommentModel> {}

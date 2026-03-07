@@ -11,6 +11,10 @@ static internal class ServiceProviderExtensions
     {
         collection.AddScoped<ICommentService, CommentService>();
         collection.AddScoped<ICommentDAO, CassandraCommentDAO>();
+        collection.AddHttpClient<IArticleDAO, RestArticleDAO>(client =>
+        {
+            client.BaseAddress = new Uri("http://localhost:24110/");
+        });
         collection.AddScoped<CassandraContext>();
         return collection;
     }
