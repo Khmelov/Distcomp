@@ -66,4 +66,10 @@ class RestCommentDAO : ICommentDAO
         }
         return result;
     }
+
+    public async Task DeleteByArticleId(long articleId)
+    {
+        HttpResponseMessage? response = await httpClient.DeleteAsync($"api/v1.0/comments?articleId={articleId}");
+        response.EnsureSuccessStatusCode();
+    }
 }

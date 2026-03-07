@@ -45,16 +45,6 @@ public class MarkService : BasicService, IMarkService
         return MakeResponseFromModel(result);
     }
 
-    public async Task<long[]> ReserveMarkIdsByNamesAsync(string[] names)
-    {
-        return await InvokeDAOMethod(() => dao.ReserveIdsByNamesAsync(names));
-    }
-
-    public async Task ReleaseLeftMarksByIdsAsync(long[] ids)
-    {
-        await InvokeDAOMethod(() => dao.ReleaseByIdsAsync(ids));
-    }
-
     private static MarkModel MakeModelFromRequest(MarkRequestDTO dto)
     {
         MarkModel result = new();

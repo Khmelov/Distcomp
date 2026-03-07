@@ -10,13 +10,13 @@ public class ArticleService : BasicService, IArticleService
 {
     private readonly IArticleDAO dao;
     private readonly IArticleMarkDAO m2mDAO;
-    private readonly IMarkService markService;
+    private readonly IMarkDAO markDAO;
 
-    public ArticleService(IArticleDAO dao, IArticleMarkDAO m2mDAO, IMarkService markService)
+    public ArticleService(IArticleDAO dao, IArticleMarkDAO m2mDAO, IMarkDAO markDAO)
     {
         this.dao = dao;
         this.m2mDAO = m2mDAO;
-        this.markService = markService;
+        this.markDAO = markDAO;
     }
 
     public async Task<ArticleResponseDTO[]> GetAllArticlesAsync()
@@ -31,13 +31,13 @@ public class ArticleService : BasicService, IArticleService
         long[]? markIds = null;
         if (null != dto.Marks)
         {
-            markIds = await markService.ReserveMarkIdsByNamesAsync(dto.Marks);
+            markIds = await InvokeDAOMethod(() => markDAO.ReserveIdsByNamesAsync(dto.Marks));
         }
         ArticleModel model = MakeModelFromRequest(dto);
         ArticleModel result = await InvokeDAOMethod(() => dao.AddNewAsync(model));
         
         if (null != markIds) {
-            await m2mDAO.LinkArticleWithMarks(result.Id, markIds);
+            await InvokeDAOMethod(() => m2mDAO.LinkArticleWithMarks(result.Id, markIds));
         }
 
         return MakeResponseFromModel(result);
@@ -54,8 +54,11 @@ public class ArticleService : BasicService, IArticleService
         //Какой богомерзкий API.
         var result = await InvokeDAOMethod(() => dao.GetByIdWithMarksAsync(id));
         long[] leftMarkIds = result.Item2;
-        await InvokeDAOMethod(() => dao.DeleteAsync(id));
-        await markService.ReleaseLeftMarksByIdsAsync(leftMarkIds);
+        await InvokeDAOMethod(async () =>
+        {
+            await dao.DeleteAsync(id);
+            await markDAO.ReleaseByIdsAsync(leftMarkIds);
+        });
     }
 
     public async Task<ArticleResponseDTO> UpdateArticleByIdAsync(long id, ArticleRequestDTO dto)
