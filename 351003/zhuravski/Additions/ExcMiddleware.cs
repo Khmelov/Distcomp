@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using Additions.Service;
 using Microsoft.AspNetCore.Http;
 
-namespace Additions.Exceptions;
+namespace Additions;
 
 public class ExcMiddleware
 {

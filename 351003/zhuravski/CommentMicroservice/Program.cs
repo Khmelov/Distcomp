@@ -1,6 +1,13 @@
 using Additions.Exceptions;
+using Cassandra;
 using CommentMicroservice;
 using CommentMicroservice.Endpoints;
+
+Cluster? cluster = Cluster.Builder()
+                                .AddContactPoint("127.0.0.1")
+                                .WithPort(9042)
+                                .Build();
+Cassandra.ISession? session = await cluster.ConnectAsync("distcomp");
 
 var builder = WebApplication.CreateBuilder(args);
 

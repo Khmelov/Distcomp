@@ -1,4 +1,4 @@
-namespace Additions.Exceptions;
+namespace Additions.Service;
 
 public class ServiceException : Exception
 {

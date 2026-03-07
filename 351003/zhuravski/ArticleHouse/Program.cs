@@ -1,4 +1,4 @@
-using Additions.Exceptions;
+using Additions;
 using ArticleHouse;
 using ArticleHouse.Endpoints;
 

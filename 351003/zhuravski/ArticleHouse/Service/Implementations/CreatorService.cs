@@ -1,68 +1,49 @@
-using Additions.Exceptions;
-using ArticleHouse.DAO;
+using Additions.Service;
+using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.DTOs;
 using ArticleHouse.Service.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace ArticleHouse.Service.Implementations;
 
 public class CreatorService : Service, ICreatorService
 {
-    private readonly ApplicationContext db;
+    private readonly ICreatorDAO dao;
 
-    public CreatorService(ApplicationContext db)
+    public CreatorService(ICreatorDAO dao)
     {
-        this.db = db;
+        this.dao = dao;
     }
     public async Task<CreatorResponseDTO[]> GetAllCreatorsAsync()
     {
-        CreatorModel[] models = await db.Creators.ToArrayAsync();
-        return [.. models.Select(MakeResponseFromModel)];
+        CreatorModel[] daoModels = await InvokeDAOMethod(() => dao.GetAllAsync());
+        return [.. daoModels.Select(MakeResponseFromModel)];
     }
 
     public async Task<CreatorResponseDTO> CreateCreatorAsync(CreatorRequestDTO dto)
     {
         CreatorModel model = MakeModelFromRequest(dto);
-        await db.Creators.AddAsync(model);
-        await InvokeDAOMethod(() => db.SaveChangesAsync());
-        return MakeResponseFromModel(model);
+        CreatorModel result = await InvokeDAOMethod(() => dao.AddNewAsync(model));
+        return MakeResponseFromModel(result);
     }
 
     public async Task DeleteCreatorAsync(long id)
     {
-        CreatorModel? model = await db.Creators.FirstOrDefaultAsync(o => o.Id == id);
-        if (null == model)
-        {
-            throw new ServiceObjectNotFoundException();
-        }
-        db.Creators.Remove(model);
-        await InvokeDAOMethod(() => db.SaveChangesAsync());
+        await InvokeDAOMethod(() => dao.DeleteAsync(id));
     }
 
     public async Task<CreatorResponseDTO> GetCreatorByIdAsync(long id)
     {
-        CreatorModel? model = await db.Creators.FirstOrDefaultAsync(o => o.Id == id);
-        if (null == model)
-        {
-            throw new ServiceObjectNotFoundException();
-        }
+        CreatorModel model = await InvokeDAOMethod(() => dao.GetByIdAsync(id));
         return MakeResponseFromModel(model);
     }
 
     public async Task<CreatorResponseDTO> UpdateCreatorByIdAsync(long creatorId, CreatorRequestDTO dto)
     {
-        if (null == dto.Id)
-        {
-            throw new ServiceException();
-        }
-        CreatorModel? model = await db.Creators.FirstOrDefaultAsync(o => o.Id == dto.Id);
-        if (null == model) {
-            throw new ServiceObjectNotFoundException();
-        }
-        ShapeModelFromRequest(ref model, dto);
-        await InvokeDAOMethod(() => db.SaveChangesAsync());
-        return MakeResponseFromModel(model);
+        CreatorModel model = MakeModelFromRequest(dto);
+        model.Id = creatorId;
+        CreatorModel result = await InvokeDAOMethod(() => dao.UpdateAsync(model));
+        return MakeResponseFromModel(result);
     }
 
     private static CreatorModel MakeModelFromRequest(CreatorRequestDTO dto)

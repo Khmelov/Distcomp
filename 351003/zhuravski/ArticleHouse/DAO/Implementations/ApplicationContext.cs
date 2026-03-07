@@ -1,7 +1,7 @@
 using ArticleHouse.DAO.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace ArticleHouse.DAO;
+namespace ArticleHouse.DAO.Implementations;
 
 public class ApplicationContext : DbContext
 {
