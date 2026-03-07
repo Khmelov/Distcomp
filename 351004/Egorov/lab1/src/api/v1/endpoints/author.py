@@ -3,9 +3,9 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from src.api.v1.dep import get_author_service
-from src.schemas.author import AuthorResponseTo, AuthorRequestTo
-from src.services.author import AuthorService
+from lab1.src.api.v1.dep import get_author_service
+from lab1.src.schemas.author import AuthorResponseTo, AuthorRequestTo
+from lab1.src.services.author import AuthorService
 
 router = APIRouter(prefix="/authors")
 

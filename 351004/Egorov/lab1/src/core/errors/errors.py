@@ -1,4 +1,4 @@
-from src.core.constants import ErrorStatus
+from lab1.src.core.constants import ErrorStatus
 
 
 class HttpError(Exception):

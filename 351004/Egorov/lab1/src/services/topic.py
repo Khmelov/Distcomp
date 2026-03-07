@@ -1,10 +1,10 @@
 from typing import List
 
-from src.core.constants import ErrorStatus
-from src.core.errors import HttpNotFoundError, TopicErrorMessage
-from src.domain.models import Topic
-from src.domain.repositories.interfaces import Repository
-from src.schemas.topic import TopicResponseTo, TopicRequestTo
+from lab1.src.core.constants import ErrorStatus
+from lab1.src.core.errors import HttpNotFoundError, TopicErrorMessage
+from lab1.src.domain.models import Topic
+from lab1.src.domain.repositories.interfaces import Repository
+from lab1.src.schemas.topic import TopicResponseTo, TopicRequestTo
 
 
 class TopicService:

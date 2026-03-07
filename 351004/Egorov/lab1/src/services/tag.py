@@ -1,11 +1,11 @@
 from typing import List
 
-from src.core.constants import ErrorStatus
-from src.core.errors import HttpNotFoundError
-from src.core.errors.messages import TagErrorMessage
-from src.domain.models import Tag
-from src.domain.repositories.interfaces import Repository
-from src.schemas.tag import TagResponseTo, TagRequestTo
+from lab1.src.core.constants import ErrorStatus
+from lab1.src.core.errors import HttpNotFoundError
+from lab1.src.core.errors.messages import TagErrorMessage
+from lab1.src.domain.models import Tag
+from lab1.src.domain.repositories.interfaces import Repository
+from lab1.src.schemas.tag import TagResponseTo, TagRequestTo
 
 
 class TagService:

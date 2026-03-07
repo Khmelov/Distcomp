@@ -1,10 +1,10 @@
 from typing import List
 
-from src.core.constants import ErrorStatus
-from src.core.errors import HttpNotFoundError, TopicErrorMessage
-from src.domain.models.author import Author
-from src.domain.repositories.interfaces.base import Repository
-from src.schemas.author import AuthorResponseTo, AuthorRequestTo
+from lab1.src.core.constants import ErrorStatus
+from lab1.src.core.errors import HttpNotFoundError, TopicErrorMessage
+from lab1.src.domain.models.author import Author
+from lab1.src.domain.repositories.interfaces.base import Repository
+from lab1.src.schemas.author import AuthorResponseTo, AuthorRequestTo
 
 
 class AuthorService:

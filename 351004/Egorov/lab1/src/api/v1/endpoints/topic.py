@@ -3,9 +3,9 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from src.api.v1.dep import get_topic_service
-from src.schemas.topic import TopicRequestTo, TopicResponseTo
-from src.services import TopicService
+from lab1.src.api.v1.dep import get_topic_service
+from lab1.src.schemas.topic import TopicRequestTo, TopicResponseTo
+from lab1.src.services import TopicService
 
 router = APIRouter(prefix="/topics")
 
