@@ -25,13 +25,13 @@ public static class CommentEndpoints
             return Results.Created(path, responseDTO);
         });
 
-        group.MapDelete("/{id}", async (ICommentService service, Guid id) =>
+        group.MapDelete("/{id}", async (ICommentService service, long id) =>
         {
             await service.DeleteCommentAsync(id);
             return Results.NoContent();
         });
 
-        group.MapGet("/{id}", async (ICommentService service, Guid id) =>
+        group.MapGet("/{id}", async (ICommentService service, long id) =>
         {
             return Results.Ok(await service.GetCommentByIdAsync(id));
         });
@@ -44,10 +44,10 @@ public static class CommentEndpoints
             {
                 throw new ValidationException("Comment identifier is missing.");
             }
-            return Results.Ok(await service.UpdateCommentByIdAsync((Guid)dto.Id, dto));
+            return Results.Ok(await service.UpdateCommentByIdAsync((long)dto.Id, dto));
         });
         
-        group.MapPut("/{id}", async (ICommentService service, CommentRequestDTO dto, Guid id) =>
+        group.MapPut("/{id}", async (ICommentService service, CommentRequestDTO dto, long id) =>
         {
             return Results.Ok(await service.UpdateCommentByIdAsync(id, dto));
         });

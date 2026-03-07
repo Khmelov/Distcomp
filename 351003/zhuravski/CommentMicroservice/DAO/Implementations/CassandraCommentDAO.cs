@@ -18,7 +18,7 @@ class CassandraCommentDAO : ICommentDAO
         ");
         context.Session.Execute(@"
             CREATE TABLE IF NOT EXISTS distcomp.tbl_comments (
-                id UUID PRIMARY KEY,
+                id BIGINT PRIMARY KEY,
                 article_id BIGINT,
                 content TEXT
             )
@@ -31,7 +31,7 @@ class CassandraCommentDAO : ICommentDAO
             "SELECT id, article_id, content FROM distcomp.tbl_comments"));
         var comments = rs.Select(row => new CommentModel
         {
-            Id = row.GetValue<Guid>("id"),
+            Id = row.GetValue<long>("id"),
             ArticleId = row.GetValue<long>("article_id"),
             Content = row.GetValue<string>("content") ?? string.Empty
         }).ToArray();
@@ -41,8 +41,7 @@ class CassandraCommentDAO : ICommentDAO
 
     public async Task<CommentModel> AddNewAsync(CommentModel model)
     {
-        if (model.Id == Guid.Empty)
-            model.Id = Guid.NewGuid();
+        model.Id = Random.Shared.NextInt64(1000000000, long.MaxValue);
 
         var stmt = new SimpleStatement(
             "INSERT INTO distcomp.tbl_comments (id, article_id, content) VALUES (?, ?, ?)",
@@ -54,13 +53,13 @@ class CassandraCommentDAO : ICommentDAO
         return model;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(long id)
     {
         await context.Session.ExecuteAsync(new SimpleStatement(
             "DELETE FROM distcomp.tbl_comments WHERE id = ?", id));
     }
 
-    public async Task<CommentModel> GetByIdAsync(Guid id)
+    public async Task<CommentModel> GetByIdAsync(long id)
     {
         var rs = await context.Session.ExecuteAsync(new SimpleStatement(
             "SELECT id, article_id, content FROM distcomp.tbl_comments WHERE id = ?", id));
@@ -72,7 +71,7 @@ class CassandraCommentDAO : ICommentDAO
 
         return new CommentModel
         {
-            Id = row.GetValue<Guid>("id"),
+            Id = row.GetValue<long>("id"),
             ArticleId = row.GetValue<long>("article_id"),
             Content = row.GetValue<string>("content") ?? string.Empty
         };
