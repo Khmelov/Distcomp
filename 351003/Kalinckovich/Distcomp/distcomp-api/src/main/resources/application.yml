@@ -1,0 +1,21 @@
+server:
+  port: 24110
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:${DB_PORT:5432}/${DB_NAME:distcomp}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      schema: distcomp
+  r2dbc:
+    url: r2dbc:postgresql://localhost:${DB_PORT:5432}/${DB_NAME:distcomp}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    pool:
+      enabled: true
+      max-size: 20
+      initial-size: 10
+      max-idle-time: 30m
+    properties:
+      shema: distcomp
