@@ -1,4 +1,4 @@
-package com.distcomp.validator.model;
+package com.distcomp.validation.model;
 
 import com.distcomp.errorhandling.model.ValidationError;
 

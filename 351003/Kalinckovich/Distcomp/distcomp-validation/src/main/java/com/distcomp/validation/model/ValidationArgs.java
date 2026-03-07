@@ -1,4 +1,4 @@
-package com.distcomp.validator.model;
+package com.distcomp.validation.model;
 
 import java.util.Collections;
 import java.util.Map;

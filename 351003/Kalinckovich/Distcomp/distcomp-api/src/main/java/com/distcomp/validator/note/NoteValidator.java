@@ -4,9 +4,9 @@ import com.distcomp.data.repository.note.NoteReactiveRepository;
 import com.distcomp.dto.note.NoteCreateRequest;
 import com.distcomp.dto.note.NoteUpdateRequest;
 import com.distcomp.errorhandling.exceptions.BusinessValidationException;
-import com.distcomp.validator.abstraction.BaseValidator;
-import com.distcomp.validator.model.ValidationArgs;
-import com.distcomp.validator.model.ValidationResult;
+import com.distcomp.validation.abstraction.BaseValidator;
+import com.distcomp.validation.model.ValidationArgs;
+import com.distcomp.validation.model.ValidationResult;
 import com.distcomp.validator.topic.TopicValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -21,7 +21,7 @@ public class NoteValidator extends BaseValidator<NoteCreateRequest, NoteUpdateRe
 
     public Mono<Void> validateNoteExists(final Long id) {
         return checkNotNull(id, "id", "ID must not be null")
-                .flatMap(r -> {
+                .flatMap((final ValidationResult r) -> {
                     if (!r.isValid()) {
                         return Mono.error(new BusinessValidationException(r.errors()));
                     }

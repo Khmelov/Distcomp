@@ -1,7 +1,7 @@
-package com.distcomp.validator.abstraction;
+package com.distcomp.validation.abstraction;
 
-import com.distcomp.validator.model.ValidationArgs;
-import com.distcomp.validator.model.ValidationResult;
+import com.distcomp.validation.model.ValidationArgs;
+import com.distcomp.validation.model.ValidationResult;
 import reactor.core.publisher.Mono;
 
 public interface Validator<C, U> {

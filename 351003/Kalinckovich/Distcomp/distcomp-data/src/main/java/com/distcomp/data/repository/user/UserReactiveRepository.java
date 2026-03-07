@@ -16,6 +16,7 @@ public interface UserReactiveRepository extends R2dbcRepository<User, Long> {
 
     Flux<User> findAllBy(Pageable pageable);
 
+
     @Modifying
     @Query("DELETE FROM tbl_user WHERE id = :id")
     Mono<Integer> deleteUserById(@Param("id") Long id);

@@ -1,0 +1,16 @@
+services:
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra-distcomp
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_USER=root
+      - CASSANDRA_PASSWORD=distcomp
+      - CASSANDRA_PASSWORD_ENABLED=true
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    restart: unless-stopped
+
+volumes:
+  cassandra-data:

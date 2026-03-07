@@ -1,8 +1,9 @@
-package com.distcomp.validator.abstraction;
+package com.distcomp.validation.abstraction;
+
 
 
 import com.distcomp.errorhandling.exceptions.BusinessValidationException;
-import com.distcomp.validator.model.ValidationResult;
+import com.distcomp.validation.model.ValidationResult;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;
 
