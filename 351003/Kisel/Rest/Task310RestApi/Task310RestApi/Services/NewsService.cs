@@ -48,13 +48,13 @@ namespace Task310RestApi.Services
         {
             ValidateNewsRequest(newsRequest);
             
-            // Проверяем существование создателя
+            
             if (!await _creatorRepository.ExistsAsync(newsRequest.CreatorId))
             {
                 throw new ValidationException($"Creator not found with id: {newsRequest.CreatorId}", "40002");
             }
 
-            // Проверяем существование меток
+            
             if (newsRequest.LabelIds != null && newsRequest.LabelIds.Any())
             {
                 foreach (var labelId in newsRequest.LabelIds)
