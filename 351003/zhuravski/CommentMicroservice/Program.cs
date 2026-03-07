@@ -1,4 +1,4 @@
-using Additions.Exceptions;
+using Additions;
 using Cassandra;
 using CommentMicroservice;
 using CommentMicroservice.Endpoints;
