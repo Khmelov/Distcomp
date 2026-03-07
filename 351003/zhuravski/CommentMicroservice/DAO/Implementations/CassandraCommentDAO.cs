@@ -55,8 +55,14 @@ class CassandraCommentDAO : ICommentDAO
 
     public async Task DeleteAsync(long id)
     {
-        await context.Session.ExecuteAsync(new SimpleStatement(
-            "DELETE FROM distcomp.tbl_comments WHERE id = ?", id));
+        var rs = await context.Session.ExecuteAsync(
+            new SimpleStatement("DELETE FROM distcomp.tbl_comments WHERE id = ? IF EXISTS", id)
+        );
+        var row = rs.FirstOrDefault();
+        if (row == null || !row.GetValue<bool>("[applied]"))
+        {
+            throw new DAOObjectNotFoundException();
+        }
     }
 
     public async Task<CommentModel> GetByIdAsync(long id)

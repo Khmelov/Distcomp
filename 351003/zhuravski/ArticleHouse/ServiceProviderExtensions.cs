@@ -17,7 +17,10 @@ static internal class ServiceProviderExtensions
         collection.AddScoped<IArticleDAO, DbArticleDAO>();
 
         collection.AddScoped<ICommentService, CommentService>();
-        collection.AddScoped<ICommentDAO, DbCommentDAO>();
+        collection.AddHttpClient<ICommentDAO, RestCommentDAO>(client =>
+        {
+            client.BaseAddress = new Uri("http://localhost:24130/");
+        });
 
         collection.AddScoped<IMarkService, MarkService>();
         collection.AddScoped<IMarkDAO, DbMarkDAO>();
