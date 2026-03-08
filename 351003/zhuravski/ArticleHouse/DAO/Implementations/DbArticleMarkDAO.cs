@@ -14,7 +14,7 @@ class DbArticleMarkDAO : IArticleMarkDAO
         this.db = db;
     }
 
-    public async Task LinkArticleWithMarks(long articleId, long[] markIds)
+    public async Task LinkArticleWithMarksAsync(long articleId, long[] markIds)
     {
         foreach (long markId in markIds)
         {

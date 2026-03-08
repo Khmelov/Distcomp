@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Additions;
 using CommentMicroservice.Service.DTOs;
 using CommentMicroservice.Service.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CommentMicroservice.Endpoints;
 
@@ -31,6 +32,12 @@ public static class CommentEndpoints
             return Results.NoContent();
         });
 
+        group.MapDelete("/", async (ICommentService service, [FromQuery] long articleId) =>
+        {
+            await service.DeleteCommentsByArticleIdAsync(articleId);
+            return Results.NoContent();
+        });
+
         group.MapGet("/{id}", async (ICommentService service, long id) =>
         {
             return Results.Ok(await service.GetCommentByIdAsync(id));
@@ -51,5 +58,7 @@ public static class CommentEndpoints
         {
             return Results.Ok(await service.UpdateCommentByIdAsync(id, dto));
         });
+
+
     }
 }

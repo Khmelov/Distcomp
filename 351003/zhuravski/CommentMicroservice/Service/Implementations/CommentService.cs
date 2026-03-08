@@ -68,4 +68,9 @@ public class CommentService : BasicService, ICommentService
             Content = model.Content
         };
     }
+
+    public async Task DeleteCommentsByArticleIdAsync(long articleId)
+    {
+        await InvokeDAOMethod(() => dao.DeleteByArticleIdAsync(articleId));
+    }
 }

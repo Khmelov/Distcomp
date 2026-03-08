@@ -2,5 +2,5 @@ namespace ArticleHouse.DAO.Interfaces;
 
 public interface IArticleMarkDAO
 {
-    Task LinkArticleWithMarks(long articleId, long[] markIds);
+    Task LinkArticleWithMarksAsync(long articleId, long[] markIds);
 }

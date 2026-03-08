@@ -11,12 +11,14 @@ public class ArticleService : BasicService, IArticleService
     private readonly IArticleDAO dao;
     private readonly IArticleMarkDAO m2mDAO;
     private readonly IMarkDAO markDAO;
+    private readonly ICommentDAO commentDAO;
 
-    public ArticleService(IArticleDAO dao, IArticleMarkDAO m2mDAO, IMarkDAO markDAO)
+    public ArticleService(IArticleDAO dao, IArticleMarkDAO m2mDAO, IMarkDAO markDAO, ICommentDAO commentDAO)
     {
         this.dao = dao;
         this.m2mDAO = m2mDAO;
         this.markDAO = markDAO;
+        this.commentDAO = commentDAO;
     }
 
     public async Task<ArticleResponseDTO[]> GetAllArticlesAsync()
@@ -37,7 +39,7 @@ public class ArticleService : BasicService, IArticleService
         ArticleModel result = await InvokeDAOMethod(() => dao.AddNewAsync(model));
         
         if (null != markIds) {
-            await InvokeDAOMethod(() => m2mDAO.LinkArticleWithMarks(result.Id, markIds));
+            await InvokeDAOMethod(() => m2mDAO.LinkArticleWithMarksAsync(result.Id, markIds));
         }
 
         return MakeResponseFromModel(result);
@@ -57,6 +59,7 @@ public class ArticleService : BasicService, IArticleService
         await InvokeDAOMethod(async () =>
         {
             await dao.DeleteAsync(id);
+            await commentDAO.DeleteByArticleIdAsync(id);
             await markDAO.ReleaseByIdsAsync(leftMarkIds);
         });
     }

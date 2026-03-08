@@ -4,5 +4,5 @@ namespace ArticleHouse.DAO.Interfaces;
 
 public interface ICommentDAO : ILongIdDAO<CommentModel>
 {
-    Task DeleteByArticleId(long articleId);
+    Task DeleteByArticleIdAsync(long articleId);
 }
