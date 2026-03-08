@@ -1,12 +1,17 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.requests.MarkRequestTo;
+import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.dto.responses.MarkResponseTo;
 import com.example.demo.exception.DuplicateException;
 import com.example.demo.exception.NotFoundException;
 import com.example.demo.model.Mark;
 import com.example.demo.repository.MarkRepository;
+import com.example.demo.specification.MarkSpecifications;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,10 +39,17 @@ public class MarkService {
         return mapper.toMarkResponse(saved);
     }
 
-    public List<MarkResponseTo> findAll() {
-        return repository.findAll().stream()
+    public List<MarkResponseTo> findAll(String name) {
+        Specification<Mark> spec = MarkSpecifications.withFilters(name);
+        return repository.findAll(spec).stream()
                 .map(mapper::toMarkResponse)
                 .collect(Collectors.toList());
+    }
+
+    public Page<MarkResponseTo> findAll(Pageable pageable, String name) {
+        Specification<Mark> spec = MarkSpecifications.withFilters(name);
+        return repository.findAll(spec, pageable)
+                .map(mapper::toMarkResponse);
     }
 
     public MarkResponseTo findById(Long id) {

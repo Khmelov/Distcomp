@@ -34,8 +34,27 @@ public class MessageController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MessageResponseTo>> findAll() {
-        return ResponseEntity.ok(messageService.findAll());
+    public ResponseEntity<?> findAll(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "id,asc") String sort,
+            @RequestParam(required = false) String content,
+            @RequestParam(required = false) Long issueId
+            ) {
+        if (page != null && size != null) {
+            Pageable pageable = PageRequest.of(page, size, parseSort(sort));
+            return ResponseEntity.ok(messageService.findAll(pageable, content, issueId));
+        } else {
+            return ResponseEntity.ok(messageService.findAll(content, issueId));
+        }
+    }
+
+    private Sort parseSort(String sort) {
+        String[] parts = sort.split(",");
+        String field = parts[0];
+        Sort.Direction direction = parts.length > 1 && "desc".equalsIgnoreCase(parts[1])
+                ? Sort.Direction.DESC : Sort.Direction.ASC;
+        return Sort.by(direction, field);
     }
 
     @GetMapping("/{id}")

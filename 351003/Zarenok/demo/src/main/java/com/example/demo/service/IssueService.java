@@ -11,10 +11,12 @@ import com.example.demo.model.Mark;
 import com.example.demo.repository.AuthorRepository;
 import com.example.demo.repository.IssueRepository;
 import com.example.demo.repository.MarkRepository;
+import com.example.demo.specification.IssueSpecifications;
 import jakarta.transaction.Transactional;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
@@ -73,10 +75,17 @@ public class IssueService {
         return mapper.toIssueResponse(issue);
     }
 
-    public List<IssueResponseTo> findAll() {
-        return repository.findAll().stream()
+    public List<IssueResponseTo> findAll(String title, String content, Long authorId, String markName) {
+        Specification<Issue> spec = IssueSpecifications.withFilters(title, content, authorId, markName);
+        return repository.findAll(spec).stream()
                 .map(mapper::toIssueResponse)
                 .collect(Collectors.toList());
+    }
+
+    public Page<IssueResponseTo> findAll(Pageable pageable, String title, String content, Long authorId, String markName) {
+        Specification<Issue> spec = IssueSpecifications.withFilters(title, content, authorId, markName);
+        return repository.findAll(spec, pageable)
+                .map(mapper::toIssueResponse);
     }
 
     public IssueResponseTo update(Long id, IssueRequestTo dto) {

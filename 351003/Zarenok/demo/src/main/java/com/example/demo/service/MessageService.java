@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.requests.MessageRequestTo;
+import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.dto.responses.MarkResponseTo;
 import com.example.demo.dto.responses.MessageResponseTo;
 import com.example.demo.exception.DuplicateException;
@@ -9,10 +10,12 @@ import com.example.demo.model.Issue;
 import com.example.demo.model.Message;
 import com.example.demo.repository.IssueRepository;
 import com.example.demo.repository.MessageRepository;
+import com.example.demo.specification.MessageSpecifications;
 import jakarta.transaction.Transactional;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -76,10 +79,17 @@ public class MessageService {
         repository.deleteById(id);
     }
 
-    public List<MessageResponseTo> findAll() {
-        return repository.findAll().stream()
+    public List<MessageResponseTo> findAll(String content, Long issueId) {
+        Specification<Message> spec = MessageSpecifications.withFilters(content, issueId);
+        return repository.findAll(spec).stream()
                 .map(mapper::toMessageResponse)
                 .collect(Collectors.toList());
+    }
+
+    public Page<MessageResponseTo> findAll(Pageable pageable, String content, Long issueId) {
+        Specification<Message> spec = MessageSpecifications.withFilters(content, issueId);
+        return repository.findAll(spec, pageable)
+                .map(mapper::toMessageResponse);
     }
 
     public MessageResponseTo findById(Long id) {

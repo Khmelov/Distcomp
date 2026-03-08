@@ -34,8 +34,28 @@ public class AuthorController {
 
     //READ ALL - GET /authors
     @GetMapping
-    public ResponseEntity<List<AuthorResponseTo>> findAll() {
-        return ResponseEntity.ok(authorService.findAll());
+    public ResponseEntity<?> findAll(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "id,asc") String sort,
+            @RequestParam(required = false) String login,
+            @RequestParam(required = false) String firstname,
+            @RequestParam(required = false) String lastname) {
+
+        if (page != null && size != null) {
+            Pageable pageable = PageRequest.of(page, size, parseSort(sort));
+            return ResponseEntity.ok(authorService.findAll(pageable, login, firstname, lastname));
+        } else {
+            return ResponseEntity.ok(authorService.findAll(login, firstname, lastname));
+        }
+    }
+
+    private Sort parseSort(String sort) {
+        String[] parts = sort.split(",");
+        String field = parts[0];
+        Sort.Direction direction = parts.length > 1 && "desc".equalsIgnoreCase(parts[1])
+                ? Sort.Direction.DESC : Sort.Direction.ASC;
+        return Sort.by(direction, field);
     }
 
     //READ BY ID - GET /authors/1
