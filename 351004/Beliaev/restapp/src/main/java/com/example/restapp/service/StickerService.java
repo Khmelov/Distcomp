@@ -8,19 +8,22 @@ import com.example.restapp.model.Sticker;
 import com.example.restapp.repository.StickerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class StickerService {
     private final StickerRepository repository;
     private final StickerMapper mapper;
 
+    @Transactional
     public StickerResponseTo create(StickerRequestTo request) {
         Sticker sticker = mapper.toEntity(request);
-        Sticker saved = repository.save(sticker);
+        Sticker saved = repository.saveAndFlush(sticker);
         return mapper.toResponse(saved);
     }
 
@@ -36,17 +39,20 @@ public class StickerService {
                 .orElseThrow(() -> new EntityNotFoundException("Sticker not found with id: " + id));
     }
 
+    @Transactional
     public StickerResponseTo update(Long id, StickerRequestTo request) {
         Sticker sticker = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Sticker not found with id: " + id));
         mapper.updateEntityFromDto(request, sticker);
-        repository.update(sticker);
-        return mapper.toResponse(sticker);
+        Sticker saved = repository.save(sticker);
+        return mapper.toResponse(saved);
     }
 
+    @Transactional
     public void delete(Long id) {
-        if (!repository.deleteById(id)) {
+        if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Sticker not found with id: " + id);
         }
+        repository.deleteById(id);
     }
 }

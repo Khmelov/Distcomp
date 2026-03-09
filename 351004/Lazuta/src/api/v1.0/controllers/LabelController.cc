@@ -2,6 +2,9 @@
 #include "LabelController.h"
 #include <iostream>
 
+using namespace myapp;
+using namespace myapp::dto;
+
 LabelController::LabelController(std::unique_ptr<LabelService> service)
 {
     m_service = std::move(service);

@@ -1,57 +1,81 @@
-using ArticleHouse.DAO.Interfaces;
+using ArticleHouse.DAO;
 using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.DTOs;
+using ArticleHouse.Service.Exceptions;
 using ArticleHouse.Service.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace ArticleHouse.Service.Implementations;
 
 public class CommentService : Service, ICommentService
 {
-    private readonly ICommentDAO commentDAO;
-    public CommentService(ICommentDAO commentDAO)
+    private readonly ApplicationContext db;
+    public CommentService(ApplicationContext db)
     {
-        this.commentDAO = commentDAO;
+        this.db = db;
     }
     public async Task<CommentResponseDTO> CreateCommentAsync(CommentRequestDTO dto)
     {
         CommentModel model = MakeModelFromRequest(dto);
-        CommentModel result = await InvokeDAOMethod(() => commentDAO.AddNewAsync(model));
-        return MakeResponseFromModel(result);
+        await db.Comments.AddAsync(model);
+        await InvokeDAOMethod(() => db.SaveChangesAsync());
+        return MakeResponseFromModel(model);
     }
 
     public async Task DeleteCommentAsync(long id)
     {
-        await InvokeDAOMethod(() => commentDAO.DeleteAsync(id));
+        CommentModel? model = await db.Comments.FirstOrDefaultAsync(o => o.Id == id);
+        if (null == model)
+        {
+            throw new ServiceObjectNotFoundException();
+        }
+        db.Comments.Remove(model);
+        await InvokeDAOMethod(() => db.SaveChangesAsync());
     }
 
     public async Task<CommentResponseDTO[]> GetAllCommentsAsync()
     {
-        CommentModel[] daoModels = await InvokeDAOMethod(() => commentDAO.GetAllAsync());
-        return [.. daoModels.Select(MakeResponseFromModel)];
+        CommentModel[] models = await db.Comments.ToArrayAsync();
+        return [.. models.Select(MakeResponseFromModel)];
     }
 
     public async Task<CommentResponseDTO> GetCommentByIdAsync(long id)
     {
-        CommentModel model = await InvokeDAOMethod(() => commentDAO.GetByIdAsync(id));
+        CommentModel? model = await db.Comments.FirstOrDefaultAsync(o => o.Id == id);
+        if (null == model)
+        {
+            throw new ServiceObjectNotFoundException();
+        }
         return MakeResponseFromModel(model);
     }
 
     public async Task<CommentResponseDTO> UpdateCommentByIdAsync(long id, CommentRequestDTO dto)
     {
-        CommentModel model = MakeModelFromRequest(dto);
-        model.Id = id;
-        CommentModel result = await InvokeDAOMethod(() => commentDAO.UpdateAsync(model));
-        return MakeResponseFromModel(result);
+        if (null == dto.Id)
+        {
+            throw new ServiceException();
+        }
+        CommentModel? model = await db.Comments.FirstOrDefaultAsync(o => o.Id == dto.Id);
+        if (null == model) {
+            throw new ServiceObjectNotFoundException();
+        }
+        ShapeModelFromRequest(ref model, dto);
+        await InvokeDAOMethod(() => db.SaveChangesAsync());
+        return MakeResponseFromModel(model);
     }
 
     private static CommentModel MakeModelFromRequest(CommentRequestDTO dto)
     {
-        return new CommentModel()
-        {
-            Id = dto.Id ?? 0,
-            ArticleId = dto.ArticleId,
-            Content = dto.Content
-        };
+        CommentModel result = new();
+        ShapeModelFromRequest(ref result, dto);
+        return result;
+    }
+
+    private static void ShapeModelFromRequest(ref CommentModel model, CommentRequestDTO dto)
+    {
+        model.Id = dto.Id ?? 0;
+        model.ArticleId = dto.ArticleId;
+        model.Content = dto.Content;
     }
 
     private static CommentResponseDTO MakeResponseFromModel(CommentModel model)
