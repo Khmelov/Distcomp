@@ -1,1 +1,1 @@
-from src.domain.models.models import (Author, Tag, Topic, Note, Base)
+from src.domain.models.models import (Author, Tag, Topic, Base)

@@ -2,7 +2,7 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.repositories.postgresql import TagRepository
+from src.domain.repositories import TagRepository
 from src.schemas.tag import TagResponseTo, TagRequestTo
 
 

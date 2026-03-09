@@ -20,14 +20,6 @@ class Author(Base):
     firstname: Mapped[str] = mapped_column(String(64),nullable=False)
     lastname: Mapped[str] = mapped_column(String(64),nullable=False)
 
-
-class Note(Base):
-    __tablename__ = "tbl_note"
-
-    content: Mapped[str] = mapped_column(Text, nullable=False)
-    topic_id: Mapped[int] = mapped_column(ForeignKey("tbl_topic.id"), nullable=False)
-
-
 topic_tag_association = Table(
     "tbl_topic_tag",
     Base.metadata,

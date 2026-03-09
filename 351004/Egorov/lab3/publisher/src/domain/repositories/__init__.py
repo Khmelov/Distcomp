@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.models import Topic, Tag, Note, Author
+from src.domain.models import Topic, Tag, Author
 from src.domain.repositories.postgresql import SqlAlchemyRepository
 
 
@@ -48,10 +48,6 @@ class TagRepository(SqlAlchemyRepository[Tag]):
             await self.session.flush()
 
         return list(existing_tags) + new_tags
-
-class NoteRepository(SqlAlchemyRepository[Note]):
-    def __init__(self, session: AsyncSession):
-        super().__init__(session, Note)
 
 class AuthorRepository(SqlAlchemyRepository[Author]):
     def __init__(self, session: AsyncSession):

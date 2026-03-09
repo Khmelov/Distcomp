@@ -2,7 +2,7 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.domain.repositories.postgresql import AuthorRepository
+from src.domain.repositories import AuthorRepository
 from src.schemas.author import AuthorResponseTo, AuthorRequestTo
 
 
