@@ -19,7 +19,6 @@ namespace Infrastructe.ApplicationDbContext
 
         public DbSet<Author> Editor => Set<Author>();
         public DbSet<Issue> Note => Set<Issue>();
-        public DbSet<Comment> Story => Set<Comment>();
         public DbSet<Marker> Tag => Set<Marker>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -20,6 +20,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Application\Application.csproj" />
+      <ProjectReference Include="..\CassandraRepository\CassandraRepository.csproj" />
       <ProjectReference Include="..\Infrastructe\Infrastructe.csproj" />
     </ItemGroup>
 
