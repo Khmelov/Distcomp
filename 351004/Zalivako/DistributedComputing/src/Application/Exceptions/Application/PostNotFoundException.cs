@@ -1,4 +1,4 @@
-﻿namespace Application.Exceptions
+﻿namespace Application.Exceptions.Application
 {
     public class PostNotFoundException : Exception
     {
