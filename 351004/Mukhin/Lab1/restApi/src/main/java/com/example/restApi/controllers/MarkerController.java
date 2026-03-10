@@ -13,6 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1.0/markers")
 public class MarkerController {
+
     private final MarkerService markerService;
 
     public MarkerController(MarkerService markerService) {
@@ -20,8 +21,11 @@ public class MarkerController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MarkerResponseTo>> getAll() {
-        return ResponseEntity.ok(markerService.getAll());
+    public ResponseEntity<List<MarkerResponseTo>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size,
+            @RequestParam(defaultValue = "id") String sort) {
+        return ResponseEntity.ok(markerService.getAll(page, size, sort).getContent());
     }
 
     @GetMapping("/{id}")

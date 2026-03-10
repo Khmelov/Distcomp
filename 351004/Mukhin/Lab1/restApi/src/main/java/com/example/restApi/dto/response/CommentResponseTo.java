@@ -2,7 +2,10 @@ package com.example.restApi.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.time.LocalDateTime;
+
 public class CommentResponseTo {
+
     @JsonProperty("id")
     private Long id;
 
@@ -11,6 +14,12 @@ public class CommentResponseTo {
 
     @JsonProperty("content")
     private String content;
+
+    @JsonProperty("created")
+    private LocalDateTime created;
+
+    @JsonProperty("modified")
+    private LocalDateTime modified;
 
     public Long getId() {
         return id;
@@ -34,5 +43,21 @@ public class CommentResponseTo {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    public void setCreated(LocalDateTime created) {
+        this.created = created;
+    }
+
+    public LocalDateTime getModified() {
+        return modified;
+    }
+
+    public void setModified(LocalDateTime modified) {
+        this.modified = modified;
     }
 }

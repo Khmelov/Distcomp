@@ -1,81 +1,33 @@
 #pragma once
 
 #include <memory>
-#include <dao/DAO.h>
-#include <entities/Post.h>
+#include <vector>
+
 #include <dto/responses/PostResponseTo.h>
 #include <dto/requests/PostRequestTo.h>
-#include <mapping/Mapper.h>
-#include <exceptions/NotFoundException.h>
-#include <exceptions/DatabaseException.h>
+
+namespace myapp
+{
+
+class PostRepository;
+class IssueRepository;
 
 class PostService 
 {
 private:
-    std::unique_ptr<DAO<::Post>> m_dao;
+    std::shared_ptr<PostRepository> m_dao;
+    std::shared_ptr<IssueRepository> m_issueRepository;
     
 public:
-    PostService(std::unique_ptr<DAO<::Post>> storage): m_dao(std::move(storage)) 
-    {
-
-    }
-        
-    PostResponseTo Create(const PostRequestTo& request) 
-    {
-        ::Post entity = Mapper::ToEntity(request);
-        auto id = m_dao->Create(entity);
-        std::optional<::Post> newEntity = m_dao->GetByID(id);
-
-        if (!newEntity)
-        {
-            throw DatabaseException("Failed to retrieve created post");
-        }
-
-        return Mapper::ToResponse(newEntity.value());
-    }
-
-    PostResponseTo Read(uint64_t id) 
-    {
-        std::optional<::Post> entity = m_dao->GetByID(id);
-
-        if (!entity)
-        {
-            throw NotFoundException("Post not found");
-        }
-
-        return Mapper::ToResponse(entity.value());
-    }
-
-    PostResponseTo Update(const PostRequestTo& request, uint64_t id) 
-    {
-        ::Post entity = Mapper::ToEntity(request);    
-
-        if (!m_dao->Update(id, entity))
-        {
-            throw NotFoundException("Post not found for update");
-        }
-
-        std::optional<::Post> newEntity = m_dao->GetByID(id);
-
-        if (!newEntity)
-        {
-            throw DatabaseException("Failed to retrieve updated post");
-        }
-
-        return Mapper::ToResponse(newEntity.value());
-    }
-
-    bool Delete(uint64_t id)
-    {
-        if (!m_dao->Delete(id))
-        {
-            throw NotFoundException("Post not found for deletion");
-        }
-        return true;
-    }
-
-    std::vector<PostResponseTo> GetAll()
-    {
-        return Mapper::ToResponseList(m_dao->ReadAll());
-    }
+    PostService(
+        std::shared_ptr<PostRepository> storage,
+        std::shared_ptr<IssueRepository> issueRepository);
+    
+    dto::PostResponseTo Create(const dto::PostRequestTo& request);
+    dto::PostResponseTo Read(int64_t id);
+    dto::PostResponseTo Update(const dto::PostRequestTo& request, int64_t id);
+    bool Delete(int64_t id);
+    std::vector<dto::PostResponseTo> GetAll();
 };
+
+}
