@@ -1,6 +1,4 @@
-﻿version: '3.9'
-
-services:
+﻿services:
   postgres:
     image: postgres:16
     container_name: news-db
@@ -10,3 +8,14 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
+  
+  mongo:
+    image: mongo:7
+    container_name: discussion-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

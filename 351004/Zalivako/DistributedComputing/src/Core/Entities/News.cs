@@ -18,6 +18,6 @@
 
         public List<Marker> Markers { get; set; } = [];
 
-        public List<Post>? Posts { get; set; }
+        // public List<Post>? Posts { get; set; }
     }
 }

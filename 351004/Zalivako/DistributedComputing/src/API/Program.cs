@@ -1,7 +1,6 @@
 using Application.Interfaces;
 using Application.MappingProfiles;
 using Application.Services;
-using Infrastructure.Persistence.InMemory;
 using Infrastructure.Persistence.EFCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,6 +29,13 @@ namespace API
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(connectionString)
             );
+
+            // add microservices
+            var discussionUrl = builder.Configuration["DiscussionService:BaseUrl"];
+            builder.Services.AddHttpClient("discussion", client =>
+            {
+                client.BaseAddress = new Uri(discussionUrl!);
+            });
 
             builder.Services.AddScoped<INewsRepository, NewsEfRepository>();
             builder.Services.AddScoped<IEditorRepository, EditorEfRepository>();

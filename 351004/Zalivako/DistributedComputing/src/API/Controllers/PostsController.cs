@@ -1,7 +1,5 @@
 ﻿using Application.DTOs.Requests;
 using Application.DTOs.Responses;
-using Application.Exceptions.Application;
-using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -10,147 +8,158 @@ namespace API.Controllers
     [Route("api/v1.0/[controller]")]
     public class PostsController : ControllerBase
     {
-        private readonly IPostService _postService;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<PostsController> _logger;
 
-        public PostsController(IPostService postService, ILogger<PostsController> logger)
+        public PostsController(
+            IHttpClientFactory httpClientFactory,
+            ILogger<PostsController> logger)
         {
-            _postService = postService;
+            _httpClientFactory = httpClientFactory;
             _logger = logger;
+        }
+
+        private HttpClient CreateClient()
+        {
+            return _httpClientFactory.CreateClient("discussion");
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(PostResponseTo), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<PostResponseTo>> CreatePost([FromBody] PostRequestTo createPostRequest)
+        public async Task<ActionResult<PostResponseTo>> CreatePost(
+            [FromBody] PostRequestTo createPostRequest)
         {
             try
             {
-                _logger.LogInformation("Creating post {request}", createPostRequest);
+                _logger.LogInformation("Forwarding create post request");
 
-                PostResponseTo createdPost = await _postService.CreatePost(createPostRequest);
+                var client = CreateClient();
+
+                var response = await client.PostAsJsonAsync("/api/v1.0/posts", createPostRequest);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return StatusCode((int)response.StatusCode);
+                }
+
+                var createdPost = await response.Content.ReadFromJsonAsync<PostResponseTo>();
 
                 return CreatedAtAction(
-                    nameof(CreatePost),
-                    new { id = createdPost.Id },
-                    createdPost
-                );
-            }
-            catch (PostAlreadyExistsException ex)
-            {
-                _logger.LogError(ex, "Post already exists");
-                return StatusCode(403);
-            }
-            catch (ReferenceException)
-            {
-                return StatusCode(404);
+                    nameof(GetPostById),
+                    new { id = createdPost!.Id },
+                    createdPost);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating post");
-                return StatusCode(500, "An error occurred while creating the post");
+                return StatusCode(500);
             }
         }
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<PostResponseTo>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<IEnumerable<PostResponseTo>>> GetAllPosts()
         {
             try
             {
-                _logger.LogInformation("Getting all posts");
+                _logger.LogInformation("Forwarding get all posts");
 
-                IEnumerable<PostResponseTo> posts = await _postService.GetAllPosts();
+                var client = CreateClient();
+
+                var posts = await client.GetFromJsonAsync<IEnumerable<PostResponseTo>>("/api/v1.0/posts");
 
                 return Ok(posts);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting all posts");
-                return StatusCode(500, "An error occurred while retrieving posts");
+                _logger.LogError(ex, "Error getting posts");
+                return StatusCode(500);
             }
         }
 
         [HttpGet("{id:long}")]
         [ProducesResponseType(typeof(PostResponseTo), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<PostResponseTo>> GetPostById([FromRoute] long id)
+        public async Task<ActionResult<PostResponseTo>> GetPostById(long id)
         {
             try
             {
-                _logger.LogInformation("Getting post by id: {Id}", id);
+                _logger.LogInformation("Forwarding get post {Id}", id);
 
-                var getPostRequest = new PostRequestTo { Id = id };
-                PostResponseTo post = await _postService.GetPost(getPostRequest);
+                var client = CreateClient();
+
+                var response = await client.GetAsync($"/api/v1.0/posts/{id}");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return NotFound();
+                }
+
+                var post = await response.Content.ReadFromJsonAsync<PostResponseTo>();
 
                 return Ok(post);
             }
-            catch (NewNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Post not found with id: {Id}", id);
-                return NotFound($"Post with id {id} not found");
-            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting post by id: {Id}", id);
-                return StatusCode(500, "An error occurred while retrieving the post");
+                _logger.LogError(ex, "Error getting post");
+                return StatusCode(500);
             }
         }
 
+        [HttpPut("{id:long}")]
         [ProducesResponseType(typeof(PostResponseTo), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<PostResponseTo>> UpdateNews(
+        public async Task<ActionResult<PostResponseTo>> UpdatePost(
+            long id,
             [FromBody] PostRequestTo updatePostRequest)
         {
             try
             {
-                _logger.LogInformation("Updating post with id: {Id}", updatePostRequest.Id);
+                _logger.LogInformation("Forwarding update post {Id}", id);
 
-                var updatedPost = await _postService.UpdatePost(updatePostRequest);
+                var client = CreateClient();
 
-                return Ok(updatedPost);
-            }
-            catch (NewNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Post not found for update with id: {Id}", updatePostRequest.Id);
-                return NotFound($"Post with id {updatePostRequest.Id} not found");
+                var response = await client.PutAsJsonAsync(
+                    $"/api/v1.0/posts/{id}",
+                    updatePostRequest);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return NotFound();
+                }
+
+                var post = await response.Content.ReadFromJsonAsync<PostResponseTo>();
+
+                return Ok(post);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating post with id: {Id}", updatePostRequest.Id);
-                return StatusCode(500, "An error occurred while updating the post");
+                _logger.LogError(ex, "Error updating post");
+                return StatusCode(500);
             }
         }
 
         [HttpDelete("{id:long}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> DeletePost([FromRoute] long id)
+        public async Task<IActionResult> DeletePost(long id)
         {
             try
             {
-                _logger.LogInformation("Deleting post with id: {Id}", id);
+                _logger.LogInformation("Forwarding delete post {Id}", id);
 
-                var deletePostRequest = new PostRequestTo { Id = id };
-                await _postService.DeletePost(deletePostRequest);
+                var client = CreateClient();
+
+                var response = await client.DeleteAsync($"/api/v1.0/posts/{id}");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return NotFound();
+                }
 
                 return NoContent();
             }
-            catch (PostNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Post not found for deletion with id: {Id}", id);
-                return NotFound();
-            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting post with id: {Id}", id);
-                return StatusCode(500, "An error occurred while deleting the post");
+                _logger.LogError(ex, "Error deleting post");
+                return StatusCode(500);
             }
         }
     }

@@ -12,9 +12,9 @@ namespace Infrastructure.Persistence.EFCore
 
         public async Task DeleteMarkersWithoutNews()
         {
-            var emptyMarkers = await _dbSet.Where(m => m.News.Count == 0).ToListAsync();
-            _dbSet.RemoveRange(emptyMarkers);
-            await _dbContext.SaveChangesAsync();
+            //var emptyMarkers = await _dbSet.Where(m => m.News.Count == 0).ToListAsync();
+            //_dbSet.RemoveRange(emptyMarkers);
+            //await _dbContext.SaveChangesAsync();
         }
     }
 }

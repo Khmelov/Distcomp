@@ -5,6 +5,6 @@
         public string Name { get; set; } = name;
 
         // navigation
-        public List<News> News { get; set; }
+        public List<News> News { get; set; } = [];
     }
 }
