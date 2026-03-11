@@ -6,6 +6,8 @@ public class Note : Entity
 
     public string Content { get; set; } = string.Empty;
 
+    public string Country { get; set; } = string.Empty;
+    
     // lookup object
     public News? News { get; set; }
    

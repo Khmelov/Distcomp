@@ -36,6 +36,15 @@ builder.Services.AddDbContext<RestServiceDbContext>(options =>
     options.UseNpgsql(connectionString)
 );
 
+// add discussion service client
+var discussionServiceUrl = builder.Configuration["DiscussionService:BaseUrl"];
+builder.Services.AddHttpClient("discussion", client =>
+{
+    client.BaseAddress = new Uri(discussionServiceUrl!);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+
 // register postgres db repositories
 builder.Services.AddScoped<INewsRepository, DbNewsRepository>();
 builder.Services.AddScoped<ICreatorRepository, DbCreatorRepository>();

@@ -12,7 +12,7 @@ public class RestServiceDbContext : DbContext
 
     public DbSet<Creator> Creators { get; set; }
 
-    public DbSet<Note> Notes { get; set; }
+    // public DbSet<Note> Notes { get; set; }
 
     public DbSet<News> News { get; set; }
 
@@ -22,7 +22,7 @@ public class RestServiceDbContext : DbContext
     {
         modelBuilder.ApplyConfiguration(new CreatorConfiguration());
         modelBuilder.ApplyConfiguration(new MarkConfiguration());
-        modelBuilder.ApplyConfiguration(new NoteConfiguration());
+        // modelBuilder.ApplyConfiguration(new NoteConfiguration());
         modelBuilder.ApplyConfiguration(new NewsConfiguration());
         base.OnModelCreating(modelBuilder);
     }

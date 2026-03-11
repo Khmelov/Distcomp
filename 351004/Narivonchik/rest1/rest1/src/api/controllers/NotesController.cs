@@ -10,15 +10,22 @@ namespace rest1.api.controllers;
     [Route("api/v1.0/[controller]")]
     public class NotesController : ControllerBase
     {
-        private readonly INoteService _noteService;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<NotesController> _logger;
 
-        public NotesController(INoteService noteService, ILogger<NotesController> logger)
+        public NotesController(
+            IHttpClientFactory httpClientFactory,
+            ILogger<NotesController> logger)
         {
-            _noteService = noteService;
+            _httpClientFactory = httpClientFactory;
             _logger = logger;
         }
-
+        
+        private HttpClient CreateClient()
+        {
+            return _httpClientFactory.CreateClient("discussion");
+        }
+        
         [HttpPost]
         [ProducesResponseType(typeof(NoteResponseTo), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -27,31 +34,32 @@ namespace rest1.api.controllers;
             [FromBody] NoteRequestTo createNoteRequest)
         {
             try
-            {
-                _logger.LogInformation("Creating note {request}", createNoteRequest);
+            {   
+                // make http request instead of request to NoteService
+                _logger.LogInformation("Forwarding create note request");
 
-                NoteResponseTo createdNote =
-                    await _noteService.CreateNote(createNoteRequest);
+                var client = CreateClient();
 
+                var response = await client.PostAsJsonAsync("/api/v1.0/notes", createNoteRequest);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return StatusCode((int)response.StatusCode);
+                }
+
+                var createdNote = await response.Content.ReadFromJsonAsync<NoteResponseTo>();
+                
+                // get created note using http request
                 return CreatedAtAction(
-                    nameof(CreateNote),
-                    new { id = createdNote.Id },
+                    nameof(GetNoteById),
+                    new { id = createdNote!.Id },
                     createdNote
                 );
-            }
-            catch (NoteAlreadyExistsException ex)
-            {
-                _logger.LogError(ex, "Post already exists");
-                return StatusCode(403);
-            }
-            catch (ReferenceException)
-            {
-                return StatusCode(404);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating note");
-                return StatusCode(500, "An error occurred while creating the note");
+                return StatusCode(500);
             }
         }
 
@@ -62,17 +70,16 @@ namespace rest1.api.controllers;
         {
             try
             {
-                _logger.LogInformation("Getting all notes");
+                var client = CreateClient();
 
-                IEnumerable<NoteResponseTo> notes =
-                    await _noteService.GetAllNotes();
+                var notes = await client.GetFromJsonAsync<IEnumerable<NoteResponseTo>>("/api/v1.0/notes");
 
                 return Ok(notes);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all notes");
-                return StatusCode(500, "An error occurred while retrieving notes");
+                return StatusCode(500);
             }
         }
 
@@ -80,67 +87,62 @@ namespace rest1.api.controllers;
         [ProducesResponseType(typeof(NoteResponseTo), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<NoteResponseTo>> GetNoteById([FromRoute] long id)
+        public async Task<ActionResult<NoteResponseTo>> GetNoteById(long id)
         {
             try
             {
-                _logger.LogInformation("Getting note by id: {Id}", id);
+                _logger.LogInformation("Forwarding get note by {Id}", id);
 
-                var getNoteRequest = new NoteRequestTo { Id = id };
-                NoteResponseTo note =
-                    await _noteService.GetNote(getNoteRequest);
+                var client = CreateClient();
+
+                var response = await client.GetAsync($"/api/v1.0/notes/{id}");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return NotFound();
+                }
+
+                var note = await response.Content.ReadFromJsonAsync<NoteResponseTo>();
 
                 return Ok(note);
             }
-            catch (NoteNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Note not found with id: {Id}", id);
-                return NotFound($"Note with id {id} not found");
-            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting note by id: {Id}", id);
-                return StatusCode(500, "An error occurred while retrieving the note");
+                _logger.LogError(ex, "Error getting note");
+                return StatusCode(500);
             }
         }
 
-        [HttpPut]
+        [HttpPut("{id:long}")]
         [ProducesResponseType(typeof(NoteResponseTo), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<NoteResponseTo>> UpdateNote(
+        public async Task<ActionResult<NoteResponseTo>> UpdateNote( long id,
             [FromBody] NoteRequestTo updateNoteRequest)
         {
             try
             {
-                _logger.LogInformation("Updating note with id: {Id}", updateNoteRequest.Id);
+                _logger.LogInformation("Forwarding update post {Id}", id);
+                var client = CreateClient();
+                
+                var response = await client.PutAsJsonAsync(
+                    $"/api/v1.0/notes/{id}",
+                    updateNoteRequest);
 
-                var updatedNote =
-                    await _noteService.UpdateNote(updateNoteRequest);
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return NotFound();
+                }
 
-                return Ok(updatedNote);
-            }
-            catch (NoteNotFoundException ex)
-            {
-                _logger.LogWarning(
-                    ex,
-                    "Note not found for update with id: {Id}",
-                    updateNoteRequest.Id);
+                var post = await response.Content.ReadFromJsonAsync<NoteResponseTo>();
 
-                return NotFound(
-                    $"Note with id {updateNoteRequest.Id} not found");
+                return Ok(post);
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "Error updating note with id: {Id}",
-                    updateNoteRequest.Id);
-
-                return StatusCode(
-                    500,
-                    "An error occurred while updating the note");
+                _logger.LogError(ex, "Error updating post");
+                return StatusCode(500);
             }
         }
 
@@ -148,26 +150,28 @@ namespace rest1.api.controllers;
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> DeleteNote([FromRoute] long id)
+        public async Task<IActionResult> DeleteNote(long id)
         {
             try
             {
-                _logger.LogInformation("Deleting note with id: {Id}", id);
+                _logger.LogInformation("Forwarding delete post {Id}", id);
+
+                var client = CreateClient();
 
                 var deleteNoteRequest = new NoteRequestTo { Id = id };
-                await _noteService.DeleteNote(deleteNoteRequest);
+                var response = await client.DeleteAsync($"/api/v1.0/notes/{id}");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return NotFound();
+                }
 
                 return NoContent();
             }
-            catch (NoteNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Note not found for deletion with id: {Id}", id);
-                return NotFound();
-            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting note with id: {Id}", id);
-                return StatusCode(500, "An error occurred while deleting the note");
+                _logger.LogError(ex, "Error deleting post");
+                return StatusCode(500);
             }
         }
     }

@@ -12,8 +12,8 @@ public class DbMarkRepository : DbRepository<Mark>, IMarkRepository
 
     public async Task DeleteMarksWithoutNews()
     {
-        var emptyMarkers = await _dbSet.Where(m => m.News.Count == 0).ToListAsync();
-        _dbSet.RemoveRange(emptyMarkers);
-        await _dbContext.SaveChangesAsync();
+        // var emptyMarkers = await _dbSet.Where(m => m.News.Count == 0).ToListAsync();
+        // _dbSet.RemoveRange(emptyMarkers);
+        // await _dbContext.SaveChangesAsync();
     }
 }

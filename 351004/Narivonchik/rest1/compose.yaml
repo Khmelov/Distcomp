@@ -1,6 +1,4 @@
-﻿version: '3.9'
-
-services:
+﻿services:
   postgres:
     image: postgres:16
     container_name: postgres-distcomp-db
@@ -11,3 +9,13 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
+
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra-distcomp
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=distcomp_cluster
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_RACK=rack1
