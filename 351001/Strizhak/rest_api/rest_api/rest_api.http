@@ -1,6 +1,129 @@
-@rest_api_HostAddress = http://localhost:5150
+@baseUrl = http://localhost:24110/api/v1.0
 
-GET {{rest_api_HostAddress}}/weatherforecast/
+### ==================== USERS ====================
+
+### Получить всех пользователей
+GET {{baseUrl}}/users
 Accept: application/json
 
-###
+### Получить пользователя по ID (например, 1)
+GET {{baseUrl}}/users/1
+Accept: application/json
+
+### Создать нового пользователя
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "login": "newuser@example.com",
+  "password": "secure123",
+  "firstname": "John",
+  "lastname": "Doe"
+}
+
+### Полностью обновить пользователя
+PUT {{baseUrl}}/users/1
+Content-Type: application/json
+
+{
+  "login": "updated@example.com",
+  "password": "newpass123",
+  "firstname": "Jane",
+  "lastname": "Smith"
+}
+
+### Удалить пользователя
+DELETE {{baseUrl}}/users/1
+
+### ==================== TOPICS ====================
+
+### Получить все темы
+GET {{baseUrl}}/topics
+Accept: application/json
+
+### Получить тему по ID
+GET {{baseUrl}}/topics/1
+Accept: application/json
+
+### Создать тему
+POST {{baseUrl}}/topics
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "title": "My First Topic",
+  "content": "This is the content of the topic."
+}
+
+### Обновить тему
+PUT {{baseUrl}}/topics/1
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "title": "Updated Title",
+  "content": "Updated content goes here."
+}
+
+### Удалить тему
+DELETE {{baseUrl}}/topics/1
+
+### ==================== REACTIONS ====================
+
+### Получить все реакции
+GET {{baseUrl}}/reactions
+Accept: application/json
+
+### Получить реакцию по ID
+GET {{baseUrl}}/reactions/1
+Accept: application/json
+
+### Создать реакцию
+POST {{baseUrl}}/reactions
+Content-Type: application/json
+
+{
+  "topicId": 1,
+  "content": "Great post!"
+}
+
+### Обновить реакцию
+PUT {{baseUrl}}/reactions/1
+Content-Type: application/json
+
+{
+  "topicId": 1,
+  "content": "Updated reaction text."
+}
+
+### Удалить реакцию
+DELETE {{baseUrl}}/reactions/1
+
+### ==================== TAGS ====================
+
+### Получить все теги
+GET {{baseUrl}}/tags
+Accept: application/json
+
+### Получить тег по ID
+GET {{baseUrl}}/tags/1
+Accept: application/json
+
+### Создать тег
+POST {{baseUrl}}/tags
+Content-Type: application/json
+
+{
+  "name": "important"
+}
+
+### Обновить тег
+PUT {{baseUrl}}/tags/1
+Content-Type: application/json
+
+{
+  "name": "very-important"
+}
+
+### Удалить тег
+DELETE {{baseUrl}}/tags/1

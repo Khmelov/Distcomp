@@ -14,13 +14,13 @@ namespace rest_api.Controllers
     [Route("api/v1.0/users")]
     public class UsersController : ControllerBase
     {
-        private readonly IUserRepository _userRepository;
-        private readonly ILogger<UsersController> _logger;
+        private readonly UserRepository _userRepository;
+       // private readonly ILogger<UsersController> _logger;
 
-        public UsersController(IUserRepository userRepository, ILogger<UsersController> logger)
+        public UsersController(UserRepository userRepository/* ILogger<UsersController> logger*/)
         {
             _userRepository = userRepository;
-            _logger = logger;
+            //_logger = logger;
         }
 
         /// <summary>
@@ -93,9 +93,10 @@ namespace rest_api.Controllers
         /// <response code="400">Некорректные данные</response>
         /// <response code="404">Пользователь не найден</response>
         /// <response code="409">Конфликт (например, логин уже занят)</response>
-        [HttpPut("{id:long}")]
-        public ActionResult<UserResponseTo> Update(long id, UserRequestTo userRequest)
+        [HttpPut]
+        public ActionResult<UserResponseTo> Update(UserRequestTo userRequest)
         {
+            long id = userRequest.Id;
             var existingUser = _userRepository.GetById(id);
             if (existingUser == null)
                 return NotFound(new { error = $"User with id {id} not found" });

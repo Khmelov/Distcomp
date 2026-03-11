@@ -5,12 +5,13 @@ using System.Linq;
 
 namespace rest_api.InMemory
 {
- 
-    public class IReactionRepository : IRepository<Reaction>
+    public class ReactionRepository : IRepository<Reaction>
     {
         private readonly Dictionary<long, Reaction> _reactions;
+        // 1. Добавляем счетчик для генерации ID
+        private long _nextId = 1;
 
-        public IReactionRepository()
+        public ReactionRepository()
         {
             _reactions = new Dictionary<long, Reaction>();
         }
@@ -19,15 +20,20 @@ namespace rest_api.InMemory
         {
             if (_reactions.TryGetValue(id, out var reaction))
                 return reaction;
-            throw new KeyNotFoundException($"Reaction with id {id} not found");
+
+            // Возвращаем null, чтобы контроллер мог выдать 404 через проверку на null
+            return null;
         }
 
         public void Add(Reaction reaction)
         {
             if (reaction == null)
                 throw new ArgumentNullException(nameof(reaction));
-            if (_reactions.ContainsKey(reaction.Id))
-                throw new InvalidOperationException($"Reaction with id {reaction.Id} already exists");
+
+            // 2. Назначаем новый ID и увеличиваем счетчик
+            reaction.Id = _nextId++;
+
+            // Теперь проверка ContainsKey не нужна, так как ID всегда уникален
             _reactions.Add(reaction.Id, reaction);
         }
 
@@ -35,8 +41,10 @@ namespace rest_api.InMemory
         {
             if (reaction == null)
                 throw new ArgumentNullException(nameof(reaction));
+
             if (!_reactions.ContainsKey(reaction.Id))
                 throw new InvalidOperationException($"Reaction with id {reaction.Id} not found");
+
             _reactions[reaction.Id] = reaction;
         }
 

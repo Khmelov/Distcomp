@@ -4,6 +4,8 @@ namespace rest_api.Dtos
     public class UserRequestTo
     {
         [Required]
+        public long Id { get; set; }
+        [Required]
         [StringLength(64, MinimumLength = 2)]
         public string Login { get; set; } = null!;
 

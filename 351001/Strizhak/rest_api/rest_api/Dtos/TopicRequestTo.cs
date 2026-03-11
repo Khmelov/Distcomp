@@ -5,6 +5,8 @@ namespace rest_api.Dtos
     public class TopicRequestTo
     {
         [Required]
+        public long Id { get; set; }
+        [Required]
         public long UserId { get; set; }
 
         [Required]
