@@ -3,6 +3,9 @@
 #include <string>
 #include <jsoncpp/json/json.h>
 
+namespace myapp::dto
+{
+
 class IssueResponseTo 
 {
 public:
@@ -24,4 +27,6 @@ public:
         json["modified"] = modified;
         return json;
     }
+};
+
 };

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class UserRequestTo {
+
     @JsonProperty("login")
     @NotBlank(message = "Login cannot be blank")
     @Size(min = 2, max = 64, message = "Login must be between 2 and 64 characters")
@@ -56,4 +57,5 @@ public class UserRequestTo {
     public void setLastname(String lastname) {
         this.lastname = lastname;
     }
+
 }

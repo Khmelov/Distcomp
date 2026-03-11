@@ -9,9 +9,13 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface NoteMapper {
+    @Mapping(target = "article", ignore = true) // Handled in Service
     Note toEntity(NoteRequestTo request);
+
+    @Mapping(source = "article.id", target = "articleId")
     NoteResponseTo toResponse(Note entity);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "article", ignore = true) // Handled in Service
     void updateEntityFromDto(NoteRequestTo request, @MappingTarget Note entity);
 }

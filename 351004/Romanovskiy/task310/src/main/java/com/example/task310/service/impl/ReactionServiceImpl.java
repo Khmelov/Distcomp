@@ -1,0 +1,59 @@
+package com.example.task310.service.impl;
+
+import com.example.task310.domain.dto.request.ReactionRequestTo;
+import com.example.task310.domain.dto.response.ReactionResponseTo;
+import com.example.task310.domain.entity.Reaction;
+import com.example.task310.exception.EntityNotFoundException;
+import com.example.task310.mapper.ReactionMapper;
+import com.example.task310.repository.ReactionRepository;
+import com.example.task310.service.ReactionService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ReactionServiceImpl implements ReactionService {
+
+    private final ReactionRepository reactionRepository;
+    private final ReactionMapper reactionMapper;
+
+    @Override
+    public ReactionResponseTo create(ReactionRequestTo request) {
+        Reaction reaction = reactionMapper.toEntity(request);
+        return reactionMapper.toResponse(reactionRepository.save(reaction));
+    }
+
+    @Override
+    public List<ReactionResponseTo> findAll() {
+        return reactionRepository.findAll().stream()
+                .map(reactionMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ReactionResponseTo findById(Long id) {
+        Reaction reaction = reactionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Reaction not found with this id"));
+        return reactionMapper.toResponse(reaction);
+    }
+
+    @Override
+    public ReactionResponseTo update(ReactionRequestTo request) {
+        if (!reactionRepository.existsById(request.getId())) {
+            throw new RuntimeException("Cannot update: Reaction not found");
+        }
+        Reaction reaction = reactionMapper.toEntity(request);
+        return reactionMapper.toResponse(reactionRepository.save(reaction));
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        if (!reactionRepository.existsById(id)) {
+            throw new EntityNotFoundException("Reaction not found with id: " + id);
+        }
+        reactionRepository.deleteById(id);
+    }
+}

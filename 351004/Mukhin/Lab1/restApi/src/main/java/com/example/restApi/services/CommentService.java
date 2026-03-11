@@ -3,52 +3,73 @@ package com.example.restApi.services;
 import com.example.restApi.dto.request.CommentRequestTo;
 import com.example.restApi.dto.response.CommentResponseTo;
 import com.example.restApi.exception.NotFoundException;
-import com.example.restApi.mapper.CommentMapper;
+import com.example.restApi.model.Article;
 import com.example.restApi.model.Comment;
+import com.example.restApi.repository.ArticleRepository;
 import com.example.restApi.repository.CommentRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CommentService {
-    private final CommentRepository commentRepository;
-    private final CommentMapper commentMapper;
 
-    public CommentService(CommentRepository commentRepository, CommentMapper commentMapper) {
+    private final CommentRepository commentRepository;
+    private final ArticleRepository articleRepository;
+
+    public CommentService(CommentRepository commentRepository,
+                          ArticleRepository articleRepository) {
         this.commentRepository = commentRepository;
-        this.commentMapper = commentMapper;
+        this.articleRepository = articleRepository;
     }
 
-    public List<CommentResponseTo> getAll() {
-        return commentRepository.findAll().stream()
-                .map(commentMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<CommentResponseTo> getAll(int page, int size, String sortParam) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortParam));
+        return commentRepository.findAll(pageable)
+                .map(this::convertToResponseDto);
     }
 
     public CommentResponseTo getById(Long id) {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Comment not found with id: " + id));
-        return commentMapper.toDto(comment);
+        return convertToResponseDto(comment);
     }
 
+    @Transactional
     public CommentResponseTo create(CommentRequestTo request) {
-        Comment comment = commentMapper.toEntity(request);
+        Article article = articleRepository.findById(request.getArticleId())
+                .orElseThrow(() -> new NotFoundException("Article not found with id: " + request.getArticleId()));
+
+        Comment comment = new Comment();
+        comment.setText(request.getContent());
+        comment.setArticle(article);
+
         Comment saved = commentRepository.save(comment);
-        return commentMapper.toDto(saved);
+        return convertToResponseDto(saved);
     }
 
+    @Transactional
     public CommentResponseTo update(Long id, CommentRequestTo request) {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Comment not found with id: " + id));
-        commentMapper.updateEntity(comment, request);
+
+        Article article = articleRepository.findById(request.getArticleId())
+                .orElseThrow(() -> new NotFoundException("Article not found with id: " + request.getArticleId()));
+
+        comment.setText(request.getContent());
+        comment.setArticle(article);
         comment.setModified(LocalDateTime.now());
+
         Comment updated = commentRepository.save(comment);
-        return commentMapper.toDto(updated);
+        return convertToResponseDto(updated);
     }
 
+    @Transactional
     public void delete(Long id) {
         if (!commentRepository.existsById(id)) {
             throw new NotFoundException("Comment not found with id: " + id);
@@ -56,9 +77,23 @@ public class CommentService {
         commentRepository.deleteById(id);
     }
 
-    public List<CommentResponseTo> getByArticleId(Long articleId) {
-        return commentRepository.findByArticleId(articleId).stream()
-                .map(commentMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<CommentResponseTo> getByArticleId(Long articleId, int page, int size, String sortParam) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortParam));
+        return commentRepository.findByArticle_Id(articleId, pageable)
+                .map(this::convertToResponseDto);
+    }
+
+    private CommentResponseTo convertToResponseDto(Comment comment) {
+        CommentResponseTo dto = new CommentResponseTo();
+        dto.setId(comment.getId());
+        dto.setContent(comment.getText());
+
+        if (comment.getArticle() != null) {
+            dto.setArticleId(comment.getArticle().getId());
+        }
+
+        dto.setCreated(comment.getCreated());
+        dto.setModified(comment.getModified());
+        return dto;
     }
 }

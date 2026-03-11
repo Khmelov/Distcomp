@@ -5,9 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-/**
- * Request DTO for Notice entity.
- */
 @JsonRootName("notice")
 public record NoticeRequestTo(
         @NotNull(message = "Story id must not be null")

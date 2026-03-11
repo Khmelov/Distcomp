@@ -1,44 +1,64 @@
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.dto.comment import CommentRequestTo, CommentResponseTo
 from app.models.comment import Comment
-from app.repository.inmemory import InMemoryRepository
-from app.core.exceptions import NotFoundException
+from app.core.exceptions import NotFoundException, AppException
 
 
 class CommentService:
-    def __init__(self):
-        self.repo = InMemoryRepository()
+    def __init__(self, db: Session):
+        self.db = db
 
     def create(self, dto: CommentRequestTo) -> CommentResponseTo:
         comment = Comment(
-            id=0,
             content=dto.content,
             topic_id=dto.topicId
         )
-        saved = self.repo.create(comment)
-        return self._to_response(saved)
+        try:
+            self.db.add(comment)
+            self.db.commit()
+            self.db.refresh(comment)
+        except IntegrityError:
+            self.db.rollback()
+            raise AppException(
+                "Invalid association: Topic not found", 40004, 400)
+
+        return self._to_response(comment)
 
     def find_all(self):
-        return [self._to_response(c) for c in self.repo.find_all()]
+        comments = self.db.query(Comment).all()
+        return [self._to_response(c) for c in comments]
 
     def find_by_id(self, id: int):
-        comment = self.repo.find_by_id(id)
+        comment = self.db.query(Comment).filter(Comment.id == id).first()
         if not comment:
             raise NotFoundException("Comment not found", 40404)
         return self._to_response(comment)
 
     def update(self, id: int, dto: CommentRequestTo):
-        comment = self.repo.find_by_id(id)
+        comment = self.db.query(Comment).filter(Comment.id == id).first()
         if not comment:
             raise NotFoundException("Comment not found", 40404)
+
         comment.content = dto.content
         comment.topic_id = dto.topicId
+
+        try:
+            self.db.commit()
+            self.db.refresh(comment)
+        except IntegrityError:
+            self.db.rollback()
+            raise AppException(
+                "Invalid association: Topic not found", 40004, 400)
+
         return self._to_response(comment)
 
     def delete(self, id: int):
-        comment = self.repo.find_by_id(id)
+        comment = self.db.query(Comment).filter(Comment.id == id).first()
         if not comment:
-            raise NotFoundException("Comment not found", 40401)
-        self.repo.delete(id)
+            raise NotFoundException("Comment not found", 40404)
+        self.db.delete(comment)
+        self.db.commit()
 
     def _to_response(self, comment: Comment) -> CommentResponseTo:
         return CommentResponseTo(
