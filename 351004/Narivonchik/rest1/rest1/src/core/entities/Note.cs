@@ -8,6 +8,5 @@ public class Note : Entity
 
     // lookup object
     public News? News { get; set; }
-    
-    
+   
 }

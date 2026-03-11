@@ -3,5 +3,5 @@
 public class Mark(string name) : Entity
 {
     public string Name { get; set; } = name;
-    public long[] NewsIds { get; set; } = new long[0];
+    public List<News> News { get; set; }
 }

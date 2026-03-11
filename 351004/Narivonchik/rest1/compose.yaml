@@ -1,0 +1,13 @@
+﻿version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres-distcomp-db
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    restart: unless-stopped

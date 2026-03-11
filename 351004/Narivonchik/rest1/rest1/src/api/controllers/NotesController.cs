@@ -39,6 +39,15 @@ namespace rest1.api.controllers;
                     createdNote
                 );
             }
+            catch (NoteAlreadyExistsException ex)
+            {
+                _logger.LogError(ex, "Post already exists");
+                return StatusCode(403);
+            }
+            catch (ReferenceException)
+            {
+                return StatusCode(404);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating note");
@@ -83,7 +92,7 @@ namespace rest1.api.controllers;
 
                 return Ok(note);
             }
-            catch (NewNotFoundException ex)
+            catch (NoteNotFoundException ex)
             {
                 _logger.LogWarning(ex, "Note not found with id: {Id}", id);
                 return NotFound($"Note with id {id} not found");
@@ -112,7 +121,7 @@ namespace rest1.api.controllers;
 
                 return Ok(updatedNote);
             }
-            catch (NewNotFoundException ex)
+            catch (NoteNotFoundException ex)
             {
                 _logger.LogWarning(
                     ex,

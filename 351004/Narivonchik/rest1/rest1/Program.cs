@@ -1,8 +1,11 @@
+using Microsoft.EntityFrameworkCore;
 using rest1.application.interfaces;
 using rest1.application.interfaces.services;
 using rest1.application.mappers;
 using rest1.application.services;
 using rest1.infrastructure.persistence;
+using rest1.persistence.db;
+using rest1.persistence.db.repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,11 +25,22 @@ builder.Services.AddAutoMapper(
         config.AddProfile<NoteProfile>();
     });
 
-// register singleton repositories
-builder.Services.AddSingleton<INewsRepository, NewsRepository>();
-builder.Services.AddSingleton<ICreatorRepository, CreatorRepository>();
-builder.Services.AddSingleton<IMarkRepository, MarkRepository>();
-builder.Services.AddSingleton<INoteRepository, NoteRepository>();
+// register in memory repositories
+// builder.Services.AddSingleton<INewsRepository, NewsRepository>();
+// builder.Services.AddSingleton<ICreatorRepository, CreatorRepository>();
+// builder.Services.AddSingleton<IMarkRepository, MarkRepository>();
+// builder.Services.AddSingleton<INoteRepository, NoteRepository>();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<RestServiceDbContext>(options =>
+    options.UseNpgsql(connectionString)
+);
+
+// register postgres db repositories
+builder.Services.AddScoped<INewsRepository, DbNewsRepository>();
+builder.Services.AddScoped<ICreatorRepository, DbCreatorRepository>();
+builder.Services.AddScoped<IMarkRepository, DbMarkRepository>();
+builder.Services.AddScoped<INoteRepository, DbNoteRepository>();
 
 // register services
 builder.Services.AddScoped<INewsService, NewsService>();
