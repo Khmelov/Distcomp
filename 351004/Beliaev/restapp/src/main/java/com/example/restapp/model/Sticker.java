@@ -1,10 +1,16 @@
 package com.example.restapp.model;
 
+import jakarta.persistence.*;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class Sticker extends BaseEntity {
+@Entity
+@Table(name = "tbl_sticker", schema = "distcomp")
+public class Sticker {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 32)
     private String name;
 }
