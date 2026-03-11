@@ -86,7 +86,6 @@ namespace rest_api.Controllers
         /// <summary>
         /// Полностью обновить пользователя.
         /// </summary>
-        /// <param name="id">Идентификатор пользователя</param>
         /// <param name="userRequest">Новые данные пользователя</param>
         /// <returns>Обновлённый пользователь</returns>
         /// <response code="200">Пользователь обновлён</response>
