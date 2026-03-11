@@ -1,0 +1,15 @@
+services:
+  liquibase:
+    image: liquibase/liquibase
+    volumes:
+      - ./migrations:/liquibase/changelog
+    network_mode: "host"
+    environment:
+      - LIQUIBASE_CLASSPATH=/liquibase/changelog/postgresql.jar
+    command: >
+      --url="jdbc:postgresql://localhost:5432/distcomp?currentSchema=distcomp"
+      --changeLogFile=changelog-master.xml
+      --username=postgres
+      --password=postgres
+      --driver=org.postgresql.Driver
+      update
