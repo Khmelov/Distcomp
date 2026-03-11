@@ -3,6 +3,7 @@ package com.distcomp.controller
 import com.distcomp.dto.marker.MarkerRequestTo
 import com.distcomp.dto.marker.MarkerResponseTo
 import com.distcomp.service.MarkerService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
@@ -13,7 +14,7 @@ class MarkerController(
 ) {
     @PostMapping(version = "1.0")
     @ResponseStatus(HttpStatus.CREATED)
-    fun createMarker(@RequestBody markerRequestTo: MarkerRequestTo): MarkerResponseTo {
+    fun createMarker(@Valid @RequestBody markerRequestTo: MarkerRequestTo): MarkerResponseTo {
         return markerService.createMarker(markerRequestTo)
     }
 
@@ -30,7 +31,7 @@ class MarkerController(
     @PutMapping(path = ["/{id}", ""], version = "1.0")
     @ResponseStatus(HttpStatus.OK)
     fun updateMarker(
-        @RequestBody markerRequestTo: MarkerRequestTo,
+        @Valid @RequestBody markerRequestTo: MarkerRequestTo,
         @PathVariable("id") id: Long?
     ): MarkerResponseTo {
         return markerService.updateMarker(markerRequestTo, id)

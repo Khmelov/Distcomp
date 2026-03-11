@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Request DTO for Marker entity.
- */
 @JsonRootName("marker")
 public record MarkerRequestTo(
         @NotBlank(message = "Name must not be blank")
