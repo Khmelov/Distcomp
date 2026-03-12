@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:17.8-alpine3.22
@@ -7,7 +5,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_NAME: ${POSTGRES_NAME}
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
@@ -17,6 +15,12 @@ services:
       - dc-network
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   mongodb:
     image: mongo:7.0-jammy
@@ -24,9 +28,10 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_DB}
+      MONGO_INITDB_DATABASE: ${MONGO_NAME}
     ports:
-      - "${MONGO_PORT}:27017"
+      - "${MONGO_PORT}:${MONGO_PORT}"
+    command: mongod --port ${MONGO_PORT}
     volumes:
       - mongodb_data:/data/db
     restart: unless-stopped
@@ -34,6 +39,12 @@ services:
       - dc-network
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD", "mongosh", "--port", "${MONGO_PORT}", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   publisher-service:
     build:
@@ -41,12 +52,13 @@ services:
       dockerfile: Dockerfile
     container_name: publisher-service
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      NOTE_SERVICE_URL: http://discussion-service:8000/api/v1.0
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_NAME}
+      NOTE_SERVICE_URL: http://discussion-service:${DISCUSSION_PORT}/api/v1.0
     ports:
-      - "${PUBLISHER_PORT}:8000"
+      - "${PUBLISHER_PORT}:${PUBLISHER_PORT}"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - dc-network
@@ -61,11 +73,12 @@ services:
       dockerfile: Dockerfile
     container_name: discussion-service
     environment:
-      MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin
+      MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:${MONGO_PORT}/${MONGO_NAME}?authSource=admin
     ports:
-      - "${DISCUSSION_PORT}:8000"
+      - "${DISCUSSION_PORT}:${DISCUSSION_PORT}"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - dc-network

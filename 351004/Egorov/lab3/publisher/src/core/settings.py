@@ -1,19 +1,23 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+class PostgresSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="POSTGRES_")
 
-class Settings(BaseSettings):
-    DB_HOST: str = Field(validation_alias="POSTGRES_HOST", default="localhost")
-    DB_PORT: int = Field(validation_alias="POSTGRES_PORT", default=5432, ge=1, le=65535)
-    DB_USER: str = Field(validation_alias="POSTGRES_USER", default=None)
-    DB_PASSWORD: str = Field(validation_alias="POSTGRES_PASSWORD", default=None)
-    DB_NAME: str = Field(validation_alias="POSTGRES_DB", default=None)
-    NOTE_SERVICE_URL: str = Field(default=None)
-
-    DEBUG: bool = Field(default=True)
+    host: str = Field(default="localhost")
+    port: int = Field(default=5432, ge=1, le=65535)
+    user: str = Field(default=None)
+    password: str = Field(default=None)
+    name: str = Field(default=None)
 
     @property
     def get_database_url(self) -> str:
-        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+
+class Settings(BaseSettings):
+    postgres: PostgresSettings = PostgresSettings()
+    note_service_url: str = Field(default=None)
+
+    DEBUG: bool = Field(default=True)
 
 settings = Settings()

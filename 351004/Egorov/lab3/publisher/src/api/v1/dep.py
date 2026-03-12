@@ -17,7 +17,7 @@ def get_topic_service(
 ) -> TopicService:
     return TopicService(session)
 
-http_note_client = httpx.AsyncClient(base_url=settings.NOTE_SERVICE_URL)
+http_note_client = httpx.AsyncClient(base_url=settings.note_service_url)
 
 def get_note_service() -> NoteService:
     return NoteService(http_note_client)

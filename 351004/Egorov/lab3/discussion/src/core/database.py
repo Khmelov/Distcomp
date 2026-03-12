@@ -8,8 +8,8 @@ db = None
 async def init_db():
     global client, db
 
-    client = AsyncIOMotorClient(settings.get_database_url)
-    db = client[settings.DB_NAME]
+    client = AsyncIOMotorClient(settings.mongo.get_database_url)
+    db = client[settings.mongo.name]
 
 async def close_db():
     client.close()
