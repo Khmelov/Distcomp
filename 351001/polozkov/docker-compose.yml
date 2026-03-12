@@ -16,6 +16,21 @@ services:
     networks:
       - distcomp-network
 
+  cassandra:
+    image: cassandra:latest
+    container_name: distcomp-cassandra
+    restart: unless-stopped
+    ports:
+      - "${CASSANDRA_PORT}:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=distcomp_cluster
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    networks:
+      - distcomp-network
+
 #  user-service:
 #    build: .
 #    container_name: user-service-app
@@ -38,3 +53,4 @@ networks:
 
 volumes:
   distcomp_db_data:
+  cassandra_data:
