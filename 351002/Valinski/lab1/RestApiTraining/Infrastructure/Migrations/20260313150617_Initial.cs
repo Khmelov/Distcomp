@@ -7,60 +7,60 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "labels",
+                name: "tbl_label",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false)
+                    name = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_labels", x => x.Id);
+                    table.PrimaryKey("PK_tbl_label", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "users",
+                name: "tbl_user",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Login = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Password = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
-                    FirstName = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    LastName = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false)
+                    login = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    password = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
+                    firstname = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    lastname = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_users", x => x.Id);
+                    table.PrimaryKey("PK_tbl_user", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "topics",
+                name: "tbl_topic",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<long>(type: "bigint", nullable: false),
-                    Title = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    Content = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    ModifiedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                    title = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    content = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    modified_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_topics", x => x.Id);
+                    table.PrimaryKey("PK_tbl_topic", x => x.id);
                     table.ForeignKey(
-                        name: "FK_topics_users_UserId",
+                        name: "FK_tbl_topic_tbl_user_UserId",
                         column: x => x.UserId,
-                        principalTable: "users",
-                        principalColumn: "Id",
+                        principalTable: "tbl_user",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -75,44 +75,38 @@ namespace Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_LabelTopic", x => new { x.LabelsId, x.TopicsId });
                     table.ForeignKey(
-                        name: "FK_LabelTopic_labels_LabelsId",
+                        name: "FK_LabelTopic_tbl_label_LabelsId",
                         column: x => x.LabelsId,
-                        principalTable: "labels",
-                        principalColumn: "Id",
+                        principalTable: "tbl_label",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_LabelTopic_topics_TopicsId",
+                        name: "FK_LabelTopic_tbl_topic_TopicsId",
                         column: x => x.TopicsId,
-                        principalTable: "topics",
-                        principalColumn: "Id",
+                        principalTable: "tbl_topic",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "reactions",
+                name: "tbl_reaction",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     TopicId = table.Column<long>(type: "bigint", nullable: false),
-                    Content = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: false)
+                    content = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_reactions", x => x.Id);
+                    table.PrimaryKey("PK_tbl_reaction", x => x.id);
                     table.ForeignKey(
-                        name: "FK_reactions_topics_TopicId",
+                        name: "FK_tbl_reaction_tbl_topic_TopicId",
                         column: x => x.TopicId,
-                        principalTable: "topics",
-                        principalColumn: "Id",
+                        principalTable: "tbl_topic",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_labels_Name",
-                table: "labels",
-                column: "Name",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_LabelTopic_TopicsId",
@@ -120,25 +114,31 @@ namespace Infrastructure.Migrations
                 column: "TopicsId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_reactions_TopicId",
-                table: "reactions",
-                column: "TopicId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_topics_Title",
-                table: "topics",
-                column: "Title",
+                name: "IX_tbl_label_name",
+                table: "tbl_label",
+                column: "name",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_topics_UserId",
-                table: "topics",
+                name: "IX_tbl_reaction_TopicId",
+                table: "tbl_reaction",
+                column: "TopicId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_topic_title",
+                table: "tbl_topic",
+                column: "title",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tbl_topic_UserId",
+                table: "tbl_topic",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_users_Login",
-                table: "users",
-                column: "Login",
+                name: "IX_tbl_user_login",
+                table: "tbl_user",
+                column: "login",
                 unique: true);
         }
 
@@ -149,16 +149,16 @@ namespace Infrastructure.Migrations
                 name: "LabelTopic");
 
             migrationBuilder.DropTable(
-                name: "reactions");
+                name: "tbl_reaction");
 
             migrationBuilder.DropTable(
-                name: "labels");
+                name: "tbl_label");
 
             migrationBuilder.DropTable(
-                name: "topics");
+                name: "tbl_topic");
 
             migrationBuilder.DropTable(
-                name: "users");
+                name: "tbl_user");
         }
     }
 }

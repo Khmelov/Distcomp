@@ -8,16 +8,29 @@ namespace Application.Services;
 public class TopicService : ITopicService
 {
     private readonly ITopicRepository _topicRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
     
-    public TopicService(ITopicRepository topicRepository, IMapper mapper)
+    public TopicService(ITopicRepository topicRepository, IMapper mapper, IUserRepository userRepository)
     {
         _topicRepository = topicRepository;
         _mapper = mapper;
+        _userRepository = userRepository;
     }
 
-    public async Task<TopicGetDto> CreateTopicAsync(TopicCreateDto topicCreateDto)
+    public async Task<TopicGetDto?> CreateTopicAsync(TopicCreateDto topicCreateDto)
     {
+        var user = await _userRepository.GetUserByIdAsync(topicCreateDto.UserId);
+        if (user == null)
+            return null;
+
+        var topicFromRepo = await _topicRepository.GetTopicByTitle(topicCreateDto.Title);
+
+        if (topicFromRepo is null)
+        {
+            return null;
+        }
+        
         var topic = await _topicRepository.CreateTopicAsync(topicCreateDto);
         return _mapper.Map<TopicGetDto>(topic);
     }

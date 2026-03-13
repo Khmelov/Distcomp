@@ -4,7 +4,7 @@ namespace Application.Abstractions;
 
 public interface IUserService
 {
-    Task<UserGetDto> CreateUserAsync(UserCreateDto createDto);
+    Task<UserGetDto?> CreateUserAsync(UserCreateDto createDto);
     Task<List<UserGetDto>> GetAllUsers();
     Task<UserGetDto> GetUserById(long id);
     Task<UserGetDto> UpdateUserAsync(UserUpdateDto updateDto);

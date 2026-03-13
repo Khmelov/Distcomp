@@ -58,6 +58,9 @@ public class UserController : ControllerBase
         
         var userDto = _mapper.Map<UserCreateDto>(userRequest);
         var res = await _userService.CreateUserAsync(userDto);
+        if (res == null)
+            return StatusCode(403);
+        
         return CreatedAtAction(nameof(GetUserById), new { id = res.Id }, _mapper.Map<UserResponseTo>(res));
     }
 

@@ -52,6 +52,9 @@ public class TopicController : ControllerBase
         var createDto = _mapper.Map<TopicCreateDto>(request); 
         
         var res = await _topicService.CreateTopicAsync(createDto);
+        if (res == null)
+            return StatusCode(403);
+        
         return CreatedAtAction(nameof(GetTopicById), new {id = res.Id}, res);
     }
 

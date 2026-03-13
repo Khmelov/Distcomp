@@ -27,6 +27,14 @@ public class TopicRepository : ITopicRepository
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
+    public async Task<Topic?> GetTopicByTitle(string topic)
+    {
+        return await _context
+            .Topics
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Title == topic);
+    }
+
     public async Task<Topic> CreateTopicAsync(TopicCreateDto topicCreateDto)
     {
         var topic = new Topic()

@@ -8,15 +8,17 @@ public class LabelEntityConfiguration : IEntityTypeConfiguration<Label>
 {
     public void Configure(EntityTypeBuilder<Label> builder)
     {
-        builder.ToTable("labels");
+        builder.ToTable("tbl_label");
         
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id)
-            .ValueGeneratedOnAdd();
+            .ValueGeneratedOnAdd()
+            .HasColumnName("id");
         
         builder.Property(x => x.Name)
             .IsRequired()
-            .HasMaxLength(32);
+            .HasMaxLength(32)
+            .HasColumnName("name");
 
         builder.HasIndex(x => x.Name)
             .IsUnique();

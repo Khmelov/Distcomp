@@ -19,7 +19,7 @@ public static class WebApplicationBuilderExtensions
             .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
         
         services.AddOpenApi();
-
+        services.AddSwaggerGen();
         services.AddAutoMapper(typeof(TopicProfile).Assembly,
             typeof(UserDtoProfile).Assembly,
             typeof(LabelProfile).Assembly,

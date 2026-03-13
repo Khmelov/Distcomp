@@ -27,6 +27,13 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(u => u.Id == id);
     }
 
+    public async Task<User?> GetUserByLoginAsync(string login)
+    {
+        return await _context
+            .Users
+            .FirstOrDefaultAsync(u => u.Login == login);
+    }
+
     public async Task<User> CreateUserAsync(UserCreateDto userDto)
     {
         var user = new User()

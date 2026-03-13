@@ -23,6 +23,9 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="10.1.4" />
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.1.4" />
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.4" />
     </ItemGroup>
 
     <ItemGroup>
