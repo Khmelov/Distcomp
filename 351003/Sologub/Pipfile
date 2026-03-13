@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"
+django-debug-toolbar = "*"
+psycopg2-binary = "*"
+flake8 = "*"
+djangorestframework = "*"
+pre-commit = "*"
+dotenv = "*"
+django-db-prefix = "*"
+dj-database-url = "*"
+pytest = "*"
+pytest-django = "*"
+testcontainers = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.14"

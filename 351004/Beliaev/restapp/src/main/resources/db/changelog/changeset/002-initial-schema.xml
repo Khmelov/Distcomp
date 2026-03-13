@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="002-create-tables" author="student">
+        <!-- Author Table -->
+        <createTable tableName="tbl_author">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Sticker Table -->
+        <createTable tableName="tbl_sticker">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Article Table -->
+        <createTable tableName="tbl_article">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="author_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_article_author" references="tbl_author(id)"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP"/>
+            <column name="modified" type="TIMESTAMP"/>
+        </createTable>
+
+        <!-- Note Table -->
+        <createTable tableName="tbl_note">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="article_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_note_article" references="tbl_article(id)"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Article-Sticker Join Table (Many-to-Many) -->
+        <createTable tableName="tbl_article_sticker">
+            <column name="article_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_as_article" references="tbl_article(id)"/>
+            </column>
+            <column name="sticker_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_as_sticker" references="tbl_sticker(id)"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="tbl_article_sticker" columnNames="article_id, sticker_id"/>
+    </changeSet>
+
+</databaseChangeLog>
