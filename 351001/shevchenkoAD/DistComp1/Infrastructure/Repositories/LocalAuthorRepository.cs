@@ -5,7 +5,7 @@ namespace Infrastructure.Repositories;
 
 public class LocalAuthorRepository : LocalBaseRepository<Author> {
     public LocalAuthorRepository() {
-        _storage.Add(new Author {
+        _storage.TryAdd(1, new Author {
             Id = 1,
             Login = "alexander.shevchenko.bsuir@gmail.com",
             Password = "DefaultPassword123",

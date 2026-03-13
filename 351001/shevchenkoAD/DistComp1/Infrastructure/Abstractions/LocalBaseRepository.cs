@@ -1,62 +1,109 @@
-﻿using Domain.Abstractions;
+﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
+using Domain.Abstractions;
 using Domain.Interfaces;
 
 namespace Infrastructure.Abstractions;
 
 public abstract class LocalBaseRepository<T> : IRepository<T>
     where T : BaseEntity {
-    protected readonly object _lock = new();
-    protected readonly List<T> _storage = new();
-    private long _idCounter;
+    protected readonly ConcurrentDictionary<long, T> _storage = new();
+    private long _idCounter = 0;
 
     public virtual Task<IEnumerable<T>> GetAllAsync() {
-        lock (_lock) {
-            var result = _storage.Select(item => Copy(item)).AsEnumerable();
-            return Task.FromResult(result);
-        }
+        var result = _storage.Values.Select(item => Copy(item)).AsEnumerable();
+        return Task.FromResult(result);
     }
 
     public virtual Task<T?> GetByIdAsync(long id) {
-        lock (_lock) {
-            var entity = _storage.FirstOrDefault(e => e.Id == id);
-            return Task.FromResult(entity == null ? null : Copy(entity));
-        }
+        _storage.TryGetValue(id, out var entity);
+        return Task.FromResult(entity == null ? null : Copy(entity));
     }
 
     public virtual Task<T> CreateAsync(T entity) {
-        lock (_lock) {
-            entity.Id = Interlocked.Increment(ref _idCounter);
+        long id = Interlocked.Increment(ref _idCounter);
+        entity.Id = id;
 
-            var entityToSave = Copy(entity);
-            _storage.Add(entityToSave);
+        var entityToSave = Copy(entity);
 
-            return Task.FromResult(Copy(entityToSave));
-        }
+        _storage.TryAdd(id, entityToSave);
+
+        return Task.FromResult(Copy(entityToSave));
     }
 
     public virtual Task<T?> UpdateAsync(T entity) {
-        lock (_lock) {
-            var index = _storage.FindIndex(e => e.Id == entity.Id);
-            if (index == -1)
-                return Task.FromResult<T?>(null);
+        if (!_storage.ContainsKey(entity.Id))
+            return Task.FromResult<T?>(null);
 
-            var entityToUpdate = Copy(entity);
-            _storage[index] = entityToUpdate;
+        var entityToUpdate = Copy(entity);
+        
+        _storage[entity.Id] = entityToUpdate;
 
-            return Task.FromResult<T?>(Copy(entityToUpdate));
-        }
+        return Task.FromResult<T?>(Copy(entityToUpdate));
     }
 
     public virtual Task<bool> DeleteAsync(long id) {
-        lock (_lock) {
-            var entity = _storage.FirstOrDefault(e => e.Id == id);
-            if (entity == null)
-                return Task.FromResult(false);
-
-            _storage.Remove(entity);
-            return Task.FromResult(true);
-        }
+        bool removed = _storage.TryRemove(id, out _);
+        return Task.FromResult(removed);
     }
 
     protected abstract T Copy(T src);
 }
+
+// public abstract class LocalBaseRepository<T> : IRepository<T>
+//     where T : BaseEntity {
+//     protected readonly object _lock = new();
+//     protected readonly List<T> _storage = new();
+//     private long _idCounter;
+//
+//     public virtual Task<IEnumerable<T>> GetAllAsync() {
+//         lock (_lock) {
+//             var result = _storage.Select(item => Copy(item)).AsEnumerable();
+//             return Task.FromResult(result);
+//         }
+//     }
+//
+//     public virtual Task<T?> GetByIdAsync(long id) {
+//         lock (_lock) {
+//             var entity = _storage.FirstOrDefault(e => e.Id == id);
+//             return Task.FromResult(entity == null ? null : Copy(entity));
+//         }
+//     }
+//
+//     public virtual Task<T> CreateAsync(T entity) {
+//         lock (_lock) {
+//             entity.Id = Interlocked.Increment(ref _idCounter);
+//
+//             var entityToSave = Copy(entity);
+//             _storage.Add(entityToSave);
+//
+//             return Task.FromResult(Copy(entityToSave));
+//         }
+//     }
+//
+//     public virtual Task<T?> UpdateAsync(T entity) {
+//         lock (_lock) {
+//             var index = _storage.FindIndex(e => e.Id == entity.Id);
+//             if (index == -1)
+//                 return Task.FromResult<T?>(null);
+//
+//             var entityToUpdate = Copy(entity);
+//             _storage[index] = entityToUpdate;
+//
+//             return Task.FromResult<T?>(Copy(entityToUpdate));
+//         }
+//     }
+//
+//     public virtual Task<bool> DeleteAsync(long id) {
+//         lock (_lock) {
+//             var entity = _storage.FirstOrDefault(e => e.Id == id);
+//             if (entity == null)
+//                 return Task.FromResult(false);
+//
+//             _storage.Remove(entity);
+//             return Task.FromResult(true);
+//         }
+//     }
+//
+//     protected abstract T Copy(T src);
+// }
