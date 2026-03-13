@@ -50,6 +50,10 @@ public class ReactionController : ControllerBase
 
         var createDto = _mapper.Map<ReactionCreateDto>(request);
         var res = await _reactionService.CreateReactionAsync(createDto);
+
+        if (res == null)
+            return BadRequest();
+        
         return CreatedAtAction(nameof(GetReactionById), new { id = res.Id }, _mapper.Map<ReactionResponseTo>(res));
     }
 

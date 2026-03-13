@@ -8,16 +8,23 @@ namespace Application.Services;
 public class ReactionService : IReactionService
 {
     private readonly IReactionRepository _reactionRepository;
+    private readonly ITopicRepository _topicRepository;
     private readonly IMapper _mapper;
 
-    public ReactionService(IReactionRepository reactionRepository, IMapper mapper)
+    public ReactionService(IReactionRepository reactionRepository, IMapper mapper, ITopicRepository topicRepository)
     {
         _reactionRepository = reactionRepository;
         _mapper = mapper;
+        _topicRepository = topicRepository;
     }
 
-    public async Task<ReactionGetDto> CreateReactionAsync(ReactionCreateDto reactionCreateDto)
+    public async Task<ReactionGetDto?> CreateReactionAsync(ReactionCreateDto reactionCreateDto)
     {
+        var topic = await _topicRepository.GetTopicByIdAsync(reactionCreateDto.TopicId);
+        if (topic == null)
+            return null;
+            
+        
         var reaction = await _reactionRepository.CreateReactionAsync(reactionCreateDto);
         return _mapper.Map<ReactionGetDto>(reaction);
     }

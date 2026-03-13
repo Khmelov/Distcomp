@@ -26,7 +26,7 @@ public class TopicService : ITopicService
 
         var topicFromRepo = await _topicRepository.GetTopicByTitle(topicCreateDto.Title);
 
-        if (topicFromRepo is null)
+        if (topicFromRepo is not null)
         {
             return null;
         }

@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -47,7 +47,7 @@ namespace Infrastructure.Migrations
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    user_id = table.Column<long>(type: "bigint", nullable: false),
                     title = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
                     content = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -57,8 +57,8 @@ namespace Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_tbl_topic", x => x.id);
                     table.ForeignKey(
-                        name: "FK_tbl_topic_tbl_user_UserId",
-                        column: x => x.UserId,
+                        name: "FK_tbl_topic_tbl_user_user_id",
+                        column: x => x.user_id,
                         principalTable: "tbl_user",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
@@ -94,15 +94,15 @@ namespace Infrastructure.Migrations
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    TopicId = table.Column<long>(type: "bigint", nullable: false),
+                    topic_id = table.Column<long>(type: "bigint", nullable: false),
                     content = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_tbl_reaction", x => x.id);
                     table.ForeignKey(
-                        name: "FK_tbl_reaction_tbl_topic_TopicId",
-                        column: x => x.TopicId,
+                        name: "FK_tbl_reaction_tbl_topic_topic_id",
+                        column: x => x.topic_id,
                         principalTable: "tbl_topic",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
@@ -120,9 +120,9 @@ namespace Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_reaction_TopicId",
+                name: "IX_tbl_reaction_topic_id",
                 table: "tbl_reaction",
-                column: "TopicId");
+                column: "topic_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_tbl_topic_title",
@@ -131,9 +131,9 @@ namespace Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_topic_UserId",
+                name: "IX_tbl_topic_user_id",
                 table: "tbl_topic",
-                column: "UserId");
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_tbl_user_login",
