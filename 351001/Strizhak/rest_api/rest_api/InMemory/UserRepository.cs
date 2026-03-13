@@ -7,14 +7,17 @@
         public UserRepository()
         {
             _users = new Dictionary<long, User>();
-            _users.Add(0, new User
+            _users = new Dictionary<long, User>();
+            var firstUser = new User
             {
-                Id = 0,
+                Id = 1,
                 Login = "veranikastryzhak@gmail.com",
                 Password = BCrypt.Net.BCrypt.HashPassword("password123"),
                 Firstname = "Veranika",
                 Lastname = "Stryzhak"
-            });
+            };
+            _users.Add(firstUser.Id, firstUser);
+            _nextId = 2;
         }
 
         public User GetById(long id)

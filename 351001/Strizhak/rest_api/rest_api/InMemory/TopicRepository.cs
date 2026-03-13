@@ -13,7 +13,7 @@ namespace rest_api.InMemory
             if (_topics.TryGetValue(id, out var topic))
                 return topic;
 
-            return null; // Или throw new KeyNotFoundException, если так требует интерфейс
+            return null; 
         }
 
         public void Add(Topic topic)

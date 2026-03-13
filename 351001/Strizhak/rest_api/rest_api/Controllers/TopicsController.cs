@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using rest_api.Dtos;
-using rest_api.InMemory;
-using System.ComponentModel.DataAnnotations;
+using rest_api.Entities;
+using rest_api.Services;
 
 namespace rest_api.Controllers
 {
@@ -13,13 +13,11 @@ namespace rest_api.Controllers
     [Route("api/v1.0/topics")]
     public class TopicsController : ControllerBase
     {
-        private readonly TopicRepository _topicRepository;
-        private readonly ILogger<TopicsController> _logger; // добавим логгер, как в UserController
+        private readonly IService<Topic, TopicRequestTo, TopicResponseTo> _topicService;
 
-        public TopicsController(TopicRepository topicRepository, ILogger<TopicsController> logger)
+        public TopicsController(IService<Topic, TopicRequestTo, TopicResponseTo> topicService)
         {
-            _topicRepository = topicRepository;
-            _logger = logger;
+            _topicService = topicService;
         }
 
         /// <summary>
@@ -32,11 +30,10 @@ namespace rest_api.Controllers
         [HttpGet("{id:long}")]
         public ActionResult<TopicResponseTo> GetById(long id)
         {
-            var topic = _topicRepository.GetById(id);
+            var topic = _topicService.GetById(id);
             if (topic == null)
                 return NotFound(new { error = $"Topic with id {id} not found" });
-
-            return Ok(MapToResponse(topic));
+            return Ok(topic);
         }
 
         /// <summary>
@@ -46,77 +43,71 @@ namespace rest_api.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<TopicResponseTo>> GetAll()
         {
-            var topics = _topicRepository.GetAll();
-            return Ok(topics.Select(MapToResponse));
+            var topics = _topicService.GetAll();
+            return Ok(topics);
         }
 
         /// <summary>
         /// Создать новую тему.
         /// </summary>
-        /// <param name="topicRequest">Данные для создания</param>
+        /// <param name="request">Данные для создания</param>
         /// <returns>Созданная тема</returns>
         /// <response code="201">Тема создана</response>
         /// <response code="400">Некорректные данные</response>
         /// <response code="409">Конфликт (например, нарушение уникальности)</response>
         [HttpPost]
-        public ActionResult<TopicResponseTo> Create(TopicRequestTo topicRequest)
+        public ActionResult<TopicResponseTo> Create(TopicRequestTo request)
         {
-            // Валидация модели выполняется автоматически атрибутом [ApiController]
-            var topic = new Topic
-            {
-                UserId = topicRequest.UserId,
-                Title = topicRequest.Title,
-                Content = topicRequest.Content,
-                Created = DateTime.UtcNow,
-                Modified = DateTime.UtcNow
-            };
-
             try
             {
-                _topicRepository.Add(topic);
+                var created = _topicService.Create(request);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
             catch (InvalidOperationException ex)
             {
                 return Conflict(new { error = ex.Message });
             }
-
-            var response = MapToResponse(topic);
-            return CreatedAtAction(nameof(GetById), new { id = topic.Id }, response);
+            catch (Exception ex)
+            {
+                // Логирование ошибки
+                return StatusCode(500, new { error = "Internal server error" });
+            }
         }
 
         /// <summary>
         /// Полностью обновить тему.
         /// </summary>
-        /// <param name="topicRequest">Новые данные темы</param>
+        /// <param name="id">Идентификатор темы (из маршрута)</param>
+        /// <param name="request">Новые данные темы</param>
         /// <returns>Обновлённая тема</returns>
         /// <response code="200">Тема обновлена</response>
         /// <response code="400">Некорректные данные</response>
         /// <response code="404">Тема не найдена</response>
         /// <response code="409">Конфликт</response>
         [HttpPut]
-        public ActionResult<TopicResponseTo> Update(TopicRequestTo topicRequest)
+        public ActionResult<TopicResponseTo> Update(TopicRequestTo request)
         {
-            long id = topicRequest.Id;
-            var existingTopic = _topicRepository.GetById(id);
-            if (existingTopic == null)
-                return NotFound(new { error = $"Topic with id {id} not found" });
-
-            // Обновляем поля
-            existingTopic.UserId = topicRequest.UserId;
-            existingTopic.Title = topicRequest.Title;
-            existingTopic.Content = topicRequest.Content;
-            existingTopic.Modified = DateTime.UtcNow; 
+            // Копируем идентификатор из маршрута в DTO
+            var id = request.Id;
+            
 
             try
             {
-                _topicRepository.Update(existingTopic);
+                var updated = _topicService.Update(request);
+                return Ok(updated);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
                 return Conflict(new { error = ex.Message });
             }
-
-            return Ok(MapToResponse(existingTopic));
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Internal server error" });
+            }
         }
 
         /// <summary>
@@ -129,26 +120,19 @@ namespace rest_api.Controllers
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
         {
-            var topic = _topicRepository.GetById(id);
-            if (topic == null)
-                return NotFound(new { error = $"Topic with id {id} not found" });
-
-            _topicRepository.Delete(id);
-            return NoContent();
-        }
-
-        // Преобразование сущности в DTO ответа
-        private TopicResponseTo MapToResponse(Topic topic)
-        {
-            return new TopicResponseTo
+            try
             {
-                Id = topic.Id,
-                UserId = topic.UserId,
-                Title = topic.Title,
-                Content = topic.Content,
-                Created = topic.Created,
-                Modified = topic.Modified
-            };
+                _topicService.Delete(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Internal server error" });
+            }
         }
     }
 }

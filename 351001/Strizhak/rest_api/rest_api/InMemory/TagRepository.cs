@@ -15,7 +15,7 @@ namespace rest_api.InMemory
         {
             _tags = new Dictionary<long, Tag>();
 
-            // Можно сразу добавить пару тестовых тегов для проверки GET запросов
+            // для проверки GET запросов
             Add(new Tag { Name = "science" });
             Add(new Tag { Name = "programming" });
         }
@@ -25,7 +25,6 @@ namespace rest_api.InMemory
             if (_tags.TryGetValue(id, out var tag))
                 return tag;
 
-            // Для контроллера удобнее возвращать null, чтобы он выдал 404
             return null;
         }
 

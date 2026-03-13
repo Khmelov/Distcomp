@@ -4,6 +4,7 @@ namespace rest_api.Dtos
 {
     public class ReactionRequestTo
     {
+        public long Id { get; set; }
         [Required]
         public long TopicId { get; set; }
 

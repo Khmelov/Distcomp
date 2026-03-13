@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using rest_api.Dtos;
 using rest_api.Entities;
-using rest_api.InMemory;
-using System.ComponentModel.DataAnnotations;
+using rest_api.Services;
 
 namespace rest_api.Controllers
 {
@@ -14,13 +13,11 @@ namespace rest_api.Controllers
     [Route("api/v1.0/reactions")]
     public class ReactionController : ControllerBase
     {
-        private readonly ReactionRepository _reactionRepository;
-        private readonly ILogger<ReactionController> _logger;
+        private readonly IService<Reaction, ReactionRequestTo, ReactionResponseTo> _reactionService;
 
-        public ReactionController(ReactionRepository reactionRepository, ILogger<ReactionController> logger)
+        public ReactionController(IService<Reaction, ReactionRequestTo, ReactionResponseTo> reactionService)
         {
-            _reactionRepository = reactionRepository;
-            _logger = logger;
+            _reactionService = reactionService;
         }
 
         /// <summary>
@@ -33,11 +30,10 @@ namespace rest_api.Controllers
         [HttpGet("{id:long}")]
         public ActionResult<ReactionResponseTo> GetById(long id)
         {
-            var reaction = _reactionRepository.GetById(id);
+            var reaction = _reactionService.GetById(id);
             if (reaction == null)
                 return NotFound(new { error = $"Reaction with id {id} not found" });
-
-            return Ok(MapToResponse(reaction));
+            return Ok(reaction);
         }
 
         /// <summary>
@@ -47,72 +43,70 @@ namespace rest_api.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<ReactionResponseTo>> GetAll()
         {
-            var reactions = _reactionRepository.GetAll();
-            return Ok(reactions.Select(MapToResponse));
+            var reactions = _reactionService.GetAll();
+            return Ok(reactions);
         }
 
         /// <summary>
         /// Создать новую реакцию.
         /// </summary>
-        /// <param name="reactionRequest">Данные для создания</param>
+        /// <param name="request">Данные для создания</param>
         /// <returns>Созданная реакция</returns>
         /// <response code="201">Реакция создана</response>
         /// <response code="400">Некорректные данные</response>
         /// <response code="409">Конфликт (например, нарушение уникальности)</response>
         [HttpPost]
-        public ActionResult<ReactionResponseTo> Create(ReactionRequestTo reactionRequest)
+        public ActionResult<ReactionResponseTo> Create(ReactionRequestTo request)
         {
-            var reaction = new Reaction
-            {
-                TopicId = reactionRequest.TopicId,
-                Content = reactionRequest.Content,
-               
-            };
-
             try
             {
-                _reactionRepository.Add(reaction);
+                var created = _reactionService.Create(request);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
             catch (InvalidOperationException ex)
             {
                 return Conflict(new { error = ex.Message });
             }
-
-            var response = MapToResponse(reaction);
-            return CreatedAtAction(nameof(GetById), new { id = reaction.Id }, response);
+            catch (Exception ex)
+            {
+                // Логирование ошибки
+                return StatusCode(500, new { error = "Internal server error" });
+            }
         }
 
         /// <summary>
         /// Полностью обновить реакцию.
         /// </summary>
-        /// <param name="id">Идентификатор реакции</param>
-        /// <param name="reactionRequest">Новые данные реакции</param>
+        /// <param name="id">Идентификатор реакции (из маршрута)</param>
+        /// <param name="request">Новые данные реакции</param>
         /// <returns>Обновлённая реакция</returns>
         /// <response code="200">Реакция обновлена</response>
         /// <response code="400">Некорректные данные</response>
         /// <response code="404">Реакция не найдена</response>
         /// <response code="409">Конфликт</response>
         [HttpPut("{id:long}")]
-        public ActionResult<ReactionResponseTo> Update(long id, ReactionRequestTo reactionRequest)
+        public ActionResult<ReactionResponseTo> Update(long id, ReactionRequestTo request)
         {
-            var existingReaction = _reactionRepository.GetById(id);
-            if (existingReaction == null)
-                return NotFound(new { error = $"Reaction with id {id} not found" });
-
-            existingReaction.TopicId = reactionRequest.TopicId;
-            existingReaction.Content = reactionRequest.Content;
-            
+            // Копируем идентификатор из маршрута в DTO
+            request.Id = id;
 
             try
             {
-                _reactionRepository.Update(existingReaction);
+                var updated = _reactionService.Update(request);
+                return Ok(updated);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
                 return Conflict(new { error = ex.Message });
             }
-
-            return Ok(MapToResponse(existingReaction));
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Internal server error" });
+            }
         }
 
         /// <summary>
@@ -125,26 +119,19 @@ namespace rest_api.Controllers
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
         {
-            var reaction = _reactionRepository.GetById(id);
-            if (reaction == null)
-                return NotFound(new { error = $"Reaction with id {id} not found" });
-
-            _reactionRepository.Delete(id);
-            return NoContent();
-        }
-
-        /// <summary>
-        /// Преобразование сущности Reaction в DTO ответа.
-        /// </summary>
-        private ReactionResponseTo MapToResponse(Reaction reaction)
-        {
-            return new ReactionResponseTo
+            try
             {
-                Id = reaction.Id,
-                TopicId = reaction.TopicId,
-                Content = reaction.Content,
-                
-            };
+                _reactionService.Delete(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Internal server error" });
+            }
         }
     }
 }

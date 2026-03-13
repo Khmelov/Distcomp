@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using rest_api.Dtos;
-using rest_api.InMemory;
-using BCrypt.Net;
-using System.ComponentModel.DataAnnotations;
+using rest_api.Entities;
+using rest_api.Services;
 
 namespace rest_api.Controllers
 {
@@ -14,13 +13,11 @@ namespace rest_api.Controllers
     [Route("api/v1.0/users")]
     public class UsersController : ControllerBase
     {
-        private readonly UserRepository _userRepository;
-       // private readonly ILogger<UsersController> _logger;
+        private readonly IService<User, UserRequestTo, UserResponseTo> _userService;
 
-        public UsersController(UserRepository userRepository/* ILogger<UsersController> logger*/)
+        public UsersController(IService<User, UserRequestTo, UserResponseTo> userService)
         {
-            _userRepository = userRepository;
-            //_logger = logger;
+            _userService = userService;
         }
 
         /// <summary>
@@ -33,11 +30,11 @@ namespace rest_api.Controllers
         [HttpGet("{id:long}")]
         public ActionResult<UserResponseTo> GetById(long id)
         {
-            var user = _userRepository.GetById(id);
+            var user = _userService.GetById(id);
             if (user == null)
                 return NotFound(new { error = $"User with id {id} not found" });
 
-            return Ok(MapToResponse(user));
+            return Ok(user);
         }
 
         /// <summary>
@@ -47,75 +44,67 @@ namespace rest_api.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<UserResponseTo>> GetAll()
         {
-            var users = _userRepository.GetAll();
-            return Ok(users.Select(MapToResponse));
+            var users = _userService.GetAll();
+            return Ok(users);
         }
 
         /// <summary>
         /// Создать нового пользователя.
         /// </summary>
-        /// <param name="userRequest">Данные для создания</param>
+        /// <param name="request">Данные для создания</param>
         /// <returns>Созданный пользователь</returns>
         /// <response code="201">Пользователь создан</response>
         /// <response code="400">Некорректные данные</response>
         /// <response code="409">Конфликт (например, логин уже существует)</response>
         [HttpPost]
-        public ActionResult<UserResponseTo> Create(UserRequestTo userRequest)
+        public ActionResult<UserResponseTo> Create(UserRequestTo request)
         {
-            var user = new User
-            {
-                Login = userRequest.Login,
-                Password = HashPassword(userRequest.Password),
-                Firstname = userRequest.Firstname,
-                Lastname = userRequest.Lastname
-            };
-
             try
             {
-                _userRepository.Add(user);
+                var created = _userService.Create(request);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
-            catch (InvalidOperationException ex) 
+            catch (InvalidOperationException ex)
             {
+                // Конфликт (например, дубликат логина)
                 return Conflict(new { error = ex.Message });
             }
-
-            var response = MapToResponse(user);
-            return CreatedAtAction(nameof(GetById), new { id = user.Id }, response);
+            catch (Exception ex)
+            {
+                // Непредвиденная ошибка
+                return StatusCode(500, new { error = "Internal server error" });
+            }
         }
 
         /// <summary>
         /// Полностью обновить пользователя.
         /// </summary>
-        /// <param name="userRequest">Новые данные пользователя</param>
+        /// <param name="request">Новые данные пользователя (включая Id)</param>
         /// <returns>Обновлённый пользователь</returns>
         /// <response code="200">Пользователь обновлён</response>
         /// <response code="400">Некорректные данные</response>
         /// <response code="404">Пользователь не найден</response>
         /// <response code="409">Конфликт (например, логин уже занят)</response>
         [HttpPut]
-        public ActionResult<UserResponseTo> Update(UserRequestTo userRequest)
+        public ActionResult<UserResponseTo> Update(UserRequestTo request)
         {
-            long id = userRequest.Id;
-            var existingUser = _userRepository.GetById(id);
-            if (existingUser == null)
-                return NotFound(new { error = $"User with id {id} not found" });
-
-            // Обновляем поля
-            existingUser.Login = userRequest.Login;
-            existingUser.Password = HashPassword(userRequest.Password);
-            existingUser.Firstname = userRequest.Firstname;
-            existingUser.Lastname = userRequest.Lastname;
-
             try
             {
-                _userRepository.Update(existingUser);
+                var updated = _userService.Update(request);
+                return Ok(updated);
             }
-            catch (InvalidOperationException ex) 
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
             {
                 return Conflict(new { error = ex.Message });
             }
-
-            return Ok(MapToResponse(existingUser));
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Internal server error" });
+            }
         }
 
         /// <summary>
@@ -128,24 +117,19 @@ namespace rest_api.Controllers
         [HttpDelete("{id:long}")]
         public IActionResult Delete(long id)
         {
-            var user = _userRepository.GetById(id);
-            if (user == null)
-                return NotFound(new { error = $"User with id {id} not found" });
-
-            _userRepository.Delete(id);
-            return NoContent();
-        }
-        private UserResponseTo MapToResponse(User user)
-        {
-            return new UserResponseTo
+            try
             {
-                Id = user.Id,
-                Login = user.Login,
-                Firstname = user.Firstname,
-                Lastname = user.Lastname
-            };
+                _userService.Delete(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Internal server error" });
+            }
         }
-
-        private string HashPassword(string password) => BCrypt.Net.BCrypt.HashPassword(password);
     }
 }
