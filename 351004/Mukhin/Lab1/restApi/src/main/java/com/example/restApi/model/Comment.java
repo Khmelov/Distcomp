@@ -6,10 +6,9 @@ import jakarta.persistence.*;
 @Table(name = "tbl_comment")
 public class Comment extends BaseEntity {
 
-    @Column(name = "text", length = 2048) // Переименовал content -> text согласно схеме Liquibase
+    @Column(name = "text", length = 2048)
     private String text;
 
-    // Связь: Много комментариев относятся к одной статье
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "article_id", nullable = false)
     private Article article;

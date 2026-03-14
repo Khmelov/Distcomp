@@ -20,7 +20,6 @@ public class User extends BaseEntity {
     @Column(name = "lastname", length = 64)
     private String lastname;
 
-    // Связь: Один пользователь может иметь много статей
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Article> articles = new HashSet<>();
 

@@ -61,14 +61,12 @@ public class ArticleService {
 
         Set<Marker> markers = new HashSet<>();
 
-        // Auto-create red/green/blue markers named after the userId
         for (String color : new String[]{"red", "green", "blue"}) {
             Marker marker = new Marker();
             marker.setName(color + request.getUserId());
             markers.add(markerRepository.save(marker));
         }
 
-        // Also add any explicitly requested markers
         if (request.getMarkerIds() != null && !request.getMarkerIds().isEmpty()) {
             markers.addAll(markerRepository.findAllById(request.getMarkerIds()));
         }
@@ -108,7 +106,6 @@ public class ArticleService {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Article not found with id: " + id));
 
-        // Delete all markers associated with this article before deleting the article
         Set<Marker> markers = new HashSet<>(article.getMarkers());
         article.getMarkers().clear();
         articleRepository.save(article);

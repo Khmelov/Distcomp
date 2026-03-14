@@ -11,8 +11,6 @@ public class Marker extends BaseEntity {
     @Column(name = "name", nullable = false, length = 32)
     private String name;
 
-    // Связь Многие-ко-многим (обратная сторона)
-    // "markers" - это имя поля Set<Marker> markers в классе Article
     @ManyToMany(mappedBy = "markers", fetch = FetchType.LAZY)
     private Set<Article> articles = new HashSet<>();
 

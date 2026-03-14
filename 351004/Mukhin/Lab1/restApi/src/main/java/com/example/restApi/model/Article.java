@@ -14,16 +14,13 @@ public class Article extends BaseEntity {
     @Column(name = "content", length = 2048)
     private String content;
 
-    // Связь: Одна статья принадлежит одному пользователю (Много статей -> Один пользователь)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Связь: У одной статьи может быть много комментариев
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments = new HashSet<>();
 
-    // Связь: Многие-ко-многим с маркерами
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "tbl_article_marker",
@@ -36,7 +33,6 @@ public class Article extends BaseEntity {
         super();
     }
 
-    // Геттеры и сеттеры
 
     public String getTitle() {
         return title;
