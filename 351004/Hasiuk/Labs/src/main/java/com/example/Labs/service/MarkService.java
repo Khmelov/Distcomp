@@ -5,46 +5,44 @@ import com.example.Labs.dto.response.MarkResponseTo;
 import com.example.Labs.entity.Mark;
 import com.example.Labs.exception.ResourceNotFoundException;
 import com.example.Labs.mapper.MarkMapper;
-import com.example.Labs.repository.InMemoryRepository;
+import com.example.Labs.repository.MarkRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class MarkService {
-    private final InMemoryRepository<Mark> markRepository;
+    private final MarkRepository repository;
     private final MarkMapper mapper;
 
+    @Transactional
     public MarkResponseTo create(MarkRequestTo request) {
-        Mark entity = mapper.toEntity(request);
-        return mapper.toDto(markRepository.save(entity));
+        return mapper.toDto(repository.save(mapper.toEntity(request)));
     }
 
-    public List<MarkResponseTo> getAll() {
-        return markRepository.findAll().stream()
-                .map(mapper::toDto)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<MarkResponseTo> getAll(Pageable pageable) {
+        return repository.findAll(pageable).map(mapper::toDto);
     }
 
+    @Transactional(readOnly = true)
     public MarkResponseTo getById(Long id) {
-        Mark entity = markRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mark not found with id: " + id));
-        return mapper.toDto(entity);
+        return mapper.toDto(repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found")));
     }
 
+    @Transactional
     public MarkResponseTo update(Long id, MarkRequestTo request) {
-        Mark entity = markRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mark not found with id: " + id));
+        Mark entity = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found"));
         mapper.updateEntity(request, entity);
-        return mapper.toDto(markRepository.update(entity));
+        return mapper.toDto(repository.save(entity));
     }
 
+    @Transactional
     public void delete(Long id) {
-        if (!markRepository.deleteById(id)) {
-            throw new ResourceNotFoundException("Mark not found with id: " + id);
-        }
+        if (!repository.existsById(id)) throw new ResourceNotFoundException("Not found");
+        repository.deleteById(id);
     }
 }

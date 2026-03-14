@@ -10,10 +10,13 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface MessageMapper {
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "story", ignore = true)
     Message toEntity(MessageRequestTo dto);
 
+    @Mapping(source = "story.id", target = "storyId")
     MessageResponseTo toDto(Message entity);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "story", ignore = true)
     void updateEntity(MessageRequestTo dto, @MappingTarget Message entity);
 }

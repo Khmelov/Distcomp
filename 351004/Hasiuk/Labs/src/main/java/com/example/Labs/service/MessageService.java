@@ -6,56 +6,51 @@ import com.example.Labs.entity.Message;
 import com.example.Labs.entity.Story;
 import com.example.Labs.exception.ResourceNotFoundException;
 import com.example.Labs.mapper.MessageMapper;
-import com.example.Labs.repository.InMemoryRepository;
+import com.example.Labs.repository.MessageRepository;
+import com.example.Labs.repository.StoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class MessageService {
-    private final InMemoryRepository<Message> messageRepository;
-    private final InMemoryRepository<Story> storyRepository; // Для проверки существования Story
+    private final MessageRepository repository;
+    private final StoryRepository storyRepository;
     private final MessageMapper mapper;
 
+    @Transactional
     public MessageResponseTo create(MessageRequestTo request) {
-        if (storyRepository.findById(request.getStoryId()).isEmpty()) {
-            throw new IllegalArgumentException("Story with id " + request.getStoryId() + " does not exist.");
-        }
-
+        Story story = storyRepository.findById(request.getStoryId()).orElseThrow(() -> new IllegalArgumentException("Bad Story ID"));
         Message entity = mapper.toEntity(request);
-        return mapper.toDto(messageRepository.save(entity));
+        entity.setStory(story);
+        return mapper.toDto(repository.save(entity));
     }
 
-    public List<MessageResponseTo> getAll() {
-        return messageRepository.findAll().stream()
-                .map(mapper::toDto)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<MessageResponseTo> getAll(Pageable pageable) {
+        return repository.findAll(pageable).map(mapper::toDto);
     }
 
+    @Transactional(readOnly = true)
     public MessageResponseTo getById(Long id) {
-        Message entity = messageRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Message not found with id: " + id));
-        return mapper.toDto(entity);
+        return mapper.toDto(repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found")));
     }
 
+    @Transactional
     public MessageResponseTo update(Long id, MessageRequestTo request) {
-        if (storyRepository.findById(request.getStoryId()).isEmpty()) {
-            throw new IllegalArgumentException("Story with id " + request.getStoryId() + " does not exist.");
-        }
-
-        Message entity = messageRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Message not found with id: " + id));
-
+        Message entity = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found"));
+        Story story = storyRepository.findById(request.getStoryId()).orElseThrow(() -> new IllegalArgumentException("Bad Story ID"));
         mapper.updateEntity(request, entity);
-        return mapper.toDto(messageRepository.update(entity));
+        entity.setStory(story);
+        return mapper.toDto(repository.save(entity));
     }
 
+    @Transactional
     public void delete(Long id) {
-        if (!messageRepository.deleteById(id)) {
-            throw new ResourceNotFoundException("Message not found with id: " + id);
-        }
+        if (!repository.existsById(id)) throw new ResourceNotFoundException("Not found");
+        repository.deleteById(id);
     }
 }

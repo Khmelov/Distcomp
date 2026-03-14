@@ -11,9 +11,7 @@ import org.mapstruct.MappingTarget;
 public interface MarkMapper {
     @Mapping(target = "id", ignore = true)
     Mark toEntity(MarkRequestTo dto);
-
     MarkResponseTo toDto(Mark entity);
-
     @Mapping(target = "id", ignore = true)
     void updateEntity(MarkRequestTo dto, @MappingTarget Mark entity);
 }

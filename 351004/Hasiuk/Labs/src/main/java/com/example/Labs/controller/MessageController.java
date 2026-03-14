@@ -5,16 +5,15 @@ import com.example.Labs.dto.response.MessageResponseTo;
 import com.example.Labs.service.MessageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1.0/messages")
 @RequiredArgsConstructor
 public class MessageController {
-
     private final MessageService service;
 
     @PostMapping
@@ -24,8 +23,8 @@ public class MessageController {
     }
 
     @GetMapping
-    public List<MessageResponseTo> getAll() {
-        return service.getAll();
+    public List<MessageResponseTo> getAll(Pageable pageable) {
+        return service.getAll(pageable).getContent();
     }
 
     @GetMapping("/{id}")

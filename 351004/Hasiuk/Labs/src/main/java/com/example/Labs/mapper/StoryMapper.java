@@ -10,14 +10,19 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface StoryMapper {
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "editor", ignore = true)
     @Mapping(target = "created", ignore = true)
     @Mapping(target = "modified", ignore = true)
+    @Mapping(target = "marks", ignore = true)
     Story toEntity(StoryRequestTo dto);
 
+    @Mapping(source = "editor.id", target = "editorId")
     StoryResponseTo toDto(Story entity);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "editor", ignore = true)
     @Mapping(target = "created", ignore = true)
     @Mapping(target = "modified", ignore = true)
+    @Mapping(target = "marks", ignore = true)
     void updateEntity(StoryRequestTo dto, @MappingTarget Story entity);
 }
