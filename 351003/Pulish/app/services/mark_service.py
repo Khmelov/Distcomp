@@ -1,39 +1,61 @@
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.dto.mark import MarkRequestTo, MarkResponseTo
 from app.models.mark import Mark
-from app.repository.inmemory import InMemoryRepository
-from app.core.exceptions import NotFoundException
+from app.core.exceptions import NotFoundException, AppException
 
 
 class MarkService:
-    def __init__(self):
-        self.repo = InMemoryRepository()
+    def __init__(self, db: Session):
+        self.db = db
 
     def create(self, dto: MarkRequestTo) -> MarkResponseTo:
-        mark = Mark(id=0, name=dto.name)
-        saved = self.repo.create(mark)
-        return self._to_response(saved)
+        mark = Mark(name=dto.name)
+        try:
+            self.db.add(mark)
+            self.db.commit()
+            self.db.refresh(mark)
+        except IntegrityError:
+            self.db.rollback()
+            raise AppException(
+                "Mark with this name already exists", 40303, 403)
+        return self._to_response(mark)
 
     def find_all(self):
-        return [self._to_response(m) for m in self.repo.find_all()]
+        marks = self.db.query(Mark).all()
+        return [self._to_response(m) for m in marks]
 
     def find_by_id(self, id: int):
-        mark = self.repo.find_by_id(id)
+        mark = self.db.query(Mark).filter(Mark.id == id).first()
         if not mark:
             raise NotFoundException("Mark not found", 40403)
         return self._to_response(mark)
 
     def update(self, id: int, dto: MarkRequestTo):
-        mark = self.repo.find_by_id(id)
+        mark = self.db.query(Mark).filter(Mark.id == id).first()
         if not mark:
             raise NotFoundException("Mark not found", 40403)
+
         mark.name = dto.name
+        try:
+            self.db.commit()
+            self.db.refresh(mark)
+        except IntegrityError:
+            self.db.rollback()
+            raise AppException(
+                "Mark with this name already exists", 40303, 403)
+
         return self._to_response(mark)
 
     def delete(self, id: int):
-        mark = self.repo.find_by_id(id)
+        mark = self.db.query(Mark).filter(Mark.id == id).first()
         if not mark:
-            raise NotFoundException("Mark not found", 40401)
-        self.repo.delete(id)
+            raise NotFoundException("Mark not found", 40403)
+        self.db.delete(mark)
+        self.db.commit()
 
     def _to_response(self, mark: Mark) -> MarkResponseTo:
-        return MarkResponseTo(id=mark.id, name=mark.name)
+        return MarkResponseTo(
+            id=mark.id,
+            name=mark.name
+        )

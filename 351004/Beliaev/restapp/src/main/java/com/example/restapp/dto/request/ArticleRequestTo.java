@@ -17,5 +17,5 @@ public class ArticleRequestTo {
     @Size(min = 4, max = 2048)
     private String content;
 
-    private List<Long> stickerIds;
+    private List<String> stickers;
 }
