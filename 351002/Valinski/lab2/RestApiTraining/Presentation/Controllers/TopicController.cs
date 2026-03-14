@@ -13,16 +13,18 @@ namespace Presentation.Controllers;
 public class TopicController : ControllerBase
 {
     private readonly ITopicService _topicService;
+    private readonly ILabelService _labelService;
     private readonly IMapper _mapper;
     private readonly IValidator<TopicRequestTo> _topicRequestValidator;
     private readonly IValidator<TopicUpdateRequestTo> _topicUpdateValidator;
     
-    public TopicController(ITopicService topicService, IMapper mapper, IValidator<TopicRequestTo> topicRequestValidator, IValidator<TopicUpdateRequestTo> topicUpdateValidator)
+    public TopicController(ITopicService topicService, IMapper mapper, IValidator<TopicRequestTo> topicRequestValidator, IValidator<TopicUpdateRequestTo> topicUpdateValidator, ILabelService labelService)
     {
         _topicService = topicService;
         _mapper = mapper;
         _topicRequestValidator = topicRequestValidator;
         _topicUpdateValidator = topicUpdateValidator;
+        _labelService = labelService;
     }
 
     [HttpGet]
@@ -54,6 +56,15 @@ public class TopicController : ControllerBase
         var res = await _topicService.CreateTopicAsync(createDto);
         if (res == null)
             return StatusCode(403);
+
+        if (request.Labels != null)
+        {
+            foreach (var label in request.Labels)
+            {
+                LabelCreateDto dto = new() {Name =  label};
+                await _labelService.CreateLabelAsync(dto);
+            }
+        }
         
         return CreatedAtAction(nameof(GetTopicById), new {id = res.Id}, res);
     }

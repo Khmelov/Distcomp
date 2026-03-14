@@ -1,7 +1,8 @@
 ﻿namespace Presentation.Contracts.Requests;
 
-public record TopicRequestTo(
+public record TopicWithLabelsRequestTo(
     long UserId,
     string Title,
     string Content,
-    string[]? Labels = null);
+    string[] Labels
+    );
