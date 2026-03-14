@@ -45,7 +45,8 @@ public class Program {
         
         
         builder.Services.AddScoped<IRepository<Author>, DbAuthorRepository>();
-        builder.Services.AddScoped<IRepository<Issue>, DbIssueRepository>();
+        builder.Services.AddScoped<IIssueRepository,  DbIssueRepository>();
+        builder.Services.AddScoped<IRepository<Issue>,  DbIssueRepository>();
         builder.Services.AddScoped<IRepository<Label>, DbLabelRepository>();
         builder.Services.AddScoped<IRepository<Comment>, DbCommentRepository>();
 

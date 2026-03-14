@@ -10,21 +10,26 @@ using Domain.Interfaces;
 namespace Application.Services;
 
 public class IssueService : BaseService<Issue, IssueRequestTo, IssueResponseTo>, IIssueService {
+    private readonly IIssueRepository _issueRepository; 
     private readonly IRepository<Author> _authorRepository; 
+    private readonly IRepository<Label> _labelRepository; 
     
     public IssueService(
-        IRepository<Issue> repository, 
+        IIssueRepository repository, 
         IRepository<Author> authorRepository, 
+        IRepository<Label> labelRepository, 
         IMapper mapper) 
         : base(repository, mapper) 
     {
+        _issueRepository = repository;
         _authorRepository = authorRepository;
+        _labelRepository = labelRepository;
     }
-
+    
     public override async Task<IssueResponseTo> CreateAsync(IssueRequestTo request)
     {
         ValidateRequest(request);
-        
+
         var authorExists = await _authorRepository.GetByIdAsync(request.AuthorId);
         if (authorExists == null)
         {
@@ -37,8 +42,55 @@ public class IssueService : BaseService<Issue, IssueRequestTo, IssueResponseTo>,
             throw new RestException(403, 26, $"Issue with title '{request.Title}' already exists");
         }
         
-        return await base.CreateAsync(request);
+        var issue = _mapper.Map<Issue>(request);
         
+        BeforeCreate(issue);
+        
+        if (request.Labels != null && request.Labels.Any())
+        {
+            foreach (var labelName in request.Labels)
+            {
+                var existingLabel = (await _labelRepository.GetAllAsync())
+                    .FirstOrDefault(l => l.Name == labelName);
+
+                if (existingLabel != null)
+                {
+                    issue.Labels.Add(existingLabel);
+                }
+                else
+                {
+                    var newLabel = new Label { Name = labelName };
+                    issue.Labels.Add(newLabel);
+                }
+            }
+        }
+
+        var createdIssue = await _repository.CreateAsync(issue);
+        return _mapper.Map<IssueResponseTo>(createdIssue);
+    }
+    
+    public override async Task<bool> DeleteAsync(long id)
+    {
+
+        var issue = await _issueRepository.GetByIdWithLabelsAsync(id);
+        if (issue == null)
+            ThrowNotFound(id);
+        
+        var labelsToCheck = issue.Labels.ToList();
+        
+        await _issueRepository.DeleteAsync(id);
+        
+        foreach (var label in labelsToCheck)
+        {
+            bool stillInUse = await _issueRepository.IsLabelUsedAsync(label.Id);
+            
+            if (!stillInUse)
+            {
+                await _labelRepository.DeleteAsync(label.Id);
+            }
+        }
+
+        return true;
     }
     
     protected override int NotFoundSubCode {
@@ -55,6 +107,17 @@ public class IssueService : BaseService<Issue, IssueRequestTo, IssueResponseTo>,
 
         if (string.IsNullOrWhiteSpace(req.Content) || req.Content.Length < 4 || req.Content.Length > 2048)
             throw new RestException(400, 22, "Content must be between 4 and 2048 characters");
+        
+        if (req.Labels != null)
+        {
+            foreach (var label in req.Labels)
+            {
+                if (label.Length < 2 || label.Length > 32)
+                {
+                    throw new RestException(400, 31, $"Label '{label}' length must be 2..32 chars");
+                }
+            }
+        }
     }
 
     protected override void BeforeCreate(Issue entity) {

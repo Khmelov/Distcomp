@@ -4,7 +4,7 @@ using Application.DTOs.Abstractions;
 namespace Application.DTOs.Requests;
 
 public record LabelRequestTo(
-    long Id,
+    long? Id,
     [Required]
     [StringLength(32, MinimumLength = 2)]
     string Name

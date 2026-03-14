@@ -4,7 +4,7 @@ using Application.DTOs.Abstractions;
 namespace Application.DTOs.Requests;
 
 public record CommentRequestTo(
-    long Id,
+    long? Id,
     [Required] long IssueId,
     [Required]
     [StringLength(2048, MinimumLength = 2)]

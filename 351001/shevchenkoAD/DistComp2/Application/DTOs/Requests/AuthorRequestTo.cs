@@ -3,8 +3,8 @@ using Application.DTOs.Abstractions;
 
 namespace Application.DTOs.Requests;
 
-public record AuthorRequestTo(
-    long Id,
+public record AuthorRequestTo (
+    long? Id,
     [Required]
     [StringLength(64, MinimumLength = 2)]
     string Login,
@@ -17,5 +17,4 @@ public record AuthorRequestTo(
     [Required]
     [StringLength(64, MinimumLength = 2)]
     string Lastname
-)
-    : BaseRequestTo(Id);
+) : BaseRequestTo(Id);

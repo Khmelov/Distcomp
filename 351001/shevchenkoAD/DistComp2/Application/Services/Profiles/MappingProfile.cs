@@ -12,7 +12,8 @@ public class MappingProfile : Profile {
 
         CreateMap<IssueRequestTo, Issue>()
             .ForMember(dest => dest.Created, opt => opt.Ignore())
-            .ForMember(dest => dest.Modified, opt => opt.Ignore());
+            .ForMember(dest => dest.Modified, opt => opt.Ignore())
+            .ForMember(dest => dest.Labels, opt => opt.Ignore());
 
         CreateMap<Issue, IssueResponseTo>();
 

@@ -4,7 +4,7 @@ using Application.DTOs.Abstractions;
 namespace Application.DTOs.Responses;
 
 public record LabelResponseTo(
-    long Id,
+    long? Id,
     [property: JsonPropertyName("name")] string Name
 )
     : BaseResponseTo(Id);

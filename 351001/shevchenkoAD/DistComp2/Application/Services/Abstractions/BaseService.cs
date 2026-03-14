@@ -50,14 +50,14 @@ public abstract class BaseService<TEntity, TRequest, TResponse> : IService<TRequ
     }
 
     public virtual async Task<TResponse> UpdateAsync(TRequest request) {
-        if (request.Id <= 0)
+        long id = request.Id ?? -1; 
+        
+        if (id < 0)
         {
             throw new RestException(400, NotFoundSubCode, "Invalid ID in request body");
         }
         
         ValidateRequest(request);
-
-        long id = request.Id; 
         
         var existingEntity = await _repository.GetByIdAsync(id);
         if (existingEntity == null)

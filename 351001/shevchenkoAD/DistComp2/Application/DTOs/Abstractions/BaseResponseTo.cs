@@ -3,5 +3,5 @@
 namespace Application.DTOs.Abstractions;
 
 public abstract record BaseResponseTo(
-    [property: JsonPropertyName("id")] long Id
+    [property: JsonPropertyName("id")] long? Id
 );

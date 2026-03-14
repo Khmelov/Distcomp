@@ -4,7 +4,7 @@ using Application.DTOs.Abstractions;
 namespace Application.DTOs.Responses;
 
 public record AuthorResponseTo(
-    long Id,
+    long? Id,
     [property: JsonPropertyName("login")] string Login,
     [property: JsonPropertyName("firstname")]
     string Firstname,

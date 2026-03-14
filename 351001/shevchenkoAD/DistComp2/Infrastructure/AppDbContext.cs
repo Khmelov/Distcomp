@@ -23,9 +23,16 @@ public class AppDbContext : DbContext
             .WithMany(l => l.Issues)
             .UsingEntity<Dictionary<string, object>>(
                 "tbl_issue_label", 
-                j => j.HasOne<Label>().WithMany().HasForeignKey("label_id"),
-                j => j.HasOne<Issue>().WithMany().HasForeignKey("issue_id")
-            );
+                j => j.HasOne<Label>()
+                    .WithMany()
+                    .HasForeignKey("label_id")
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne<Issue>()
+                    .WithMany()
+                    .HasForeignKey("issue_id")
+                    .OnDelete(DeleteBehavior.Cascade)
+            )
+            ;
         
         modelBuilder.Entity<Author>()
             .HasIndex(a => a.Login)
