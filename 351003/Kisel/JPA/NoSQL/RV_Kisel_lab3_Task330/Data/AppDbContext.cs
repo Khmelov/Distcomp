@@ -8,7 +8,6 @@ public class AppDbContext : DbContext {
     public DbSet<Creator> Creators { get; set; }
     public DbSet<News> News { get; set; }
     public DbSet<Label> Labels { get; set; }
-    public DbSet<Post> Posts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         // Жестко указываем названия колонок для связи Многие-ко-многим

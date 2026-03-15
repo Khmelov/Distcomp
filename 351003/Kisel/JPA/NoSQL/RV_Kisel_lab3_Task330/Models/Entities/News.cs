@@ -19,6 +19,5 @@ public class News {
     public int CreatorId { get; set; }
 
     public Creator? Creator { get; set; }
-    public ICollection<Post> Posts { get; set; } = new List<Post>();
     public ICollection<Label> Labels { get; set; } = new List<Label>();
 }

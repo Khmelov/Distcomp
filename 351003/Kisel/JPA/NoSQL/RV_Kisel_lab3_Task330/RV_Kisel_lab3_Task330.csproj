@@ -4,6 +4,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <OutputType>Exe</OutputType>
+        <RootNamespace>RV_Kisel_lab2_Task320</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
