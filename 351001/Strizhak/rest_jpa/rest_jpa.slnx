@@ -1,3 +1,3 @@
 <Solution>
-  <Project Path="rest_api/rest_api.csproj" />
+  <Project Path="rest_jpa/rest_jpa.csproj" />
 </Solution>

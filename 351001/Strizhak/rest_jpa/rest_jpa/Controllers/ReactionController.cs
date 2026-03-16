@@ -67,7 +67,7 @@ namespace rest_api.Controllers
             {
                 return Conflict(new { error = ex.Message });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Логирование ошибки
                 return StatusCode(500, new { error = "Internal server error" });
@@ -103,7 +103,7 @@ namespace rest_api.Controllers
             {
                 return Conflict(new { error = ex.Message });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new { error = "Internal server error" });
             }
@@ -128,7 +128,7 @@ namespace rest_api.Controllers
             {
                 return NotFound(new { error = ex.Message });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new { error = "Internal server error" });
             }

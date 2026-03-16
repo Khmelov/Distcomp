@@ -14,5 +14,7 @@ namespace rest_api.Entities
         [Required]
         [StringLength(2048, MinimumLength = 2)]
         public string Content { get; set; } = null!;
+        // Навигационное свойство для связи с Topic
+        public Topic Topic { get; set; }
     }
 }

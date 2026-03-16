@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using rest_api;
+using rest_api.Data;
 using rest_api.Dtos;
 using rest_api.Entities;
 using rest_api.InMemory;
@@ -6,7 +8,8 @@ using rest_api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
