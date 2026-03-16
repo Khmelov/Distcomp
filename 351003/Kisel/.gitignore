@@ -1,0 +1,6 @@
+[Bb]in/
+[Oo]bj/
+.idea/
+.vs/
+*.user
+*.DotSettings.user
