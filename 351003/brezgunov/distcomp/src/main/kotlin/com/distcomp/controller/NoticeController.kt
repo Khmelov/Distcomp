@@ -3,6 +3,7 @@ package com.distcomp.controller
 import com.distcomp.dto.notice.NoticeRequestTo
 import com.distcomp.dto.notice.NoticeResponseTo
 import com.distcomp.service.NoticeService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
@@ -13,7 +14,7 @@ class NoticeController(
 ) {
     @PostMapping(version = "1.0")
     @ResponseStatus(HttpStatus.CREATED)
-    fun createNotice(@RequestBody noticeRequestTo: NoticeRequestTo): NoticeResponseTo {
+    fun createNotice(@Valid @RequestBody noticeRequestTo: NoticeRequestTo): NoticeResponseTo {
         return noticeService.createNotice(noticeRequestTo)
     }
 
@@ -30,7 +31,7 @@ class NoticeController(
     @PutMapping(path = ["/{id}", ""], version = "1.0")
     @ResponseStatus(HttpStatus.OK)
     fun updateNotice(
-        @RequestBody noticeRequestTo: NoticeRequestTo,
+        @Valid @RequestBody noticeRequestTo: NoticeRequestTo,
         @PathVariable("id") id: Long?
     ): NoticeResponseTo {
         return noticeService.updateNotice(noticeRequestTo, id)

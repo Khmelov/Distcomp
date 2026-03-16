@@ -47,7 +47,7 @@ public class AuthorService {
         Author author = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Author not found with id: " + id));
         mapper.updateEntityFromDto(request, author);
-        Author saved = repository.save(author); // JPA managed, but save ensures persistence
+        Author saved = repository.save(author); 
         return mapper.toResponse(saved);
     }
 
