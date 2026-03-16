@@ -1,0 +1,37 @@
+package notedto
+
+import notemodel "lab1/internal/model/note"
+
+type CreateNoteRequest struct {
+	IssueID int64  `json:"issueId" binding:"required"`
+	Content string `json:"content" binding:"required,min=2,max=2048"`
+}
+
+type UpdateNoteRequest struct {
+	Content *string `json:"content,omitempty" binding:"omitempty,min=2,max=2048"`
+}
+
+type NoteResponse struct {
+	ID      int64  `json:"id"`
+	IssueID int64  `json:"issueId"`
+	Content string `json:"content"`
+}
+
+func ToResponse(n *notemodel.Note) *NoteResponse {
+	if n == nil {
+		return nil
+	}
+	return &NoteResponse{
+		ID:      n.ID,
+		IssueID: n.IssueID,
+		Content: n.Content,
+	}
+}
+
+func ToResponseList(list []*notemodel.Note) []*NoteResponse {
+	res := make([]*NoteResponse, len(list))
+	for i, v := range list {
+		res[i] = ToResponse(v)
+	}
+	return res
+}
