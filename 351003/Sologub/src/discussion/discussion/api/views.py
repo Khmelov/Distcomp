@@ -8,11 +8,6 @@ _NOTE_REPOSITORY = None
 
 
 def _get_repository():
-    """
-    Ленивое создание и повторное использование экземпляра репозитория.
-    Это избавляет от накладных расходов на создание Cluster/Session
-    при каждом HTTP-запросе и уменьшает вероятность таймаутов.
-    """
     global _NOTE_REPOSITORY
     if _NOTE_REPOSITORY is None:
         from repository import CassandraNoteRepository
@@ -25,7 +20,6 @@ def _get_repository():
 
 
 class NoteViewSet(viewsets.ViewSet):
-    """REST API для Note через Repository (Cassandra)."""
 
     def list(self, request: Request):
         story_id = request.query_params.get("storyId")
