@@ -87,7 +87,6 @@ namespace rest_api.Controllers
         [HttpPut("{id:long}")]
         public ActionResult<ReactionResponseTo> Update(long id, ReactionRequestTo request)
         {
-            // Копируем идентификатор из маршрута в DTO
             request.Id = id;
 
             try

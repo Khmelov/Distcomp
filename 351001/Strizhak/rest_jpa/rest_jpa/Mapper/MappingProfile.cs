@@ -2,7 +2,7 @@
 using rest_api.Dtos;
 using rest_api.Entities;
 
-namespace rest_api.Mapping
+namespace rest_api.Mapper
 {
     public class MappingProfile : Profile
     {

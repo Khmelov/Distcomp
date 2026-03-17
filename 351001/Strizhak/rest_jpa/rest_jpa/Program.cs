@@ -5,9 +5,10 @@ using rest_api.Dtos;
 using rest_api.Entities;
 using rest_api.InMemory;
 using rest_api.Services;
-
+using rest_api.Mapper;
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddAutoMapper(typeof(MappingProfile)); // или из сборки
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
