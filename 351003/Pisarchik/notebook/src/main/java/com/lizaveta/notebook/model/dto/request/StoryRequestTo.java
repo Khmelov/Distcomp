@@ -7,9 +7,6 @@ import jakarta.validation.constraints.Size;
 
 import java.util.Set;
 
-/**
- * Request DTO for Story entity.
- */
 @JsonRootName("story")
 public record StoryRequestTo(
         @NotNull(message = "Writer id must not be null")
@@ -23,5 +20,7 @@ public record StoryRequestTo(
         @Size(min = 4, max = 2048, message = "Content length must be between 4 and 2048")
         String content,
 
-        Set<Long> markerIds) {
+        Set<Long> markerIds,
+
+        Set<String> markerNames) {
 }

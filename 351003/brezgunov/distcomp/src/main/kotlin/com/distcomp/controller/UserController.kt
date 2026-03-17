@@ -3,6 +3,7 @@ package com.distcomp.controller
 import com.distcomp.dto.user.UserRequestTo
 import com.distcomp.dto.user.UserResponseTo
 import com.distcomp.service.UserService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -21,7 +22,7 @@ class UserController (
 ) {
     @PostMapping(version = "1.0")
     @ResponseStatus(HttpStatus.CREATED)
-    fun createUser(@RequestBody userRequestTo: UserRequestTo): UserResponseTo {
+    fun createUser(@Valid @RequestBody userRequestTo: UserRequestTo): UserResponseTo {
         return userService.createUser(userRequestTo)
     }
 
@@ -37,7 +38,7 @@ class UserController (
 
     @PutMapping(version = "1.0")
     @ResponseStatus(HttpStatus.OK)
-    fun updateUser(@RequestBody userRequestTo: UserRequestTo): UserResponseTo {
+    fun updateUser(@Valid @RequestBody userRequestTo: UserRequestTo): UserResponseTo {
         return userService.updateUser(userRequestTo)
     }
 
