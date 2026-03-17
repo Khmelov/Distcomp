@@ -1,62 +1,55 @@
-﻿using rest_api.Entities;
-using rest_api.InMemory;
+﻿using AutoMapper;
 using rest_api.Dtos;
+using rest_api.Entities;
+using rest_api.Repositories;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace rest_api.Services
 {
     public class TagService : BaseService<Tag, TagRequestTo, TagResponseTo>
     {
-        public TagService(IRepository<Tag> repository) : base(repository)
+        public TagService(IRepository<Tag> repository, IMapper mapper)
+            : base(repository, mapper)
         {
         }
 
-        public override TagResponseTo Create(TagRequestTo request)
+        public override async Task<TagResponseTo> CreateAsync(TagRequestTo request)
         {
-            // Проверка уникальности имени (опционально)
-            var existing = _repository.Find(t => t.Name == request.Name).FirstOrDefault();
+            // Проверка уникальности имени
+            var existing = (await _repository.FindAsync(t => t.Name == request.Name)).FirstOrDefault();
             if (existing != null)
                 throw new InvalidOperationException("Tag with this name already exists");
 
-            var tag = MapToEntity(request);
-            _repository.Add(tag);
-            return MapToResponse(tag);
+            var tag = _mapper.Map<Tag>(request);
+            await _repository.AddAsync(tag);
+            await _repository.SaveChangesAsync();
+
+            return _mapper.Map<TagResponseTo>(tag);
         }
 
-        public override TagResponseTo Update(TagRequestTo request)
+        public override async Task<TagResponseTo> UpdateAsync(long id, TagRequestTo request)
         {
-            var id = request.Id;
-            var tag = _repository.GetById(id);
+            var tag = await _repository.GetByIdAsync(id);
             if (tag == null)
                 throw new KeyNotFoundException($"Tag with id {id} not found");
 
             // Если имя меняется, проверяем уникальность
             if (tag.Name != request.Name)
             {
-                var existing = _repository.Find(t => t.Name == request.Name).FirstOrDefault();
+                var existing = (await _repository.FindAsync(t => t.Name == request.Name)).FirstOrDefault();
                 if (existing != null)
                     throw new InvalidOperationException("Tag with this name already exists");
             }
 
-            tag.Name = request.Name;
+            // AutoMapper обновляет существующую сущность
+            _mapper.Map(request, tag);
+
             _repository.Update(tag);
-            return MapToResponse(tag);
-        }
+            await _repository.SaveChangesAsync();
 
-        protected override TagResponseTo MapToResponse(Tag entity)
-        {
-            return new TagResponseTo
-            {
-                Id = entity.Id,
-                Name = entity.Name
-            };
-        }
-
-        protected override Tag MapToEntity(TagRequestTo request)
-        {
-            return new Tag
-            {
-                Name = request.Name
-            };
+            return _mapper.Map<TagResponseTo>(tag);
         }
     }
 }

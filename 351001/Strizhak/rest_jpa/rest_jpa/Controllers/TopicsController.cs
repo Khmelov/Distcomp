@@ -1,138 +1,92 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using rest_api;
 using rest_api.Dtos;
-using rest_api.Entities;
 using rest_api.Services;
 
-namespace rest_api.Controllers
+[ApiController]
+[Route("api/v1.0/topics")]
+public class TopicsController : ControllerBase
 {
-    /// <summary>
-    /// Контроллер для работы с темами.
-    /// Базовый URL: /api/v1.0/topics
-    /// </summary>
-    [ApiController]
-    [Route("api/v1.0/topics")]
-    public class TopicsController : ControllerBase
+    private readonly IService<Topic, TopicRequestTo, TopicResponseTo> _topicService;
+
+    public TopicsController(IService<Topic, TopicRequestTo, TopicResponseTo> topicService)
     {
-        private readonly IService<Topic, TopicRequestTo, TopicResponseTo> _topicService;
+        _topicService = topicService;
+    }
 
-        public TopicsController(IService<Topic, TopicRequestTo, TopicResponseTo> topicService)
+    [HttpGet("{id:long}")]
+    public async Task<ActionResult<TopicResponseTo>> GetById(long id)
+    {
+        var topic = await _topicService.GetByIdAsync(id);
+        if (topic == null)
+            return NotFound(new { error = $"Topic with id {id} not found" });
+        return Ok(topic);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<TopicResponseTo>>> GetAll()
+    {
+        var topics = await _topicService.GetAllAsync();
+        return Ok(topics);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<TopicResponseTo>> Create(TopicRequestTo request)
+    {
+        try
         {
-            _topicService = topicService;
+            var created = await _topicService.CreateAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
-
-        /// <summary>
-        /// Получить тему по идентификатору.
-        /// </summary>
-        /// <param name="id">Идентификатор темы</param>
-        /// <returns>Тема</returns>
-        /// <response code="200">Тема найдена</response>
-        /// <response code="404">Тема не найдена</response>
-        [HttpGet("{id:long}")]
-        public ActionResult<TopicResponseTo> GetById(long id)
+        catch (InvalidOperationException ex)
         {
-            var topic = _topicService.GetById(id);
-            if (topic == null)
-                return NotFound(new { error = $"Topic with id {id} not found" });
-            return Ok(topic);
+            return Conflict(new { error = ex.Message });
         }
-
-        /// <summary>
-        /// Получить все темы.
-        /// </summary>
-        /// <returns>Список тем</returns>
-        [HttpGet]
-        public ActionResult<IEnumerable<TopicResponseTo>> GetAll()
+        catch (Exception)
         {
-            var topics = _topicService.GetAll();
-            return Ok(topics);
+            return StatusCode(500, new { error = "Internal server error" });
         }
+    }
 
-        /// <summary>
-        /// Создать новую тему.
-        /// </summary>
-        /// <param name="request">Данные для создания</param>
-        /// <returns>Созданная тема</returns>
-        /// <response code="201">Тема создана</response>
-        /// <response code="400">Некорректные данные</response>
-        /// <response code="409">Конфликт (например, нарушение уникальности)</response>
-        [HttpPost]
-        public ActionResult<TopicResponseTo> Create(TopicRequestTo request)
+    [HttpPut]
+    public async Task<ActionResult<TopicResponseTo>> Update(TopicRequestTo request)
+    {
+        var id = request.Id;
+
+        try
         {
-            try
-            {
-                var created = _topicService.Create(request);
-                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { error = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                // Логирование ошибки
-                return StatusCode(500, new { error = "Internal server error" });
-            }
+            var updated = await _topicService.UpdateAsync(id, request);
+            return Ok(updated);
         }
-
-        /// <summary>
-        /// Полностью обновить тему.
-        /// </summary>
-        /// <param name="id">Идентификатор темы (из маршрута)</param>
-        /// <param name="request">Новые данные темы</param>
-        /// <returns>Обновлённая тема</returns>
-        /// <response code="200">Тема обновлена</response>
-        /// <response code="400">Некорректные данные</response>
-        /// <response code="404">Тема не найдена</response>
-        /// <response code="409">Конфликт</response>
-        [HttpPut]
-        public ActionResult<TopicResponseTo> Update(TopicRequestTo request)
+        catch (KeyNotFoundException ex)
         {
-            // Копируем идентификатор из маршрута в DTO
-            var id = request.Id;
-            
-
-            try
-            {
-                var updated = _topicService.Update(request);
-                return Ok(updated);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { error = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "Internal server error" });
-            }
+            return NotFound(new { error = ex.Message });
         }
-
-        /// <summary>
-        /// Удалить тему.
-        /// </summary>
-        /// <param name="id">Идентификатор темы</param>
-        /// <returns>Статус удаления</returns>
-        /// <response code="204">Тема удалена</response>
-        /// <response code="404">Тема не найдена</response>
-        [HttpDelete("{id:long}")]
-        public IActionResult Delete(long id)
+        catch (InvalidOperationException ex)
         {
-            try
-            {
-                _topicService.Delete(id);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "Internal server error" });
-            }
+            return Conflict(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    [HttpDelete("{id:long}")]
+    public async Task<IActionResult> Delete(long id)
+    {
+        try
+        {
+            await _topicService.DeleteAsync(id);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { error = "Internal server error" });
         }
     }
 }

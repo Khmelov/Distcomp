@@ -14,6 +14,14 @@ namespace rest_api.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Устанавливаем имена таблиц с префиксом tbl_
+            modelBuilder.Entity<User>().ToTable("tbl_user");
+            modelBuilder.Entity<Topic>().ToTable("tbl_topic");
+            modelBuilder.Entity<Tag>().ToTable("tbl_tag");
+            modelBuilder.Entity<Reaction>().ToTable("tbl_reaction");
+
+            // Для промежуточной таблицы TopicTag (если нужен префикс)
+            modelBuilder.Entity<TopicTag>().ToTable("tbl_topic_tag");
             // Связь Topic -> User
             modelBuilder.Entity<Topic>()
                 .HasOne(t => t.User)

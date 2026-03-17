@@ -1,62 +1,45 @@
-﻿using rest_api.Entities;
-using rest_api.InMemory;
+﻿using AutoMapper;
 using rest_api.Dtos;
+using rest_api.Entities;
+using rest_api.Repositories;
+using System;
+using System.Threading.Tasks;
 
 namespace rest_api.Services
 {
     public class TopicService : BaseService<Topic, TopicRequestTo, TopicResponseTo>
     {
-        public TopicService(IRepository<Topic> repository) : base(repository)
+        public TopicService(IRepository<Topic> repository, IMapper mapper)
+            : base(repository, mapper)
         {
         }
 
-        public override TopicResponseTo Create(TopicRequestTo request)
+        public override async Task<TopicResponseTo> CreateAsync(TopicRequestTo request)
         {
-            var topic = MapToEntity(request);
+            var topic = _mapper.Map<Topic>(request);
             topic.Created = DateTime.UtcNow;
             topic.Modified = DateTime.UtcNow;
 
-            _repository.Add(topic);
-            return MapToResponse(topic);
+            await _repository.AddAsync(topic);
+            await _repository.SaveChangesAsync();
+
+            return _mapper.Map<TopicResponseTo>(topic);
         }
 
-        public override TopicResponseTo Update(TopicRequestTo request)
+        public override async Task<TopicResponseTo> UpdateAsync(long id, TopicRequestTo request)
         {
-            var id = request.Id;
-            var topic = _repository.GetById(id);
-            if (topic == null)
+           
+            var existingTopic = await _repository.GetByIdAsync(id);
+            if (existingTopic == null)
                 throw new KeyNotFoundException($"Topic with id {id} not found");
 
-            topic.UserId = request.UserId;
-            topic.Title = request.Title;
-            topic.Content = request.Content;
-            topic.Modified = DateTime.UtcNow;
+            _mapper.Map(request, existingTopic);
+            existingTopic.Modified = DateTime.UtcNow; 
 
-            _repository.Update(topic);
-            return MapToResponse(topic);
-        }
+            _repository.Update(existingTopic);
+            await _repository.SaveChangesAsync();
 
-        protected override TopicResponseTo MapToResponse(Topic entity)
-        {
-            return new TopicResponseTo
-            {
-                Id = entity.Id,
-                UserId = entity.UserId,
-                Title = entity.Title,
-                Content = entity.Content,
-                Created = entity.Created,
-                Modified = entity.Modified
-            };
-        }
-
-        protected override Topic MapToEntity(TopicRequestTo request)
-        {
-            return new Topic
-            {
-                UserId = request.UserId,
-                Title = request.Title,
-                Content = request.Content
-            };
+            return _mapper.Map<TopicResponseTo>(existingTopic);
         }
     }
 }

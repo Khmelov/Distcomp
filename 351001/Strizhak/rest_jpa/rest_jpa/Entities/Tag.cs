@@ -6,7 +6,7 @@ namespace rest_api.Entities
 {
     public class Tag: IEntity
     {
-        [Key]уч
+        [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
         [Required]

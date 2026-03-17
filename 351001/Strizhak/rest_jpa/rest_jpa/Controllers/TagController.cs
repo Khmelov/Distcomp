@@ -3,134 +3,90 @@ using rest_api.Dtos;
 using rest_api.Entities;
 using rest_api.Services;
 
-namespace rest_api.Controllers
+[ApiController]
+[Route("api/v1.0/tags")]
+public class TagsController : ControllerBase
 {
-    /// <summary>
-    /// Контроллер для работы с тегами.
-    /// Базовый URL: /api/v1.0/tags
-    /// </summary>
-    [ApiController]
-    [Route("api/v1.0/tags")]
-    public class TagController : ControllerBase
+    private readonly IService<Tag, TagRequestTo, TagResponseTo> _tagService;
+
+    public TagsController(IService<Tag, TagRequestTo, TagResponseTo> tagService)
     {
-        private readonly IService<Tag, TagRequestTo, TagResponseTo> _tagService;
+        _tagService = tagService;
+    }
 
-        public TagController(IService<Tag, TagRequestTo, TagResponseTo> tagService)
+    [HttpGet("{id:long}")]
+    public async Task<ActionResult<TagResponseTo>> GetById(long id)
+    {
+        var tag = await _tagService.GetByIdAsync(id);
+        if (tag == null)
+            return NotFound(new { error = $"Tag with id {id} not found" });
+        return Ok(tag);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<TagResponseTo>>> GetAll()
+    {
+        var tags = await _tagService.GetAllAsync();
+        return Ok(tags);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<TagResponseTo>> Create(TagRequestTo request)
+    {
+        try
         {
-            _tagService = tagService;
+            var created = await _tagService.CreateAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
-
-        /// <summary>
-        /// Получить тег по идентификатору.
-        /// </summary>
-        /// <param name="id">Идентификатор тега</param>
-        /// <returns>Тег</returns>
-        /// <response code="200">Тег найден</response>
-        /// <response code="404">Тег не найден</response>
-        [HttpGet("{id:long}")]
-        public ActionResult<TagResponseTo> GetById(long id)
+        catch (InvalidOperationException ex)
         {
-            var tag = _tagService.GetById(id);
-            if (tag == null)
-                return NotFound(new { error = $"Tag with id {id} not found" });
-            return Ok(tag);
+            return Conflict(new { error = ex.Message });
         }
-
-        /// <summary>
-        /// Получить все теги.
-        /// </summary>
-        /// <returns>Список тегов</returns>
-        [HttpGet]
-        public ActionResult<IEnumerable<TagResponseTo>> GetAll()
+        catch (Exception)
         {
-            var tags = _tagService.GetAll();
-            return Ok(tags);
+            return StatusCode(500, new { error = "Internal server error" });
         }
+    }
 
-        /// <summary>
-        /// Создать новый тег.
-        /// </summary>
-        /// <param name="request">Данные для создания</param>
-        /// <returns>Созданный тег</returns>
-        /// <response code="201">Тег создан</response>
-        /// <response code="400">Некорректные данные</response>
-        /// <response code="409">Конфликт (например, тег с таким именем уже существует)</response>
-        [HttpPost]
-        public ActionResult<TagResponseTo> Create(TagRequestTo request)
+    [HttpPut("{id:long}")]
+    public async Task<ActionResult<TagResponseTo>> Update(long id, TagRequestTo request)
+    {
+        //request.Id = id; // копируем id из маршрута
+
+        try
         {
-            try
-            {
-                var created = _tagService.Create(request);
-                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { error = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "Internal server error" });
-            }
+            var updated = await _tagService.UpdateAsync(id, request);
+            return Ok(updated);
         }
-
-        /// <summary>
-        /// Полностью обновить тег.
-        /// </summary>
-        /// <param name="id">Идентификатор тега (из маршрута)</param>
-        /// <param name="request">Новые данные тега</param>
-        /// <returns>Обновлённый тег</returns>
-        /// <response code="200">Тег обновлён</response>
-        /// <response code="400">Некорректные данные</response>
-        /// <response code="404">Тег не найден</response>
-        /// <response code="409">Конфликт (например, тег с таким именем уже существует)</response>
-        [HttpPut("{id:long}")]
-        public ActionResult<TagResponseTo> Update(long id, TagRequestTo request)
+        catch (KeyNotFoundException ex)
         {
-            // Копируем идентификатор из маршрута в DTO
-            request.Id = id;
-
-            try
-            {
-                var updated = _tagService.Update(request);
-                return Ok(updated);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { error = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "Internal server error" });
-            }
+            return NotFound(new { error = ex.Message });
         }
-
-        /// <summary>
-        /// Удалить тег.
-        /// </summary>
-        /// <param name="id">Идентификатор тега</param>
-        /// <returns>Статус удаления</returns>
-        /// <response code="204">Тег удалён</response>
-        /// <response code="404">Тег не найден</response>
-        [HttpDelete("{id:long}")]
-        public IActionResult Delete(long id)
+        catch (InvalidOperationException ex)
         {
-            try
-            {
-                _tagService.Delete(id);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "Internal server error" });
-            }
+            return Conflict(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    [HttpDelete("{id:long}")]
+    public async Task<IActionResult> Delete(long id)
+    {
+        try
+        {
+            await _tagService.DeleteAsync(id);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { error = "Internal server error" });
         }
     }
 }

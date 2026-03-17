@@ -1,57 +1,42 @@
-﻿using rest_api.Entities;
-using rest_api.InMemory;
+﻿using AutoMapper;
 using rest_api.Dtos;
+using rest_api.Entities;
+using rest_api.Repositories;
+using System;
+using System.Threading.Tasks;
 
 namespace rest_api.Services
 {
     public class ReactionService : BaseService<Reaction, ReactionRequestTo, ReactionResponseTo>
     {
-        public ReactionService(IRepository<Reaction> repository) : base(repository)
+        public ReactionService(IRepository<Reaction> repository, IMapper mapper)
+            : base(repository, mapper)
         {
         }
 
-        public override ReactionResponseTo Create(ReactionRequestTo request)
+        public override async Task<ReactionResponseTo> CreateAsync(ReactionRequestTo request)
         {
-            var reaction = MapToEntity(request);
-  
+            var reaction = _mapper.Map<Reaction>(request);
+           
 
-            _repository.Add(reaction);
-            return MapToResponse(reaction);
+            await _repository.AddAsync(reaction);
+            await _repository.SaveChangesAsync();
+
+            return _mapper.Map<ReactionResponseTo>(reaction);
         }
 
-        public override ReactionResponseTo Update(ReactionRequestTo request)
+        public override async Task<ReactionResponseTo> UpdateAsync(long id, ReactionRequestTo request)
         {
-            var id = request.Id;
-            var reaction = _repository.GetById(id);
-            if (reaction == null)
+            var existingReaction = await _repository.GetByIdAsync(id);
+            if (existingReaction == null)
                 throw new KeyNotFoundException($"Reaction with id {id} not found");
 
-            reaction.TopicId = request.TopicId;
-            reaction.Content = request.Content;
-            
+            _mapper.Map(request, existingReaction);
 
-            _repository.Update(reaction);
-            return MapToResponse(reaction);
-        }
+            _repository.Update(existingReaction);
+            await _repository.SaveChangesAsync();
 
-        protected override ReactionResponseTo MapToResponse(Reaction entity)
-        {
-            return new ReactionResponseTo
-            {
-                Id = entity.Id,
-                TopicId = entity.TopicId,
-                Content = entity.Content,
-                
-            };
-        }
-
-        protected override Reaction MapToEntity(ReactionRequestTo request)
-        {
-            return new Reaction
-            {
-                TopicId = request.TopicId,
-                Content = request.Content
-            };
+            return _mapper.Map<ReactionResponseTo>(existingReaction);
         }
     }
 }
