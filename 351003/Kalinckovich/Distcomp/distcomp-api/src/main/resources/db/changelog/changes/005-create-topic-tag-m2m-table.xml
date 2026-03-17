@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="5" author="AlexKalinckovich">
+        <createTable tableName="tbl_topic_tag">
+            <column name="topic_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+                tableName="tbl_topic_tag"
+                columnNames="topic_id, tag_id"
+                constraintName="pk_topic_tag"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_topic_tag"
+                baseColumnNames="topic_id"
+                referencedTableName="tbl_topic"
+                referencedColumnNames="id"
+                constraintName="fk_topic_tag_topic"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_topic_tag"
+                baseColumnNames="tag_id"
+                referencedTableName="tbl_tag"
+                referencedColumnNames="id"
+                constraintName="fk_topic_tag_tag"/>
+    </changeSet>
+</databaseChangeLog>

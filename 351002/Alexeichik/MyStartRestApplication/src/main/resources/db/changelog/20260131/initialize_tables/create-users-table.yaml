@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-users-table
+      author: Yana Aliakseichyk
+      changes:
+        - createSequence:
+            sequenceName: users_seq
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  defaultValueComputed: "nextval('users_seq')"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: login
+                  type: text
+                  constraints:
+                    unique: true
+                    nullable: false
+                    checkConstraint: "char_length(login) >= 2 AND 
+                                      char_length(login) <= 64"
+              - column:
+                  name: password
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(password) >= 8 AND 
+                                      char_length(password) <= 128"
+              - column:
+                  name: firstname
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(firstname) >= 8 AND 
+                                      char_length(firstname) <= 64"
+              - column:
+                  name: lastname
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(lastname) >= 8 AND 
+                                      char_length(lastname) <= 64"
