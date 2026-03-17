@@ -49,7 +49,6 @@
                 constraintName="fk_article_user"/>
     </changeSet>
 
-    <!-- NOTE -->
     <changeSet id="3" author="student">
         <createTable tableName="tbl_note" schemaName="public">
             <column name="id" type="BIGSERIAL">
