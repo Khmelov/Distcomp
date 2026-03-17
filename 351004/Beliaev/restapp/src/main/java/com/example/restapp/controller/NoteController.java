@@ -1,8 +1,8 @@
 package com.example.restapp.controller;
 
-import com.example.restapp.client.NoteClient;
 import com.example.restapp.dto.request.NoteRequestTo;
 import com.example.restapp.dto.response.NoteResponseTo;
+import com.example.restapp.service.NoteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,33 +14,32 @@ import java.util.List;
 @RequestMapping("/api/v1.0/notes")
 @RequiredArgsConstructor
 public class NoteController {
-
-    private final NoteClient noteClient; // Изменено с NoteService на NoteClient
+    private final NoteService service;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public NoteResponseTo create(@Valid @RequestBody NoteRequestTo request) {
-        return noteClient.create(request);
+        return service.create(request);
     }
 
     @GetMapping
     public List<NoteResponseTo> getAll() {
-        return noteClient.getAll();
+        return service.getAll();
     }
 
     @GetMapping("/{id}")
     public NoteResponseTo getById(@PathVariable Long id) {
-        return noteClient.getById(id);
+        return service.getById(id);
     }
 
     @PutMapping("/{id}")
     public NoteResponseTo update(@PathVariable Long id, @Valid @RequestBody NoteRequestTo request) {
-        return noteClient.update(id, request);
+        return service.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        noteClient.delete(id);
+        service.delete(id);
     }
 }
