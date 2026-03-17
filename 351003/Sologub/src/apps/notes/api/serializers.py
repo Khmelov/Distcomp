@@ -1,9 +1,2 @@
-from rest_framework import serializers
-from apps.notes.models import Note
-
-
-class NoteSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Note
-        fields = '__all__'
+# Сериализация для Note выполняется в микросервисе discussion.
+# Publisher проксирует запросы без своей сериализации.

@@ -16,6 +16,8 @@ dj-database-url = "*"
 pytest = "*"
 pytest-django = "*"
 testcontainers = "*"
+django-cassandra-engine = "1.7.0"
+requests = "*"
 
 [dev-packages]
 
