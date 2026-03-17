@@ -12,7 +12,8 @@ namespace Distcomp.Application.Mapping
             CreateMap<UserRequestTo, User>();
 
             CreateMap<Issue, IssueResponseTo>();
-            CreateMap<IssueRequestTo, Issue>();
+            CreateMap<IssueRequestTo, Issue>()
+                .ForMember(dest => dest.Markers, opt => opt.Ignore());
 
             CreateMap<Marker, MarkerResponseTo>();
             CreateMap<MarkerRequestTo, Marker>();

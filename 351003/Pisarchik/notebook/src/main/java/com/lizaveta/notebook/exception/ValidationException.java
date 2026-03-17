@@ -1,8 +1,5 @@
 package com.lizaveta.notebook.exception;
 
-/**
- * Exception thrown when validation fails.
- */
 public class ValidationException extends RuntimeException {
 
     private final int errorCode;

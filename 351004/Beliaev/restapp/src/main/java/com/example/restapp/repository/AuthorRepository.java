@@ -1,8 +1,9 @@
 package com.example.restapp.repository;
 
 import com.example.restapp.model.Author;
-import org.springframework.stereotype.Component;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-@Component
-public class AuthorRepository extends InMemoryRepository<Author> {
+@Repository
+public interface AuthorRepository extends JpaRepository<Author, Long> {
 }

@@ -13,6 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1.0/comments")
 public class CommentController {
+
     private final CommentService commentService;
 
     public CommentController(CommentService commentService) {
@@ -20,8 +21,11 @@ public class CommentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CommentResponseTo>> getAll() {
-        return ResponseEntity.ok(commentService.getAll());
+    public ResponseEntity<List<CommentResponseTo>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size,
+            @RequestParam(defaultValue = "id") String sort) {
+        return ResponseEntity.ok(commentService.getAll(page, size, sort).getContent());
     }
 
     @GetMapping("/{id}")

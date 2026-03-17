@@ -30,11 +30,19 @@ public class ExcMiddleware
         {
             await HandleException(context, e, StatusCodes.Status404NotFound);
         }
+        catch (ServiceForbiddenOperationException e)
+        {
+            await HandleException(context, e, StatusCodes.Status403Forbidden);
+        }
         catch (ServiceException e)
         {
             await HandleException(context, e, StatusCodes.Status400BadRequest);
         }
         catch (ValidationException e)
+        {
+            await HandleException(context, e, StatusCodes.Status400BadRequest);
+        }
+        catch (BadHttpRequestException e)
         {
             await HandleException(context, e, StatusCodes.Status400BadRequest);
         }
