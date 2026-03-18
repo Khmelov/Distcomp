@@ -14,11 +14,44 @@ namespace rest_api.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Устанавливаем имена таблиц с префиксом tbl_
-            modelBuilder.Entity<User>().ToTable("tbl_user");
-            modelBuilder.Entity<Topic>().ToTable("tbl_topic");
-            modelBuilder.Entity<Tag>().ToTable("tbl_tag");
-            modelBuilder.Entity<Reaction>().ToTable("tbl_reaction");
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.ToTable("tbl_user");
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Login).HasColumnName("login");
+                entity.Property(e => e.Password).HasColumnName("password");
+                entity.Property(e => e.Firstname).HasColumnName("firstname");
+                entity.Property(e => e.Lastname).HasColumnName("lastname");
+            });
+            // Тема
+            modelBuilder.Entity<Topic>(entity =>
+            {
+                entity.ToTable("tbl_topic");
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.UserId).HasColumnName("user_id");
+                entity.Property(e => e.Title).HasColumnName("title");
+                entity.Property(e => e.Content).HasColumnName("content");
+                entity.Property(e => e.Created).HasColumnName("created");
+                entity.Property(e => e.Modified).HasColumnName("modified");
+            });
+
+            // Реакция
+            modelBuilder.Entity<Reaction>(entity =>
+            {
+                entity.ToTable("tbl_reaction");
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.TopicId).HasColumnName("topic_id");
+                entity.Property(e => e.Content).HasColumnName("content");
+                
+            });
+
+            //Тег
+            modelBuilder.Entity<Tag>(entity =>
+            {
+                entity.ToTable("tbl_tag");
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Name).HasColumnName("name");
+            });
 
             // Для промежуточной таблицы TopicTag (если нужен префикс)
             modelBuilder.Entity<TopicTag>().ToTable("tbl_topic_tag");
@@ -33,6 +66,7 @@ namespace rest_api.Data
                 .HasOne(r => r.Topic)
                 .WithMany(t => t.Reactions)
                 .HasForeignKey(r => r.TopicId);
+                
 
             // Настройка связи многие-ко-многим через TopicTag
             modelBuilder.Entity<TopicTag>()
@@ -42,14 +76,14 @@ namespace rest_api.Data
                 .HasOne(tt => tt.Topic)
                 .WithMany(t => t.TopicTags)
                 .HasForeignKey(tt => tt.TopicId)
-                .OnDelete(DeleteBehavior.Restrict); 
+                .OnDelete(DeleteBehavior.Cascade); 
 
             modelBuilder.Entity<TopicTag>()
                 .HasOne(tt => tt.Tag)
                 .WithMany(t => t.TopicTags)
                 .HasForeignKey(tt => tt.TagId)
-                .OnDelete(DeleteBehavior.Restrict);
-
+                .OnDelete(DeleteBehavior.Cascade);
+            
 
             base.OnModelCreating(modelBuilder);
         }

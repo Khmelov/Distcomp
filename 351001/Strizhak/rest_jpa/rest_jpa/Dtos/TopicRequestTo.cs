@@ -16,5 +16,6 @@ namespace rest_api.Dtos
         [Required]
         [StringLength(2048, MinimumLength = 4)]
         public string Content { get; set; } = null!;
+        public List<string>? Tags { get; set; }
     }
 }

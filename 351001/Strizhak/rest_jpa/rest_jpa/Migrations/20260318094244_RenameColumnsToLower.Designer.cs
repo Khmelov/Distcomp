@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using rest_api.Data;
@@ -11,9 +12,11 @@ using rest_api.Data;
 namespace rest_jpa.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260318094244_RenameColumnsToLower")]
+    partial class RenameColumnsToLower
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,7 +42,7 @@ namespace rest_jpa.Migrations
 
                     b.Property<long>("TopicId")
                         .HasColumnType("bigint")
-                        .HasColumnName("topic_id");
+                        .HasColumnName("topicid");
 
                     b.Property<long?>("UserId")
                         .HasColumnType("bigint");
@@ -57,20 +60,18 @@ namespace rest_jpa.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
+                        .HasColumnType("bigint");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)")
-                        .HasColumnName("name");
+                        .HasColumnType("character varying(32)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_tag", (string)null);
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("rest_api.Topic", b =>
@@ -104,7 +105,7 @@ namespace rest_jpa.Migrations
 
                     b.Property<long>("UserId")
                         .HasColumnType("bigint")
-                        .HasColumnName("user_id");
+                        .HasColumnName("userid");
 
                     b.HasKey("Id");
 
@@ -197,13 +198,13 @@ namespace rest_jpa.Migrations
                     b.HasOne("rest_api.Entities.Tag", "Tag")
                         .WithMany("TopicTags")
                         .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("rest_api.Topic", "Topic")
                         .WithMany("TopicTags")
                         .HasForeignKey("TopicId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Tag");

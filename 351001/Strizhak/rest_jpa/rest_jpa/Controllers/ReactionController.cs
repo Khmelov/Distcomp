@@ -40,11 +40,11 @@ public class ReactionsController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { error = ex.Message });
+            return StatusCode(403, new { error = ex.Message });
         }
         catch (Exception)
         {
-            return StatusCode(500, new { error = "Internal server error" });
+            return StatusCode(400, new { error = "Internal server error" });
         }
     }
 

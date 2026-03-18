@@ -31,6 +31,26 @@ builder.Services.AddScoped<IService<Tag, TagRequestTo, TagResponseTo>, TagServic
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    context.Database.Migrate(); // применяем миграции, если их нет
+
+    // Проверяем, есть ли пользователь с Id = 1
+    if (!context.Users.Any(u => u.Id == 1))
+    {
+        context.Users.Add(new User
+        {
+            Id = 1,
+            Login = "veranikastryzhak@gmail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("password123"),
+            Firstname = "Veranika",
+            Lastname = "Stryzhak"
+        });
+        context.SaveChanges();
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
