@@ -6,7 +6,7 @@
 #include <dto/responses/IssueResponseTo.h>
 #include <dto/requests/IssueRequestTo.h>
 
-namespace myapp
+namespace publisher
 {
 
 class IssueRepository;

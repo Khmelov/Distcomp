@@ -9,7 +9,7 @@
 #include <exceptions/ValidationException.h>
 
 using namespace drogon;
-using namespace myapp;
+using namespace publisher;
 
 class LabelController : public drogon::HttpController<LabelController, false>
 {

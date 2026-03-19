@@ -1,8 +1,8 @@
 #include "EditorController.h"
 #include <iostream>
 
-using namespace myapp;
-using namespace myapp::dto;
+using namespace publisher;
+using namespace publisher::dto;
 
 EditorController::EditorController(std::unique_ptr<EditorService> service)
 {

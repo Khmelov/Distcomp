@@ -6,7 +6,7 @@
 #include <dto/responses/PostResponseTo.h>
 #include <dto/requests/PostRequestTo.h>
 
-namespace myapp
+namespace publisher
 {
 
 class PostRepository;

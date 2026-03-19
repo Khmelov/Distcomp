@@ -6,7 +6,7 @@
 #include <dto/responses/LabelResponseTo.h>
 #include <dto/requests/LabelRequestTo.h>
 
-namespace myapp
+namespace publisher
 {
 
 class LabelRepository;

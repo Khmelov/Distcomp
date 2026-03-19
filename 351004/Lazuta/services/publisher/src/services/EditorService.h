@@ -7,7 +7,7 @@
 #include <dto/requests/EditorRequestTo.h>
 #include <dto/responses/EditorResponseTo.h>
 
-namespace myapp
+namespace publisher
 {
 
 class EditorRepository;

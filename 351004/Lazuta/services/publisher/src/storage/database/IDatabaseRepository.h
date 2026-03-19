@@ -3,7 +3,7 @@
 #include <drogon/orm/Mapper.h>
 #include <dao/DAO.h>
 
-namespace myapp 
+namespace publisher 
 {
 
 template <typename T>

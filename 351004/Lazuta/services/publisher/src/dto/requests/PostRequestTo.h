@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <exceptions/ValidationException.h>
 
-namespace myapp::dto
+namespace publisher::dto
 {
 
 class PostRequestTo

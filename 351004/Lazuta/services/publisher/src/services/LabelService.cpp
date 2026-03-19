@@ -4,11 +4,11 @@
 #include <exceptions/DatabaseException.h>
 #include <exceptions/NotFoundException.h>
 
-namespace myapp
+namespace publisher
 {
 
 using namespace drogon_model::distcomp;
-using namespace myapp::dto;
+using namespace publisher::dto;
 
 LabelService::LabelService(std::shared_ptr<LabelRepository> storage)
     : m_dao(storage)

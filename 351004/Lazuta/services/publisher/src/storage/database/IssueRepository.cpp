@@ -2,7 +2,7 @@
 #include <drogon/orm/Criteria.h>
 #include "IssueRepository.h"
 
-namespace myapp
+namespace publisher
 {
 
 using namespace drogon::orm;

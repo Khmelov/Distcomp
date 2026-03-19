@@ -11,7 +11,7 @@
 #include <models/TblLabel.h>
 #include <exceptions/DatabaseError.h>
 
-namespace myapp
+namespace publisher
 {
 
 using namespace drogon_model::distcomp;

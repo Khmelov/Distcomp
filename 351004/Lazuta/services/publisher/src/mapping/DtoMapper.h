@@ -22,7 +22,7 @@
 #include <dto/responses/LabelResponseTo.h>
 #include <dto/responses/PostResponseTo.h>
 
-namespace myapp
+namespace publisher
 {
 
 using namespace drogon_model::distcomp;

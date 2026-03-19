@@ -1,7 +1,7 @@
 #include "storage/database/LabelRepository.h"
 #include <drogon/orm/Criteria.h>
 
-namespace myapp
+namespace publisher
 {
 
 using namespace drogon::orm;

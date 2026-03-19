@@ -7,7 +7,7 @@
 #include <dto/responses/IssueLabelResponseTo.h>
 #include <dto/requests/IssueLabelRequestTo.h>
 
-namespace myapp
+namespace publisher
 {
 
 class IssueLabelRepository;

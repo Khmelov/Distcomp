@@ -2,8 +2,8 @@
 #include "IssueController.h"
 #include <iostream>
 
-using namespace myapp;
-using namespace myapp::dto;
+using namespace publisher;
+using namespace publisher::dto;
 
 IssueController::IssueController(std::unique_ptr<IssueService> service)
 {

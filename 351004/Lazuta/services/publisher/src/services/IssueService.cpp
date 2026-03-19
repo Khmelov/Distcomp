@@ -8,11 +8,11 @@
 #include <exceptions/NotFoundException.h>
 #include <exceptions/ValidationException.h>
 
-namespace myapp
+namespace publisher
 {
 
 using namespace drogon_model::distcomp;
-using namespace myapp::dto;
+using namespace publisher::dto;
 
 IssueService::IssueService(
     std::shared_ptr<IssueRepository> storage,

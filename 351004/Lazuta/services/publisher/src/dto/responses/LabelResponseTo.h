@@ -3,7 +3,7 @@
 #include <string>
 #include <jsoncpp/json/json.h>
 
-namespace myapp::dto
+namespace publisher::dto
 {
 
 class LabelResponseTo 

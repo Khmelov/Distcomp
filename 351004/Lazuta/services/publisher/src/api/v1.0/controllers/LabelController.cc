@@ -2,8 +2,8 @@
 #include "LabelController.h"
 #include <iostream>
 
-using namespace myapp;
-using namespace myapp::dto;
+using namespace publisher;
+using namespace publisher::dto;
 
 LabelController::LabelController(std::unique_ptr<LabelService> service)
 {

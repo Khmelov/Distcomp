@@ -1,8 +1,8 @@
 #include "IssueLabelController.h"
 #include <iostream>
 
-using namespace myapp;
-using namespace myapp::dto;
+using namespace publisher;
+using namespace publisher::dto;
 
 IssueLabelController::IssueLabelController(std::unique_ptr<IssueLabelService> service)
 {

@@ -1,7 +1,7 @@
 #include "storage/database/EditorRepository.h"
 #include "EditorRepository.h"
 
-namespace myapp
+namespace publisher
 {
 
 using namespace drogon::orm;
