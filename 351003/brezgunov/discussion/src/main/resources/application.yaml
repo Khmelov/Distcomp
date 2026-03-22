@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: discussion
+
+server:
+  port: 24130
