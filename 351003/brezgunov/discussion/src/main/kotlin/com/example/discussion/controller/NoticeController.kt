@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
 
 @RestController
 @RequestMapping("/api/{version}/notices")
@@ -40,16 +40,24 @@ class NoticeController(
     }
 
     @GetMapping(path = ["/{id}"], version = "1.0")
-    fun readNoticeById(@PathVariable id: UUID): NoticeResponseTo {
+    fun readNoticeById(@PathVariable id: Long): NoticeResponseTo {
         return noticeService.readNoticeById(id)
     }
 
     @GetMapping(version = "1.0")
     fun readAllnotices(): List<NoticeResponseTo> = noticeService.readAllNotices()
 
+    @PutMapping(path = ["/{id}", ""], version = "1.0")
+    @ResponseStatus(HttpStatus.OK)
+    fun updateNotice(
+        @Valid @RequestBody noticeRequestTo: NoticeRequestTo,
+        @PathVariable("id") noticeId: Long
+    ) =
+        noticeService.updateNotice(noticeId, noticeRequestTo)
+
     @DeleteMapping(path = ["/{id}"], version = "1.0")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteNotice(@PathVariable id: UUID) {
+    fun deleteNotice(@PathVariable id: Long) {
         noticeService.removeNoticeById(id)
     }
 }

@@ -14,7 +14,7 @@ class NoticeService (
     private val noticeMapper: NoticeMapper,
     private val noticeRepository : NoticeRepository,
 ) {
-    fun readNoticeById(id: UUID) : NoticeResponseTo {
+    fun readNoticeById(id: Long) : NoticeResponseTo {
         val notice = noticeRepository.findByIdOrNull(id) ?: throw NoticeNotFoundException("User not found")
 
         return noticeMapper.toNoticeResponse(notice)
@@ -28,12 +28,24 @@ class NoticeService (
     fun createNotice(noticeRequestTo: NoticeRequestTo): NoticeResponseTo {
         val notice = noticeMapper.toNoticeEntity(noticeRequestTo)
 
+        notice.id = UUID.randomUUID().mostSignificantBits and Long.MAX_VALUE
         noticeRepository.save(notice)
 
         return noticeMapper.toNoticeResponse(notice)
     }
 
-    fun removeNoticeById(id : UUID) {
+    fun updateNotice(id : Long, noticeRequestTo: NoticeRequestTo): NoticeResponseTo {
+        if (!noticeRepository.existsById(id)) throw NoticeNotFoundException("Notice not found")
+
+        val notice = noticeMapper.toNoticeEntity(noticeRequestTo)
+        notice.id = id
+
+        noticeRepository.save(notice)
+
+        return noticeMapper.toNoticeResponse(notice)
+    }
+
+    fun removeNoticeById(id : Long) {
         val notice = noticeRepository.findByIdOrNull(id) ?: throw NoticeNotFoundException("User not found")
 
         noticeRepository.delete(notice)

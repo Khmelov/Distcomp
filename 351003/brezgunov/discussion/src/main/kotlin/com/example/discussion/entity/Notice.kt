@@ -1,20 +1,17 @@
 package com.example.discussion.entity
 
-import org.springframework.data.cassandra.core.cql.PrimaryKeyType
-import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn
+import org.springframework.data.cassandra.core.mapping.Column
+import org.springframework.data.cassandra.core.mapping.PrimaryKey
 import org.springframework.data.cassandra.core.mapping.Table
-import java.util.UUID
 
 @Table("tbl_notice")
-class Notice(
-    @PrimaryKeyColumn(type = PrimaryKeyType.PARTITIONED)
-    var country: String,
+data class Notice(
+    @PrimaryKey
+    var id: Long = 0,
 
-    @PrimaryKeyColumn(type = PrimaryKeyType.CLUSTERED)
-    var newsId: Long,
+    @Column("news_id")
+    var newsId: Long = 0,
 
-    @PrimaryKeyColumn(type = PrimaryKeyType.CLUSTERED)
-    var id: UUID,
-
-    var content: String,
+    @Column("content")
+    var content: String = ""
 )

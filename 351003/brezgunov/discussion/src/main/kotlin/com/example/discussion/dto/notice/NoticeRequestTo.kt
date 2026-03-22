@@ -3,13 +3,9 @@ package com.example.discussion.dto.notice
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Size
-import java.util.UUID
 
 data class NoticeRequestTo (
-    val id: UUID? = null,
-
-    @field:NotNull
-    val country: String,
+    val id: Long? = null,
 
     @field:NotNull
     val newsId: Long,

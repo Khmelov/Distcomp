@@ -9,7 +9,7 @@ import org.mapstruct.ReportingPolicy
 
 @Mapper(
     componentModel = MappingConstants.ComponentModel.SPRING,
-    unmappedTargetPolicy = ReportingPolicy.IGNORE
+    unmappedTargetPolicy = ReportingPolicy.ERROR
 )
 interface NoticeMapper {
     fun toNoticeResponse(notice: Notice) : NoticeResponseTo

@@ -1,10 +1,7 @@
 package com.example.discussion.dto.notice
 
-import java.util.UUID
-
 data class NoticeResponseTo (
-    val id: UUID,
-    val country: String,
+    val id: Long,
     val content: String,
     val newsId: Long,
 )
