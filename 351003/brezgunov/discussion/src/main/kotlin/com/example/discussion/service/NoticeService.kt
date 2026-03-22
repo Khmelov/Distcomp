@@ -20,6 +20,11 @@ class NoticeService (
         return noticeMapper.toNoticeResponse(notice)
     }
 
+    fun readAllNotices() : List<NoticeResponseTo> {
+        val notices = noticeRepository.findAll()
+        return notices.map { noticeMapper.toNoticeResponse(it) }
+    }
+
     fun createNotice(noticeRequestTo: NoticeRequestTo): NoticeResponseTo {
         val notice = noticeMapper.toNoticeEntity(noticeRequestTo)
 

@@ -44,6 +44,9 @@ class NoticeController(
         return noticeService.readNoticeById(id)
     }
 
+    @GetMapping(version = "1.0")
+    fun readAllnotices(): List<NoticeResponseTo> = noticeService.readAllNotices()
+
     @DeleteMapping(path = ["/{id}"], version = "1.0")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteNotice(@PathVariable id: UUID) {
