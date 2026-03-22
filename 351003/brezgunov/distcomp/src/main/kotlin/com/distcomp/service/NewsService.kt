@@ -20,7 +20,6 @@ class NewsService(
     val newsMapper: NewsMapper,
     val newsRepository: NewsRepository,
     val userRepository: UserRepository,
-    val markerRepository: MarkerRepository
 ) {
     @Transactional
     fun createNews(newsRequestTo: NewsRequestTo): NewsResponseTo {

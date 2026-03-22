@@ -22,6 +22,8 @@ repositories {
 }
 
 dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-cassandra")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("tools.jackson.module:jackson-module-kotlin")
@@ -30,6 +32,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-data-cassandra-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    kapt("org.mapstruct:mapstruct-processor:1.7.0.Beta1")
 }
 
 kotlin {
