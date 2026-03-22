@@ -12,7 +12,7 @@ public class WebClientConfig {
     @Qualifier("NoteServiceWebClient")
     public WebClient noteServiceWebClient() {
         return WebClient.builder()
-                .baseUrl("")
+                .baseUrl("http://localhost:24130")
                 .build();
     }
 }

@@ -1,5 +1,10 @@
 services:
   cassandra:
+    healthcheck:
+      test: [ "CMD", "cqlsh", "-e", "describe keyspaces" ]
+      interval: 15s
+      timeout: 10s
+      retries: 10
     image: cassandra:latest
     container_name: cassandra-distcomp
     ports:

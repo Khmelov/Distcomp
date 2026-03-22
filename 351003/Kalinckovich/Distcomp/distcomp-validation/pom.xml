@@ -15,6 +15,7 @@
         <maven.compiler.source>22</maven.compiler.source>
         <maven.compiler.target>22</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <lombok.version>1.18.30</lombok.version>
     </properties>
     <dependencies>
         <dependency>
@@ -28,5 +29,4 @@
             <artifactId>spring-data-commons</artifactId>
         </dependency>
     </dependencies>
-
 </project>

@@ -5,15 +5,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
-import org.springframework.data.relational.core.mapping.Table;
-import jakarta.validation.constraints.Size;
-
+import org.springframework.data.cassandra.core.mapping.Table;
 import org.springframework.data.cassandra.core.cql.PrimaryKeyType;
 import org.springframework.data.cassandra.core.mapping.PrimaryKeyClass;
 import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 @Table("tbl_note")
 @Getter
@@ -25,16 +22,18 @@ public class Note {
     @PrimaryKey
     private NoteKey key;
 
-    @Size(min = 2, max = 2048)
     private String content;
-
 
     public Long getTopicId() {
         return key != null ? key.getTopicId() : null;
     }
 
-    public UUID getId() {
+    public Long getId() {
         return key != null ? key.getId() : null;
+    }
+
+    public String getCountry() {
+        return key != null ? key.getCountry() : null;
     }
 
     @PrimaryKeyClass
@@ -43,10 +42,13 @@ public class Note {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class NoteKey implements Serializable {
-        @PrimaryKeyColumn(name = "topic_id", type = PrimaryKeyType.PARTITIONED)
+        @PrimaryKeyColumn(name = "country", type = PrimaryKeyType.PARTITIONED)
+        private String country;
+
+        @PrimaryKeyColumn(name = "topic_id", type = PrimaryKeyType.CLUSTERED)
         private Long topicId;
 
         @PrimaryKeyColumn(name = "id", type = PrimaryKeyType.CLUSTERED)
-        private UUID id;
+        private Long id;
     }
 }

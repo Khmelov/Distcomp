@@ -1,54 +1,67 @@
 package com.distcomp.validation.note;
 
-import com.distcomp.data.repository.note.NoteReactiveRepository;
+import com.distcomp.errorhandling.model.ValidationError;
+import com.distcomp.repository.cassandra.NoteCassandraReactiveRepository;
 import com.distcomp.dto.note.NoteCreateRequest;
 import com.distcomp.dto.note.NoteUpdateRequest;
-import com.distcomp.errorhandling.exceptions.BusinessValidationException;
+import com.distcomp.errorhandling.exceptions.NoteNotFoundException;
 import com.distcomp.model.note.Note;
 import com.distcomp.validation.abstraction.BaseValidator;
 import com.distcomp.validation.model.ValidationArgs;
 import com.distcomp.validation.model.ValidationResult;
-import com.distcomp.validator.topic.TopicValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.UUID;
+import java.util.List;
+import java.util.Map;
 
-@Component
+@Component("cassandraNoteValidator")
 @RequiredArgsConstructor
 public class NoteValidator extends BaseValidator<NoteCreateRequest, NoteUpdateRequest> {
 
-    private final TopicValidator topicValidator;
-    private final NoteReactiveRepository noteRepository;
+    private static final String DEFAULT_COUNTRY = "default";
+
+    private final NoteCassandraReactiveRepository noteRepository;
 
     /**
-     * Validate that a note exists by its composite key (topicId + noteId).
-     * Returns Mono.empty() if valid, otherwise Mono.error with BusinessValidationException.
+     * Validates that a note exists for the given composite key (country, topicId, noteId).
      */
-    public Mono<Void> validateNoteExists(final Long topicId, final UUID noteId) {
-        return checkNotNull(topicId, "topicId", "Topic ID must not be null")
-                .flatMap(r -> {
-                    if (!r.isValid()) {
-                        return Mono.error(new BusinessValidationException(r.errors()));
+    public Mono<Void> validateNoteExists(Long topicId, Long noteId) {
+        Note.NoteKey key = new Note.NoteKey(DEFAULT_COUNTRY, topicId, noteId);
+        return noteRepository.existsById(key)
+                .flatMap(exists -> {
+                    if (!exists) {
+                        List<ValidationError> errors = List.of(
+                                new ValidationError("note", "Note not found with topicId: " + topicId + " and id: " + noteId)
+                        );
+                        return Mono.error(new NoteNotFoundException(errors));
                     }
-                    return checkNotNull(noteId, "noteId", "Note ID must not be null");
-                })
-                .flatMap(r -> {
-                    if (!r.isValid()) {
-                        return Mono.error(new BusinessValidationException(r.errors()));
+                    return Mono.empty();
+                });
+    }
+
+    /**
+     * Validates that a note exists for the given single ID (using the materialized view).
+     */
+    public Mono<Void> validateNoteExists(Long id) {
+        return noteRepository.findByNoteId(id)  
+                .hasElement()
+                .flatMap(exists -> {
+                    if (!exists) {
+                        List<ValidationError> errors = List.of(
+                                new ValidationError("note", "Note not found with id: " + id)
+                        );
+                        return Mono.error(new NoteNotFoundException(errors));
                     }
-                    final Note.NoteKey key = new Note.NoteKey(topicId, noteId);
-                    return checkEntityExists(noteRepository, key, "note",
-                            "Note not found with topicId: " + topicId + " and id: " + noteId);
-                })
-                .flatMap(r -> r.isValid() ? Mono.empty() : Mono.error(new BusinessValidationException(r.errors())));
+                    return Mono.empty();
+                });
     }
 
     @Override
-    public Mono<ValidationResult> validateUpdate(final NoteUpdateRequest request, final ValidationArgs args) {
-        final Long topicId = args.id() != null ? args.id() : null;
-        final UUID noteId = args.extras() != null ? (UUID) args.extras().get("noteId") : null;
+    public Mono<ValidationResult> validateUpdate(NoteUpdateRequest request, ValidationArgs args) {
+        Long topicId = args.id() != null ? args.id() : null;
+        Long noteId = args.extras() != null ? (Long) args.extras().get("noteId") : null;
 
         Mono<ValidationResult> result = Mono.just(ValidationResult.ok());
 
@@ -57,30 +70,24 @@ public class NoteValidator extends BaseValidator<NoteCreateRequest, NoteUpdateRe
 
         result = result.flatMap(r -> {
             if (topicId != null && noteId != null) {
-                final Note.NoteKey key = new Note.NoteKey(topicId, noteId);
+                Note.NoteKey key = new Note.NoteKey(DEFAULT_COUNTRY, topicId, noteId);
                 return checkEntityExists(noteRepository, key, "note", "Note not found").map(r::merge);
             }
             return Mono.just(r);
         });
 
-        return result.flatMap(r -> r.isValid() ? Mono.just(r) : Mono.error(new BusinessValidationException(r.errors())));
+        return result.flatMap(r -> r.isValid() ? Mono.just(r) : Mono.error(new NoteNotFoundException(r.errors())));
     }
 
     @Override
-    public Mono<ValidationResult> validateCreate(final NoteCreateRequest request, final ValidationArgs args) {
-        final Long topicId = request.getTopicId();
+    public Mono<ValidationResult> validateCreate(NoteCreateRequest request, ValidationArgs args) {
+        Long topicId = request.getTopicId();
 
         Mono<ValidationResult> result = Mono.just(ValidationResult.ok());
 
         result = result.flatMap(r -> checkNotNull(topicId, "topicId", "Topic ID must not be null").map(r::merge));
 
-        result = result.flatMap(r -> {
-            if (topicId == null) {
-                return Mono.just(r);
-            }
-            return topicValidator.checkTopicExists(topicId).map(r::merge);
-        });
-
-        return result.flatMap(r -> r.isValid() ? Mono.just(r) : Mono.error(new BusinessValidationException(r.errors())));
+        
+        return result.flatMap(r -> r.isValid() ? Mono.just(r) : Mono.error(new NoteNotFoundException(r.errors())));
     }
 }

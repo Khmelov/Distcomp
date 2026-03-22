@@ -3,10 +3,12 @@ package com.distcomp.config;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import liquibase.integration.spring.SpringLiquibase;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
 
@@ -39,20 +41,17 @@ public class LiquibaseCassandraConfig {
                 contactPoints, port, keyspace, localDatacenter
         );
 
-        final HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(jdbcUrl);
-        config.setDriverClassName("com.ing.data.cassandra.jdbc.CassandraDriver");
-        config.setMaximumPoolSize(2);
-
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName("com.ing.data.cassandra.jdbc.CassandraDriver");
+        dataSource.setUrl(jdbcUrl);
         if (!username.isEmpty()) {
-            config.setUsername(username);
-            config.setPassword(password);
+            dataSource.setUsername(username);
+            dataSource.setPassword(password);
         }
-
-        return new HikariDataSource(config);
+        return dataSource;
     }
 
-    @Bean
+    @Bean(name = "cassandraLiquibase")
     public SpringLiquibase liquibase(final DataSource cassandraDataSource) {
         final SpringLiquibase liquibase = new SpringLiquibase();
         liquibase.setDataSource(cassandraDataSource);

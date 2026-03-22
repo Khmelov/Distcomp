@@ -61,6 +61,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.distcomp</groupId>
             <artifactId>distcomp-domain</artifactId>
@@ -70,12 +71,6 @@
         <dependency>
             <groupId>com.distcomp</groupId>
             <artifactId>distcomp-validation</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.distcomp</groupId>
-            <artifactId>distcomp-api</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
