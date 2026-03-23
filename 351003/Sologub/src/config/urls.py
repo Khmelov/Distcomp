@@ -26,9 +26,3 @@ urlpatterns = [
     path(prefix_v1, include('apps.stories.api.urls')),
     path(prefix_v1, include('apps.notes.api.urls')),
 ]
-
-if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns = [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns

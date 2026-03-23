@@ -1,8 +1,9 @@
 package com.example.restapp.repository;
 
 import com.example.restapp.model.Note;
-import org.springframework.stereotype.Component;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-@Component
-public class NoteRepository extends InMemoryRepository<Note> {
+@Repository
+public interface NoteRepository extends JpaRepository<Note, Long> {
 }
