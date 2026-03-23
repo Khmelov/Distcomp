@@ -656,3 +656,7 @@ drogon_ctl_*
 cert/
 certs/
 ssl/
+
+
+# /config
+/tools
