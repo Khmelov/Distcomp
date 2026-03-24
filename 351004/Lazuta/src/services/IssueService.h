@@ -1,81 +1,44 @@
 #pragma once
 
 #include <memory>
-#include <dao/DAO.h>
-#include <entities/Issue.h>
+#include <vector>
+
 #include <dto/responses/IssueResponseTo.h>
 #include <dto/requests/IssueRequestTo.h>
-#include <mapping/Mapper.h>
-#include <exceptions/DatabaseException.h>
-#include <exceptions/NotFoundException.h>
+
+namespace myapp
+{
+
+class IssueRepository;
+class EditorRepository;
+class LabelRepository;
+class IssueLabelRepository;
 
 class IssueService 
 {
 private:
-    std::unique_ptr<DAO<Issue>> m_dao;
+    std::shared_ptr<IssueRepository> m_dao;
+    std::shared_ptr<EditorRepository> m_editorRepository;
+    std::shared_ptr<LabelRepository> m_labelRepository;
+    std::shared_ptr<IssueLabelRepository> m_issueLabelRepository;
+    
+    std::vector<int64_t> ProcessLabels(const std::vector<std::string>& labelNames);
     
 public:
-    IssueService(std::unique_ptr<DAO<Issue>> storage): m_dao(std::move(storage)) 
-    {
-
-    }
-        
-    IssueResponseTo Create(const IssueRequestTo& request) 
-    {
-        Issue entity = Mapper::ToEntity(request);
-        auto id = m_dao->Create(entity);
-        std::optional<Issue> newEntity = m_dao->GetByID(id);
-
-        if (!newEntity)
-        {
-            throw DatabaseException("Failed to retrieve created issue");
-        }
-
-        return Mapper::ToResponse(newEntity.value());
-    }
-
-    IssueResponseTo Read(uint64_t id) 
-    {
-        std::optional<Issue> entity = m_dao->GetByID(id);
-
-        if (!entity)
-        {
-            throw NotFoundException("Issue not found");
-        }
-
-        return Mapper::ToResponse(entity.value());
-    }
-
-    IssueResponseTo Update(const IssueRequestTo& request, uint64_t id) 
-    {
-        Issue entity = Mapper::ToEntity(request);    
-
-        if (!m_dao->Update(id, entity))
-        {
-            throw NotFoundException("Issue not found for update");
-        }
-
-        std::optional<Issue> newEntity = m_dao->GetByID(id);
-
-        if (!newEntity)
-        {
-            throw DatabaseException("Failed to retrieve updated issue");
-        }
-
-        return Mapper::ToResponse(newEntity.value());
-    }
-
-    bool Delete(uint64_t id)
-    {
-        if (!m_dao->Delete(id))
-        {
-            throw NotFoundException("Issue not found for deletion");
-        }
-        return true;
-    }
-
-    std::vector<IssueResponseTo> GetAll()
-    {
-        return Mapper::ToResponseList(m_dao->ReadAll());
-    }
+    IssueService(
+        std::shared_ptr<IssueRepository> storage,
+        std::shared_ptr<EditorRepository> editorRepository,
+        std::shared_ptr<LabelRepository> labelRepository,
+        std::shared_ptr<IssueLabelRepository> issueLabelRepository);
+    
+    dto::IssueResponseTo Create(const dto::IssueRequestTo& request);
+    dto::IssueResponseTo Read(int64_t id);
+    dto::IssueResponseTo Update(const dto::IssueRequestTo& request, int64_t id);
+    bool Delete(int64_t id);
+    std::vector<dto::IssueResponseTo> GetAll();
+    
+    std::vector<dto::IssueResponseTo> GetByEditorId(int64_t editorId);
+    std::vector<dto::IssueResponseTo> GetRecent(int limit = 10);
 };
+
+}

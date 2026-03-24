@@ -1,5 +1,5 @@
-using ArticleHouse.DAO.Exceptions;
 using ArticleHouse.Service.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace ArticleHouse.Service.Implementations;
 
@@ -11,7 +11,7 @@ public abstract class Service
         {
             await call();
         }
-        catch (DAOException e)
+        catch (DbUpdateException e)
         {
             HandleDAOException(e);
         }
@@ -23,18 +23,18 @@ public abstract class Service
         {
             return await call();
         }
-        catch (DAOException e)
+        catch (DbUpdateException e)
         {
             HandleDAOException(e);
             return default!;
         }
     }
 
-    protected static void HandleDAOException(DAOException e)
+    protected static void HandleDAOException(Exception e)
     {
-        if (e is DAOObjectNotFoundException)
+        if (e is DbUpdateException)
         {
-            throw new ServiceObjectNotFoundException(e.Message);
+            throw new ServiceForbiddenOperationException(e.Message);
         }
         throw new ServiceException(e.Message);
     }
