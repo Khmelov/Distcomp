@@ -16,36 +16,54 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d distcomp" ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  web:
-    container_name: dc
-    build:
-      context: .
-      dockerfile: Dockerfile
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra-distcomp
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=TestCluster
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces'"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+
+  publisher:
+    build: .
+    container_name: dc-publisher
     volumes:
       - .:/app
     working_dir: /app/src
+    command: python manage.py runserver 0.0.0.0:24110
     ports:
       - "24110:24110"
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/distcomp?options=-csearch_path%3Ddistcomp,public
-        - POSTGRES_HOST=postgres
-        - POSTGRES_DB=distcomp
-        - POSTGRES_USER=postgres
-        - POSTGRES_PASSWORD=postgres
-        - POSTGRES_PORT=5432
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/distcomp
+      - DISCUSSION_SERVICE_URL=http://discussion:24130/api/v1.0
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: curl --fail http://localhost:24110 || exit 1
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
-volumes:
-  postgres_data:
+
+  discussion:
+    build: .
+    container_name: dc-discussion
+    volumes:
+      - .:/app
+    working_dir: /app/src/discussion
+    command: python manage.py runserver 0.0.0.0:24130
+    ports:
+      - "24130:24130"
+    environment:
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
+    depends_on:
+      cassandra:
+        condition: service_healthy
