@@ -1,4 +1,4 @@
-package com.distcomp.dto.notice
+package com.example.discussion.dto.notice
 
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -8,7 +8,7 @@ data class NoticeRequestTo (
     val id: Long? = null,
 
     @field:NotNull
-    var newsId: Long,
+    val newsId: Long,
 
     @field:NotBlank
     @field:Size(min = 4, max = 2048)

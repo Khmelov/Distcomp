@@ -1,4 +1,4 @@
-package com.distcomp.exception
+package com.example.discussion.exception
 
 import org.springframework.http.HttpStatus
 
