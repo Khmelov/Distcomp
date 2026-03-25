@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+	<changeSet id="2" author="system">
+		<createTable tableName="tbl_tweet">
+			<column name="id" type="bigint" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false"/>
+			</column>
+			<column name="editor_id" type="bigint">
+				<constraints nullable="false"
+                             foreignKeyName="fk_tweet_editor"
+                             references="tbl_editor(id)"/>
+			</column>
+			<column name="title" type="varchar(64)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="content" type="varchar(2048)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="created" type="timestamp">
+				<constraints nullable="false"/>
+			</column>
+			<column name="modified" type="timestamp">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<addCheckConstraint
+            tableName="tbl_tweet"
+            constraintName="ck_tweet_title_length"
+            condition="length(title) BETWEEN 2 AND 64"/>
+
+		<addCheckConstraint
+            tableName="tbl_tweet"
+            constraintName="ck_tweet_content_length"
+            condition="length(content) BETWEEN 4 AND 2048"/>
+
+		<createIndex tableName="tbl_tweet" indexName="idx_tweet_editor">
+			<column name="editor_id"/>
+		</createIndex>
+
+		<createIndex tableName="tbl_tweet" indexName="idx_tweet_created">
+			<column name="created"/>
+		</createIndex>
+
+		<createSequence sequenceName="tbl_tweet_seq" startValue="1" incrementBy="1"/>
+	</changeSet>
+</databaseChangeLog>

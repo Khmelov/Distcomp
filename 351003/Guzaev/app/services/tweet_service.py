@@ -1,121 +1,145 @@
-from app.repositories.base_repository import InMemoryRepository
-from app.models.tweet import Tweet
-from app.dtos.tweet_dto import TweetRequestTo, TweetResponseTo
-from app.services.writer_service import writer_repository
-from app.services.marker_service import marker_repository
-from app.errors import AppError
+from repositories.base_repository import BaseRepository
+from models.models import Tweet, Writer, Marker
+from dtos.tweet_dto import TweetRequestTo, TweetResponseTo
+from database import SessionLocal
+from errors import AppError
 from typing import List
 from datetime import datetime
+from sqlalchemy import func
 
-tweet_repository = InMemoryRepository[Tweet]()
-
+tweet_repo = BaseRepository[Tweet](Tweet)
 
 class TweetService:
     def create(self, dto: TweetRequestTo) -> TweetResponseTo:
-        # 1. Проверка существования Writer
-        writer = writer_repository.get_by_id(dto.writer_id)
-        if not writer:
-            raise AppError(status_code=403, message="Writer not found", error_code=40303)
+        with SessionLocal() as db:
 
-        # 2. Проверка существования маркеров
-        if dto.marker_ids:
-            for marker_id in dto.marker_ids:
-                marker = marker_repository.get_by_id(marker_id)
-                if not marker:
-                    raise AppError(status_code=403, message=f"Marker {marker_id} not found", error_code=40304)
+            writer = db.query(Writer).filter(Writer.id == dto.writer_id).first()
+            if not writer:
+                raise AppError(status_code=403, message="Writer not found", error_code=40303)
 
-        # 3. Создание сущности
-        entity = Tweet(
-            writer_id=dto.writer_id,
-            title=dto.title,
-            content=dto.content,
-            marker_ids=dto.marker_ids or [],
-            created=datetime.now(),
-            modified=datetime.now()
-        )
-        saved_entity = tweet_repository.create(entity)
+            existing = db.query(Tweet).filter(Tweet.writer_id == dto.writer_id, Tweet.title == dto.title).first()
+            if existing:
+                raise AppError(status_code=403, message="Tweet title already exists", error_code=40307)
 
-        # 4. Явный маппинг в DTO (исправление ошибки 500)
-        return TweetResponseTo(
-            id=saved_entity.id,
-            writerId=saved_entity.writer_id,
-            title=saved_entity.title,
-            content=saved_entity.content,
-            created=saved_entity.created,
-            modified=saved_entity.modified,
-            markerIds=saved_entity.marker_ids
-        )
+            db_markers: List[Marker] = []
+
+
+            if dto.marker_ids:
+                db_markers = db.query(Marker).filter(Marker.id.in_(dto.marker_ids)).all()
+                if len(db_markers) != len(dto.marker_ids):
+                    raise AppError(status_code=403, message="Marker not found", error_code=40304)
+
+            if dto.markers:
+                for m_name in dto.markers:
+
+                    marker_entity = db.query(Marker).filter(Marker.name == m_name).first()
+
+                    if not marker_entity:
+                        marker_entity = Marker(name=m_name)
+                        db.add(marker_entity)
+                        db.commit()  # Сохраняем, чтобы получить id
+                        db.refresh(marker_entity)
+
+                    if marker_entity not in db_markers:
+                        db_markers.append(marker_entity)
+
+
+            entity = Tweet(
+                writer_id=dto.writer_id,
+                title=dto.title,
+                content=dto.content,
+                markers=db_markers,
+                created=datetime.utcnow(),
+                modified=datetime.utcnow(),
+            )
+            saved = tweet_repo.create(db, entity)
+
+            return TweetResponseTo(
+                id=saved.id,
+                writerId=saved.writer_id,
+                title=saved.title,
+                content=saved.content,
+                created=saved.created,
+                modified=saved.modified,
+                markerIds=saved.marker_ids,
+            )
+
 
     def get_all(self) -> List[TweetResponseTo]:
-        entities = tweet_repository.get_all()
-        return [
-            TweetResponseTo(
-                id=e.id,
-                writerId=e.writer_id,
-                title=e.title,
-                content=e.content,
-                created=e.created,
-                modified=e.modified,
-                markerIds=e.marker_ids
-            ) for e in entities
-        ]
+        with SessionLocal() as db:
+            entities = tweet_repo.get_all(db)
+            return [
+                TweetResponseTo(
+                    id=e.id, writerId=e.writer_id, title=e.title,
+                    content=e.content, created=e.created,
+                    modified=e.modified, markerIds=e.marker_ids
+                ) for e in entities
+            ]
 
     def get_by_id(self, id: int) -> TweetResponseTo:
-        entity = tweet_repository.get_by_id(id)
-        if not entity:
-            raise AppError(status_code=404, message="Tweet not found", error_code=40404)
+        with SessionLocal() as db:
+            entity = tweet_repo.get_by_id(db, id)
+            if not entity:
+                raise AppError(status_code=404, message="Tweet not found", error_code=40404)
 
-        return TweetResponseTo(
-            id=entity.id,
-            writerId=entity.writer_id,
-            title=entity.title,
-            content=entity.content,
-            created=entity.created,
-            modified=entity.modified,
-            markerIds=entity.marker_ids
-        )
+            return TweetResponseTo(
+                id=entity.id, writerId=entity.writer_id, title=entity.title,
+                content=entity.content, created=entity.created,
+                modified=entity.modified, markerIds=entity.marker_ids
+            )
 
     def update(self, id: int, dto: TweetRequestTo) -> TweetResponseTo:
-        entity = tweet_repository.get_by_id(id)
-        if not entity:
-            raise AppError(status_code=404, message="Tweet not found", error_code=40405)
+        with SessionLocal() as db:
+            entity = tweet_repo.get_by_id(db, id)
+            if not entity:
+                raise AppError(status_code=404, message="Tweet not found", error_code=40405)
 
-        # Проверка Writer
-        writer = writer_repository.get_by_id(dto.writer_id)
-        if not writer:
-            raise AppError(status_code=403, message="Writer not found", error_code=40305)
+            writer = db.query(Writer).filter(Writer.id == dto.writer_id).first()
+            if not writer:
+                raise AppError(status_code=403, message="Writer not found", error_code=40305)
 
-        # Проверка Markers
-        if dto.marker_ids:
-            for marker_id in dto.marker_ids:
-                marker = marker_repository.get_by_id(marker_id)
-                if not marker:
-                    raise AppError(status_code=403, message=f"Marker {marker_id} not found", error_code=40306)
+            db_markers = []
+            if dto.marker_ids:
+                for m_id in dto.marker_ids:
+                    if not db.query(Marker).filter(Marker.id == m_id).first():
+                        raise AppError(status_code=403, message=f"Marker {m_id} not found", error_code=40306)
+                db_markers = db.query(Marker).filter(Marker.id.in_(dto.marker_ids)).all()
 
-        # Обновление
-        updated_entity = Tweet(
-            id=id,
-            writer_id=dto.writer_id,
-            title=dto.title,
-            content=dto.content,
-            marker_ids=dto.marker_ids or [],
-            created=entity.created,  # дата создания не меняется
-            modified=datetime.now()  # дата обновления меняется
-        )
-        tweet_repository.update(id, updated_entity)
+            entity.writer_id = dto.writer_id
+            entity.title = dto.title
+            entity.content = dto.content
+            entity.markers = db_markers
+            entity.modified = datetime.utcnow()
 
-        return TweetResponseTo(
-            id=updated_entity.id,
-            writerId=updated_entity.writer_id,
-            title=updated_entity.title,
-            content=updated_entity.content,
-            created=updated_entity.created,
-            modified=updated_entity.modified,
-            markerIds=updated_entity.marker_ids
-        )
+            db.commit()
+            db.refresh(entity)
+
+            return TweetResponseTo(
+                id=entity.id, writerId=entity.writer_id, title=entity.title,
+                content=entity.content, created=entity.created,
+                modified=entity.modified, markerIds=entity.marker_ids
+            )
 
     def delete(self, id: int) -> None:
-        entity = tweet_repository.get_by_id(id)
-        if not entity:
-            raise AppError(status_code=404, message="Tweet not found", error_code=40406)
-        tweet_repository.delete(id)
+        with SessionLocal() as db:
+            entity = tweet_repo.get_by_id(db, id)
+            if not entity:
+                raise AppError(status_code=404, message="Tweet not found", error_code=40406)
+
+            old_markers = list(entity.markers)
+
+            success = tweet_repo.delete(db, id)
+            if not success:
+                raise AppError(status_code=404, message="Tweet not found", error_code=40406)
+
+            for marker in old_markers:
+                cnt = (
+                    db.query(func.count(Tweet.id))
+                    .join(Tweet.markers)
+                    .filter(Marker.id == marker.id)
+                    .scalar()
+                )
+                if cnt == 0:
+                    db.delete(marker)
+
+            db.commit()
