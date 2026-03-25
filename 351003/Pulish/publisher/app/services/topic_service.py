@@ -12,7 +12,6 @@ class TopicService:
 
     def create(self, dto: TopicRequestTo) -> TopicResponseTo:
         topic = Topic(title=dto.title, content=dto.content, user_id=dto.userId)
-
         if dto.marks:
             for mark_name in dto.marks:
                 mark = self.db.query(Mark).filter(
@@ -21,7 +20,6 @@ class TopicService:
                     mark = Mark(name=mark_name)
                     self.db.add(mark)
                 topic.marks.append(mark)
-
         try:
             self.db.add(topic)
             self.db.commit()
@@ -33,7 +31,6 @@ class TopicService:
                 raise AppException("Duplicate title", 40302, 403)
             else:
                 raise AppException("Invalid association", 40002, 400)
-
         return self._to_response(topic)
 
     def find_all(self):
@@ -46,8 +43,8 @@ class TopicService:
             raise NotFoundException("Topic not found", 40402)
         return self._to_response(topic)
 
-    def update(self, id: int, dto: TopicRequestTo):
-        topic = self.db.query(Topic).filter(Topic.id == id).first()
+    def update(self, dto: TopicRequestTo):
+        topic = self.db.query(Topic).filter(Topic.id == dto.id).first()
         if not topic:
             raise NotFoundException("Topic not found", 40402)
 
@@ -77,7 +74,6 @@ class TopicService:
                 if mark_in_db and len(mark_in_db.topics) == 0:
                     self.db.delete(mark_in_db)
             self.db.commit()
-
         except IntegrityError:
             self.db.rollback()
             raise AppException("Duplicate title or invalid user", 40002, 400)

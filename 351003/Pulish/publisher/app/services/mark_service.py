@@ -31,8 +31,8 @@ class MarkService:
             raise NotFoundException("Mark not found", 40403)
         return self._to_response(mark)
 
-    def update(self, id: int, dto: MarkRequestTo):
-        mark = self.db.query(Mark).filter(Mark.id == id).first()
+    def update(self, dto: MarkRequestTo):
+        mark = self.db.query(Mark).filter(Mark.id == dto.id).first()
         if not mark:
             raise NotFoundException("Mark not found", 40403)
 
@@ -55,7 +55,4 @@ class MarkService:
         self.db.commit()
 
     def _to_response(self, mark: Mark) -> MarkResponseTo:
-        return MarkResponseTo(
-            id=mark.id,
-            name=mark.name
-        )
+        return MarkResponseTo(id=mark.id, name=mark.name)

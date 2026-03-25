@@ -5,7 +5,6 @@ from typing import List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.user import User
-    from app.models.comment import Comment
     from app.models.mark import Mark
 
 topic_mark_association = Table(
@@ -28,7 +27,5 @@ class Topic(Base):
         ForeignKey("tbl_user.id", ondelete="CASCADE"))
 
     user: Mapped["User"] = relationship(back_populates="topics")
-    comments: Mapped[List["Comment"]] = relationship(
-        back_populates="topic", cascade="all, delete-orphan")
     marks: Mapped[List["Mark"]] = relationship(
         secondary=topic_mark_association, back_populates="topics")

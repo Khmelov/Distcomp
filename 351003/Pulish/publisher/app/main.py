@@ -3,7 +3,7 @@ from app.api.v1 import users, topics, marks, comments
 from app.core.error_handler import register_exception_handlers
 from app.db.database import Base, engine
 from app.core.config import settings
-from app.models import user, topic, mark, comment  # noqa
+from app.models import user, topic, mark  # noqa
 
 Base.metadata.create_all(bind=engine)
 
