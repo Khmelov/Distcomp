@@ -1,4 +1,4 @@
-import { UsersService } from './user.service';
+import { UsersService } from './users.service';
 import {
   Body,
   Controller,
