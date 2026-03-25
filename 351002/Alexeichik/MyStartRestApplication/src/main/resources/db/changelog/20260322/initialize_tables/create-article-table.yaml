@@ -1,17 +1,16 @@
 databaseChangeLog:
   - changeSet:
-      id: create-articles-table
+      id: create-article-table
       author: Yana Aliakseichyk
       changes:
         - createSequence:
             sequenceName: articles_seq
         - createTable:
-            tableName: articles
+            tableName: tbl_article
             columns:
               - column:
                   name: id
                   type: bigint
-                  defaultValueComputed: "nextval('articles_seq')"
                   constraints:
                     primaryKey: true
                     nullable: false
@@ -61,6 +60,7 @@ databaseChangeLog:
         - sql:
             sql: |
                 CREATE OR REPLACE TRIGGER trg_update_date_modified
-                BEFORE UPDATE ON articles
+                BEFORE UPDATE ON tbl_article
                 FOR EACH ROW
-                EXECUTE FUNCTION update_date_modified()
+                EXECUTE FUNCTION update_date_modified();
+            splitStatements: false

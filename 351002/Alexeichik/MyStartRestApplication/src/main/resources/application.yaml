@@ -6,9 +6,10 @@ spring:
     hibernate:
       ddl-auto: validate
   datasource:
-    url: jdbc:postgresql://localhost:5432/MyStartRestApplication
-    username: lexya
-    password: lexya
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DB_DRIVER}
 server:
   address: localhost
   port: 24110

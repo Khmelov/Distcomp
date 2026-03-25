@@ -1,5 +1,6 @@
 package com.github.Lexya06.startrestapp.model.entity.abstraction;
 
+import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
 import java.util.Objects;

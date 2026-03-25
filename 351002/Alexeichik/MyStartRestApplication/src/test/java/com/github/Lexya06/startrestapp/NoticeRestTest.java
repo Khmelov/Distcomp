@@ -1,19 +1,17 @@
 package com.github.Lexya06.startrestapp;
 
 import com.github.Lexya06.startrestapp.DataTestBuilder.DataTestBuilder;
-import com.github.Lexya06.startrestapp.DataTestBuilder.UserTestBuilder;
+import com.github.Lexya06.startrestapp.DataTestBuilder.NoticeTestBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.stereotype.Component;
 
-@SpringBootTest
-class UserRestTest extends FunctionalTest {
-
+@Component
+public class NoticeRestTest extends FunctionalTest {
     @Autowired
-    UserTestBuilder userTestBuilder;
-
+    NoticeTestBuilder noticeTestBuilder;
 
     @Override
     protected DataTestBuilder getDataTestBuilder() {
-        return userTestBuilder;
+        return noticeTestBuilder;
     }
 }

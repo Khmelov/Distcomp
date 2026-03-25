@@ -1,10 +1,10 @@
 databaseChangeLog:
   - changeSet:
-      id: apply-notices-indexes
+      id: apply-notice-indexes
       author: YanaAliakseichyk
       changes:
         - createIndex:
-            tableName: notices
+            tableName: tbl_notice
             columns:
               - column:
                   name: article_id

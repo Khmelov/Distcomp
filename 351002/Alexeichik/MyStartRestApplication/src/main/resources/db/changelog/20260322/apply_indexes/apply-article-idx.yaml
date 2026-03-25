@@ -1,22 +1,22 @@
 databaseChangeLog:
   - changeSet:
-      id: apply-articles-indexes
+      id: apply-article-indexes
       author: YanaAliakseichyk
       changes:
         - createIndex:
-            tableName: articles
+            tableName: tbl_article
             columns:
               - column:
                   name: user_id
             indexName: art_user_idx
         - createIndex:
-            tableName: articles
+            tableName: tbl_article
             columns:
               - column:
                   name: created
             indexName: art_created_idx
         - createIndex:
-            tableName: articles
+            tableName: tbl_article
             columns:
               - column:
                   name: modified

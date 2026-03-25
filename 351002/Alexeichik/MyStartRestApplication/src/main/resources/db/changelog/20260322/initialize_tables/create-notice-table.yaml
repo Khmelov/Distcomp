@@ -1,25 +1,28 @@
 databaseChangeLog:
   - changeSet:
-      id: create-labels-table
+      id: create-notice-table
       author: Yana Aliakseichyk
       changes:
         - createSequence:
-            sequenceName: labels_seq
+            sequenceName: notices_seq
         - createTable:
-            tableName: labels
+            tableName: tbl_notice
             columns:
               - column:
                   name: id
                   type: bigint
-                  defaultValueComputed: "nextval('labels_seq')"
                   constraints:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: name
+                  name: article_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
                   type: text
                   constraints:
-                    unique: true
                     nullable: false
-                    checkConstraint: "char_length(login) >= 2 AND 
-                                      char_length(login) <= 32"
+                    checkConstraint: "char_length(content) >= 2 AND 
+                                      char_length(content) <= 2048"

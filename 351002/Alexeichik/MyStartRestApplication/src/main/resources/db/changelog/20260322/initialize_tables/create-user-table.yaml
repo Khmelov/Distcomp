@@ -1,17 +1,16 @@
 databaseChangeLog:
   - changeSet:
-      id: create-users-table
+      id: create-user-table
       author: Yana Aliakseichyk
       changes:
         - createSequence:
             sequenceName: users_seq
         - createTable:
-            tableName: users
+            tableName: tbl_user
             columns:
               - column:
                   name: id
                   type: bigint
-                  defaultValueComputed: "nextval('users_seq')"
                   constraints:
                     primaryKey: true
                     nullable: false

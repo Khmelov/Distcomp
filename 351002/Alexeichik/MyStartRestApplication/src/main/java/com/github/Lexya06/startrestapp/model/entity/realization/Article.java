@@ -14,14 +14,14 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Getter
 @Setter
 @Entity
-@Table(name = "articles")
+@Table(name = "tbl_article")
 public class Article extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "articles_seq")
     @SequenceGenerator(name = "articles_seq", sequenceName = "articles_seq", allocationSize = 1)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -37,12 +37,12 @@ public class Article extends BaseEntity {
     @UpdateTimestamp
     private OffsetDateTime modified;
 
-    @OneToMany(mappedBy = "article", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "article", orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private Set<Notice> notices = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "articles_m2m_labels",
+            name = "tbl_article_m2m_label",
             joinColumns = @JoinColumn(name = "article_id"),
             inverseJoinColumns = @JoinColumn(name = "label_id")
     )

@@ -11,7 +11,7 @@ import java.util.HashSet;
 @Getter
 @Setter
 @Entity
-@Table(name = "labels")
+@Table(name = "tbl_label")
 public class Label extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "labels_seq")

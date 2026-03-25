@@ -1,7 +1,10 @@
 package com.github.Lexya06.startrestapp.controller.error;
+import com.github.Lexya06.startrestapp.service.customexception.MyEntitiesNotFoundException;
 import com.github.Lexya06.startrestapp.service.customexception.MyEntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.NonNull;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -14,6 +17,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -90,12 +95,31 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return super.handleExceptionInternal(ex, finalizeError(ErrorDescription.ENTITY_NOT_FOUND, errorMessage), headers, status, request);
     }
 
+    private ResponseEntity<Object> buildCustomResponseEntityError(ErrorDescription errorDescription, String errorMessage){
+        return ResponseEntity.status(errorDescription.getStatus()).body(finalizeError(errorDescription, errorMessage));
+    }
+
     @ExceptionHandler(MyEntityNotFoundException.class)
     public ResponseEntity<Object> handleMyEntityNotFound(
             @NonNull MyEntityNotFoundException ex
     )
     {
-        return ResponseEntity.status(ErrorDescription.ENTITY_NOT_FOUND.getStatus()) .body(finalizeError(ErrorDescription.ENTITY_NOT_FOUND, ex.getMessage()));
+        return buildCustomResponseEntityError(ErrorDescription.ENTITY_NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(MyEntitiesNotFoundException.class)
+    public ResponseEntity<Object> handleMyEntityNotFound(
+            @NonNull MyEntitiesNotFoundException ex
+    )
+    {
+        return buildCustomResponseEntityError(ErrorDescription.ENTITIES_NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Object> handleDataIntegrityViolation(
+            @NonNull DataIntegrityViolationException ex
+    ){
+        return buildCustomResponseEntityError(ErrorDescription.CONSTRAINT_VIOLATION, ex.getMessage());
     }
 
 

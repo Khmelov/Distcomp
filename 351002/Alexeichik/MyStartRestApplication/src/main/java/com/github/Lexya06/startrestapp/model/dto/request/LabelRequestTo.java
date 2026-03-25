@@ -15,6 +15,4 @@ public class LabelRequestTo {
     @NotBlank
     @Size(min = 2, max = 32)
     String name;
-
-    Set<Long> articleIds = new HashSet<>();
 }

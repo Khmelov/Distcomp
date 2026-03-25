@@ -3,13 +3,19 @@ package com.github.Lexya06.startrestapp.controller.abstraction;
 import com.github.Lexya06.startrestapp.config.ApiProperties;
 import com.github.Lexya06.startrestapp.model.entity.abstraction.BaseEntity;
 import com.github.Lexya06.startrestapp.service.abstraction.BaseEntityService;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.Expressions;
 import jakarta.validation.Valid;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.querydsl.binding.QuerydslPredicate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
 
 public abstract class BaseController<T extends BaseEntity, RequestDTO,ResponseDTO> {
@@ -40,9 +46,12 @@ public abstract class BaseController<T extends BaseEntity, RequestDTO,ResponseDT
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    public ResponseEntity<Set<ResponseDTO>> getAllEntities(){
-        return ResponseEntity.ok(getBaseService().getEntities());
+
+    protected ResponseEntity<List<ResponseDTO>> getAllEntitiesBase(Predicate predicate, Pageable pageable){
+        return ResponseEntity.ok(getBaseService().getEntities(predicate, pageable));
     }
+
+    @GetMapping
+    public abstract ResponseEntity<List<ResponseDTO>> getAllEntities(Predicate predicate, Pageable pageable);
 
 }

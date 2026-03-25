@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-label-table
+      author: Yana Aliakseichyk
+      changes:
+        - createSequence:
+            sequenceName: labels_seq
+        - createTable:
+            tableName: tbl_label
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: text
+                  constraints:
+                    unique: true
+                    nullable: false
+                    checkConstraint: "char_length(login) >= 2 AND 
+                                      char_length(login) <= 32"

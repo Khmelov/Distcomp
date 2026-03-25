@@ -1,10 +1,10 @@
 databaseChangeLog:
   - changeSet:
-      id: create-articles_m2m_labels-table
+      id: create-article_m2m_label-table
       author: Yana Aliakseichyk
       changes:
         - createTable:
-            tableName: articles_m2m_labels
+            tableName: tbl_article_m2m_label
             columns:
               - column:
                   name: article_id
@@ -17,5 +17,5 @@ databaseChangeLog:
                   constraints:
                     nullable: false
         - addPrimaryKey:
-            tableName: articles_m2m_labels
+            tableName: tbl_article_m2m_label
             columnNames: article_id, label_id

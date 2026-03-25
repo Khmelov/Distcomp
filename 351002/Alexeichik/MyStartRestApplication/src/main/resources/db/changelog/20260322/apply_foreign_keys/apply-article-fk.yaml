@@ -1,13 +1,13 @@
 databaseChangeLog:
   - changeSet:
-      id: apply-articles-fk
+      id: apply-article-fk
       author: YanaAliakseichyk
       changes:
         - addForeignKeyConstraint:
-            baseTableName: articles
+            baseTableName: tbl_article
             baseColumnNames: user_id
             constraintName: art_user_id_fk
-            referencedTableName: users
+            referencedTableName: tbl_user
             referencedColumnNames: id
             onDelete: NO ACTION
             onUpdate: CASCADE

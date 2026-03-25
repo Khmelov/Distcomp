@@ -4,7 +4,7 @@ databaseChangeLog:
       author: YanaAliakseichyk
       changes:
         - createIndex:
-            tableName: users
+            tableName: tbl_user
             columns:
               - column:
                   name: firstname
@@ -12,8 +12,14 @@ databaseChangeLog:
                   name: lastname
             indexName: firstn_lastn_idx
         - createIndex:
-            tableName: users
+            tableName: tbl_user
             columns:
               - column:
                   name: lastname
             indexName: lastn_idx
+        - createIndex:
+            tableName: tbl_user
+            columns:
+              - column:
+                  name: login
+            indexName: log_idx

@@ -4,7 +4,9 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Value
@@ -16,5 +18,5 @@ public class ArticleResponseTo {
     String content;
     OffsetDateTime created;
     OffsetDateTime modified;
-    Set<LabelResponseTo> labels = new HashSet<>();
+    List<LabelResponseTo> labels = new ArrayList<>();
 }

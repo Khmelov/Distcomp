@@ -4,7 +4,7 @@ import com.github.Lexya06.startrestapp.model.dto.request.NoticeRequestTo;
 import com.github.Lexya06.startrestapp.model.dto.response.NoticeResponseTo;
 import com.github.Lexya06.startrestapp.model.entity.realization.Article;
 import com.github.Lexya06.startrestapp.model.entity.realization.Notice;
-import com.github.Lexya06.startrestapp.model.repository.abstraction.MyCrudRepository;
+import com.github.Lexya06.startrestapp.model.repository.impl.MyCrudRepositoryImpl;
 import com.github.Lexya06.startrestapp.model.repository.realization.ArticleRepository;
 import com.github.Lexya06.startrestapp.model.repository.realization.NoticeRepository;
 import com.github.Lexya06.startrestapp.service.abstraction.BaseEntityService;
@@ -16,20 +16,20 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class NoticeService extends BaseEntityService<Notice, NoticeRequestTo, NoticeResponseTo> {
-    NoticeRepository noticeRepository;
-    ArticleRepository articleRepository;
-    NoticeMapper noticeMapper;
+    final NoticeRepository noticeRepository;
+    final ArticleService articleService;
+    final NoticeMapper noticeMapper;
 
     @Autowired
-    public NoticeService(NoticeRepository noticeRepository, ArticleRepository articleRepository, NoticeMapper noticeMapper) {
+    public NoticeService(NoticeRepository noticeRepository, ArticleService articleService, NoticeMapper noticeMapper) {
         super(Notice.class);
         this.noticeRepository = noticeRepository;
-        this.articleRepository = articleRepository;
+        this.articleService = articleService;
         this.noticeMapper = noticeMapper;
     }
 
     @Override
-    protected MyCrudRepository<Notice> getRepository() {
+    protected MyCrudRepositoryImpl<Notice> getRepository() {
         return noticeRepository;
     }
 
@@ -40,7 +40,7 @@ public class NoticeService extends BaseEntityService<Notice, NoticeRequestTo, No
 
     @Override
     public NoticeResponseTo createEntity(NoticeRequestTo noticeRequestTo){
-        Article article = articleRepository.findById(noticeRequestTo.getArticleId()).orElseThrow(()->new MyEntityNotFoundException(noticeRequestTo.getArticleId(), Article.class));
+        Article article = articleService.getEntityReferenceWithCheckExistingId(noticeRequestTo.getArticleId());
         Notice notice = noticeMapper.createEntityFromRequest(noticeRequestTo);
         notice.setArticle(article);
         notice = noticeRepository.save(notice);
