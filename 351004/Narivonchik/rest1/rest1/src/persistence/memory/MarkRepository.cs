@@ -5,5 +5,8 @@ namespace rest1.infrastructure.persistence;
 
 public class MarkRepository: Repository<Mark>, IMarkRepository
 {
-    
+    public Task DeleteMarksWithoutNews()
+    {
+        throw new NotImplementedException();
+    }
 }
