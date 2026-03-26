@@ -26,7 +26,6 @@ public class CommentService {
 
     private final IssueService issueService;
 
-    // Прямой URL к сервису discussion
     private final RestClient restClient = RestClient.create("http://localhost:24130/api/v1.0/comments");
 
     public List<CommentResponseTo> getAllComments() {
@@ -46,17 +45,10 @@ public class CommentService {
     }
 
     public CommentResponseTo createComment(@Valid CommentRequestTo commentRequest) {
-        // Достаем Issue, чтобы получить данные для ключа (например, автора или специфику)
         Issue issue = issueService.getIssueById(commentRequest.getIssueId());
 
         CommentDiscussionRequest cdr = new CommentDiscussionRequest(commentRequest);
         cdr.setCountry("BY");
-
-        // Формируем запрос для сервиса Discussion
-        // Важно: в DiscussionRequest должны уйти все поля, которые ждет Cassandra
-         // Дефолтная страна для ключа
-
-        // ОТПРАВЛЯЕМ И ПОЛУЧАЕМ ТЕЛО ОТВЕТА (с ID!)
         CommentResponseTo response = restClient.post()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(cdr)
@@ -66,12 +58,10 @@ public class CommentService {
                 })
                 .body(CommentResponseTo.class);
 
-        // Если вернем response напрямую, в нем будут и ID, и даты
         return response;
     }
 
     public CommentResponseTo updateComment(@Valid CommentRequestTo commentRequest) {
-        // При обновлении передаем объект целиком, включая ID
         return restClient.put()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(commentRequest)

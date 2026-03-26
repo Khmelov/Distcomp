@@ -25,25 +25,21 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
 
-    // Получить все (сканирование всей таблицы - медленно в Cassandra)
     public List<CommentResponseTo> getAllComments() {
         return commentRepository.findAll().stream()
                 .map(this::mapToResponse)
                 .toList();
     }
 
-    // Поиск по полному ключу
     public CommentResponseTo getComment(Long id) {
         return commentRepository.findByKeyId(id)
                 .map(this::mapToResponse)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
     }
 
-    // Создание комментария
     public CommentResponseTo createComment(@Valid CommentRequestTo dto) {
         Comment comment = new Comment();
 
-        // Формируем ключ. Если id в dto пустой - генерируем.
         CommentKey key = new CommentKey();
         key.setCountry(dto.getCountry());
         key.setIssueId(dto.getIssueId());
@@ -58,7 +54,6 @@ public class CommentService {
         return mapToResponse(saved);
     }
 
-    // Обновление комментария
     public CommentResponseTo updateComment(@Valid CommentRequestTo dto) {
 
         Comment comment = commentRepository.findByKeyId(dto.getId()).orElseThrow(() -> new RuntimeException("Cannot update: Comment not found"));
@@ -70,10 +65,9 @@ public class CommentService {
         return mapToResponse(updated);
     }
 
-    // Удаление
-    public void deleteComment(String country, Long issueId, Long id) {
-        CommentKey key = new CommentKey(country, issueId, id);
-        commentRepository.deleteById(key);
+    public void deleteComment(Long id) {
+        Comment comment = commentRepository.findByKeyId(id).orElseThrow(()-> new RuntimeException("comment-not-found"));
+        commentRepository.delete(comment);
     }
 
     private CommentResponseTo mapToResponse(Comment entity) {
@@ -81,7 +75,6 @@ public class CommentService {
         res.setId(entity.getKey().getId());
         res.setIssueId(entity.getKey().getIssueId());
         res.setContent(entity.getContent());
-        // Конвертация Instant -> LocalDateTime
         res.setCreated(LocalDateTime.ofInstant(entity.getCreatedAt(), ZoneId.systemDefault()));
         return res;
     }
