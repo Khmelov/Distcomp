@@ -4,4 +4,6 @@
 
 # User-specific files
 .idea/
+.vs/
 *.user
+*.DotSettings.user
