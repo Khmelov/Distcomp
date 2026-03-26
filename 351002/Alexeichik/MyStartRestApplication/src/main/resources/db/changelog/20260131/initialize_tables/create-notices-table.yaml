@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-notices-table
+      author: Yana Aliakseichyk
+      changes:
+        - createSequence:
+            sequenceName: notices_seq
+        - createTable:
+            tableName: notices
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  defaultValueComputed: "nextval('notices_seq')"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: article_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(content) >= 2 AND 
+                                      char_length(content) <= 2048"
