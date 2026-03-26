@@ -1,8 +1,9 @@
-package com.example.restapp.repository;
+package com.example.discussion.repository;
 
-import com.example.restapp.model.Article;
-import org.springframework.stereotype.Component;
+import com.example.discussion.model.Article;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-@Component
-public class ArticleRepository extends InMemoryRepository<Article> {
+@Repository
+public interface ArticleRepository extends JpaRepository<Article, Long> {
 }

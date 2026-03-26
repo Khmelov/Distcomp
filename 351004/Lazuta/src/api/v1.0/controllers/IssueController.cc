@@ -2,6 +2,9 @@
 #include "IssueController.h"
 #include <iostream>
 
+using namespace myapp;
+using namespace myapp::dto;
+
 IssueController::IssueController(std::unique_ptr<IssueService> service)
 {
     m_service = std::move(service);
@@ -46,7 +49,7 @@ void IssueController::CreateIssue(const HttpRequestPtr& req, std::function<void(
         errorResponse["message"] = e.what();
         httpResponse->setBody(Json::FastWriter().write(errorResponse));
         httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
-        httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
+        httpResponse->setStatusCode(HttpStatusCode::k403Forbidden);
     }
     catch(const NotFoundException& e)
     {

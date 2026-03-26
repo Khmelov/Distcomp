@@ -3,6 +3,9 @@
 #include <string>
 #include <jsoncpp/json/json.h>
 
+namespace myapp::dto
+{
+
 class PostResponseTo 
 {
 public:
@@ -22,4 +25,6 @@ public:
         json["modified"] = modified;
         return json;
     }
+};
+
 };
