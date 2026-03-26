@@ -1,14 +1,14 @@
 package com.distcomp.service.user;
 
-import com.distcomp.data.repository.user.UserReactiveRepository;
+import com.distcomp.data.r2dbc.repository.user.UserReactiveRepository;
 import com.distcomp.dto.user.UserCreateRequest;
 import com.distcomp.dto.user.UserPatchRequest;
 import com.distcomp.dto.user.UserResponseDto;
 import com.distcomp.dto.user.UserUpdateRequest;
 import com.distcomp.mapper.user.UserMapper;
 import com.distcomp.model.user.User;
-import com.distcomp.validator.model.ValidationArgs;
-import com.distcomp.validator.user.UserValidator;
+import com.distcomp.validation.model.ValidationArgs;
+import com.distcomp.validation.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
