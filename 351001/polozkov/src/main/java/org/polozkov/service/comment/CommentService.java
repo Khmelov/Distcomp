@@ -2,16 +2,20 @@ package org.polozkov.service.comment;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.polozkov.dto.comment.CommentDiscussionRequest;
 import org.polozkov.dto.comment.CommentRequestTo;
 import org.polozkov.dto.comment.CommentResponseTo;
-import org.polozkov.entity.comment.Comment;
 import org.polozkov.entity.issue.Issue;
-import org.polozkov.exception.NotFoundException;
-import org.polozkov.mapper.comment.CommentMapper;
-import org.polozkov.repository.comment.CommentRepository;
+import org.polozkov.exception.InternalServerErrorException;
 import org.polozkov.service.issue.IssueService;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -20,70 +24,61 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CommentService {
 
-    private final CommentRepository commentRepository;
     private final IssueService issueService;
-    private final CommentMapper commentMapper;
+
+    private final RestClient restClient = RestClient.create("http://localhost:24130/api/v1.0/comments");
 
     public List<CommentResponseTo> getAllComments() {
-        return commentRepository.findAll().stream()
-                .map(commentMapper::commentToResponseDto)
-                .toList();
+        return restClient.get()
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<CommentResponseTo>>() {});
     }
 
     public CommentResponseTo getComment(Long id) {
-        Comment comment = commentRepository.byId(id);
-        return commentMapper.commentToResponseDto(comment);
-    }
-
-    public Comment getCommentById(Long id) {
-        return commentRepository.byId(id);
+        return restClient.get()
+                .uri("/{id}", id)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (req, res) -> {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found in discussion");
+                })
+                .body(CommentResponseTo.class);
     }
 
     public CommentResponseTo createComment(@Valid CommentRequestTo commentRequest) {
         Issue issue = issueService.getIssueById(commentRequest.getIssueId());
 
-        Comment comment = commentMapper.requestDtoToComment(commentRequest);
+        CommentDiscussionRequest cdr = new CommentDiscussionRequest(commentRequest);
+        cdr.setCountry("BY");
+        CommentResponseTo response = restClient.post()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(cdr)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (req, res) -> {
+                    throw new InternalServerErrorException("Ошибка при сохранении в Cassandra");
+                })
+                .body(CommentResponseTo.class);
 
-        comment.setIssue(issue);
-
-
-        Comment savedComment = commentRepository.save(comment);
-
-        issueService.addCommentToIssue(issue.getId(), savedComment);
-
-        return commentMapper.commentToResponseDto(savedComment);
+        return response;
     }
 
     public CommentResponseTo updateComment(@Valid CommentRequestTo commentRequest) {
-        Comment existingComment = commentRepository.byId(commentRequest.getId());
-
-        Issue issue;
-        if (!existingComment.getIssue().getId().equals(commentRequest.getIssueId())) {
-            issue = issueService.getIssueById(commentRequest.getIssueId());
-        } else {
-            issue = existingComment.getIssue();
-        }
-
-        Comment comment = getCommentById(commentRequest.getId());
-        comment = commentMapper.updateComment(comment, commentRequest);
-
-        Comment updatedComment = commentRepository.save(comment);
-
-        if (!existingComment.getIssue().getId().equals(commentRequest.getIssueId())) {
-            existingComment.getIssue().getComments().removeIf(c -> c.getId().equals(commentRequest.getId()));
-
-            issueService.addCommentToIssue(issue.getId(), updatedComment);
-        }
-
-        return commentMapper.commentToResponseDto(updatedComment);
+        return restClient.put()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(commentRequest)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (req, res) -> {
+                    throw new InternalServerErrorException("Ошибка при обновлении в Cassandra");
+                })
+                .body(CommentResponseTo.class);
     }
 
     public void deleteComment(Long id) {
-        Comment comment = commentRepository.byId(id);
-
-        comment.getIssue().getComments().removeIf(c -> c.getId().equals(id));
-
-        commentRepository.deleteById(id);
+        restClient.delete()
+                .uri("/{id}", id)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (req, res) -> {
+                    throw new InternalServerErrorException("Ошибка при удалении в Cassandra");
+                })
+                .toBodilessEntity();
     }
-
 }
