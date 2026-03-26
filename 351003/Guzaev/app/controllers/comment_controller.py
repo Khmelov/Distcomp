@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Response
 from typing import List
-from app.dtos.comment_dto import CommentRequestTo, CommentResponseTo
-from app.services.comment_service import CommentService
+from dtos.comment_dto import CommentRequestTo, CommentResponseTo
+from services.comment_service import CommentService
 
 router = APIRouter(prefix="/api/v1.0/comments", tags=["comments"])
 service = CommentService()

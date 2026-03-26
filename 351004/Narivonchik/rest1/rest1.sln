@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "rest1", "rest1\rest1.csproj", "{FE7B8449-5E48-49E7-926B-A237F86AA240}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D250152E-82B6-46D1-AA26-F2CD5F132116}"
+	ProjectSection(SolutionItems) = preProject
+		compose.yaml = compose.yaml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscussionModule", "DiscussionModule\DiscussionModule.csproj", "{DA6736D2-6E84-436D-8098-3BDD9C5D1837}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FE7B8449-5E48-49E7-926B-A237F86AA240}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE7B8449-5E48-49E7-926B-A237F86AA240}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE7B8449-5E48-49E7-926B-A237F86AA240}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE7B8449-5E48-49E7-926B-A237F86AA240}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA6736D2-6E84-436D-8098-3BDD9C5D1837}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA6736D2-6E84-436D-8098-3BDD9C5D1837}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA6736D2-6E84-436D-8098-3BDD9C5D1837}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA6736D2-6E84-436D-8098-3BDD9C5D1837}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

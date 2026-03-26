@@ -6,6 +6,9 @@
 #include <stdexcept>
 #include <exceptions/ValidationException.h>
 
+namespace myapp::dto
+{
+
 class LabelRequestTo 
 {
 public:
@@ -27,4 +30,6 @@ public:
         dto.validate();
         return dto;
     }
+};
+
 };
