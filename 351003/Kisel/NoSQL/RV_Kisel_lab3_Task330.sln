@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RV_Kisel_lab4_Task340", "RV_Kisel_lab4_Task340\RV_Kisel_lab4_Task340.csproj", "{5B4DAAC4-A779-4E73-8F73-B94B4851CE64}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RV_Kisel_lab3_Task330", "RV_Kisel_lab3_Task330\RV_Kisel_lab3_Task330.csproj", "{5B4DAAC4-A779-4E73-8F73-B94B4851CE64}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscussionService", "DiscussionService\DiscussionService.csproj", "{ED55D8C1-BD2A-4F2A-9B08-5F618B03E8DE}"
 EndProject
