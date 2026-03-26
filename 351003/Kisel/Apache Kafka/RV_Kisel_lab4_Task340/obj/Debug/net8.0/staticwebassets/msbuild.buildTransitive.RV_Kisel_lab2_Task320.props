@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\buildMultiTargeting\RV_Kisel_lab2_Task320.props" />
+</Project>
