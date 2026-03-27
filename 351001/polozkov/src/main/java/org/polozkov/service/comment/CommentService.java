@@ -7,7 +7,10 @@ import org.polozkov.dto.comment.CommentRequestTo;
 import org.polozkov.dto.comment.CommentResponseTo;
 import org.polozkov.entity.issue.Issue;
 import org.polozkov.exception.InternalServerErrorException;
+import org.polozkov.other.enums.RequestMethod;
+import org.polozkov.other.record.CommentUploadRecord;
 import org.polozkov.service.issue.IssueService;
+import org.polozkov.service.kafka.KafkaProducerService;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -18,6 +21,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Validated
@@ -25,10 +29,14 @@ import java.util.List;
 public class CommentService {
 
     private final IssueService issueService;
+    private final KafkaProducerService kafkaProducerService;
 
     private final RestClient restClient = RestClient.create("http://localhost:24130/api/v1.0/comments");
 
     public List<CommentResponseTo> getAllComments() {
+
+        CommentUploadRecord cur = new CommentUploadRecord(UUID.randomUUID(), RequestMethod.GET, null, null, null, null);
+
         return restClient.get()
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<CommentResponseTo>>() {});
