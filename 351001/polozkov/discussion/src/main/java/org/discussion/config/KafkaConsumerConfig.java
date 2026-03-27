@@ -1,9 +1,10 @@
-package org.polozkov.config;
+package org.discussion.config;
 
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.polozkov.other.record.CommentResponseRecord;
+import org.discussion.other.record.CommentResponseRecord;
+import org.discussion.other.record.CommentUploadRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +20,27 @@ public class KafkaConsumerConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
+
+//    @Bean
+//    public ConsumerFactory<String, CommentUploadRecord> consumerFactory() {
+//        Map<String, Object> props = new HashMap<>();
+//        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+//        props.put(ConsumerConfig.GROUP_ID_CONFIG, "publisher-group");
+//        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+//        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+//        props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+//        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, CommentUploadRecord.class);
+//        return new DefaultKafkaConsumerFactory<>(props);
+//    }
+//
+//    @Bean
+//    public ConcurrentKafkaListenerContainerFactory<String, CommentUploadRecord> kafkaListenerContainerFactory() {
+//        ConcurrentKafkaListenerContainerFactory<String, CommentUploadRecord> factory =
+//                new ConcurrentKafkaListenerContainerFactory<>();
+//        factory.setConsumerFactory(consumerFactory());
+//
+//        return factory;
+//    }
 
     private Map<String, Object> getConfig(Object recordClass) {
         Map<String, Object> props = new HashMap<>();
@@ -45,10 +67,10 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, CommentResponseRecord> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, CommentResponseRecord> factory =
+    public ConcurrentKafkaListenerContainerFactory<String, CommentUploadRecord> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, CommentUploadRecord> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(getConfig(CommentResponseRecord.class)));
+        factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(getConfig(CommentUploadRecord.class)));
 
         return factory;
     }

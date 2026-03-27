@@ -1,8 +1,10 @@
-package org.polozkov.other.record;
+package org.discussion.other.record;
+
+
+import org.discussion.dto.comment.CommentResponseTo;
 
 import java.util.List;
 import java.util.UUID;
-import org.polozkov.dto.comment.CommentResponseTo;
 
 public record CommentResponseRecord(
         UUID id,

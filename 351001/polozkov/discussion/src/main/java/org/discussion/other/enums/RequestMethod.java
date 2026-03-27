@@ -1,4 +1,4 @@
-package org.polozkov.other.enums;
+package org.discussion.other.enums;
 
 public enum RequestMethod {
 
