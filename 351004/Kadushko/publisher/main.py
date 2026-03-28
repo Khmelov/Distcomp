@@ -3,11 +3,12 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from app.api.v1.router import router
 from app.database import engine, Base
+from app.kafka_client import start_out_consumer
 
 Base.metadata.create_all(bind=engine)
+start_out_consumer()
 
 app = FastAPI(title="Distcomp API", version="1.0")
-
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -21,9 +22,4 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"errorMessage": messages, "errorCode": 40001}
     )
 
-
 app.include_router(router, prefix="/api/v1.0")
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="localhost", port=24110, reload=True)

@@ -10,7 +10,7 @@ def _next_id() -> int:
 
 def get_all() -> List[CommentResponse]:
     col = get_collection()
-    return [CommentResponse(id=r["id"], issue_id=r["issue_id"], content=r["content"]) for r in col.find()]
+    return [CommentResponse(id=r["id"], issue_id=r["issue_id"], content=r["content"], state=r.get("state", "PENDING")) for r in col.find()]
 
 
 def get_by_id(comment_id: int) -> Optional[CommentResponse]:
@@ -18,14 +18,14 @@ def get_by_id(comment_id: int) -> Optional[CommentResponse]:
     r = col.find_one({"id": comment_id})
     if not r:
         return None
-    return CommentResponse(id=r["id"], issue_id=r["issue_id"], content=r["content"])
+    return CommentResponse(id=r["id"], issue_id=r["issue_id"], content=r["content"], state=r.get("state", "PENDING"))
 
 
-def create(data: CommentCreate) -> CommentResponse:
+def create(data: CommentCreate, comment_id: int = None, state: str = "PENDING") -> CommentResponse:
     col = get_collection()
-    comment_id = _next_id()
-    col.insert_one({"id": comment_id, "issue_id": data.issue_id, "content": data.content})
-    return CommentResponse(id=comment_id, issue_id=data.issue_id, content=data.content)
+    cid = comment_id or _next_id()
+    col.insert_one({"id": cid, "issue_id": data.issue_id, "content": data.content, "state": state})
+    return CommentResponse(id=cid, issue_id=data.issue_id, content=data.content, state=state)
 
 
 def update(comment_id: int, data: CommentUpdate) -> Optional[CommentResponse]:
@@ -37,7 +37,7 @@ def update(comment_id: int, data: CommentUpdate) -> Optional[CommentResponse]:
     )
     if not result:
         return None
-    return CommentResponse(id=comment_id, issue_id=data.issue_id, content=data.content)
+    return CommentResponse(id=comment_id, issue_id=data.issue_id, content=data.content, state=result.get("state", "PENDING"))
 
 
 def delete(comment_id: int) -> bool:

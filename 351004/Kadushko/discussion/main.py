@@ -3,15 +3,10 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from app.api.v1.router import router
 from app.database import init_db
+from app.kafka_worker import start_kafka_worker
 
-print(1)
-
-try:
-    init_db()
-    print("DB OK")
-except Exception as e:
-    print("DB ERROR:", e)
-    raise
+init_db()
+start_kafka_worker()
 
 app = FastAPI(title="Discussion API", version="1.0")
 
@@ -25,7 +20,3 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(status_code=400, content={"errorMessage": messages, "errorCode": 40001})
 
 app.include_router(router, prefix="/api/v1.0")
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="localhost", port=24130, reload=False)

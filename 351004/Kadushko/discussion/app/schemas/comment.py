@@ -24,3 +24,4 @@ class CommentResponse(BaseModel):
     id: int
     issue_id: int = Field(serialization_alias="issueId")
     content: str
+    state: str = "PENDING"

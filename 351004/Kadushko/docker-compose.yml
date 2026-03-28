@@ -1,16 +1,28 @@
-version: "3"
 services:
   mongodb:
     image: mongo:7
     ports:
       - "27017:27017"
     mem_limit: 512m
- 
-  cassandra:
-    image: cassandra:4.1
-    ports:
-      - "9042:9042"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.2
     environment:
-      - CASSANDRA_BROADCAST_RPC_ADDRESS=127.0.0.1
-      - CASSANDRA_RPC_ADDRESS=0.0.0.0
- 
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.2
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
