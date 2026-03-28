@@ -1,3 +1,4 @@
+using Additions.Service;
 using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.DTOs;
@@ -5,34 +6,34 @@ using ArticleHouse.Service.Interfaces;
 
 namespace ArticleHouse.Service.Implementations;
 
-public class CommentService : Service, ICommentService
+public class CommentService : BasicService, ICommentService
 {
-    private readonly ICommentDAO commentDAO;
-    public CommentService(ICommentDAO commentDAO)
+    private readonly ICommentDAO dao;
+    public CommentService(ICommentDAO dao)
     {
-        this.commentDAO = commentDAO;
+        this.dao = dao;
     }
     public async Task<CommentResponseDTO> CreateCommentAsync(CommentRequestDTO dto)
     {
         CommentModel model = MakeModelFromRequest(dto);
-        CommentModel result = await InvokeDAOMethod(() => commentDAO.AddNewAsync(model));
+        CommentModel result = await InvokeDAOMethod(() => dao.AddNewAsync(model));
         return MakeResponseFromModel(result);
     }
 
     public async Task DeleteCommentAsync(long id)
     {
-        await InvokeDAOMethod(() => commentDAO.DeleteAsync(id));
+        await InvokeDAOMethod(() => dao.DeleteAsync(id));
     }
 
     public async Task<CommentResponseDTO[]> GetAllCommentsAsync()
     {
-        CommentModel[] daoModels = await InvokeDAOMethod(() => commentDAO.GetAllAsync());
+        CommentModel[] daoModels = await InvokeDAOMethod(() => dao.GetAllAsync());
         return [.. daoModels.Select(MakeResponseFromModel)];
     }
 
     public async Task<CommentResponseDTO> GetCommentByIdAsync(long id)
     {
-        CommentModel model = await InvokeDAOMethod(() => commentDAO.GetByIdAsync(id));
+        CommentModel model = await InvokeDAOMethod(() => dao.GetByIdAsync(id));
         return MakeResponseFromModel(model);
     }
 
@@ -40,18 +41,22 @@ public class CommentService : Service, ICommentService
     {
         CommentModel model = MakeModelFromRequest(dto);
         model.Id = id;
-        CommentModel result = await InvokeDAOMethod(() => commentDAO.UpdateAsync(model));
+        CommentModel result = await InvokeDAOMethod(() => dao.UpdateAsync(model));
         return MakeResponseFromModel(result);
     }
 
     private static CommentModel MakeModelFromRequest(CommentRequestDTO dto)
     {
-        return new CommentModel()
-        {
-            Id = dto.Id ?? 0,
-            ArticleId = dto.ArticleId,
-            Content = dto.Content
-        };
+        CommentModel result = new();
+        ShapeModelFromRequest(ref result, dto);
+        return result;
+    }
+
+    private static void ShapeModelFromRequest(ref CommentModel model, CommentRequestDTO dto)
+    {
+        model.Id = dto.Id ?? 0;
+        model.ArticleId = dto.ArticleId;
+        model.Content = dto.Content;
     }
 
     private static CommentResponseDTO MakeResponseFromModel(CommentModel model)

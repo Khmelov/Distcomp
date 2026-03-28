@@ -15,7 +15,8 @@ namespace Application.MappingProfiles
                 .ForMember(dest => dest.Modified, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.EditorId, opt => opt.MapFrom(src => src.EditorId))
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
-                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title));
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
+                .ForMember(dest => dest.Markers, opt => opt.MapFrom(src => src.Markers.Select(m => new Marker(m))));
 
             CreateMap<News, NewsResponseTo>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
