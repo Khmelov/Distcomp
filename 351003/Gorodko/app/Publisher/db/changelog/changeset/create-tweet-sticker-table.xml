@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+	<changeSet id="5" author="system">
+		<createTable tableName="tbl_tweet_sticker">
+			<column name="tweet_id" type="bigint">
+				<constraints nullable="false"
+                             foreignKeyName="fk_tweetsticker_tweet"
+                             references="tbl_tweet(id)"/>
+			</column>
+			<column name="sticker_id" type="bigint">
+				<constraints nullable="false"
+                             foreignKeyName="fk_tweetsticker_sticker"
+                             references="tbl_sticker(id)"/>
+			</column>
+		</createTable>
+
+		<addPrimaryKey
+            tableName="tbl_tweet_sticker"
+            columnNames="tweet_id, sticker_id"
+            constraintName="pk_tweet_sticker"/>
+
+		<createIndex tableName="tbl_tweet_sticker" indexName="idx_tweetsticker_tweet">
+			<column name="tweet_id"/>
+		</createIndex>
+
+		<createIndex tableName="tbl_tweet_sticker" indexName="idx_tweetsticker_sticker">
+			<column name="sticker_id"/>
+		</createIndex>
+	</changeSet>
+</databaseChangeLog>
