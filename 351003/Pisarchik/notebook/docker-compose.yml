@@ -1,0 +1,49 @@
+services:
+  cassandra:
+    image: cassandra:5.0
+    container_name: notebook-cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+    healthcheck:
+      test: ["CMD-SHELL", "nodetool status | grep -q UN"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: notebook-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: notebook-app
+    ports:
+      - "24110:24110"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/distcomp
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SERVER_PORT: 24110
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
