@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:15
+    container_name: postgres-distcomp
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra-distcomp
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=TestCluster
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces'"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+
+  publisher:
+    build: .
+    container_name: dc-publisher
+    volumes:
+      - .:/app
+    working_dir: /app/src
+    command: python manage.py runserver 0.0.0.0:24110
+    ports:
+      - "24110:24110"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/distcomp
+      - DISCUSSION_SERVICE_URL=http://discussion:24130/api/v1.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+  discussion:
+    build: .
+    container_name: dc-discussion
+    volumes:
+      - .:/app
+    working_dir: /app/src/discussion
+    command: python manage.py runserver 0.0.0.0:24130
+    ports:
+      - "24130:24130"
+    environment:
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
+    depends_on:
+      cassandra:
+        condition: service_healthy
