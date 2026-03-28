@@ -2,17 +2,19 @@ package com.distcomp.service
 
 import com.distcomp.dto.marker.MarkerRequestTo
 import com.distcomp.dto.marker.MarkerResponseTo
-import com.distcomp.entity.Marker
 import com.distcomp.exception.MarkerNotFoundException
 import com.distcomp.mapper.MarkerMapper
-import com.distcomp.repository.CrudRepository
+import com.distcomp.repository.MarkerRepository
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class MarkerService(
     val markerMapper: MarkerMapper,
-    val markerRepository: CrudRepository<Marker>
+    val markerRepository: MarkerRepository
 ) {
+    @Transactional
     fun createMarker(markerRequestTo: MarkerRequestTo): MarkerResponseTo {
         val marker = markerMapper.toMarkerEntity(markerRequestTo)
         markerRepository.save(marker)
@@ -20,7 +22,7 @@ class MarkerService(
     }
 
     fun readMarkerById(id: Long): MarkerResponseTo {
-        val marker = markerRepository.findById(id)
+        val marker = markerRepository.findByIdOrNull(id)
             ?: throw MarkerNotFoundException("Marker with id $id not found")
         return markerMapper.toMarkerResponse(marker)
     }
@@ -29,8 +31,9 @@ class MarkerService(
         return markerRepository.findAll().map { markerMapper.toMarkerResponse(it) }
     }
 
+    @Transactional
     fun updateMarker(markerRequestTo: MarkerRequestTo, markerId: Long?): MarkerResponseTo {
-        if (markerId == null || markerRepository.findById(markerId) == null) {
+        if (markerId == null || markerRepository.findByIdOrNull(markerId) == null) {
             throw MarkerNotFoundException("Marker with id $markerId not found")
         }
 
@@ -41,10 +44,11 @@ class MarkerService(
         return markerMapper.toMarkerResponse(marker)
     }
 
+    @Transactional
     fun removeMarkerById(id: Long) {
-        if (markerRepository.findById(id) == null) {
+        if (markerRepository.findByIdOrNull(id) == null) {
             throw MarkerNotFoundException("Marker with id $id not found")
         }
-        markerRepository.removeById(id)
+        markerRepository.deleteById(id)
     }
 }

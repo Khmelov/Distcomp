@@ -1,4 +1,19 @@
 services:
+  cassandra:
+    image: cassandra:5.0
+    container_name: notebook-cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+    healthcheck:
+      test: ["CMD-SHELL", "nodetool status | grep -q UN"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
+
   postgres:
     image: postgres:16-alpine
     container_name: notebook-postgres

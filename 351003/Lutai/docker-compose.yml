@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  postgres-db:
+    image: postgres:16
+    container_name: news-postgres
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra-db
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=TestCluster
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+    healthcheck:
+      test: [ "CMD", "cqlsh", "-u", "cassandra", "-p", "cassandra", "-e", "describe keyspaces" ]
+      interval: 15s
+      timeout: 10s
+      retries: 10

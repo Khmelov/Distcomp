@@ -8,3 +8,4 @@ class LabelRequestTo(BaseModel):
 class LabelResponseTo(BaseModel):
     id: int
     name: str
+    model_config = {"from_attributes": True, "populate_by_name": True}

@@ -1,0 +1,96 @@
+services:
+  postgres:
+    image: postgres:17.8-alpine3.22
+    container_name: ds_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_NAME: ${POSTGRES_NAME}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - dc-network
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  mongodb:
+    image: mongo:7.0-jammy
+    container_name: ds_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_NAME}
+    ports:
+      - "${MONGO_PORT}:${MONGO_PORT}"
+    command: mongod --port ${MONGO_PORT}
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    networks:
+      - dc-network
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "mongosh", "--port", "${MONGO_PORT}", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  publisher-service:
+    build:
+      context: ./publisher
+      dockerfile: Dockerfile
+    container_name: publisher-service
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_NAME}
+      NOTE_SERVICE_URL: http://discussion-service:${DISCUSSION_PORT}/api/v1.0
+    ports:
+      - "${PUBLISHER_PORT}:${PUBLISHER_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - dc-network
+    volumes:
+      - ./publisher:/app
+    env_file:
+      - .env
+
+  discussion-service:
+    build:
+      context: ./discussion
+      dockerfile: Dockerfile
+    container_name: discussion-service
+    environment:
+      MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:${MONGO_PORT}/${MONGO_NAME}?authSource=admin
+    ports:
+      - "${DISCUSSION_PORT}:${DISCUSSION_PORT}"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - dc-network
+    volumes:
+      - ./discussion:/app
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
+  mongodb_data:
+
+networks:
+  dc-network:
+    driver: bridge

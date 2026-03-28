@@ -1,10 +1,17 @@
 package com.distcomp.entity
 
-class User (
+import jakarta.persistence.*
+
+@Entity
+@Table(name = "tbl_user")
+class User(
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     var id: Long? = null,
     var login: String,
     var password: String,
     var firstname: String,
     var lastname: String,
-    var news: List<News>?
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL])
+    var news: MutableList<News>? = null
 )
