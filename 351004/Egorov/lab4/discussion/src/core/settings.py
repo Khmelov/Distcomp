@@ -1,6 +1,13 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+class KafkaSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="KAFKA_")
+
+    bootstrap_servers: str = Field(default=None)
+    topic_in: str = Field(default=None)
+    topic_out: str = Field(default=None)
+
 class MongoSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="MONGO_")
 
@@ -17,6 +24,7 @@ class MongoSettings(BaseSettings):
 
 class Settings(BaseSettings):
     mongo: MongoSettings = MongoSettings()
+    kafka: KafkaSettings = KafkaSettings()
     DEBUG: bool = Field(default=True)
 
 settings = Settings()

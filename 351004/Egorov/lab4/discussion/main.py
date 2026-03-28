@@ -5,12 +5,15 @@ from fastapi import FastAPI
 from src.api.v1.router import router_v1
 from src.core.database import init_db, close_db
 from src.core.handlers import register_error_handlers
+from src.core.kafka import init_kafka_producer, close_kafka_producer
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     await init_db()
+    await init_kafka_producer()
     yield
+    await close_kafka_producer()
     await close_db()
 
 app = FastAPI(title="DistComp_discussion", version="1.0", lifespan=lifespan)
