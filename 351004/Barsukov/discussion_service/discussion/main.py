@@ -4,6 +4,9 @@ from contextlib import asynccontextmanager
 from discussion.api.v1.router import api_router
 from discussion.db.thecassandra import cassandra_client
 from discussion.core.config import settings
+from discussion.kafka_consumer import KafkaConsumerDiscussion
+from discussion.kafka_producer import kafka_producer
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -11,10 +14,19 @@ async def lifespan(app: FastAPI):
     print("Starting discussion service...")
     cassandra_client.connect()
     print(f"Connected to Cassandra at {settings.CASSANDRA_HOSTS}:{settings.CASSANDRA_PORT}")
+
+    # Запускаем Kafka
+    await kafka_producer.start()
+    kafka_consumer = KafkaConsumerDiscussion()
+    await kafka_consumer.start()
+    print("Kafka consumer started")
+
     yield
+
     # Shutdown
-    cassandra_client.close()
+    await kafka_producer.stop()
     print("Discussion service stopped")
+
 
 app = FastAPI(
     title="Discussion Service",

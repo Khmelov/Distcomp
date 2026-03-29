@@ -16,6 +16,10 @@ class NoteService:
         if "issueId" in data:
             data["issue_id"] = data.pop("issueId")
 
+        # Устанавливаем начальный статус
+        if "state" not in data:
+            data["state"] = "PENDING"
+
         # Генерируем ID если не указан
         if "id" not in data or data["id"] is None:
             data["id"] = self.model.get_next_id()
@@ -30,7 +34,8 @@ class NoteService:
         return NoteResponseTo(
             id=result['id'],
             issueId=result['issue_id'],
-            content=result['content']
+            content=result['content'],
+            state=result['state']
         )
 
     def get_all(self) -> List[NoteResponseTo]:
@@ -40,7 +45,8 @@ class NoteService:
             NoteResponseTo(
                 id=r['id'],
                 issueId=r['issue_id'],
-                content=r['content']
+                content=r['content'],
+                state=r['state']  # Добавлено
             ) for r in results
         ]
 
@@ -56,7 +62,8 @@ class NoteService:
         return NoteResponseTo(
             id=result['id'],
             issueId=result['issue_id'],
-            content=result['content']
+            content=result['content'],
+            state=result['state']  # Добавлено
         )
 
     def get_by_issue(self, issue_id: int) -> List[NoteResponseTo]:
@@ -66,23 +73,26 @@ class NoteService:
             NoteResponseTo(
                 id=r['id'],
                 issueId=r['issue_id'],
-                content=r['content']
+                content=r['content'],
+                state=r['state']  # Добавлено
             ) for r in results
         ]
 
-    def update(self, issue_id: int, note_id: int, dto: NoteRequestTo) -> NoteResponseTo:
-        """Обновление заметки"""
-        result = self.model.update(issue_id, note_id, dto.content)
-        if not result:
+    def update_state(self, issue_id: int, note_id: int, state: str) -> NoteResponseTo:
+        """Обновление статуса заметки"""
+        note = self.model.get_by_id(issue_id, note_id)
+        if not note:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Note not found"
             )
 
+        result = self.model.update(issue_id, note_id, note['content'], state)
         return NoteResponseTo(
             id=result['id'],
             issueId=result['issue_id'],
-            content=result['content']
+            content=result['content'],
+            state=result['state']
         )
 
     def delete(self, issue_id: int, note_id: int) -> bool:

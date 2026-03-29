@@ -22,7 +22,6 @@ class CassandraClient:
 
     def _init_tables(self):
         """Создание таблицы если не существует"""
-        # ВНИМАНИЕ: Правильная структура с issue_id как partition key!
         self.session.execute("""
                              CREATE TABLE IF NOT EXISTS tbl_note
                              (
@@ -31,6 +30,8 @@ class CassandraClient:
                                  id
                                  int,
                                  content
+                                 text,
+                                 state
                                  text,
                                  PRIMARY
                                  KEY (

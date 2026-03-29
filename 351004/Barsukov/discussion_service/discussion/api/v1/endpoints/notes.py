@@ -3,7 +3,7 @@ from typing import List
 from discussion.schemas.note import NoteRequestTo, NoteResponseTo
 from discussion.services.note_service import NoteService
 from discussion.db.thecassandra import get_db
-
+from pydantic import BaseModel
 router = APIRouter()
 
 def get_service(session=Depends(get_db)):
@@ -75,3 +75,16 @@ async def get_note_by_id(
         if note.id == id:
             return note
     raise HTTPException(status_code=404, detail="Note not found")
+
+class StateUpdateRequest(BaseModel):
+    state: str
+
+@router.patch("/issues/{issue_id}/notes/{note_id}/state", response_model=NoteResponseTo)
+async def update_note_state(
+    issue_id: int,
+    note_id: int,
+    state_update: StateUpdateRequest,
+    service: NoteService = Depends(get_service)
+):
+    """Обновить статус заметки"""
+    return service.update_state(issue_id, note_id, state_update.state)

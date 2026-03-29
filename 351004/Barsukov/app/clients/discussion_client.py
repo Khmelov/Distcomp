@@ -1,6 +1,6 @@
 import httpx
 from typing import List, Optional
-from app.schemas.note import NoteRequestTo, NoteResponseTo
+from schemas.note import NoteRequestTo, NoteResponseTo
 
 
 class DiscussionClient:
@@ -42,3 +42,11 @@ class DiscussionClient:
         async with httpx.AsyncClient() as client:
             response = await client.delete(f"{self.base_url}/issues/{issue_id}/notes/{note_id}")
             return response.status_code == 204
+
+    async def update_note_state(self, issue_id: int, note_id: int, state: str) -> bool:
+        async with httpx.AsyncClient() as client:
+            response = await client.patch(
+                f"{self.base_url}/issues/{issue_id}/notes/{note_id}/state",
+                json={"state": state}
+            )
+            return response.status_code == 200
