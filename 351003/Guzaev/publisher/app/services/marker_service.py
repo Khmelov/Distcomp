@@ -1,5 +1,5 @@
 from repositories.base_repository import BaseRepository
-from models import Marker
+from models.models import Marker
 from dtos.marker_dto import MarkerRequestTo, MarkerResponseTo
 from database import SessionLocal
 from errors import AppError

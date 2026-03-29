@@ -46,4 +46,4 @@ def root():
     return {"message": "DistComp Task 320"}
 
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="0.0.0.0", port=24110, http="h11")
+    uvicorn.run("main:app", host="0.0.0.0", port=24110, http="h11")
