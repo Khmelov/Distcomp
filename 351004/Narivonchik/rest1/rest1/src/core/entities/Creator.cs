@@ -13,4 +13,6 @@ public class Creator(
     public string Firstname { get; set; } = firstname;
 
     public string Lastname { get; set; } = lastname;
+    
+    public IEnumerable<News>? News { get; set; }
 }

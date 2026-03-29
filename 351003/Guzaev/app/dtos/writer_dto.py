@@ -3,7 +3,7 @@ from typing import Optional
 
 class WriterRequestTo(BaseModel):
     login: str = Field(..., min_length=2, max_length=64)
-    password: str = Field(..., min_length=4, max_length=128)
+    password: str = Field(..., min_length=8, max_length=128, pattern=r"^[A-Za-z0-9]+$")
     firstname: Optional[str] = Field(None, min_length=2, max_length=64)
     lastname: Optional[str] = Field(None, min_length=2, max_length=64)
 

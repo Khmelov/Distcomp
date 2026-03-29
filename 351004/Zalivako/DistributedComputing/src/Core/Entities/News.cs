@@ -15,5 +15,9 @@
         // navigation
 
         public Editor? Editor { get; set; }
+
+        public List<Marker> Markers { get; set; } = [];
+
+        // public List<Post>? Posts { get; set; }
     }
 }
