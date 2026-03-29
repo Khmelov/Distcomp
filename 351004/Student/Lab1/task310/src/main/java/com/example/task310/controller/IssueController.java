@@ -1,13 +1,12 @@
 package com.example.task310.controller;
 
-import com.example.task310.dto.IssueRequestTo;
-import com.example.task310.dto.IssueResponseTo;
+import com.example.task310.dto.*;
 import com.example.task310.service.IssueService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -17,10 +16,14 @@ public class IssueController {
     private final IssueService service;
 
     @GetMapping
-    public List<IssueResponseTo> getAll() { return service.getAll(); }
+    public List<IssueResponseTo> getAll(Pageable pageable) {
+        return service.getAll(pageable);
+    }
 
     @GetMapping("/{id}")
-    public IssueResponseTo getById(@PathVariable Long id) { return service.getById(id); }
+    public IssueResponseTo getById(@PathVariable Long id) {
+        return service.getById(id);
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -28,12 +31,15 @@ public class IssueController {
         return service.create(dto);
     }
 
-    @PutMapping
-    public IssueResponseTo update(@Valid @RequestBody IssueRequestTo dto) {
+    @PutMapping("/{id}")
+    public IssueResponseTo update(@PathVariable Long id, @Valid @RequestBody IssueRequestTo dto) {
+        dto.setId(id);
         return service.update(dto);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) { service.delete(id); }
+    public void delete(@PathVariable Long id) {
+        service.delete(id);
+    }
 }

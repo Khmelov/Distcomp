@@ -1,13 +1,12 @@
 package com.example.task310.controller;
 
-import com.example.task310.dto.WriterRequestTo;
-import com.example.task310.dto.WriterResponseTo;
+import com.example.task310.dto.*;
 import com.example.task310.service.WriterService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -17,8 +16,8 @@ public class WriterController {
     private final WriterService service;
 
     @GetMapping
-    public List<WriterResponseTo> getAll() {
-        return service.getAll();
+    public List<WriterResponseTo> getAll(Pageable pageable) {
+        return service.getAll(pageable);
     }
 
     @GetMapping("/{id}")
@@ -32,8 +31,9 @@ public class WriterController {
         return service.create(dto);
     }
 
-    @PutMapping
-    public WriterResponseTo update(@Valid @RequestBody WriterRequestTo dto) {
+    @PutMapping("/{id}")
+    public WriterResponseTo update(@PathVariable Long id, @Valid @RequestBody WriterRequestTo dto) {
+        dto.setId(id);
         return service.update(dto);
     }
 

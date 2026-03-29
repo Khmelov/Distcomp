@@ -27,7 +27,23 @@ public class EntityMapper {
     // 2. Issue
     public Issue toEntity(IssueRequestTo request) {
         if (request == null) return null;
-        return new Issue(request.getId(), request.getWriterId(), request.getTitle(), request.getContent(), null, null);
+
+        List<Marker> markerEntities = null;
+        if (request.getMarkers() != null) {
+            markerEntities = request.getMarkers().stream()
+                    .map(name -> new Marker(null, name, null))
+                    .collect(Collectors.toList());
+        }
+
+        return new Issue(
+                request.getId(),
+                request.getWriterId(),
+                request.getTitle(),
+                request.getContent(),
+                null,
+                null,
+                markerEntities
+        );
     }
 
     public IssueResponseTo toResponse(Issue entity) {
@@ -42,7 +58,7 @@ public class EntityMapper {
     // 3. Marker
     public Marker toEntity(MarkerRequestTo request) {
         if (request == null) return null;
-        return new Marker(request.getId(), request.getName());
+        return new Marker(request.getId(), request.getName(), null);
     }
 
     public MarkerResponseTo toResponse(Marker entity) {
