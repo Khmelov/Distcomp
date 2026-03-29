@@ -1,8 +1,8 @@
-package com.example.restapp.mapper;
+package com.example.discussion.mapper;
 
-import com.example.restapp.dto.request.NoteRequestTo;
-import com.example.restapp.dto.response.NoteResponseTo;
-import com.example.restapp.model.Note;
+import com.example.discussion.dto.request.NoteRequestTo;
+import com.example.discussion.dto.response.NoteResponseTo;
+import com.example.discussion.model.Note;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

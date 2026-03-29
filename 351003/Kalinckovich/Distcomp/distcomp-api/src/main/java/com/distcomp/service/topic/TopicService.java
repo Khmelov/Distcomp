@@ -1,9 +1,8 @@
 package com.distcomp.service.topic;
 
-import com.distcomp.data.repository.m2m.TopicTagReactiveRepository;
-import com.distcomp.data.repository.note.NoteReactiveRepository;
-import com.distcomp.data.repository.tag.TagReactiveRepository;
-import com.distcomp.data.repository.topic.TopicReactiveRepository;
+import com.distcomp.data.r2dbc.repository.m2m.TopicTagReactiveRepository;
+import com.distcomp.data.r2dbc.repository.tag.TagReactiveRepository;
+import com.distcomp.data.r2dbc.repository.topic.TopicReactiveRepository;
 import com.distcomp.dto.topic.TopicCreateRequest;
 import com.distcomp.dto.topic.TopicPatchRequest;
 import com.distcomp.dto.topic.TopicResponseDto;
@@ -11,9 +10,10 @@ import com.distcomp.dto.topic.TopicUpdateRequest;
 import com.distcomp.mapper.topic.TopicMapper;
 import com.distcomp.model.m2m.TopicTag;
 import com.distcomp.model.topic.Topic;
+import com.distcomp.service.note.NoteProxyService;
 import com.distcomp.service.tag.TagService;
-import com.distcomp.validator.model.ValidationArgs;
-import com.distcomp.validator.topic.TopicValidator;
+import com.distcomp.validation.model.ValidationArgs;
+import com.distcomp.validation.topic.TopicValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class TopicService {
     private final TopicReactiveRepository topicRepository;
     private final TopicTagReactiveRepository topicTagRepository;
     private final TagReactiveRepository tagRepository;
-    private final NoteReactiveRepository noteRepository;
+    private final NoteProxyService noteProxyService;
     private final TopicMapper topicMapper;
     private final TopicValidator topicValidator;
     private final TagService tagService;
@@ -45,7 +45,7 @@ public class TopicService {
                                     return Mono.just(savedTopic);
                                 }
                                 return Flux.fromIterable(tagNames)
-                                        .flatMap(tagName -> tagService.findOrCreateByName(tagName))
+                                        .flatMap(tagService::findOrCreateByName)
                                         .collectList()
                                         .flatMap(tags -> {
                                             final List<TopicTag> links = tags.stream()
@@ -92,7 +92,7 @@ public class TopicService {
 
     public Mono<Void> delete(final Long id) {
         return topicValidator.validateTopicExists(id)
-                .then(noteRepository.deleteByTopicId(id))
+                .then(noteProxyService.deleteNotesByTopicId(id))
                 .then(topicTagRepository.findByTopicId(id).collectList())
                 .flatMap(topicTags -> {
                     final List<Long> tagIds = topicTags.stream()
