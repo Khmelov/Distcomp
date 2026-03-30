@@ -1,0 +1,9 @@
+server:
+  port: 24110
+
+spring:
+  jackson:
+    serialization:
+      wrap-root-value: false
+    deserialization:
+      unwrap-root-value: false

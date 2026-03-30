@@ -20,8 +20,11 @@ public class ArticleController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ArticleResponseTo>> getAll() {
-        return ResponseEntity.ok(articleService.getAll());
+    public ResponseEntity<List<ArticleResponseTo>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sort) {
+        return ResponseEntity.ok(articleService.getAll(page, size, sort).getContent());
     }
 
     @GetMapping("/{id}")

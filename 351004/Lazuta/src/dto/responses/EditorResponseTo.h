@@ -3,6 +3,9 @@
 #include <string>
 #include <jsoncpp/json/json.h>
 
+namespace myapp::dto
+{
+
 class EditorResponseTo 
 {
 public:
@@ -20,4 +23,6 @@ public:
         json["lastname"] = lastName;
         return json;
     }
+};
+
 };
