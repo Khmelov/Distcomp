@@ -52,21 +52,6 @@
         </createTable>
     </changeSet>
 
-
-    <changeSet id="4-create-tbl_message" author="palina">
-        <createTable tableName="tbl_message" schemaName="dictcomp">
-            <column name="id" type="BIGINT" autoIncrement="true">
-                <constraints primaryKey="true"/>
-            </column>
-            <column name="issue_id" type="BIGINT">
-                <constraints foreignKeyName="fk_message_issue"
-                             references="dictcomp.tbl_issue(id)"
-                             nullable="false"/>
-            </column>
-            <column name="content" type="TEXT"/>
-        </createTable>
-    </changeSet>
-
     <changeSet id="5-create-tbl_issue_mark" author="palina">
         <createTable tableName="tbl_issue_mark" schemaName="dictcomp">
             <column name="issue_id" type="BIGINT">

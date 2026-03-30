@@ -14,7 +14,6 @@ public class MessageRequestTo {
     @JsonProperty("content")
     private String content;
 
-    @NotNull(message = "Issue ID is required")
     @JsonProperty("issueId")
     private Long issueId;
 }

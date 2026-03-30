@@ -1,6 +1,5 @@
 package com.example.demo.specification;
 
-import com.example.demo.model.Author;
 import com.example.demo.model.Mark;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;

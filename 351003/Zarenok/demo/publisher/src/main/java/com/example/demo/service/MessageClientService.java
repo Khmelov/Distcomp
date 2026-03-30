@@ -2,17 +2,23 @@ package com.example.demo.service;
 
 import com.example.demo.dto.requests.MessageRequestTo;
 import com.example.demo.dto.responses.MessageResponseTo;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,14 +26,21 @@ import java.util.stream.Collectors;
 public class MessageClientService {
 
     private final WebClient webClient;
+    private final ObjectMapper objectMapper;
 
     public MessageResponseTo create(MessageRequestTo dto) {
-        return webClient.post()
-                .uri("/messages")
-                .bodyValue(dto)
-                .retrieve()
-                .bodyToMono(MessageResponseTo.class)
-                .block();
+        try {
+            String json = new ObjectMapper().writeValueAsString(dto);
+            return webClient.post()
+                    .uri("/messages")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(json)
+                    .retrieve()
+                    .bodyToMono(MessageResponseTo.class)
+                    .block();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize DTO", e);
+        }
     }
 
     public MessageResponseTo findById(Long id) {
@@ -39,49 +52,51 @@ public class MessageClientService {
     }
 
     public Page<MessageResponseTo> findAll(Pageable pageable, String contentFilter, Long issueIdFilter) {
-        List<MessageResponseTo> allMessages;
-        if (issueIdFilter != null) {
-            allMessages = webClient.get()
-                    .uri(uriBuilder -> uriBuilder.path("/messages").queryParam("issueId", issueIdFilter).build())
-                    .retrieve()
-                    .bodyToFlux(MessageResponseTo.class)
-                    .collectList()
-                    .block();
-        } else {
-            allMessages = webClient.get()
-                    .uri("/messages")
-                    .retrieve()
-                    .bodyToFlux(MessageResponseTo.class)
-                    .collectList()
-                    .block();
-        }
+        int pageNumber = pageable.isPaged() ? pageable.getPageNumber() : 0;
+        int pageSize = pageable.isPaged() ? pageable.getPageSize() : 100;
 
-        if (contentFilter != null && !contentFilter.isEmpty()) {
-            allMessages = allMessages.stream()
-                    .filter(msg -> msg.getContent() != null && msg.getContent().contains(contentFilter))
-                    .collect(Collectors.toList());
-        }
 
+        String sortParam;
         if (pageable.getSort().isSorted()) {
-            Comparator<MessageResponseTo> comparator = null;
-            for (Sort.Order order : pageable.getSort()) {
-                Comparator<MessageResponseTo> fieldComparator = getComparatorForField(order.getProperty());
-                if (order.isDescending()) {
-                    fieldComparator = fieldComparator.reversed();
-                }
-                comparator = (comparator == null) ? fieldComparator : comparator.thenComparing(fieldComparator);
-            }
-            if (comparator != null) {
-                allMessages.sort(comparator);
-            }
+            sortParam = pageable.getSort().stream()
+                    .map(order -> order.getProperty() + "," + (order.isAscending() ? "asc" : "desc"))
+                    .collect(Collectors.joining(","));
+        } else {
+            sortParam = "id,asc";
         }
 
-        // Пагинация
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), allMessages.size());
-        List<MessageResponseTo> pageContent = allMessages.subList(start, end);
+        Map<String, Object> response = webClient.get()
+                .uri(uriBuilder -> {
+                    uriBuilder.path("/messages");
+                    uriBuilder.queryParam("page", pageNumber);
+                    uriBuilder.queryParam("size", pageSize);
+                    uriBuilder.queryParam("sort", sortParam);
+                    if (issueIdFilter != null) {
+                        uriBuilder.queryParam("issueId", issueIdFilter);
+                    }
+                    if (contentFilter != null && !contentFilter.isEmpty()) {
+                        uriBuilder.queryParam("content", contentFilter);
+                    }
+                    return uriBuilder.build();
+                })
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .block();
 
-        return new PageImpl<>(pageContent, pageable, allMessages.size());
+        if (response == null || !response.containsKey("content")) {
+            return Page.empty(pageable);
+        }
+
+        List<MessageResponseTo> contentList = objectMapper.convertValue(
+                response.get("content"),
+                new TypeReference<List<MessageResponseTo>>() {}
+        );
+
+        int totalPages = response.containsKey("totalPages") ? (int) response.get("totalPages") : 1;
+        long totalElements = response.containsKey("totalElements") ?
+                ((Number) response.get("totalElements")).longValue() : contentList.size();
+
+        return new PageImpl<>(contentList, pageable, totalElements);
     }
 
     private Comparator<MessageResponseTo> getComparatorForField(String field) {

@@ -6,10 +6,12 @@ import org.springframework.data.cassandra.core.cql.PrimaryKeyType;
 import org.springframework.data.cassandra.core.mapping.PrimaryKeyClass;
 import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
 @PrimaryKeyClass
-public class MessageKey {
+public class MessageKey implements Serializable {
 
     @PrimaryKeyColumn(name = "issue_id", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
     private Long issueId;

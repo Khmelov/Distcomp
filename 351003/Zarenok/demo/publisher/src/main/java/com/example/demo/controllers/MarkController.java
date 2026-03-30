@@ -1,11 +1,8 @@
 package com.example.demo.controllers;
 
 import com.example.demo.dto.requests.MarkRequestTo;
-import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.dto.responses.MarkResponseTo;
 import com.example.demo.service.MarkService;
-import org.springframework.data.crossstore.ChangeSetPersister;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -15,7 +12,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1.0/marks")
@@ -34,10 +30,10 @@ public class MarkController {
 
     @GetMapping
     public ResponseEntity<?> findAll(
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size,
-            @RequestParam(defaultValue = "id,asc") String sort,
-            @RequestParam(required = false) String name
+            @RequestParam(name = "page", required = false) Integer page,
+            @RequestParam(name = "size", required = false) Integer size,
+            @RequestParam(name = "sort", defaultValue = "id,asc") String sort,
+            @RequestParam(name = "name", required = false) String name
             ) {
         if (page != null && size != null) {
             Pageable pageable = PageRequest.of(page, size, parseSort(sort));
@@ -56,20 +52,20 @@ public class MarkController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MarkResponseTo> findById(@PathVariable Long id) {
+    public ResponseEntity<MarkResponseTo> findById(@PathVariable("id") Long id) {
         MarkResponseTo mark = markService.findById(id);
         return ResponseEntity.ok(mark);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MarkResponseTo> update(@PathVariable Long id,
+    public ResponseEntity<MarkResponseTo> update(@PathVariable("id") Long id,
                                                  @Valid @RequestBody MarkRequestTo dto) {
         MarkResponseTo updated = markService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws ChangeSetPersister.NotFoundException {
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         markService.delete(id);
         return ResponseEntity.noContent().build();
     }

@@ -8,7 +8,6 @@ import com.example.demo.model.Author;
 import com.example.demo.repository.AuthorRepository;
 import com.example.demo.specification.AuthorSpecifications;
 import jakarta.transaction.Transactional;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;

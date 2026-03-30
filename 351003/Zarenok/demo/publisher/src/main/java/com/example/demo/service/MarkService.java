@@ -1,7 +1,6 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.requests.MarkRequestTo;
-import com.example.demo.dto.responses.AuthorResponseTo;
 import com.example.demo.dto.responses.MarkResponseTo;
 import com.example.demo.exception.DuplicateException;
 import com.example.demo.exception.NotFoundException;

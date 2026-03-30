@@ -3,14 +3,21 @@ package com.example.demo.exception;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+
 import java.util.stream.Collectors;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -62,5 +69,18 @@ public class GlobalExceptionHandler {
         response.put("errorMessage", message);
         response.put("errorCode", code);
         return ResponseEntity.status(status).body(response);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        Map<String, Object> error = new HashMap<>();
+        if ("id".equals(ex.getName()) || "issueId".equals(ex.getName())) {
+            error.put("status", HttpStatus.NOT_FOUND.value());
+            error.put("message", "Resource not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
+        error.put("status", HttpStatus.BAD_REQUEST.value());
+        error.put("message", "Invalid parameter");
+        return ResponseEntity.badRequest().body(error);
     }
 }
