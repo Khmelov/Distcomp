@@ -1,4 +1,20 @@
-
+kafka:
+  topics:
+    auto-create: true
+    default:
+      partitions: 3
+      replication-factor: 1
+    list:
+      - name: InTopic
+        partitions: 3
+        replication-factor: 1
+        configs:
+          retention.ms: 604800000  # 7 days
+      - name: OutTopic
+        partitions: 3
+        replication-factor: 1
+        configs:
+          retention.ms: 604800000
 
 cassandra:
   contact-points: localhost
@@ -9,6 +25,20 @@ cassandra:
   password: distcomp
 
 spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: note-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    admin:
+      properties:
+        bootstrap.servers: localhost:9092
+
   autoconfigure:
     exclude: org.springframework.boot.r2dbc.autoconfigure.R2dbcAutoConfiguration
   data:

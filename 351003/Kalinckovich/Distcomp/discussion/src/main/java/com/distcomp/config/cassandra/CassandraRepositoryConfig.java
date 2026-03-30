@@ -1,4 +1,4 @@
-package com.distcomp.config;
+package com.distcomp.config.cassandra;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.cassandra.repository.config.EnableReactiveCassandraRepositories;
