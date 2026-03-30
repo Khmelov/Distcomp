@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../../../services/prisma.service';
 import { ArticleRequestTo } from '../../../dto/articles/ArticleRequestTo.dto';
 import { ArticleResponseTo } from '../../../dto/articles/ArticleResponseTo.dto';
+import { Sticker } from '../../../../generated/prisma/client';
 
 @Injectable()
 export class ArticlesService {
@@ -30,8 +31,41 @@ export class ArticlesService {
       throw new ForbiddenException('Article with title already exists!');
     }
 
-    return this.prisma.article.create({
-      data: article,
+    const { stickers, ...articleData } = article;
+
+    return this.prisma.$transaction(async (tx) => {
+      const stickerRecords: Sticker[] = [];
+      if (stickers) {
+        for (const sticker of stickers) {
+          const find_sticker = await tx.sticker.findFirst({
+            where: { name: sticker },
+          });
+
+          if (!find_sticker) {
+            const newSticker = await tx.sticker.create({
+              data: { name: sticker },
+            });
+            stickerRecords.push(newSticker);
+          } else {
+            stickerRecords.push(find_sticker);
+          }
+        }
+      }
+
+      const newArticle = await tx.article.create({
+        data: articleData,
+      });
+
+      if (stickerRecords.length > 0) {
+        await tx.articleSticker.createMany({
+          data: stickerRecords.map((sticker) => ({
+            articleId: newArticle.id,
+            stickerId: sticker.id,
+          })),
+        });
+      }
+
+      return newArticle;
     });
   }
 
@@ -82,6 +116,36 @@ export class ArticlesService {
       throw new NotFoundException('Article not found');
     }
 
-    await this.prisma.article.delete({ where: { id } });
+    await this.prisma.$transaction(async (tx) => {
+      const articleStickers = await tx.articleSticker.findMany({
+        where: { articleId: id },
+        include: {
+          sticker: true,
+        },
+      });
+
+      const stickerIds = articleStickers.map((as) => as.stickerId);
+
+      await tx.articleSticker.deleteMany({
+        where: { articleId: id },
+      });
+
+      for (const stickerId of stickerIds) {
+        const otherConnections = await tx.articleSticker.count({
+          where: {
+            stickerId: stickerId,
+            NOT: { articleId: id },
+          },
+        });
+
+        if (otherConnections === 0) {
+          await tx.sticker.delete({
+            where: { id: stickerId },
+          });
+        }
+      }
+
+      await tx.article.delete({ where: { id } });
+    });
   }
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"labs/publisher/internal/client/kafka"
+	"labs/publisher/internal/client"
 	"labs/publisher/internal/config"
 	editorctrl "labs/publisher/internal/controller/editor"
 	issuectrl "labs/publisher/internal/controller/issue"
