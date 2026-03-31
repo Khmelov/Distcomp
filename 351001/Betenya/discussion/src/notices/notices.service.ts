@@ -19,6 +19,7 @@ export class NoticesService {
       id: (row['id'] as types.Long).toNumber(),
       content: row['content'] as string,
       articleId: (row['article_id'] as types.Long).toNumber(),
+      state: (row['state'] as string) ?? 'PENDING',
     };
   }
 
@@ -36,19 +37,19 @@ export class NoticesService {
     return (result.rows[0]['value'] as types.Long).toNumber();
   }
 
-  async createNotice(dto: NoticeRequestTo): Promise<NoticeResponseTo> {
+  async createNotice(dto: NoticeRequestTo, state = 'PENDING'): Promise<NoticeResponseTo> {
     const id = await this.nextId();
     await this.cassandra.client.execute(
-      `INSERT INTO ${KS}.tbl_notice (id, article_id, content) VALUES (?, ?, ?)`,
-      [types.Long.fromNumber(id), types.Long.fromNumber(dto.articleId), dto.content],
+      `INSERT INTO ${KS}.tbl_notice (id, article_id, content, state) VALUES (?, ?, ?, ?)`,
+      [types.Long.fromNumber(id), types.Long.fromNumber(dto.articleId), dto.content, state],
       { prepare: true },
     );
-    return { id, content: dto.content, articleId: dto.articleId };
+    return { id, content: dto.content, articleId: dto.articleId, state };
   }
 
   async getAll(): Promise<NoticeResponseTo[]> {
     const result = await this.cassandra.client.execute(
-      `SELECT id, article_id, content FROM ${KS}.tbl_notice`,
+      `SELECT id, article_id, content, state FROM ${KS}.tbl_notice`,
       [],
       { prepare: true },
     );
@@ -57,7 +58,7 @@ export class NoticesService {
 
   async getNotice(id: number): Promise<NoticeResponseTo> {
     const result = await this.cassandra.client.execute(
-      `SELECT id, article_id, content FROM ${KS}.tbl_notice WHERE id = ?`,
+      `SELECT id, article_id, content, state FROM ${KS}.tbl_notice WHERE id = ?`,
       [types.Long.fromNumber(id)],
       { prepare: true },
     );
@@ -68,15 +69,16 @@ export class NoticesService {
   }
 
   async updateNotice(id: number, dto: NoticeRequestTo): Promise<NoticeResponseTo> {
-    // Check existence first
     const existing = await this.cassandra.client.execute(
-      `SELECT id FROM ${KS}.tbl_notice WHERE id = ?`,
+      `SELECT id, state FROM ${KS}.tbl_notice WHERE id = ?`,
       [types.Long.fromNumber(id)],
       { prepare: true },
     );
     if (!existing.rows.length) {
       throw new NotFoundException('Notice not found');
     }
+
+    const state = (existing.rows[0]['state'] as string) ?? 'PENDING';
 
     try {
       await this.cassandra.client.execute(
@@ -87,7 +89,15 @@ export class NoticesService {
     } catch {
       throw new InternalServerErrorException('Database error occurred');
     }
-    return { id, content: dto.content, articleId: dto.articleId };
+    return { id, content: dto.content, articleId: dto.articleId, state };
+  }
+
+  async updateNoticeState(id: number, state: string): Promise<void> {
+    await this.cassandra.client.execute(
+      `UPDATE ${KS}.tbl_notice SET state = ? WHERE id = ?`,
+      [state, types.Long.fromNumber(id)],
+      { prepare: true },
+    );
   }
 
   async deleteNotice(id: number): Promise<void> {

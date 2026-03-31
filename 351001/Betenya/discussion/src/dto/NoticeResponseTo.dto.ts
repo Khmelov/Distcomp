@@ -9,4 +9,7 @@ export class NoticeResponseTo {
 
   @ApiProperty({ example: 1, description: 'Article ID' })
   articleId: number;
+
+  @ApiProperty({ example: 'PENDING', description: 'Moderation state', enum: ['PENDING', 'APPROVE', 'DECLINE'] })
+  state: string;
 }

@@ -50,16 +50,27 @@ export class CassandraService implements OnModuleInit, OnModuleDestroy {
        WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}`,
     );
 
-    // Notice table — id is the partition key for uniform distribution across nodes.
-    // Using articleId alone as partition key would cause data skew
-    // (hot partition for popular articles), so id gives even spread.
     await this.client.execute(
       `CREATE TABLE IF NOT EXISTS ${KEYSPACE}.tbl_notice (
          id         bigint PRIMARY KEY,
          article_id bigint,
-         content    text
+         content    text,
+         state      text
        )`,
     );
+
+    // Ensure the state column exists (may be missing if table was created before lab 4)
+    try {
+      await this.client.execute(
+        `ALTER TABLE ${KEYSPACE}.tbl_notice ADD state text`,
+      );
+      this.logger.log('Added state column to tbl_notice');
+    } catch (err) {
+      // Column already exists — safe to ignore
+      if (!err.message?.includes('already exists')) {
+        throw err;
+      }
+    }
 
     // Counter table for auto-incrementing numeric IDs
     await this.client.execute(

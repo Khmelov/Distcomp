@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../services/prisma.service';
+import { KafkaService } from '../../../kafka/kafka.service';
 import { NoticeRequestTo } from '../../../dto/notices/NoticeRequestTo.dto';
 import { NoticeResponseTo } from '../../../dto/notices/NoticeResponseTo.dto';
 
@@ -12,7 +13,10 @@ const NOTICES_API = `${DISCUSSION_URL}/api/v1.0/notices`;
 
 @Injectable()
 export class NoticesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private kafkaService: KafkaService,
+  ) {}
 
   /** Serialize a DTO to a plain JSON-safe object (BigInt → Number) */
   private serializeDto(dto: NoticeRequestTo): Record<string, unknown> {
@@ -28,6 +32,7 @@ export class NoticesService {
       id: BigInt(raw.id as number),
       content: raw.content as string,
       articleId: BigInt(raw.articleId as number),
+      state: (raw.state as string) ?? 'PENDING',
     };
   }
 
@@ -40,6 +45,17 @@ export class NoticesService {
       throw new NotFoundException('Article not found');
     }
 
+    // Use Kafka transport if available, otherwise fall back to HTTP
+    if (this.kafkaService.isReady()) {
+      const raw = await this.kafkaService.sendAndWait(
+        'CREATE',
+        this.serializeDto(notice),
+        String(Number(notice.articleId)), // key = articleId for partition affinity
+      );
+      return this.toResponseTo(raw as Record<string, unknown>);
+    }
+
+    // Fallback to HTTP
     const res = await fetch(NOTICES_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -9,7 +9,7 @@ describe('NoticesController', () => {
   let controller: NoticesController;
   let service: NoticesService;
 
-  const mockResponse: NoticeResponseTo = { id: 1, content: 'Test content', articleId: 1 };
+  const mockResponse: NoticeResponseTo = { id: 1, content: 'Test content', articleId: 1, state: 'PENDING' };
   const mockRequest: NoticeRequestTo = { content: 'Test content', articleId: 1 };
 
   const mockService = {
