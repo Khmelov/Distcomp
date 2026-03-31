@@ -1,6 +1,6 @@
 ﻿using Application.DTOs.Requests;
 using Application.DTOs.Responses;
-using Application.Exceptions;
+using Application.Exceptions.Application;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,6 +36,11 @@ namespace API.Controllers
                     new { id = createdEditor.Id },
                     createdEditor
                 );
+            }
+            catch (EditorAlreadyExistsException ex)
+            {
+                _logger.LogError(ex, "Editor already exists");
+                return StatusCode(403);
             }
             catch (Exception ex)
             {
@@ -91,6 +96,7 @@ namespace API.Controllers
             }
         }
 
+        [HttpPut]
         [ProducesResponseType(typeof(EditorResponseTo), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
