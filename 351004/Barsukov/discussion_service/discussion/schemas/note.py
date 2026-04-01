@@ -5,6 +5,7 @@ class NoteRequestTo(BaseModel):
     id: Optional[int] = None
     issueId: int
     content: str = Field(..., min_length=2, max_length=2048)
+    state: Optional[Literal["PENDING", "APPROVE", "DECLINE"]] = "PENDING"
 
 class NoteResponseTo(BaseModel):
     id: int
