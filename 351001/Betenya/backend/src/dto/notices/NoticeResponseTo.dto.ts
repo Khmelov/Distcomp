@@ -17,4 +17,11 @@ export class NoticeResponseTo {
     minimum: 0,
   })
   articleId: bigint;
+
+  @ApiProperty({
+    example: 'PENDING',
+    description: 'Moderation state',
+    enum: ['PENDING', 'APPROVE', 'DECLINE'],
+  })
+  state: string;
 }

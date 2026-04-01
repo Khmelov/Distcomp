@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using RestApiTask.Infrastructure.Exceptions;
 using RestApiTask.Models.DTOs;
 using RestApiTask.Models.Entities;
@@ -18,8 +18,16 @@ public class WriterService : IWriterService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<WriterResponseTo>> GetAllAsync() =>
-        _mapper.Map<IEnumerable<WriterResponseTo>>(await _repo.GetAllAsync());
+    public async Task<IEnumerable<WriterResponseTo>> GetAllAsync(QueryOptions? options = null)
+    {
+        if (options is null)
+        {
+            return _mapper.Map<IEnumerable<WriterResponseTo>>(await _repo.GetAllAsync());
+        }
+
+        var page = await _repo.GetAllAsync(options);
+        return _mapper.Map<IEnumerable<WriterResponseTo>>(page.Items);
+    }
 
     public async Task<WriterResponseTo> GetByIdAsync(long id)
     {

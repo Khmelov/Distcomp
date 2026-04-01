@@ -1,0 +1,27 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="1-create-table" author="AlexKalinckovich">
+        <comment>Create note table with composite primary key (country, topic_id, id)</comment>
+        <sql>
+            CREATE TABLE IF NOT EXISTS tbl_note (
+                                                    country text,
+                                                    topic_id bigint,
+                                                    id bigint,
+                                                    content text,
+                                                    PRIMARY KEY ((country), topic_id, id)
+                );
+        </sql>
+    </changeSet>
+
+    <changeSet id="2-create-indexes" author="AlexKalinckovich">
+        <comment>Create secondary index on id for lookups by single ID</comment>
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_note_id ON tbl_note (id);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
