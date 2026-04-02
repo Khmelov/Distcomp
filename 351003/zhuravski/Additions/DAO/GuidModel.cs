@@ -1,5 +1,3 @@
-using Additions.DAO;
-
-namespace CommentMicroservice.DAO.Models;
+namespace Additions.DAO;
 
 public abstract class GuidModel<T> : Model<T, Guid> where T : GuidModel<T> {}
