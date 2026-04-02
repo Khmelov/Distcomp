@@ -20,8 +20,13 @@ public class CreatorController {
     }
 
     @GetMapping
-    public List<CreatorResponseTo> findAll() {
-        return creatorService.findAll();
+    public List<CreatorResponseTo> findAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search) {
+        return creatorService.findAll(page, size, sortBy, sortDir, search);
     }
 
     @GetMapping("/{id}")
