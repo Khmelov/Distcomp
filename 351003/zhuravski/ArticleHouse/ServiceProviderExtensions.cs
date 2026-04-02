@@ -27,6 +27,7 @@ static internal class ServiceProviderExtensions
 
         collection.AddScoped<IArticleMarkDAO, DbArticleMarkDAO>();
 
+        collection.AddSingleton<IEventProducerService, KafkaProducerService>();
         collection.AddDbContext<ApplicationContext>(options => options.UseNpgsql(connection).UseSnakeCaseNamingConvention());
         return collection;
     }
