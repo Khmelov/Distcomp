@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Literal
 
 
 class CommentRequestTo(BaseModel):
@@ -11,3 +12,4 @@ class CommentResponseTo(BaseModel):
     id: int
     content: str
     topicId: int
+    state: Literal["PENDING", "APPROVE", "DECLINE"] = "PENDING"

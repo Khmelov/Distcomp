@@ -1,4 +1,4 @@
-﻿namespace RestApiTask.Models.DTOs
+namespace RestApiTask.Models.DTOs
 {
-    public record ArticleRequestTo(long WriterId, string Title, string Content);
+    public record ArticleRequestTo(long WriterId, string Title, string Content, List<string>? Markers = null);
 }

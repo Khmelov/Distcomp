@@ -3,7 +3,8 @@ from app.api.v1 import users, topics, marks, comments
 from app.core.error_handler import register_exception_handlers
 from app.db.database import Base, engine
 from app.core.config import settings
-from app.models import user, topic, mark  # noqa
+from app.models import user, topic, mark
+from app.kafka import manager as kafka
 
 Base.metadata.create_all(bind=engine)
 
@@ -19,6 +20,11 @@ app.include_router(marks.router, prefix="/api/v1.0")
 app.include_router(comments.router, prefix="/api/v1.0")
 
 register_exception_handlers(app)
+
+
+@app.on_event("startup")
+async def startup_event():
+    kafka.init_kafka(settings.KAFKA_BOOTSTRAP_SERVERS)
 
 
 @app.get("/")

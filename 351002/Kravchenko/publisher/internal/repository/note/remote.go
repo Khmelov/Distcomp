@@ -2,9 +2,9 @@ package note
 
 import (
 	"context"
+	"labs/publisher/internal/client"
 	"time"
 
-	"labs/publisher/internal/client"
 	notemodel "labs/shared/model/note"
 )
 

@@ -1,0 +1,100 @@
+services:
+  postgres:
+    container_name: postgres_container_rv1
+    image: postgres:14
+    shm_size: 1gb
+    command: postgres -c 'max_connections=500'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+    restart: unless-stopped
+
+  cassandra:
+    container_name: cassandra_container_rv1
+    image: cassandra:4.1
+    environment:
+      CASSANDRA_CLUSTER_NAME: 'MyCluster'
+      CASSANDRA_SEEDS: cassandra
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_NUM_TOKENS: 256
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 100M
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra:/var/lib/cassandra/data
+    networks:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "cqlsh", "-e", "describe keyspaces;" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: bash -c "sleep 30 && cassandra -f"
+
+  pgadmin:
+    container_name: pgadmin_container_rv1
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgaadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - backend
+    restart: unless-stopped
+
+  rabbitmq:
+    container_name: rabbitmq_container_rv1
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    networks:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    container_name: redis_container_rv1
+    image: redis:alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    restart: unless-stopped
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  postgres:
+  pgadmin:
+  rabbitmq:
+  redis_data:
+  cassandra:
