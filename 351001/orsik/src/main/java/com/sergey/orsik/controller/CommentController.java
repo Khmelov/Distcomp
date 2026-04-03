@@ -20,8 +20,14 @@ public class CommentController {
     }
 
     @GetMapping
-    public List<CommentResponseTo> findAll() {
-        return commentService.findAll();
+    public List<CommentResponseTo> findAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) Long tweetId,
+            @RequestParam(required = false) String content) {
+        return commentService.findAll(page, size, sortBy, sortDir, tweetId, content);
     }
 
     @GetMapping("/{id}")

@@ -1,0 +1,29 @@
+services:
+  postgres:
+    container_name: distcomp.postgres
+    image: "postgres:17-alpine"
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    env_file:
+      - .env
+    volumes:
+      - distcomp.postgres.data:/var/lib/postgresql/data:rw
+    networks:
+      - distcomp.network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  distcomp.postgres.data:
+    name: distcomp.postgres.data
+
+networks:
+  distcomp.network:
+    name: distcomp.network
+
+  
