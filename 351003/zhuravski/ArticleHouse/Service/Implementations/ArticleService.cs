@@ -1,8 +1,10 @@
 using Additions.Service;
+using Additions.Service.EventService;
 using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.DTOs;
 using ArticleHouse.Service.Interfaces;
+using CommonAPI.Service.Events;
 
 namespace ArticleHouse.Service.Implementations;
 
@@ -11,14 +13,16 @@ public class ArticleService : BasicService, IArticleService
     private readonly IArticleDAO dao;
     private readonly IArticleMarkDAO m2mDAO;
     private readonly IMarkDAO markDAO;
-    private readonly ICommentDAO commentDAO;
+    private readonly IEventProducerService producerService;
+    private readonly string eventTopic;
 
-    public ArticleService(IArticleDAO dao, IArticleMarkDAO m2mDAO, IMarkDAO markDAO, ICommentDAO commentDAO)
+    public ArticleService(IArticleDAO dao, IArticleMarkDAO m2mDAO, IMarkDAO markDAO, IEventProducerService producerService, IConfiguration configuration)
     {
         this.dao = dao;
         this.m2mDAO = m2mDAO;
         this.markDAO = markDAO;
-        this.commentDAO = commentDAO;
+        this.producerService = producerService;
+        eventTopic = configuration["Kafka:RecvTopic"] ?? "default-topic";
     }
 
     public async Task<ArticleResponseDTO[]> GetAllArticlesAsync()
@@ -59,7 +63,11 @@ public class ArticleService : BasicService, IArticleService
         await InvokeDAOMethod(async () =>
         {
             await dao.DeleteAsync(id);
-            await commentDAO.DeleteByArticleIdAsync(id);
+            await producerService.ProduceEventAsync<long>(eventTopic, new EventMessage<long>()
+            {
+                Operation = EventNames.ARTICLE_DELETED,
+                Payload = id
+            });
             await markDAO.ReleaseByIdsAsync(leftMarkIds);
         });
     }

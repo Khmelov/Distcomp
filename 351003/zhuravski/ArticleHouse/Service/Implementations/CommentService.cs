@@ -1,65 +1,92 @@
 using Additions.Service;
-using ArticleHouse.DAO.Interfaces;
-using ArticleHouse.DAO.Models;
+using Additions.Service.EventService;
 using ArticleHouse.Service.DTOs;
 using ArticleHouse.Service.Interfaces;
+using CommonAPI.Service.Events;
 
 namespace ArticleHouse.Service.Implementations;
 
 public class CommentService : BasicService, ICommentService
 {
-    private readonly ICommentDAO dao;
-    public CommentService(ICommentDAO dao)
+    private readonly IEventProducerService producerService;
+    private readonly string eventTopic;
+    private readonly TimeSpan operationTimeout = TimeSpan.FromSeconds(5);
+    
+    public CommentService(IEventProducerService producerService, IConfiguration configuration)
     {
-        this.dao = dao;
+        this.producerService = producerService;
+        eventTopic = configuration["Kafka:RecvTopic"] ?? "default-topic";
     }
     public async Task<CommentResponseDTO> CreateCommentAsync(CommentRequestDTO dto)
     {
-        CommentModel model = MakeModelFromRequest(dto);
-        CommentModel result = await InvokeDAOMethod(() => dao.AddNewAsync(model));
-        return MakeResponseFromModel(result);
+        CommentPayload model = MakePayloadFromRequest(dto);
+        EventMessage<CommentPayload> message = new()
+        {
+            Operation = EventNames.COMMENT_ADD,
+            Payload = model
+        };
+        var result = await producerService.ProduceEventWithResponseAsync<CommentPayload, CommentPayload>(eventTopic, message, operationTimeout);
+        return MakeResponseFromPayload(result.Payload);
     }
 
     public async Task DeleteCommentAsync(long id)
     {
-        await InvokeDAOMethod(() => dao.DeleteAsync(id));
+        await producerService.ProduceEventAsync(eventTopic, new EventMessage<long>()
+        {
+            Operation = EventNames.COMMENT_DELETE,
+            Payload = id
+        });
     }
 
     public async Task<CommentResponseDTO[]> GetAllCommentsAsync()
     {
-        CommentModel[] daoModels = await InvokeDAOMethod(() => dao.GetAllAsync());
-        return [.. daoModels.Select(MakeResponseFromModel)];
+        EventMessage<object> message = new()
+        {
+            Operation = EventNames.MANY_COMMENTS_GET
+        };
+        var result = await producerService.ProduceEventWithResponseAsync<object, ManyCommentsPayload>(eventTopic, message, operationTimeout);
+        return [.. result.Payload.Comments.Select(MakeResponseFromPayload)];
     }
 
     public async Task<CommentResponseDTO> GetCommentByIdAsync(long id)
     {
-        CommentModel model = await InvokeDAOMethod(() => dao.GetByIdAsync(id));
-        return MakeResponseFromModel(model);
+        EventMessage<long> message = new()
+        {
+            Operation = EventNames.COMMENT_GET,
+            Payload = id
+        };
+        var result = await producerService.ProduceEventWithResponseAsync<long, CommentPayload>(eventTopic, message, operationTimeout);
+        return MakeResponseFromPayload(result.Payload);
     }
 
     public async Task<CommentResponseDTO> UpdateCommentByIdAsync(long id, CommentRequestDTO dto)
     {
-        CommentModel model = MakeModelFromRequest(dto);
+        CommentPayload model = MakePayloadFromRequest(dto);
         model.Id = id;
-        CommentModel result = await InvokeDAOMethod(() => dao.UpdateAsync(model));
-        return MakeResponseFromModel(result);
+        EventMessage<CommentPayload> message = new()
+        {
+            Operation = EventNames.COMMENT_UPDATE,
+            Payload = model
+        };
+        var result = await producerService.ProduceEventWithResponseAsync<CommentPayload, CommentPayload>(eventTopic, message, operationTimeout);
+        return MakeResponseFromPayload(result.Payload);
     }
 
-    private static CommentModel MakeModelFromRequest(CommentRequestDTO dto)
+    private static CommentPayload MakePayloadFromRequest(CommentRequestDTO dto)
     {
-        CommentModel result = new();
-        ShapeModelFromRequest(ref result, dto);
+        CommentPayload result = new();
+        ShapePayloadFromRequest(ref result, dto);
         return result;
     }
 
-    private static void ShapeModelFromRequest(ref CommentModel model, CommentRequestDTO dto)
+    private static void ShapePayloadFromRequest(ref CommentPayload model, CommentRequestDTO dto)
     {
         model.Id = dto.Id ?? 0;
         model.ArticleId = dto.ArticleId;
         model.Content = dto.Content;
     }
 
-    private static CommentResponseDTO MakeResponseFromModel(CommentModel model)
+    private static CommentResponseDTO MakeResponseFromPayload(CommentPayload model)
     {
         return new CommentResponseDTO()
         {

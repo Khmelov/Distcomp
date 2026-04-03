@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Additions\Additions.csproj" />
+    <ProjectReference Include="..\CommonAPI\CommonAPI.csproj" />
   </ItemGroup>
 
 </Project>
