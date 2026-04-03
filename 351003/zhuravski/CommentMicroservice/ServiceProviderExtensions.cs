@@ -16,6 +16,7 @@ static internal class ServiceProviderExtensions
             client.BaseAddress = new Uri("http://localhost:24110/");
         });
         collection.AddScoped<CassandraContext>();
+        collection.AddSingleton<IEventProducerService, KafkaProducerService>();
         return collection;
     }
 }

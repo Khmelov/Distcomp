@@ -13,7 +13,8 @@ public class KafkaProducerService : IEventProducerService, IDisposable
         string bootstrapServers = configuration["Kafka:BootstrapServers"] ?? "localhost:9092";
         producer = new ProducerBuilder<string, string>(new ProducerConfig()
         {
-            BootstrapServers = bootstrapServers
+            BootstrapServers = bootstrapServers,
+            AllowAutoCreateTopics = true
         }).Build();
     }
 
