@@ -2,6 +2,7 @@ package org.discussion.service.kafka;
 
 import lombok.RequiredArgsConstructor;
 import org.discussion.dto.comment.CommentResponseTo;
+import org.discussion.other.enums.RequestMethod;
 import org.discussion.other.record.CommentResponseRecord;
 import org.discussion.other.record.CommentUploadRecord;
 import org.discussion.service.comment.CommentService;
@@ -21,6 +22,7 @@ public class KafkaDiscussionListener {
 
     @KafkaListener(topics = "in-topic", groupId = "discussion-group", containerFactory = "kafkaListenerContainerFactory")
     public void listen(CommentUploadRecord record) {
+        if (record.method().equals(RequestMethod.PUT)) System.out.println("hhhhhhhhhhhh");
         CommentResponseRecord response;
         try {
             List<CommentResponseTo> result = switch (record.method()) {
