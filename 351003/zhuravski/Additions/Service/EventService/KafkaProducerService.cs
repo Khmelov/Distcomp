@@ -1,8 +1,8 @@
-using Additions.Service;
-using CommentMicroservice.Service.Interfaces;
+using System.Text.Json;
 using Confluent.Kafka;
+using Microsoft.Extensions.Configuration;
 
-namespace CommentMicroservice.Service.Implementations;
+namespace Additions.Service.EventService;
 
 public class KafkaProducerService : IEventProducerService, IDisposable
 {
@@ -18,14 +18,14 @@ public class KafkaProducerService : IEventProducerService, IDisposable
         }).Build();
     }
 
-    public async Task ProduceEventAsync(string topic, string key, string value)
+    public async Task ProduceEventAsync<T>(string topic, string key, EventMessage<T> message)
     {
         try
         {
             var deliveryResult = await producer.ProduceAsync(topic, new Message<string, string>
             {
                 Key = key,
-                Value = value
+                Value = JsonSerializer.Serialize(message)
             });
         }
         catch (ProduceException<string, string> e)

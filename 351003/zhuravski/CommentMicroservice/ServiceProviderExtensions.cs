@@ -2,6 +2,7 @@ using CommentMicroservice.Service.Interfaces;
 using CommentMicroservice.Service.Implementations;
 using CommentMicroservice.DAO.Implementations;
 using CommentMicroservice.DAO.Interfaces;
+using Additions.Service.EventService;
 
 namespace CommentMicroservice;
 
