@@ -57,6 +57,7 @@ public class CommentService {
     }
 
     public CommentResponseTo updateComment(@Valid CommentRequestTo commentRequest) {
+        System.out.println("put zapros");
         CommentDiscussionRequest cdr = new CommentDiscussionRequest(commentRequest);
 
         if (cdr.getCountry() == null) {
