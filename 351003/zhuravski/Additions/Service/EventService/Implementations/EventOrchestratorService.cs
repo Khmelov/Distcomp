@@ -22,7 +22,12 @@ public class EventOrchestratorService : IEventOrchestratorService
                 throw new ServiceException(
                     $"No response received for MessageId {messageId} within {TIMEOUT}");
             }
-            return await tcs.Task;
+            EventMessage result = await tcs.Task;
+            if (result.Error != null)
+            {
+                throw new ServiceException(result.Error);
+            }
+            return result;
         }
         finally
         {

@@ -32,11 +32,11 @@ public class CommentService : BasicService, ICommentService
 
     public async Task DeleteCommentAsync(long id)
     {
-        await producerService.ProduceEventAsync(eventTopic, new EventMessage()
+        await producerService.ProduceEventWithResponseAsync(eventTopic, new EventMessage()
         {
             Operation = EventNames.COMMENT_DELETE,
             Payload = JsonSerializer.Serialize(id)
-        });
+        }, operationTimeout);
     }
 
     public async Task<CommentResponseDTO[]> GetAllCommentsAsync()

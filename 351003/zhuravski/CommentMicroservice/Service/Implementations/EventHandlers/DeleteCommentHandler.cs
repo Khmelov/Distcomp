@@ -31,13 +31,37 @@ public class DeleteCommentHandler : IEventHandler
 
     public async Task HandleMessage(EventMessage message)
     {
+        EventMessage response = null!;
         long? payload = message.GetPayload<long>();
+        string? error = null;
         if (payload != null) {
             try
             {
                 await commentService.DeleteCommentAsync(payload.Value);
+                response = new()
+                {
+                    Operation = EventNames.OPERATION_END,
+                    InReplyTo = message.MessageId
+                };
             }
-            catch (ServiceException) {}
+            catch (ServiceException e)
+            {
+                error = e.Message;
+            }
         }
+        else
+        {
+            error = "Got a corrupted message from Kafka.";
+        }
+        if (error != null)
+        {
+            response = new()
+            {
+                Operation = EventNames.OPERATION_END,
+                Error = error,
+                InReplyTo = message.MessageId
+            };
+        }
+        await producerService.ProduceEventAsync(eventTopic, response);
     }
 }

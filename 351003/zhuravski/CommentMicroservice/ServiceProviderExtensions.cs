@@ -25,6 +25,7 @@ static internal class ServiceProviderExtensions
         collection.AddSingleton<IEventHandler, DeleteCommentHandler>();
         collection.AddSingleton<IEventHandler, GetCommentHandler>();
         collection.AddSingleton<IEventHandler, UpdateCommentHandler>();
+        collection.AddSingleton<IEventHandler, ArticleDeletedHandler>();
 
         collection.AddSingleton<IEventOrchestratorService, EventOrchestratorService>();
         collection.AddSingleton<IEventProducerService, KafkaProducerService>();
