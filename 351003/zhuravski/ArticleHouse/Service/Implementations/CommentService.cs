@@ -16,7 +16,7 @@ public class CommentService : BasicService, ICommentService
     public CommentService(IEventProducerService producerService, IConfiguration configuration)
     {
         this.producerService = producerService;
-        eventTopic = configuration["Kafka:RecvTopic"] ?? "default-topic";
+        eventTopic = configuration["Kafka:SendTopic"] ?? "default-topic";
     }
     public async Task<CommentResponseDTO> CreateCommentAsync(CommentRequestDTO dto)
     {
@@ -24,7 +24,7 @@ public class CommentService : BasicService, ICommentService
         EventMessage message = new()
         {
             Operation = EventNames.COMMENT_ADD,
-            Payload = JsonSerializer.SerializeToElement(model)
+            Payload = JsonSerializer.Serialize(model)
         };
         var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message, operationTimeout);
         return MakeResponseFromPayload(result.GetPayload<CommentPayload>()!);
@@ -35,7 +35,7 @@ public class CommentService : BasicService, ICommentService
         await producerService.ProduceEventAsync(eventTopic, new EventMessage()
         {
             Operation = EventNames.COMMENT_DELETE,
-            Payload = JsonSerializer.SerializeToElement(id)
+            Payload = JsonSerializer.Serialize(id)
         });
     }
 
@@ -54,7 +54,7 @@ public class CommentService : BasicService, ICommentService
         EventMessage message = new()
         {
             Operation = EventNames.COMMENT_GET,
-            Payload = JsonSerializer.SerializeToElement(id)
+            Payload = JsonSerializer.Serialize(id)
         };
         var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message, operationTimeout);
         return MakeResponseFromPayload(result.GetPayload<CommentPayload>()!);
@@ -67,7 +67,7 @@ public class CommentService : BasicService, ICommentService
         EventMessage message = new()
         {
             Operation = EventNames.COMMENT_UPDATE,
-            Payload = JsonSerializer.SerializeToElement(model)
+            Payload = JsonSerializer.Serialize(model)
         };
         var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message, operationTimeout);
         return MakeResponseFromPayload(result.GetPayload<CommentPayload>()!);

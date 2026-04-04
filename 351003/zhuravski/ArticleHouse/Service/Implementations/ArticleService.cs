@@ -23,7 +23,7 @@ public class ArticleService : BasicService, IArticleService
         this.m2mDAO = m2mDAO;
         this.markDAO = markDAO;
         this.producerService = producerService;
-        eventTopic = configuration["Kafka:RecvTopic"] ?? "default-topic";
+        eventTopic = configuration["Kafka:SendTopic"] ?? "default-topic";
     }
 
     public async Task<ArticleResponseDTO[]> GetAllArticlesAsync()
@@ -67,7 +67,7 @@ public class ArticleService : BasicService, IArticleService
             await producerService.ProduceEventAsync(eventTopic, new EventMessage()
             {
                 Operation = EventNames.ARTICLE_DELETED,
-                Payload = JsonSerializer.SerializeToElement(id)
+                Payload = JsonSerializer.Serialize(id)
             });
             await markDAO.ReleaseByIdsAsync(leftMarkIds);
         });

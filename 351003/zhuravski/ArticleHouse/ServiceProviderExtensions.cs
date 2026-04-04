@@ -27,6 +27,7 @@ static internal class ServiceProviderExtensions
 
         collection.AddSingleton<IEventOrchestratorService, EventOrchestratorService>();
         collection.AddSingleton<IEventProducerService, KafkaProducerService>();
+        collection.AddHostedService<KafkaConsumerService>();
 
         collection.AddDbContext<ApplicationContext>(options => options.UseNpgsql(connection).UseSnakeCaseNamingConvention());
         return collection;

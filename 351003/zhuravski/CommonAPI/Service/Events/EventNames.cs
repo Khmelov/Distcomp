@@ -8,4 +8,5 @@ public static class EventNames
     public const string COMMENT_GET = "comment_get";
     public const string COMMENT_UPDATE = "comment_update";
     public const string MANY_COMMENTS_GET = "many_comments_get";
+    public const string OPERATION_END = "operation_end";
 }
