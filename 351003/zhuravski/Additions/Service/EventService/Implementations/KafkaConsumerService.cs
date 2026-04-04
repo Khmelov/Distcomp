@@ -1,8 +1,11 @@
+using Additions.Service.EventService.Interfaces;
 using Confluent.Kafka;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
-namespace CommentMicroservice.Service.Implementations;
+namespace Additions.Service.EventService.Implementations;
 
-public class KafkaConsumerService : BackgroundService
+public class KafkaConsumerService : BaseEventConsumerService
 {
     private readonly string topic;
     private readonly IConsumer<string, string> consumer;
@@ -11,7 +14,7 @@ public class KafkaConsumerService : BackgroundService
     public KafkaConsumerService(IConfiguration configuration, ILogger<KafkaConsumerService> logger)
     {
         this.logger = logger;
-        topic = configuration["Kafka:Topic"] ?? "default-topic";
+        topic = configuration["Kafka:RecvTopic"] ?? "default-topic";
         string bootstrapServers = configuration["Kafka:BootstrapServers"] ?? "localhost:9092";
         string groupId = configuration["Kafka:GroupId"] ?? "default-group";
 
@@ -24,6 +27,7 @@ public class KafkaConsumerService : BackgroundService
             EnableAutoCommit = false
         };
         consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
+        consumer.Subscribe(topic);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

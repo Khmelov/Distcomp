@@ -1,5 +1,6 @@
+using System.Text.Json;
 using Additions.Service;
-using Additions.Service.EventService;
+using Additions.Service.EventService.Interfaces;
 using ArticleHouse.Service.DTOs;
 using ArticleHouse.Service.Interfaces;
 using CommonAPI.Service.Events;
@@ -20,56 +21,56 @@ public class CommentService : BasicService, ICommentService
     public async Task<CommentResponseDTO> CreateCommentAsync(CommentRequestDTO dto)
     {
         CommentPayload model = MakePayloadFromRequest(dto);
-        EventMessage<CommentPayload> message = new()
+        EventMessage message = new()
         {
             Operation = EventNames.COMMENT_ADD,
-            Payload = model
+            Payload = JsonSerializer.SerializeToElement(model)
         };
-        var result = await producerService.ProduceEventWithResponseAsync<CommentPayload, CommentPayload>(eventTopic, message, operationTimeout);
-        return MakeResponseFromPayload(result.Payload);
+        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message, operationTimeout);
+        return MakeResponseFromPayload(result.GetPayload<CommentPayload>()!);
     }
 
     public async Task DeleteCommentAsync(long id)
     {
-        await producerService.ProduceEventAsync(eventTopic, new EventMessage<long>()
+        await producerService.ProduceEventAsync(eventTopic, new EventMessage()
         {
             Operation = EventNames.COMMENT_DELETE,
-            Payload = id
+            Payload = JsonSerializer.SerializeToElement(id)
         });
     }
 
     public async Task<CommentResponseDTO[]> GetAllCommentsAsync()
     {
-        EventMessage<object> message = new()
+        EventMessage message = new()
         {
             Operation = EventNames.MANY_COMMENTS_GET
         };
-        var result = await producerService.ProduceEventWithResponseAsync<object, ManyCommentsPayload>(eventTopic, message, operationTimeout);
-        return [.. result.Payload.Comments.Select(MakeResponseFromPayload)];
+        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message, operationTimeout);
+        return [.. result.GetPayload<ManyCommentsPayload>()!.Comments.Select(MakeResponseFromPayload)];
     }
 
     public async Task<CommentResponseDTO> GetCommentByIdAsync(long id)
     {
-        EventMessage<long> message = new()
+        EventMessage message = new()
         {
             Operation = EventNames.COMMENT_GET,
-            Payload = id
+            Payload = JsonSerializer.SerializeToElement(id)
         };
-        var result = await producerService.ProduceEventWithResponseAsync<long, CommentPayload>(eventTopic, message, operationTimeout);
-        return MakeResponseFromPayload(result.Payload);
+        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message, operationTimeout);
+        return MakeResponseFromPayload(result.GetPayload<CommentPayload>()!);
     }
 
     public async Task<CommentResponseDTO> UpdateCommentByIdAsync(long id, CommentRequestDTO dto)
     {
         CommentPayload model = MakePayloadFromRequest(dto);
         model.Id = id;
-        EventMessage<CommentPayload> message = new()
+        EventMessage message = new()
         {
             Operation = EventNames.COMMENT_UPDATE,
-            Payload = model
+            Payload = JsonSerializer.SerializeToElement(model)
         };
-        var result = await producerService.ProduceEventWithResponseAsync<CommentPayload, CommentPayload>(eventTopic, message, operationTimeout);
-        return MakeResponseFromPayload(result.Payload);
+        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message, operationTimeout);
+        return MakeResponseFromPayload(result.GetPayload<CommentPayload>()!);
     }
 
     private static CommentPayload MakePayloadFromRequest(CommentRequestDTO dto)

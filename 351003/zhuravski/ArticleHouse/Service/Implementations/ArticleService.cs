@@ -1,5 +1,6 @@
+using System.Text.Json;
 using Additions.Service;
-using Additions.Service.EventService;
+using Additions.Service.EventService.Interfaces;
 using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.DTOs;
@@ -63,10 +64,10 @@ public class ArticleService : BasicService, IArticleService
         await InvokeDAOMethod(async () =>
         {
             await dao.DeleteAsync(id);
-            await producerService.ProduceEventAsync<long>(eventTopic, new EventMessage<long>()
+            await producerService.ProduceEventAsync(eventTopic, new EventMessage()
             {
                 Operation = EventNames.ARTICLE_DELETED,
-                Payload = id
+                Payload = JsonSerializer.SerializeToElement(id)
             });
             await markDAO.ReleaseByIdsAsync(leftMarkIds);
         });

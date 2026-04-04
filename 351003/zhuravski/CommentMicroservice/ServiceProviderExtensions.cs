@@ -2,7 +2,8 @@ using CommentMicroservice.Service.Interfaces;
 using CommentMicroservice.Service.Implementations;
 using CommentMicroservice.DAO.Implementations;
 using CommentMicroservice.DAO.Interfaces;
-using Additions.Service.EventService;
+using Additions.Service.EventService.Interfaces;
+using Additions.Service.EventService.Implementations;
 
 namespace CommentMicroservice;
 
@@ -17,6 +18,8 @@ static internal class ServiceProviderExtensions
             client.BaseAddress = new Uri("http://localhost:24110/");
         });
         collection.AddScoped<CassandraContext>();
+
+        collection.AddSingleton<IEventOrchestratorService, EventOrchestratorService>();
         collection.AddSingleton<IEventProducerService, KafkaProducerService>();
         return collection;
     }
