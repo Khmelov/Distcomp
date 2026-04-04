@@ -1,0 +1,23 @@
+services:
+  cassandra:
+    image: cassandra:5.0
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: distcomp-local
+    healthcheck:
+      test: ["CMD-SHELL", "nodetool status | grep -E '^UN'"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
+
+  cassandra-init:
+    image: cassandra:5.0
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      cqlsh cassandra -e "CREATE KEYSPACE IF NOT EXISTS distcomp WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};"
+    restart: "no"
