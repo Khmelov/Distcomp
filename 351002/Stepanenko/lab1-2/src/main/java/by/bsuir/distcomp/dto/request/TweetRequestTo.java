@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
+import java.util.List;
 import java.util.Set;
 
 public class TweetRequestTo {
@@ -27,45 +27,23 @@ public class TweetRequestTo {
     @JsonProperty("markerIds")
     private Set<Long> markerIds;
 
+    // ДОБАВИТЬ ЭТО ПОЛЕ
+    @JsonProperty("markers")
+    private List<String> markers;
+
     public TweetRequestTo() {}
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getAuthorId() {
-        return authorId;
-    }
-
-    public void setAuthorId(Long authorId) {
-        this.authorId = authorId;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public Set<Long> getMarkerIds() {
-        return markerIds;
-    }
-
-    public void setMarkerIds(Set<Long> markerIds) {
-        this.markerIds = markerIds;
-    }
+    // Геттеры и сеттеры
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getAuthorId() { return authorId; }
+    public void setAuthorId(Long authorId) { this.authorId = authorId; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+    public Set<Long> getMarkerIds() { return markerIds; }
+    public void setMarkerIds(Set<Long> markerIds) { this.markerIds = markerIds; }
+    public List<String> getMarkers() { return markers; }
+    public void setMarkers(List<String> markers) { this.markers = markers; }
 }
