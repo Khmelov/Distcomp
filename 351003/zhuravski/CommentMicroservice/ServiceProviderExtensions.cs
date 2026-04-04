@@ -21,6 +21,9 @@ static internal class ServiceProviderExtensions
         collection.AddSingleton<CassandraContext>();
 
         collection.AddSingleton<IEventHandler, GetManyCommentsHandler>();
+        collection.AddSingleton<IEventHandler, AddCommentHandler>();
+        collection.AddSingleton<IEventHandler, DeleteCommentHandler>();
+        collection.AddSingleton<IEventHandler, GetCommentHandler>();
 
         collection.AddSingleton<IEventOrchestratorService, EventOrchestratorService>();
         collection.AddSingleton<IEventProducerService, KafkaProducerService>();

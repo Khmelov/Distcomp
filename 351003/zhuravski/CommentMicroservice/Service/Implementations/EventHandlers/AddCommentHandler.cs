@@ -1,12 +1,13 @@
 using System.Text.Json;
 using Additions.Service;
 using Additions.Service.EventService.Interfaces;
+using CommentMicroservice.Service.DTOs;
 using CommentMicroservice.Service.Interfaces;
 using CommonAPI.Service.Events;
 
 namespace CommentMicroservice.Service.Implementations.EventHandlers;
 
-public class GetManyCommentsHandler : IEventHandler
+public class AddCommentHandler : IEventHandler
 {
     private readonly ICommentService commentService;
     private readonly IEventProducerService producerService;
@@ -16,11 +17,11 @@ public class GetManyCommentsHandler : IEventHandler
     {
         get
         {
-            return EventNames.MANY_COMMENTS_GET;
+            return EventNames.COMMENT_ADD;
         }
     }
 
-    public GetManyCommentsHandler(ICommentService commentService, IEventProducerService producerService,
+    public AddCommentHandler(ICommentService commentService, IEventProducerService producerService,
                                     IConfiguration configuration)
     {
         this.commentService = commentService;
@@ -31,29 +32,38 @@ public class GetManyCommentsHandler : IEventHandler
     public async Task HandleMessage(EventMessage message)
     {
         EventMessage response = null!;
+        CommentPayload? payload = message.GetPayload<CommentPayload>();
         string? error = null;
-        try
-        {
-            var comments = await commentService.GetAllCommentsAsync();
-            ManyCommentsPayload formattedComments = new([..comments.Select(com =>
+        if (payload != null) {
+            try
             {
-                return new CommentPayload()
+                var comment = await commentService.CreateCommentAsync(new CommentRequestDTO()
                 {
-                    Id = com.Id,
-                    ArticleId = com.ArticleId,
-                    Content = com.Content
+                    Id = payload.Id,
+                    ArticleId = payload.ArticleId,
+                    Content = payload.Content
+                });
+                CommentPayload formattedComment = new()
+                {
+                    Id = comment.Id,
+                    ArticleId = comment.ArticleId,
+                    Content = comment.Content
                 };
-            })]);
-            response = new()
+                response = new()
+                {
+                    Operation = EventNames.OPERATION_END,
+                    Payload = JsonSerializer.Serialize(formattedComment),
+                    InReplyTo = message.MessageId
+                };
+            }
+            catch (ServiceException e)
             {
-                Operation = EventNames.OPERATION_END,
-                Payload = JsonSerializer.Serialize(formattedComments),
-                InReplyTo = message.MessageId
-            };
+                error = e.Message;
+            }
         }
-        catch (ServiceException e)
+        else
         {
-            error = e.Message;
+            error = "Got a corrupted message from Kafka.";
         }
         if (error != null)
         {
