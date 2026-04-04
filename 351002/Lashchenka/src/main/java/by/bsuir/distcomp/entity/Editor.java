@@ -1,10 +1,30 @@
 package by.bsuir.distcomp.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "tbl_editor")
 public class Editor {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "login", nullable = false, unique = true, length = 64)
     private String login;
+
+    @Column(name = "password", nullable = false, length = 128)
     private String password;
+
+    @Column(name = "firstname", nullable = false, length = 64)
     private String firstname;
+
+    @Column(name = "lastname", nullable = false, length = 64)
     private String lastname;
 
     public Editor() {}
