@@ -2,7 +2,6 @@ using System.Text.Json;
 using Additions.Service.EventService.Interfaces;
 using Confluent.Kafka;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace Additions.Service.EventService.Implementations;
 
@@ -41,7 +40,7 @@ public class KafkaProducerService : IEventProducerService, IDisposable
         }
     }
 
-    public async Task<EventMessage> ProduceEventWithResponseAsync(string topic, EventMessage message, TimeSpan timeout)
+    public async Task<EventMessage> ProduceEventWithResponseAsync(string topic, EventMessage message)
     {
         var responseTask = eventOrchestrator.ExpectResponse(message.MessageId);
         await ProduceEventAsync(topic, message);

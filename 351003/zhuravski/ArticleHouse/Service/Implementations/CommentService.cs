@@ -11,7 +11,6 @@ public class CommentService : BasicService, ICommentService
 {
     private readonly IEventProducerService producerService;
     private readonly string eventTopic;
-    private readonly TimeSpan operationTimeout = TimeSpan.FromSeconds(5);
     
     public CommentService(IEventProducerService producerService, IConfiguration configuration)
     {
@@ -26,7 +25,7 @@ public class CommentService : BasicService, ICommentService
             Operation = EventNames.COMMENT_ADD,
             Payload = JsonSerializer.Serialize(model)
         };
-        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message, operationTimeout);
+        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message);
         return MakeResponseFromPayload(result.GetPayload<CommentPayload>()!);
     }
 
@@ -36,7 +35,7 @@ public class CommentService : BasicService, ICommentService
         {
             Operation = EventNames.COMMENT_DELETE,
             Payload = JsonSerializer.Serialize(id)
-        }, operationTimeout);
+        });
     }
 
     public async Task<CommentResponseDTO[]> GetAllCommentsAsync()
@@ -45,7 +44,7 @@ public class CommentService : BasicService, ICommentService
         {
             Operation = EventNames.MANY_COMMENTS_GET
         };
-        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message, operationTimeout);
+        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message);
         return [.. result.GetPayload<ManyCommentsPayload>()!.Comments.Select(MakeResponseFromPayload)];
     }
 
@@ -56,7 +55,7 @@ public class CommentService : BasicService, ICommentService
             Operation = EventNames.COMMENT_GET,
             Payload = JsonSerializer.Serialize(id)
         };
-        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message, operationTimeout);
+        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message);
         return MakeResponseFromPayload(result.GetPayload<CommentPayload>()!);
     }
 
@@ -69,7 +68,7 @@ public class CommentService : BasicService, ICommentService
             Operation = EventNames.COMMENT_UPDATE,
             Payload = JsonSerializer.Serialize(model)
         };
-        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message, operationTimeout);
+        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message);
         return MakeResponseFromPayload(result.GetPayload<CommentPayload>()!);
     }
 
