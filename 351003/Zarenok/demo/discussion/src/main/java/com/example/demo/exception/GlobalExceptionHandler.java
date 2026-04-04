@@ -1,6 +1,7 @@
 package com.example.demo.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -37,5 +38,13 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getDefaultMessage())
                 .collect(Collectors.toList()));
         return ResponseEntity.badRequest().body(errors);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<String> handleNotFound(NotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("{\"message\": \"" + ex.getMessage() + "\", \"status\": 404}");
     }
 }

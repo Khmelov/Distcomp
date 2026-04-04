@@ -17,9 +17,12 @@ public interface MessageMapper {
     Message toEntity(MessageRequestTo dto);
 
      */
+
+
     public static Message toEntity(MessageRequestTo dto) {
         Message message = new Message();
         message.setContent(dto.getContent());
+        message.setState("PENDING");
         return message;
     }
 

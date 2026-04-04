@@ -13,10 +13,12 @@ public class Message {
     private MessageKey key;
 
     private String content;
+    private String state;
     public Message() {}
 
-    public Message(MessageKey key, String content) {
+    public Message(MessageKey key, String content, String state) {
         this.key = key;
         this.content = content;
+        this.state = state;
     }
 }

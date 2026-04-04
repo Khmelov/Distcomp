@@ -1,7 +1,9 @@
 package com.example.demo.controllers;
 
+import com.example.demo.dto.requests.MessageKafkaRequestTo;
 import com.example.demo.dto.requests.MessageRequestTo;
 import com.example.demo.dto.responses.MessageResponseTo;
+import com.example.demo.producer.MessageKafkaProducer;
 import com.example.demo.service.MessageClientService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.data.domain.Page;
@@ -23,14 +25,29 @@ import java.util.Map;
 @Validated
 public class MessageController {
     private final MessageClientService messageService;
+    private final MessageKafkaProducer messageKafkaProducer;
 
-    public MessageController(MessageClientService messageService) {
+    public MessageController(MessageClientService messageService, MessageKafkaProducer messageKafkaProducer) {
         this.messageService = messageService;
+        this.messageKafkaProducer = messageKafkaProducer;
     }
 
+    /*
     @PostMapping
     public ResponseEntity<MessageResponseTo> create(@Valid @RequestBody MessageRequestTo dto) throws JsonProcessingException {
         MessageResponseTo response = messageService.create(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+     */
+
+    @PostMapping
+    public ResponseEntity<MessageResponseTo> create(@Valid @RequestBody MessageRequestTo dto) {
+        Long id = System.nanoTime();
+        MessageKafkaRequestTo kafkaRequest = new MessageKafkaRequestTo(id, dto.getIssueId(), dto.getContent());
+        messageKafkaProducer.send(kafkaRequest);
+
+        MessageResponseTo response = new MessageResponseTo(id, dto.getIssueId(), dto.getContent(), "PENDING");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

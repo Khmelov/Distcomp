@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.requests.MessageKafkaRequestTo;
 import com.example.demo.dto.requests.MessageRequestTo;
 import com.example.demo.dto.responses.MessageResponseTo;
 import com.example.demo.exception.NotFoundException;
@@ -152,5 +153,26 @@ public class MessageService {
             throw new NotFoundException("Message not found with issueId=" + issueId + ", id=" + id);
         }
         repository.deleteById(key);
+    }
+
+    public MessageResponseTo saveFromKafka(MessageKafkaRequestTo kafkaRequest) {
+        MessageKey key = new MessageKey(kafkaRequest.getIssueId(), kafkaRequest.getId());
+
+        Message entity = new Message();
+        entity.setKey(key);
+        entity.setContent(kafkaRequest.getContent());
+        entity.setState("PENDING");
+
+        Message saved = repository.save(entity);
+        return mapper.toResponse(saved);
+    }
+
+    public MessageResponseTo updateState(Long issueId, Long id, String newState) {
+        MessageKey key = new MessageKey(issueId, id);
+        Message message = repository.findById(key)
+                .orElseThrow(() -> new NotFoundException("Message not found"));
+        message.setState(newState);
+        Message updated = repository.save(message);
+        return mapper.toResponse(updated);
     }
 }
