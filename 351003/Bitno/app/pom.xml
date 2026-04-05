@@ -24,6 +24,7 @@
 
 	<dependencies>
 		<dependency>
+<<<<<<< HEAD
 			<groupId>org.testcontainers</groupId>
 			<artifactId>testcontainers</artifactId>
 			<version>1.19.3</version>
@@ -39,6 +40,8 @@
 
 
 		<dependency>
+=======
+>>>>>>> f26c601fbbe43710c18d4d0b9d78ec1d65a1357c
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
@@ -99,12 +102,16 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+<<<<<<< HEAD
 	<repositories>
 		<repository>
 			<id>central</id>
 			<url>https://repo.maven.apache.org/maven2</url>
 		</repository>
 	</repositories>
+=======
+
+>>>>>>> f26c601fbbe43710c18d4d0b9d78ec1d65a1357c
 	<build>
 		<plugins>
 			<plugin>

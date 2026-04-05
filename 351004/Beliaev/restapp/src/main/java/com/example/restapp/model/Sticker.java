@@ -1,4 +1,4 @@
-package com.example.restapp.model;
+package com.example.discussion.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
