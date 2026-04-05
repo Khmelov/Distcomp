@@ -37,3 +37,22 @@ class PostgresConfig(BaseSettings, env_prefix="POSTGRES_"):
             port=self.port,
             database=self.db
         )
+
+
+class CassandraConfig(BaseSettings, env_prefix="CASSANDRA_"):
+    host: str = "127.0.0.1"
+    port: int = 9042
+    keyspace: str = "distcomp_discussion"
+
+
+class PublisherConfig(BaseSettings, env_prefix="PUBLISHER_"):
+    base_url: str = "http://127.0.0.1:24110/api/v1.0"
+
+
+class DiscussionConfig(BaseSettings, env_prefix="DISCUSSION_"):
+    base_url: str = "http://127.0.0.1:24130/api/v1.0"
+
+
+class KafkaConfig(BaseSettings, env_prefix="KAFKA_"):
+    bootstrap_servers: str = "localhost:9092"
+    post_rpc_timeout_seconds: float = 1.0
