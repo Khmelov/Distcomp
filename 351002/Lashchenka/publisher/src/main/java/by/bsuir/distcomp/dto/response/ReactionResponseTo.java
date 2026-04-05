@@ -1,17 +1,16 @@
-package by.bsuir.distcomp.discussion.entity;
+package by.bsuir.distcomp.dto.response;
 
-import by.bsuir.distcomp.discussion.model.ReactionState;
+import by.bsuir.distcomp.model.ReactionState;
 
-public class Reaction {
-
+public class ReactionResponseTo {
     private Long id;
     private Long tweetId;
     private String content;
     private ReactionState state;
 
-    public Reaction() {}
+    public ReactionResponseTo() {}
 
-    public Reaction(Long id, Long tweetId, String content, ReactionState state) {
+    public ReactionResponseTo(Long id, Long tweetId, String content, ReactionState state) {
         this.id = id;
         this.tweetId = tweetId;
         this.content = content;

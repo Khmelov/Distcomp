@@ -8,6 +8,7 @@ import by.bsuir.distcomp.discussion.dto.response.ReactionResponseTo;
 import by.bsuir.distcomp.discussion.entity.Reaction;
 import by.bsuir.distcomp.discussion.exception.ResourceNotFoundException;
 import by.bsuir.distcomp.discussion.mapper.ReactionMapper;
+import by.bsuir.distcomp.discussion.model.ReactionState;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,19 +21,23 @@ public class ReactionService {
     private final ReactionCassandraRepository reactionRepository;
     private final PublisherTweetClient publisherTweetClient;
     private final ReactionMapper reactionMapper;
+    private final ModerationService moderationService;
 
     public ReactionService(ReactionCassandraRepository reactionRepository,
                            PublisherTweetClient publisherTweetClient,
-                           ReactionMapper reactionMapper) {
+                           ReactionMapper reactionMapper,
+                           ModerationService moderationService) {
         this.reactionRepository = reactionRepository;
         this.publisherTweetClient = publisherTweetClient;
         this.reactionMapper = reactionMapper;
+        this.moderationService = moderationService;
     }
 
     public ReactionResponseTo create(ReactionRequestTo dto) {
         publisherTweetClient.requireTweetExists(dto.getTweetId());
         Reaction entity = reactionMapper.toEntity(dto);
         entity.setId(nextId());
+        entity.setState(moderationService.moderate(dto.getContent()));
         ReactionRow saved = reactionRepository.save(reactionMapper.toRow(entity));
         return reactionMapper.toResponseDto(reactionMapper.fromRow(saved));
     }
@@ -58,6 +63,7 @@ public class ReactionService {
         publisherTweetClient.requireTweetExists(dto.getTweetId());
         Reaction existing = reactionMapper.fromRow(existingRow);
         reactionMapper.updateEntityFromDto(dto, existing);
+        existing.setState(moderationService.moderate(dto.getContent()));
         ReactionRow updated = reactionRepository.save(reactionMapper.toRow(existing));
         return reactionMapper.toResponseDto(reactionMapper.fromRow(updated));
     }

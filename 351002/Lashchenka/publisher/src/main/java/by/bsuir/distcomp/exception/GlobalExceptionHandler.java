@@ -6,6 +6,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +24,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleDuplicateException(DuplicateException ex) {
         ErrorResponse error = new ErrorResponse(ex.getMessage(), ex.getErrorCode());
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException ex) {
+        ErrorResponse error = new ErrorResponse(
+                ex.getReason() != null ? ex.getReason() : ex.getMessage(),
+                ex.getStatusCode().value());
+        return new ResponseEntity<>(error, ex.getStatusCode());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
