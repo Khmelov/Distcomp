@@ -1,37 +1,37 @@
+// PostRepository.h
 #pragma once
 
 #include <vector>
 #include <cstdint>
 #include <variant>
-#include <drogon/orm/DbClient.h>
-#include <drogon/orm/Mapper.h>
-#include <drogon/HttpAppFramework.h>
-
-#include "IDatabaseRepository.h"
+#include <memory>
+#include <drogon/HttpClient.h>
 #include <models/TblPost.h>
 #include <exceptions/DatabaseError.h>
 
 namespace publisher
 {
 
-using namespace drogon_model::distcomp;
-
-class PostRepository : public IDatabaseRepository<TblPost>
+class PostRepository 
 {
 public:
-    PostRepository() = default;
+    PostRepository();
     ~PostRepository() = default;
     
-    std::variant<int64_t, DatabaseError> Create(const TblPost& entity) override;
-    std::variant<TblPost, DatabaseError> GetByID(int64_t id) override;
-    std::variant<bool, DatabaseError> Update(int64_t id, const TblPost& entity) override;
-    std::variant<bool, DatabaseError> Delete(int64_t id) override;
-    std::variant<std::vector<TblPost>, DatabaseError> ReadAll() override;
-    std::variant<bool, DatabaseError> Exists(int64_t id) override;
+    std::variant<int64_t, DatabaseError> Create(const drogon_model::distcomp::TblPost& entity);
+    std::variant<drogon_model::distcomp::TblPost, DatabaseError> GetByID(int64_t id);
+    std::variant<bool, DatabaseError> Update(int64_t id, const drogon_model::distcomp::TblPost& entity);
+    std::variant<bool, DatabaseError> Delete(int64_t id);
+    std::variant<std::vector<drogon_model::distcomp::TblPost>, DatabaseError> ReadAll();
+    std::variant<bool, DatabaseError> Exists(int64_t id);
+    std::variant<std::vector<drogon_model::distcomp::TblPost>, DatabaseError> FindByIssueId(int64_t issueId);
+
+private:
+    drogon::HttpClientPtr m_client;
     
-    std::variant<std::vector<TblPost>, DatabaseError> FindByIssueId(int64_t issueId);
-    std::variant<std::vector<TblPost>, DatabaseError> FindRecentByIssue(int64_t issueId, int limit = 10);
-    std::variant<std::vector<TblPost>, DatabaseError> FindByContentContaining(const std::string& searchText);
+    Json::Value ModelToJson(const drogon_model::distcomp::TblPost& entity);
+    drogon_model::distcomp::TblPost JsonToModel(const Json::Value& json);
+    std::vector<drogon_model::distcomp::TblPost> JsonArrayToModelVector(const Json::Value& jsonArray);
 };
 
-};
+}
