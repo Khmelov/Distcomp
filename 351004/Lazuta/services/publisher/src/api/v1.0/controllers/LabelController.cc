@@ -2,13 +2,8 @@
 #include "LabelController.h"
 #include <iostream>
 
-<<<<<<< HEAD:351004/Lazuta/services/publisher/src/api/v1.0/controllers/LabelController.cc
 using namespace publisher;
 using namespace publisher::dto;
-=======
-using namespace myapp;
-using namespace myapp::dto;
->>>>>>> f26c601fbbe43710c18d4d0b9d78ec1d65a1357c:351004/Lazuta/src/api/v1.0/controllers/LabelController.cc
 
 LabelController::LabelController(std::unique_ptr<LabelService> service)
 {
