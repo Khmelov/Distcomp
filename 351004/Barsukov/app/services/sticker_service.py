@@ -1,29 +1,22 @@
-from app.repository.memory import sticker_repo
-from app.schemas.sticker import StickerRequestTo, StickerResponseTo
-from app.core.exceptions import AppException
-
+from sqlalchemy.orm import Session
+from repository import StickerRepo
+from app.schemas.sticker import StickerRequestTo
 
 class StickerService:
-    def create(self, dto: StickerRequestTo) -> StickerResponseTo:
-        return StickerResponseTo(**sticker_repo.save(dto.model_dump()))
+    def __init__(self):
+        self.repo = StickerRepo()
 
-    def get_all(self):
-        return [StickerResponseTo(**s) for s in sticker_repo.find_all()]
+    def create(self, db: Session, dto: StickerRequestTo):
+        return self.repo.create(db, dto.model_dump(exclude_none=True))
 
-    def get_by_id(self, id: int):
-        res = sticker_repo.find_by_id(id)
-        if not res:
-            raise AppException(404, "Sticker not found", 9)
-        return StickerResponseTo(**res)
+    def get_all(self, db: Session):
+        return self.repo.get_all(db)
 
-    def update(self, id: int, dto: StickerRequestTo) -> StickerResponseTo:
-        if not sticker_repo.find_by_id(id):
-            raise AppException(404, "Sticker not found", 10)
-        data = dto.model_dump()
-        data["id"] = id
-        saved = sticker_repo.save(data)
-        return StickerResponseTo(**saved)
+    def get_by_id(self, db: Session, id: int):
+        return self.repo.get_by_id(db, id)
 
-    def delete(self, id: int):
-        if not sticker_repo.delete(id):
-            raise AppException(404, "Sticker not found", 11)
+    def update(self, db: Session, id: int, dto: StickerRequestTo):
+        return self.repo.update(db, id, dto.model_dump(exclude_none=True))
+
+    def delete(self, db: Session, id: int):
+        return self.repo.delete(db, id)

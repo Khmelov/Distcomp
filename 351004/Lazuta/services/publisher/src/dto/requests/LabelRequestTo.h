@@ -6,7 +6,11 @@
 #include <stdexcept>
 #include <exceptions/ValidationException.h>
 
+<<<<<<< HEAD:351004/Lazuta/services/publisher/src/dto/requests/LabelRequestTo.h
 namespace publisher::dto
+=======
+namespace myapp::dto
+>>>>>>> f26c601fbbe43710c18d4d0b9d78ec1d65a1357c:351004/Lazuta/src/dto/requests/LabelRequestTo.h
 {
 
 class LabelRequestTo 

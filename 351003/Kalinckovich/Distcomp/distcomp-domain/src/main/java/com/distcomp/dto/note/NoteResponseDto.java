@@ -13,6 +13,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class NoteResponseDto {
     private Long id;
-    private String content;
     private Long topicId;
+    private String content;
 }

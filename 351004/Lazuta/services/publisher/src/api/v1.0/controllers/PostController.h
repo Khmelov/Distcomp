@@ -9,7 +9,11 @@
 #include <exceptions/ValidationException.h>
 
 using namespace drogon;
+<<<<<<< HEAD:351004/Lazuta/services/publisher/src/api/v1.0/controllers/PostController.h
 using namespace publisher;
+=======
+using namespace myapp;
+>>>>>>> f26c601fbbe43710c18d4d0b9d78ec1d65a1357c:351004/Lazuta/src/api/v1.0/controllers/PostController.h
 
 class PostController : public drogon::HttpController<PostController, false>
 {
