@@ -22,7 +22,7 @@ public class KafkaTopicProperties {
     public static class Topics {
         private boolean autoCreate = true;
         private Default defaultConfig = new Default();
-        private List<TopicConfig> list;
+        private Map<String, TopicConfig> mapping;
     }
 
     @Data
@@ -37,5 +37,16 @@ public class KafkaTopicProperties {
         private Integer partitions;
         private Integer replicationFactor;
         private Map<String, String> configs;
+    }
+
+    public String getTopicName(final KafkaTopic topic) {
+        final Map<String, TopicConfig> topicsMapping = topics.getMapping();
+        if (topicsMapping != null) {
+            final String topicName = topic.name();
+            if (topicsMapping.containsKey(topicName)) {
+                return topicsMapping.get(topicName).getName();
+            }
+        }
+        return topic.getName();
     }
 }

@@ -4,15 +4,17 @@ import com.distcomp.config.kafka.KafkaTopicProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.clients.admin.TopicDescription;
 import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,19 +41,23 @@ public class KafkaTopicCreatorService {
                 return;
             }
 
-            final List<NewTopic> newTopics = filterExistingTopics(adminClient, topicsToCreate);
+            final Set<String> existingTopics = listExistingTopics(adminClient);
+            log.info("Existing Kafka topics: {}", existingTopics);
+
+            final List<NewTopic> newTopics = topicsToCreate.stream()
+                    .filter(topic -> !existingTopics.contains(topic.name()))
+                    .collect(Collectors.toList());
 
             if (newTopics.isEmpty()) {
                 log.info("All configured topics already exist");
                 return;
             }
 
-            
             adminClient.createTopics(newTopics).all().get();
 
             log.info("Successfully created {} Kafka topics: {}",
                     newTopics.size(),
-                    newTopics.stream().map(NewTopic::name).toList());
+                    newTopics.stream().map(NewTopic::name).collect(Collectors.toList()));
 
         } catch (final InterruptedException | ExecutionException e) {
             log.error("Failed to create Kafka topics", e);
@@ -60,17 +66,36 @@ public class KafkaTopicCreatorService {
         }
     }
 
+    private Set<String> listExistingTopics(final AdminClient adminClient)
+            throws InterruptedException, ExecutionException {
+
+        final ListTopicsOptions options = new ListTopicsOptions().listInternal(false);
+
+        return adminClient.listTopics(options)
+                .names()
+                .get();
+    }
 
     private List<NewTopic> buildTopicsToCreate() {
         final List<NewTopic> topics = new ArrayList<>();
         final KafkaTopicProperties.Topics topicConfig = kafkaTopicProperties.getTopics();
 
-        for (final KafkaTopicProperties.TopicConfig config : topicConfig.getList()) {
+        
+        if (topicConfig.getMapping() == null || topicConfig.getMapping().isEmpty()) {
+            log.warn("No topic mappings configured in kafka.topics.mapping");
+            return topics;
+        }
+
+        for (final KafkaTopicProperties.TopicConfig config : topicConfig.getMapping().values()) {
+            if (config == null || config.getName() == null) {
+                continue;
+            }
+
             final NewTopic newTopic = getNewTopic(config, topicConfig);
 
-
-            if (config.getConfigs() != null && !config.getConfigs().isEmpty()) {
-                newTopic.configs(config.getConfigs());
+            final Map<String, String> configs = config.getConfigs();
+            if (configs != null && !configs.isEmpty()) {
+                newTopic.configs(configs);
             }
 
             topics.add(newTopic);
@@ -79,7 +104,8 @@ public class KafkaTopicCreatorService {
         return topics;
     }
 
-    private static NewTopic getNewTopic(final KafkaTopicProperties.TopicConfig config, final KafkaTopicProperties.Topics topicConfig) {
+    private static NewTopic getNewTopic(final KafkaTopicProperties.TopicConfig config,
+                                        final KafkaTopicProperties.Topics topicConfig) {
         final int partitions = config.getPartitions() != null
                 ? config.getPartitions()
                 : topicConfig.getDefaultConfig().getPartitions();
@@ -95,40 +121,32 @@ public class KafkaTopicCreatorService {
         );
     }
 
-
-    private List<NewTopic> filterExistingTopics(final AdminClient adminClient, final List<NewTopic> allTopics)
-            throws InterruptedException, ExecutionException {
-
-        final List<String> topicNames = allTopics.stream()
-                .map(NewTopic::name)
-                .toList();
-
-        final Map<String, TopicDescription> existingTopics = adminClient
-                .describeTopics(topicNames)
-                .allTopicNames()
-                .get();
-
-        return allTopics.stream()
-                .filter(topic -> !existingTopics.containsKey(topic.name()))
-                .toList();
-    }
-
-
     public void validateTopics() {
         try (final AdminClient adminClient = AdminClient.create(kafkaAdmin.getConfigurationProperties())) {
 
-            final List<String> requiredTopics = kafkaTopicProperties.getTopics().getList()
+            final KafkaTopicProperties.Topics topicConfig = kafkaTopicProperties.getTopics();
+
+            
+            if (topicConfig.getMapping() == null || topicConfig.getMapping().isEmpty()) {
+                log.warn("No topic mappings to validate");
+                return;
+            }
+
+            final List<String> requiredTopics = topicConfig.getMapping().values()
                     .stream()
+                    .filter(config -> config != null && config.getName() != null)
                     .map(KafkaTopicProperties.TopicConfig::getName)
                     .toList();
 
-            final Map<String, TopicDescription> existingTopics = adminClient
-                    .describeTopics(requiredTopics)
-                    .allTopicNames()
-                    .get();
+            if (requiredTopics.isEmpty()) {
+                log.warn("No topics to validate");
+                return;
+            }
+
+            final Set<String> existingTopics = listExistingTopics(adminClient);
 
             final List<String> missingTopics = requiredTopics.stream()
-                    .filter(topic -> !existingTopics.containsKey(topic))
+                    .filter(topic -> !existingTopics.contains(topic))
                     .toList();
 
             if (!missingTopics.isEmpty()) {

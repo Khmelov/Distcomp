@@ -1,16 +1,18 @@
 kafka:
   topics:
     auto-create: true
-    default:
+    default-config:
       partitions: 3
       replication-factor: 1
-    list:
-      - name: InTopic
+    mapping:
+      IN_TOPIC:
+        name: InTopic
         partitions: 3
         replication-factor: 1
         configs:
-          retention.ms: 604800000  # 7 days
-      - name: OutTopic
+          retention.ms: 604800000
+      OUT_TOPIC:
+        name: OutTopic
         partitions: 3
         replication-factor: 1
         configs:
@@ -30,22 +32,16 @@ spring:
     consumer:
       group-id: note-service-group
       auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
     producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    admin:
-      properties:
-        bootstrap.servers: localhost:9092
-
+      acks: all
+      retries: 3
   autoconfigure:
     exclude: org.springframework.boot.r2dbc.autoconfigure.R2dbcAutoConfiguration
   data:
     r2dbc:
       repositories:
         enabled: false
-
   cassandra:
     contact-points: ${cassandra.contact-points}
     port: ${cassandra.port}
@@ -53,5 +49,6 @@ spring:
     local-datacenter: ${cassandra.local-datacenter}
     username: ${cassandra.username}
     password: ${cassandra.password}
+
 server:
   port: 24130
