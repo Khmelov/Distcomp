@@ -1,10 +1,11 @@
 package by.bsuir.distcomp.discussion.cassandra;
 
+import by.bsuir.distcomp.discussion.model.ReactionState;
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
-@Table("reaction")
+@Table("tbl_reaction")
 public class ReactionRow {
 
     @PrimaryKey
@@ -16,12 +17,16 @@ public class ReactionRow {
     @Column("content")
     private String content;
 
+    @Column("state")
+    private ReactionState state;
+
     public ReactionRow() {}
 
-    public ReactionRow(Long id, Long tweetId, String content) {
+    public ReactionRow(Long id, Long tweetId, String content, ReactionState state) {
         this.id = id;
         this.tweetId = tweetId;
         this.content = content;
+        this.state = state;
     }
 
     public Long getId() {
@@ -46,5 +51,13 @@ public class ReactionRow {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public ReactionState getState() {
+        return state;
+    }
+
+    public void setState(ReactionState state) {
+        this.state = state;
     }
 }

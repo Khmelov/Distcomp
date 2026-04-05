@@ -1,17 +1,17 @@
-package by.bsuir.distcomp.discussion.entity;
+package by.bsuir.distcomp.discussion.kafka;
 
 import by.bsuir.distcomp.discussion.model.ReactionState;
 
-public class Reaction {
+public class ReactionSnapshot {
 
     private Long id;
     private Long tweetId;
     private String content;
     private ReactionState state;
 
-    public Reaction() {}
+    public ReactionSnapshot() {}
 
-    public Reaction(Long id, Long tweetId, String content, ReactionState state) {
+    public ReactionSnapshot(Long id, Long tweetId, String content, ReactionState state) {
         this.id = id;
         this.tweetId = tweetId;
         this.content = content;

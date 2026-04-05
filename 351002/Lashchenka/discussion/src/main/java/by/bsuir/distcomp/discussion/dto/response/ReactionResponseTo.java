@@ -1,16 +1,20 @@
 package by.bsuir.distcomp.discussion.dto.response;
 
+import by.bsuir.distcomp.discussion.model.ReactionState;
+
 public class ReactionResponseTo {
     private Long id;
     private Long tweetId;
     private String content;
+    private ReactionState state;
 
     public ReactionResponseTo() {}
 
-    public ReactionResponseTo(Long id, Long tweetId, String content) {
+    public ReactionResponseTo(Long id, Long tweetId, String content, ReactionState state) {
         this.id = id;
         this.tweetId = tweetId;
         this.content = content;
+        this.state = state;
     }
 
     public Long getId() {
@@ -35,5 +39,13 @@ public class ReactionResponseTo {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public ReactionState getState() {
+        return state;
+    }
+
+    public void setState(ReactionState state) {
+        this.state = state;
     }
 }

@@ -1,6 +1,32 @@
+networks:
+  kafkanet:
+    name: kafkanet
+
 services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    networks: [kafkanet]
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    networks: [kafkanet]
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
   cassandra:
     image: cassandra:5.0
+    networks: [kafkanet]
     ports:
       - "9042:9042"
     environment:
@@ -14,6 +40,7 @@ services:
 
   cassandra-init:
     image: cassandra:5.0
+    networks: [kafkanet]
     depends_on:
       cassandra:
         condition: service_healthy
