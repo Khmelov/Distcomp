@@ -33,7 +33,7 @@ class Issue(Base):
     modified = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     author = relationship("Author", back_populates="issues")
-    notes = relationship("Note", back_populates="issue")
+
     # Связь многие-ко-многим через таблицу tbl_issue_sticker
     stickers = relationship("Sticker", secondary=issue_sticker)
 
@@ -44,10 +44,3 @@ class Sticker(Base):
     name = Column(String(32), unique=True, nullable=False)
 
 
-class Note(Base):
-    __tablename__ = "tbl_note"
-    id = Column(Integer, primary_key=True, index=True)
-    issue_id = Column(Integer, ForeignKey("tbl_issue.id", ondelete="CASCADE"), nullable=False)
-    content = Column(String(2048), nullable=False)
-
-    issue = relationship("Issue", back_populates="notes")

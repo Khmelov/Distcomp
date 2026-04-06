@@ -16,6 +16,7 @@ type NoteResponse struct {
 	ID      int64  `json:"id"`
 	IssueID int64  `json:"issueId"`
 	Content string `json:"content"`
+	State   string `json:"state"`
 }
 
 func ToResponse(n *notemodel.Note) *NoteResponse {
@@ -26,6 +27,7 @@ func ToResponse(n *notemodel.Note) *NoteResponse {
 		ID:      n.ID,
 		IssueID: n.IssueID,
 		Content: n.Content,
+		State:   n.State,
 	}
 }
 
