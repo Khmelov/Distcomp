@@ -1,10 +1,12 @@
 #include "PostService.h"
 #include <storage/database/PostRepository.h>
 #include <storage/database/IssueRepository.h>
+
 #include <mapping/DtoMapper.h>
 #include <exceptions/DatabaseException.h>
 #include <exceptions/NotFoundException.h>
 #include <exceptions/ValidationException.h>
+#include <json/json.h>
 
 namespace publisher
 {
@@ -14,9 +16,11 @@ using namespace publisher::dto;
 
 PostService::PostService(
     std::shared_ptr<PostRepository> storage,
-    std::shared_ptr<IssueRepository> issueRepository)
+    std::shared_ptr<IssueRepository> issueRepository,
+    std::unique_ptr<KafkaProducer> kafkaProducer)
     : m_dao(storage)
     , m_issueRepository(issueRepository)
+    , m_kafkaProducer(std::move(kafkaProducer))
 {
 }
 
@@ -50,6 +54,18 @@ PostResponseTo PostService::Create(const PostRequestTo& request)
     if (std::holds_alternative<DatabaseError>(getResult))
     {
         throw DatabaseException("Failed to retrieve created post");
+    }
+
+    if (m_kafkaProducer)
+    {
+        Json::Value kafkaMsg;
+        kafkaMsg["id"] = id;
+        kafkaMsg["issueId"] = request.issueId;
+        kafkaMsg["content"] = request.content;
+        
+        std::string key = std::to_string(request.issueId);
+        m_kafkaProducer->Send(key, Json::FastWriter().write(kafkaMsg));
+        std::cout << "[KAFKA] Sent post " << id << " to InTopic for moderation" << std::endl;
     }
     
     return DtoMapper::ToResponse(std::get<TblPost>(getResult));

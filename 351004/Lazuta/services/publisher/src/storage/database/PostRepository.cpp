@@ -10,7 +10,6 @@ namespace publisher
 PostRepository::PostRepository()
 {
     m_client = drogon::HttpClient::newHttpClient("http://127.0.0.1:24130");
-    std::cout << "[DEBUG] PostRepository initialized with client: http://localhost:24130" << std::endl;
 }
 
 Json::Value PostRepository::ModelToJson(const drogon_model::distcomp::TblPost& entity)
