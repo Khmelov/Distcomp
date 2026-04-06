@@ -5,22 +5,24 @@ import by.bsuir.distcomp.dto.response.ReactionResponseTo;
 import by.bsuir.distcomp.entity.Reaction;
 import by.bsuir.distcomp.exception.ResourceNotFoundException;
 import by.bsuir.distcomp.mapper.ReactionMapper;
-import by.bsuir.distcomp.repository.impl.InMemoryReactionRepository;
-import by.bsuir.distcomp.repository.impl.InMemoryTweetRepository;
+import by.bsuir.distcomp.repository.ReactionRepository;
+import by.bsuir.distcomp.repository.TweetRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class ReactionService {
 
-    private final InMemoryReactionRepository reactionRepository;
-    private final InMemoryTweetRepository tweetRepository;
+    private final ReactionRepository reactionRepository;
+    private final TweetRepository tweetRepository;
     private final ReactionMapper reactionMapper;
 
-    public ReactionService(InMemoryReactionRepository reactionRepository,
-                           InMemoryTweetRepository tweetRepository,
+    public ReactionService(ReactionRepository reactionRepository,
+                           TweetRepository tweetRepository,
                            ReactionMapper reactionMapper) {
         this.reactionRepository = reactionRepository;
         this.tweetRepository = tweetRepository;
@@ -36,12 +38,14 @@ public class ReactionService {
         return reactionMapper.toResponseDto(saved);
     }
 
+    @Transactional(readOnly = true)
     public ReactionResponseTo getById(Long id) {
         Reaction entity = reactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reaction with id " + id + " not found", 40413));
         return reactionMapper.toResponseDto(entity);
     }
 
+    @Transactional(readOnly = true)
     public List<ReactionResponseTo> getAll() {
         return reactionRepository.findAll().stream()
                 .map(reactionMapper::toResponseDto)
@@ -49,14 +53,13 @@ public class ReactionService {
     }
 
     public ReactionResponseTo update(ReactionRequestTo dto) {
-        if (!reactionRepository.existsById(dto.getId())) {
-            throw new ResourceNotFoundException("Reaction with id " + dto.getId() + " not found", 40414);
-        }
+        Reaction existing = reactionRepository.findById(dto.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Reaction with id " + dto.getId() + " not found", 40414));
         if (!tweetRepository.existsById(dto.getTweetId())) {
             throw new ResourceNotFoundException("Tweet with id " + dto.getTweetId() + " not found", 40415);
         }
-        Reaction entity = reactionMapper.toEntity(dto);
-        Reaction updated = reactionRepository.update(entity);
+        reactionMapper.updateEntityFromDto(dto, existing);
+        Reaction updated = reactionRepository.save(existing);
         return reactionMapper.toResponseDto(updated);
     }
 

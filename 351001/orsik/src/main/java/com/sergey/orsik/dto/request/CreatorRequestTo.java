@@ -17,7 +17,8 @@ public class CreatorRequestTo {
     @Size(min = 2, max = 64)
     private String login;
 
-    @Size(min = 2, max = 128)
+    @NotBlank(message = "password must not be blank")
+    @Size(min = 8, max = 128)
     private String password;
 
     @Size(min = 2, max = 64)

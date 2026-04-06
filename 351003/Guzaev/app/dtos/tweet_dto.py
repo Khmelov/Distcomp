@@ -7,6 +7,7 @@ class TweetRequestTo(BaseModel):
     title: str = Field(..., min_length=2, max_length=64)
     content: str = Field(..., min_length=4, max_length=2048)
     marker_ids: Optional[List[int]] = Field(default_factory=list, alias="markerIds")
+    markers: Optional[List[str]] = Field(default=None)
 
     class Config:
         populate_by_name = True

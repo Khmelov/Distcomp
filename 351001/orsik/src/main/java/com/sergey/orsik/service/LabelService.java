@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface LabelService {
 
-    List<LabelResponseTo> findAll();
+    List<LabelResponseTo> findAll(int page, int size, String sortBy, String sortDir, String name);
 
     LabelResponseTo findById(Long id);
 
