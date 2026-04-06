@@ -1,15 +1,37 @@
 services:
-  liquibase:
-    image: liquibase/liquibase
-    volumes:
-      - ./migrations:/liquibase/changelog
-    network_mode: "host"
+  postgres:
+    image: postgres:16-alpine
     environment:
-      - LIQUIBASE_CLASSPATH=/liquibase/changelog/postgresql.jar
-    command: >
-      --url="jdbc:postgresql://localhost:5432/distcomp?currentSchema=distcomp"
-      --changeLogFile=changelog-master.xml
-      --username=postgres
-      --password=postgres
-      --driver=org.postgresql.Driver
-      update
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+
+  cassandra:
+    image: cassandra:5.0
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=distcomp
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.3
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.3
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"

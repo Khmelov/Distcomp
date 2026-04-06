@@ -6,5 +6,5 @@ class TweetLabel(Base):
     __table_args__ = {"schema": "distcomp"}
 
     id = Column(BigInteger, primary_key=True, index=True)
-    tweet_id = Column(BigInteger, ForeignKey("distcomp.tbl_tweet.id"), nullable=False)
-    label_id = Column(BigInteger, ForeignKey("distcomp.tbl_label.id"), nullable=False)
+    tweet_id = Column(BigInteger, ForeignKey("distcomp.tbl_tweet.id", ondelete="CASCADE"), nullable=False)
+    label_id = Column(BigInteger, ForeignKey("distcomp.tbl_label.id", ondelete="CASCADE"), nullable=False)
