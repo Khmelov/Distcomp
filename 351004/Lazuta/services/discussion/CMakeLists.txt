@@ -16,6 +16,7 @@ find_package(Jsoncpp REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(MONGOCXX REQUIRED IMPORTED_TARGET libmongocxx)
 pkg_check_modules(BSONCXX REQUIRED IMPORTED_TARGET libbsoncxx)
+pkg_check_modules(RDKAFKA REQUIRED rdkafka)
 
 add_executable(${PROJECT_NAME}
     ${SOURCE_FILES}
@@ -25,6 +26,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     ${MONGOCXX_INCLUDE_DIRS}
     ${BSONCXX_INCLUDE_DIRS}
+    ${RDKAFKA_INCLUDE_DIRS}
 )
 
 target_link_directories(${PROJECT_NAME} PRIVATE
@@ -36,5 +38,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Drogon::Drogon
     PkgConfig::MONGOCXX
     PkgConfig::BSONCXX
+    ${RDKAFKA_LIBRARIES}
+    rdkafka++
 )
 

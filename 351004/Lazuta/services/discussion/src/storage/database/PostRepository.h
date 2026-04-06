@@ -33,7 +33,7 @@ public:
     std::variant<std::vector<TblPost>, DatabaseError> FindByIssueId(int64_t issueId);
     std::variant<std::vector<TblPost>, DatabaseError> FindRecentByIssue(int64_t issueId, int limit = 10);
     std::variant<std::vector<TblPost>, DatabaseError> FindByContentContaining(const std::string& searchText);
-
+    std::variant<bool, DatabaseError> UpdateState(int64_t id, PostState state);
 private:
     int64_t GetNextId();
     bsoncxx::document::value ToBson(const TblPost& entity);

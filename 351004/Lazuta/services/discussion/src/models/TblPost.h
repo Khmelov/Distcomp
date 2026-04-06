@@ -7,6 +7,13 @@
 namespace discussion
 {
 
+enum class PostState
+{
+    PENDING,
+    APPROVE,
+    DECLINE
+};
+
 class TblPost
 {
 public:
@@ -28,12 +35,16 @@ public:
     std::chrono::system_clock::time_point GetModified() const { return modified_; }
     void SetModified(const std::chrono::system_clock::time_point& time) { modified_ = time; }
 
+    PostState GetState() const { return state_; }
+    void SetState(PostState state) { state_ = state; }
+
 private:
     int64_t post_id_ = 0;
     int64_t issue_id_ = 0;
     std::string content_;
     std::chrono::system_clock::time_point created_;
     std::chrono::system_clock::time_point modified_;
+    PostState state_ = PostState::PENDING;
 };
 
 }

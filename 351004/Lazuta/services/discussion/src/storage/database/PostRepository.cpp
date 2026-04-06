@@ -36,29 +36,9 @@ int64_t PostRepository::GetNextId()
     
     if (result)
     {
-        auto view = result->view();
-        auto valueElem = view["value"];
-
-        if (valueElem.type() == bsoncxx::type::k_int64)
-        {
-            return valueElem.get_int64().value;
-        }
-        else if (valueElem.type() == bsoncxx::type::k_int32)
-        {
-            return valueElem.get_int32().value;
-        }
-        else if (valueElem.type() == bsoncxx::type::k_double)
-        {
-            return static_cast<int64_t>(valueElem.get_double().value);
-        }
-        else
-        {
-            std::cerr << "[ERROR] Unexpected type for counter value" << std::endl;
-            return 1;
-        }
+        return result->view()["value"].get_int64().value;
     }
     
-    std::cerr << "[ERROR] Failed to get next id" << std::endl;
     return 1;
 }
 
@@ -66,11 +46,26 @@ bsoncxx::document::value PostRepository::ToBson(const TblPost& entity)
 {
     bsoncxx::builder::stream::document doc{};
     
+    std::string stateStr;
+    switch (entity.GetState())
+    {
+        case PostState::APPROVE:
+            stateStr = "APPROVE";
+            break;
+        case PostState::DECLINE:
+            stateStr = "DECLINE";
+            break;
+        default:
+            stateStr = "PENDING";
+            break;
+    }
+    
     doc << "id" << entity.GetPostId()
         << "issue_id" << entity.GetIssueId()
         << "content" << entity.GetContent()
         << "created" << bsoncxx::types::b_date(entity.GetCreated())
-        << "modified" << bsoncxx::types::b_date(entity.GetModified());
+        << "modified" << bsoncxx::types::b_date(entity.GetModified())
+        << "state" << stateStr;
     
     return doc << bsoncxx::builder::stream::finalize;
 }
@@ -108,6 +103,23 @@ TblPost PostRepository::FromBson(const bsoncxx::document::view& doc)
             std::chrono::milliseconds(modified_time)));
     }
     
+    if (doc["state"])
+    {
+        std::string stateStr(doc["state"].get_string().value.data());
+        if (stateStr == "APPROVE")
+        {
+            entity.SetState(PostState::APPROVE);
+        }
+        else if (stateStr == "DECLINE")
+        {
+            entity.SetState(PostState::DECLINE);
+        }
+        else
+        {
+            entity.SetState(PostState::PENDING);
+        }
+    }
+    
     return entity;
 }
 
@@ -123,13 +135,13 @@ std::variant<int64_t, DatabaseError> PostRepository::Create(const TblPost& entit
         entityWithId.SetPostId(newId);
         entityWithId.SetCreated(now);
         entityWithId.SetModified(now);
+        entityWithId.SetState(PostState::PENDING);
 
         auto doc = ToBson(entityWithId);
         auto result = GetCollection().insert_one(doc.view());
         
         if (result)
         {
-            std::cout << "[DEBUG] Post created with id: " << newId << std::endl;
             return newId;
         }
         
@@ -326,6 +338,48 @@ std::variant<std::vector<TblPost>, DatabaseError> PostRepository::FindByContentC
     }
     catch (const std::exception& e)
     {
+        return DatabaseError::DatabaseError;
+    }
+}
+
+std::variant<bool, DatabaseError> PostRepository::UpdateState(int64_t id, PostState state)
+{
+    try
+    {
+        auto filter = bsoncxx::builder::stream::document{};
+        filter << "id" << id;
+        
+        std::string stateStr;
+        switch (state)
+        {
+            case PostState::APPROVE:
+                stateStr = "APPROVE";
+                break;
+            case PostState::DECLINE:
+                stateStr = "DECLINE";
+                break;
+            default:
+                stateStr = "PENDING";
+                break;
+        }
+        
+        auto updateDoc = bsoncxx::builder::stream::document{};
+        updateDoc << "$set" << bsoncxx::builder::stream::open_document
+                  << "state" << stateStr
+                  << bsoncxx::builder::stream::close_document;
+        
+        auto result = GetCollection().update_one(filter.view(), updateDoc.view());
+        
+        if (result && result->modified_count() > 0)
+        {
+            return true;
+        }
+        
+        return false;
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "[ERROR] UpdateState failed: " << e.what() << std::endl;
         return DatabaseError::DatabaseError;
     }
 }
