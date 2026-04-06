@@ -28,14 +28,14 @@ def get_all():
     return [CommentResponse(id=c.id, tweetId=c.tweet_id, content=c.content, country=c.country) for c in repo.get_all()]
 
 @router.get("/{comment_id}", response_model=CommentResponse)
-def get_one(comment_id: int):
+def get_one(comment_id: str):
     c = repo.get_by_id(comment_id)
     if not c:
         raise HTTPException(404, detail={"errorMessage": "Comment not found", "errorCode": 40404})
     return CommentResponse(id=c.id, tweetId=c.tweet_id, content=c.content, country=c.country)
 
 @router.put("/{comment_id}", response_model=CommentResponse)
-def update(comment_id: int, dto: CommentRequest):
+def update(comment_id: str, dto: CommentRequest):
     c = repo.get_by_id(comment_id)
     if not c:
         raise HTTPException(404, detail={"errorMessage": "Comment not found", "errorCode": 40404})
@@ -45,6 +45,6 @@ def update(comment_id: int, dto: CommentRequest):
     return CommentResponse(id=c.id, tweetId=c.tweet_id, content=c.content, country=c.country)
 
 @router.delete("/{comment_id}", status_code=204)
-def delete(comment_id: int):
+def delete(comment_id: str):
     if not repo.delete(comment_id):
         raise HTTPException(404, detail={"errorMessage": "Comment not found", "errorCode": 40404})
