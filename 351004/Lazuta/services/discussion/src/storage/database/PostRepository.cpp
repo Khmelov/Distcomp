@@ -36,9 +36,29 @@ int64_t PostRepository::GetNextId()
     
     if (result)
     {
-        return result->view()["value"].get_int64().value;
+        auto view = result->view();
+        auto valueElem = view["value"];
+
+        if (valueElem.type() == bsoncxx::type::k_int64)
+        {
+            return valueElem.get_int64().value;
+        }
+        else if (valueElem.type() == bsoncxx::type::k_int32)
+        {
+            return valueElem.get_int32().value;
+        }
+        else if (valueElem.type() == bsoncxx::type::k_double)
+        {
+            return static_cast<int64_t>(valueElem.get_double().value);
+        }
+        else
+        {
+            std::cerr << "[ERROR] Unexpected type for counter value" << std::endl;
+            return 1;
+        }
     }
     
+    std::cerr << "[ERROR] Failed to get next id" << std::endl;
     return 1;
 }
 
