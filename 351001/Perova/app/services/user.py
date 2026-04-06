@@ -22,8 +22,8 @@ class UserService:
         user = User(
             login=request.login,
             password=request.password,
-            firstname=request.firstname,
-            lastname=request.lastname,
+            firstname=request.firstName,
+            lastname=request.lastName,
         )
         created = self._repository.create(user)
         return self._to_response(created)
@@ -37,8 +37,8 @@ class UserService:
         self._ensure_unique_login(request.login, ignore_user_id=request.id)
         existing.login = request.login
         existing.password = request.password
-        existing.firstname = request.firstname
-        existing.lastname = request.lastname
+        existing.firstname = request.firstName
+        existing.lastname = request.lastName
         updated = self._repository.update(existing)
         return self._to_response(updated)
 
@@ -56,4 +56,10 @@ class UserService:
 
     @staticmethod
     def _to_response(user: User) -> UserResponseTo:
-        return UserResponseTo.model_validate(user.__dict__)
+        return UserResponseTo(
+            id=user.id,
+            login=user.login,
+            password=user.password,
+            firstname=user.firstname,
+            lastname=user.lastname,
+        )

@@ -72,7 +72,13 @@ class IssueService:
         user = self._user_repository.find_by_id(issue.userId)
         if user is None:
             raise EntityNotFoundException("User", issue.userId)
-        return UserResponseTo.model_validate(user.__dict__)
+        return UserResponseTo(
+            id=user.id,
+            login=user.login,
+            password=user.password,
+            firstname=user.firstname,
+            lastname=user.lastname,
+        )
 
     def get_stickers_by_issue_id(self, issue_id: int) -> list[dict]:
         issue = self.get_entity_by_id(issue_id)

@@ -48,7 +48,12 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def handle_request_validation(_: Request, exc: RequestValidationError) -> JSONResponse:
+        parts: list[str] = []
+        for err in exc.errors():
+            loc = " -> ".join(str(x) for x in err.get("loc", ()))
+            parts.append(f"{loc}: {err.get('msg', '')}")
+        message = "; ".join(parts) if parts else str(exc)
         return JSONResponse(
             status_code=400,
-            content={"errorMessage": str(exc), "errorCode": 40002},
+            content={"errorMessage": message, "errorCode": 40002},
         )
