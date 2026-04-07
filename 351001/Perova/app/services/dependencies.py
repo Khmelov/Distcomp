@@ -16,11 +16,17 @@ if settings.storage == "memory":
     issue_repository = InMemoryRepository[Issue]()
     sticker_repository = InMemoryRepository[Sticker]()
     notice_repository = InMemoryRepository[Notice]()
+
+    def _delete_notices_for_issue_memory(issue_id: int) -> None:
+        for n in list(notice_repository.find_all()):
+            if n.issueId == issue_id and n.id is not None:
+                notice_repository.delete_by_id(n.id)
+
 else:
     from app.db.session import get_session_factory
+    from app.repositories.http import HttpNoticeRepository
     from app.repositories.postgres import (
         PostgresIssueRepository,
-        PostgresNoticeRepository,
         PostgresStickerRepository,
         PostgresUserRepository,
     )
@@ -29,11 +35,20 @@ else:
     user_repository = PostgresUserRepository(_session_factory)
     issue_repository = PostgresIssueRepository(_session_factory)
     sticker_repository = PostgresStickerRepository(_session_factory)
-    notice_repository = PostgresNoticeRepository(_session_factory)
+    notice_repository = HttpNoticeRepository(settings.discussion_base_url)
+
+    def _delete_notices_for_issue_memory(issue_id: int) -> None:
+        notice_repository.delete_all_for_issue(issue_id)
+
 
 user_service = UserService(user_repository)
 sticker_service = StickerService(sticker_repository)
-issue_service = IssueService(issue_repository, user_repository, sticker_repository)
+issue_service = IssueService(
+    issue_repository,
+    user_repository,
+    sticker_repository,
+    delete_notices_for_issue=_delete_notices_for_issue_memory,
+)
 notice_service = NoticeService(notice_repository, issue_repository)
 
 
@@ -50,7 +65,7 @@ def reset_storage() -> None:
     with sf() as session:
         session.execute(
             text(
-                "TRUNCATE distcomp.tbl_issue_sticker, distcomp.tbl_notice, "
+                "TRUNCATE distcomp.tbl_issue_sticker, "
                 "distcomp.tbl_issue, distcomp.tbl_user, distcomp.tbl_sticker "
                 "RESTART IDENTITY CASCADE"
             )

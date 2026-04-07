@@ -2,6 +2,7 @@ from app.dto.notice import NoticeRequestTo, NoticeResponseTo
 from app.exceptions import EntityNotFoundException
 from app.models.notice import Notice
 from app.repositories import CrudRepository
+from app.repositories.paging import PageRequest
 
 
 class NoticeService:
@@ -21,8 +22,11 @@ class NoticeService:
     def get_by_issue_id(self, issue_id: int) -> list[NoticeResponseTo]:
         if self._issue_repository.find_by_id(issue_id) is None:
             raise EntityNotFoundException("Issue", issue_id)
-        notices = [notice for notice in self._repository.find_all() if notice.issueId == issue_id]
-        return [self._to_response(n) for n in notices]
+        result = self._repository.find_page(
+            PageRequest(page=0, size=10**9, sort=[("id", True)]),
+            filters={"issueId": issue_id},
+        )
+        return [self._to_response(n) for n in result.items]
 
     def create(self, request: NoticeRequestTo) -> NoticeResponseTo:
         self._ensure_issue_exists(request.issueId)

@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from datetime import datetime, timezone
 
 from app.dto.issue import IssueRequestTo, IssueResponseTo
@@ -15,10 +16,12 @@ class IssueService:
         repository: CrudRepository[Issue],
         user_repository: CrudRepository,
         sticker_repository: CrudRepository[Sticker],
+        delete_notices_for_issue: Callable[[int], None] | None = None,
     ) -> None:
         self._repository = repository
         self._user_repository = user_repository
         self._sticker_repository = sticker_repository
+        self._delete_notices_for_issue = delete_notices_for_issue
 
     def get_all(self) -> list[IssueResponseTo]:
         return [self._to_response(issue) for issue in self._repository.find_all()]
@@ -94,6 +97,8 @@ class IssueService:
         if issue is None:
             raise EntityNotFoundException("Issue", issue_id)
         sticker_ids = list(issue.stickerIds)
+        if self._delete_notices_for_issue is not None:
+            self._delete_notices_for_issue(issue_id)
         if not self._repository.delete_by_id(issue_id):
             raise EntityNotFoundException("Issue", issue_id)
         self._delete_stickers_no_longer_linked(sticker_ids)
