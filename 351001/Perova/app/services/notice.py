@@ -1,6 +1,7 @@
 from app.dto.notice import NoticeRequestTo, NoticeResponseTo
 from app.exceptions import EntityNotFoundException
 from app.models.notice import Notice
+from app.models.notice_state import NoticeState
 from app.repositories import CrudRepository
 from app.repositories.paging import PageRequest
 
@@ -30,7 +31,9 @@ class NoticeService:
 
     def create(self, request: NoticeRequestTo) -> NoticeResponseTo:
         self._ensure_issue_exists(request.issueId)
-        created = self._repository.create(Notice(issueId=request.issueId, content=request.content))
+        created = self._repository.create(
+            Notice(issueId=request.issueId, content=request.content, state=NoticeState.PENDING)
+        )
         return self._to_response(created)
 
     def update(self, request: NoticeRequestTo) -> NoticeResponseTo:

@@ -14,8 +14,14 @@ from app.settings import settings
 async def lifespan(_: FastAPI):
     if settings.storage == "postgres":
         init_engine()
+        from app.services.dependencies import start_publisher_kafka_transport
+
+        start_publisher_kafka_transport()
     yield
     if settings.storage == "postgres":
+        from app.services.dependencies import shutdown_publisher_kafka_transport
+
+        shutdown_publisher_kafka_transport()
         dispose_engine()
 
 

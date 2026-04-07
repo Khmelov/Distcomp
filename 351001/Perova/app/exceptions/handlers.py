@@ -24,6 +24,13 @@ class EntityDuplicateException(Exception):
         super().__init__(self.message)
 
 
+class GatewayTimeoutException(Exception):
+    def __init__(self, message: str = "Upstream service did not respond in time"):
+        self.message = message
+        self.error_code = 50401
+        super().__init__(self.message)
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(EntityNotFoundException)
     async def handle_not_found(_: Request, exc: EntityNotFoundException) -> JSONResponse:
@@ -43,6 +50,13 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def handle_duplicate(_: Request, exc: EntityDuplicateException) -> JSONResponse:
         return JSONResponse(
             status_code=403,
+            content={"errorMessage": exc.message, "errorCode": exc.error_code},
+        )
+
+    @app.exception_handler(GatewayTimeoutException)
+    async def handle_gateway_timeout(_: Request, exc: GatewayTimeoutException) -> JSONResponse:
+        return JSONResponse(
+            status_code=504,
             content={"errorMessage": exc.message, "errorCode": exc.error_code},
         )
 

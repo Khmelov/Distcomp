@@ -24,18 +24,43 @@ if settings.storage == "memory":
 
 else:
     from app.db.session import get_session_factory
-    from app.repositories.http import HttpNoticeRepository
+    from app.repositories.kafka.bridge import NoticeKafkaBridge
+    from app.repositories.kafka.notice_repo import KafkaNoticeRepository
     from app.repositories.postgres import (
         PostgresIssueRepository,
         PostgresStickerRepository,
         PostgresUserRepository,
     )
+    from app.repositories.postgres.notice_id import next_notice_id_from_postgres
 
     _session_factory = get_session_factory()
     user_repository = PostgresUserRepository(_session_factory)
     issue_repository = PostgresIssueRepository(_session_factory)
     sticker_repository = PostgresStickerRepository(_session_factory)
-    notice_repository = HttpNoticeRepository(settings.discussion_base_url)
+    _kafka_bridge: NoticeKafkaBridge | None = None
+
+    def get_kafka_bridge() -> NoticeKafkaBridge:
+        global _kafka_bridge
+        if _kafka_bridge is None:
+            _kafka_bridge = NoticeKafkaBridge(
+                settings.kafka_bootstrap_servers,
+                settings.kafka_in_topic,
+                settings.kafka_out_topic,
+                settings.kafka_consumer_group_publisher,
+                settings.kafka_reply_timeout_sec,
+            )
+        return _kafka_bridge
+
+    notice_repository = KafkaNoticeRepository(get_kafka_bridge, next_notice_id_from_postgres)
+
+    def start_publisher_kafka_transport() -> None:
+        get_kafka_bridge().start()
+
+    def shutdown_publisher_kafka_transport() -> None:
+        global _kafka_bridge
+        if _kafka_bridge is not None:
+            _kafka_bridge.stop()
+            _kafka_bridge = None
 
     def _delete_notices_for_issue_memory(issue_id: int) -> None:
         notice_repository.delete_all_for_issue(issue_id)
