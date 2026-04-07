@@ -1,4 +1,8 @@
-from fastapi import APIRouter, Query, Response, status
+import json
+
+from fastapi import APIRouter, Query, Request, Response, status
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
 
 from app.dto.issue import IssueRequestTo, IssueResponseTo
 from app.dto.notice import NoticeResponseTo
@@ -17,26 +21,53 @@ def _parse_id(path_id: str) -> int | None:
         return None
 
 
+async def _parse_issue_request_body(request: Request, *, drop_string_id: bool = False) -> IssueRequestTo:
+    raw = await request.body()
+    if not raw:
+        raise RequestValidationError(
+            [{"type": "missing", "loc": ("body",), "msg": "Field required", "input": None}],
+        )
+    try:
+        data = json.loads(raw.decode("utf-8-sig"))
+    except json.JSONDecodeError:
+        raise RequestValidationError(
+            [{"type": "json_invalid", "loc": ("body",), "msg": "JSON decode error", "input": None}],
+        )
+    if not isinstance(data, dict):
+        raise RequestValidationError(
+            [{"type": "dict_type", "loc": ("body",), "msg": "Input should be a valid dictionary", "input": data}],
+        )
+    if drop_string_id and isinstance(data.get("id"), str):
+        data = {k: v for k, v in data.items() if k != "id"}
+    try:
+        return IssueRequestTo.model_validate(data)
+    except ValidationError as e:
+        raise RequestValidationError(e.errors(), body=data) from e
+
+
 @router.get("", response_model=list[IssueResponseTo])
 def get_issues() -> list[IssueResponseTo]:
     return issue_service.get_all()
 
 
 @router.post("", response_model=IssueResponseTo, status_code=status.HTTP_201_CREATED)
-def create_issue(payload: IssueRequestTo) -> IssueResponseTo:
+async def create_issue(request: Request) -> IssueResponseTo:
+    payload = await _parse_issue_request_body(request)
     return issue_service.create(payload)
 
 
 @router.put("", response_model=IssueResponseTo)
-def update_issue(payload: IssueRequestTo) -> IssueResponseTo:
+async def update_issue(request: Request) -> IssueResponseTo:
+    payload = await _parse_issue_request_body(request)
     return issue_service.update(payload)
 
 
 @router.put("/{issue_id}", response_model=IssueResponseTo)
-def update_issue_by_id(issue_id: str, payload: IssueRequestTo) -> IssueResponseTo:
+async def update_issue_by_id(issue_id: str, request: Request) -> IssueResponseTo:
     oid = _parse_id(issue_id)
     if oid is None:
         raise EntityNotFoundException("Issue", 0)
+    payload = await _parse_issue_request_body(request)
     return issue_service.update(payload.model_copy(update={"id": oid}))
 
 
