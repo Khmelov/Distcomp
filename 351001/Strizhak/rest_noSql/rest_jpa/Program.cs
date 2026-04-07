@@ -4,6 +4,7 @@ using rest_api.Data;
 using rest_api.Dtos;
 using rest_api.Entities;
 using rest_api.Mapper;
+using rest_api.Proxies;
 using rest_api.Repositories;      // пространство имён для EfRepository<>
 using rest_api.Services;
 
@@ -26,8 +27,16 @@ builder.Services.AddOpenApi();
 // Сервисы (бизнес-логика)
 builder.Services.AddScoped<IService<User, UserRequestTo, UserResponseTo>, UserService>();
 builder.Services.AddScoped<IService<Topic, TopicRequestTo, TopicResponseTo>, TopicService>();
-builder.Services.AddScoped<IService<Reaction, ReactionRequestTo, ReactionResponseTo>, ReactionService>();
 builder.Services.AddScoped<IService<Tag, TagRequestTo, TagResponseTo>, TagService>();
+// Регистрация HTTP-клиента для Discussion
+builder.Services.AddHttpClient("DiscussionClient", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:24130");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+// Регистрация прокси
+builder.Services.AddScoped<IReactionProxy, ReactionProxy>();
 
 var app = builder.Build();
 
@@ -36,7 +45,7 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.Migrate(); // применяем миграции, если их нет
 
-    // Проверяем, есть ли пользователь с Id = 1
+    //// Проверяем, есть ли пользователь с Id = 1
     //if (!context.Users.Any(u => u.Id == 1))
     //{
     //    context.Users.Add(new User
