@@ -23,6 +23,10 @@ services:
       CASSANDRA_CLUSTER_NAME: 'MyCluster'
       CASSANDRA_SEEDS: cassandra
       CASSANDRA_DC: datacenter1
+      CASSANDRA_LISTEN_ADDRESS: auto
+      CASSANDRA_BROADCAST_ADDRESS: auto
+      CASSANDRA_RPC_ADDRESS: 0.0.0.0
+      CASSANDRA_BROADCAST_RPC_ADDRESS: 127.0.0.1
       CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
       CASSANDRA_NUM_TOKENS: 256
       MAX_HEAP_SIZE: 512M
@@ -39,7 +43,15 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-    command: bash -c "sleep 30 && cassandra -f"
+    command: >-
+      bash -c "sleep 30 &&
+      sed -ri 's/^rpc_address:.*/rpc_address: 0.0.0.0/' /etc/cassandra/cassandra.yaml &&
+      if grep -q '^broadcast_rpc_address:' /etc/cassandra/cassandra.yaml; then
+      sed -ri 's/^broadcast_rpc_address:.*/broadcast_rpc_address: 127.0.0.1/' /etc/cassandra/cassandra.yaml;
+      else
+      sed -ri '/^rpc_address:/a broadcast_rpc_address: 127.0.0.1' /etc/cassandra/cassandra.yaml;
+      fi &&
+      cassandra -f -R"
 
   pgadmin:
     container_name: pgadmin_container_rv1
