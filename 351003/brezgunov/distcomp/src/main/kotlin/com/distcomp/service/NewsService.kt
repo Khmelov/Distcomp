@@ -8,7 +8,6 @@ import com.distcomp.exception.NewsTitleDuplicateException
 import com.distcomp.exception.UserNotFoundException
 import com.distcomp.exception.ValidationException
 import com.distcomp.mapper.NewsMapper
-import com.distcomp.repository.MarkerRepository
 import com.distcomp.repository.NewsRepository
 import com.distcomp.repository.UserRepository
 import org.springframework.data.repository.findByIdOrNull
@@ -20,7 +19,6 @@ class NewsService(
     val newsMapper: NewsMapper,
     val newsRepository: NewsRepository,
     val userRepository: UserRepository,
-    val markerRepository: MarkerRepository
 ) {
     @Transactional
     fun createNews(newsRequestTo: NewsRequestTo): NewsResponseTo {
