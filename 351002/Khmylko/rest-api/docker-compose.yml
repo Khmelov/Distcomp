@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:15
+    platform: linux/amd64
+    container_name: rest-api-postgres
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+
+  php:
+    build: .
+    platform: linux/amd64
+    container_name: rest-api-php
+    ports:
+      - "24110:24110"
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: distcomp
+      DB_USER: postgres
+      DB_PASS: postgres
+
+  tests:
+    image: khmelov/distcomp:latest
+    platform: linux/amd64
+    container_name: rest-api-tests
+    ports:
+      - "24100:24100"
+    depends_on:
+      - php
+volumes:
+  postgres_data:
