@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, Response, status, Body
 
 from ..dto.author_dto import AuthorRequestTo, AuthorResponseTo
 from ..services.author_service import AuthorService
@@ -8,7 +8,8 @@ service = AuthorService()
 
 
 @router.post("", response_model=AuthorResponseTo, status_code=status.HTTP_201_CREATED)
-def create_author(dto: AuthorRequestTo):
+def create_author(payload: dict = Body(...)):
+    dto = AuthorRequestTo(**payload)
     return service.create(dto)
 
 
