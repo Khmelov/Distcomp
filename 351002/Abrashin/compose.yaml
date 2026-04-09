@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: 'postgres:15-alpine'
+    environment:
+      - 'POSTGRES_DB=distcomp'
+      - 'POSTGRES_PASSWORD=postgres'
+      - 'POSTGRES_USER=postgres'
+    ports:
+      - '5432:5432'

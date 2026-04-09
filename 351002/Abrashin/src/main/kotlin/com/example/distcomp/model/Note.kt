@@ -1,7 +1,6 @@
 package com.example.distcomp.model
 
-class Note(
-    id: Long? = null,
+data class Note(
     var tweetId: Long? = null,
-    var content: String = ""
-) : BaseEntity(id)
+    var content: String? = null
+) : BaseEntity()

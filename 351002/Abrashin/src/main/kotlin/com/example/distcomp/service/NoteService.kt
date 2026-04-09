@@ -6,7 +6,10 @@ import com.example.distcomp.exception.NotFoundException
 import com.example.distcomp.mapper.NoteMapper
 import com.example.distcomp.repository.NoteRepository
 import com.example.distcomp.repository.TweetRepository
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class NoteService(
@@ -14,11 +17,13 @@ class NoteService(
     private val tweetRepository: TweetRepository,
     private val mapper: NoteMapper
 ) {
+    @Transactional
     fun create(request: NoteRequestTo): NoteResponseTo {
-        if (request.tweetId != null && !tweetRepository.existsById(request.tweetId!!)) {
-            throw NotFoundException("Tweet with id ${request.tweetId} not found")
+        request.tweetId?.let {
+            if (!tweetRepository.existsById(it)) throw NotFoundException("Tweet with id $it not found")
         }
         val entity = mapper.toEntity(request)
+        entity.tweetId = request.tweetId
         val saved = repository.save(entity)
         return mapper.toResponse(saved)
     }
@@ -28,17 +33,24 @@ class NoteService(
         return mapper.toResponse(entity)
     }
 
-    fun getAll(): List<NoteResponseTo> {
-        return repository.findAll().map { mapper.toResponse(it) }
+    fun getAll(page: Int, size: Int, sort: Array<String>): List<NoteResponseTo> {
+        val sortOrder = if (sort.size >= 2) {
+            Sort.by(Sort.Direction.fromString(sort[1]), sort[0])
+        } else if (sort.isNotEmpty()) {
+            Sort.by(sort[0])
+        } else {
+            Sort.unsorted()
+        }
+        val pageable = PageRequest.of(page, size, sortOrder)
+        return repository.findAll(pageable).content.map { mapper.toResponse(it) }
     }
 
+    @Transactional
     fun patch(id: Long, request: NoteRequestTo): NoteResponseTo {
         val existing = repository.findById(id) ?: throw NotFoundException("Note with id $id not found")
         
         request.tweetId?.let {
-            if (!tweetRepository.existsById(it)) {
-                throw NotFoundException("Tweet with id $it not found")
-            }
+            if (!tweetRepository.existsById(it)) throw NotFoundException("Tweet with id $it not found")
             existing.tweetId = it
         }
         request.content?.let { existing.content = it }

@@ -6,6 +6,8 @@ import com.example.distcomp.exception.ConflictException
 import com.example.distcomp.exception.NotFoundException
 import com.example.distcomp.mapper.CreatorMapper
 import com.example.distcomp.repository.CreatorRepository
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 
 @Service
@@ -27,8 +29,16 @@ class CreatorService(
         return mapper.toResponse(entity)
     }
 
-    fun getAll(): List<CreatorResponseTo> {
-        return repository.findAll().map { mapper.toResponse(it) }
+    fun getAll(page: Int, size: Int, sort: Array<String>): List<CreatorResponseTo> {
+        val sortOrder = if (sort.size >= 2) {
+            Sort.by(Sort.Direction.fromString(sort[1]), sort[0])
+        } else if (sort.isNotEmpty()) {
+            Sort.by(sort[0])
+        } else {
+            Sort.unsorted()
+        }
+        val pageable = PageRequest.of(page, size, sortOrder)
+        return repository.findAll(pageable).content.map { mapper.toResponse(it) }
     }
 
     fun patch(id: Long, request: CreatorRequestTo): CreatorResponseTo {
@@ -54,4 +64,8 @@ class CreatorService(
             throw NotFoundException("Creator with id $id not found")
         }
     }
+}
+
+sealed class Hello{
+    class World:Hello()
 }

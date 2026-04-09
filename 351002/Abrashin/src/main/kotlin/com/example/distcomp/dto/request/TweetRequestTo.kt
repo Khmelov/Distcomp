@@ -9,5 +9,6 @@ data class TweetRequestTo(
     @field:Size(min = 2, max = 64)
     var title: String? = null,
     @field:Size(min = 2, max = 2048)
-    var content: String? = null
+    var content: String? = null,
+    var stickers: List<String>? = null
 )

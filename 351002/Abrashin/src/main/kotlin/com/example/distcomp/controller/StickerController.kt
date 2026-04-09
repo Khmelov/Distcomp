@@ -23,8 +23,12 @@ class StickerController(private val service: StickerService) {
     }
 
     @GetMapping
-    fun getAll(): List<StickerResponseTo> {
-        return service.getAll()
+    fun getAll(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "id,desc") sort: Array<String>
+    ): List<StickerResponseTo> {
+        return service.getAll(page, size, sort)
     }
 
     @PutMapping("/{id}")

@@ -23,8 +23,12 @@ class NoteController(private val service: NoteService) {
     }
 
     @GetMapping
-    fun getAll(): List<NoteResponseTo> {
-        return service.getAll()
+    fun getAll(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "id,desc") sort: Array<String>
+    ): List<NoteResponseTo> {
+        return service.getAll(page, size, sort)
     }
 
     @PutMapping("/{id}")

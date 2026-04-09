@@ -1,11 +1,13 @@
 package com.example.distcomp.repository
 
-import com.example.distcomp.model.BaseEntity
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 
-interface CrudRepository<T : BaseEntity, ID> {
+interface CrudRepository<T> {
     fun save(entity: T): T
-    fun findById(id: ID): T?
+    fun findById(id: Long): T?
     fun findAll(): List<T>
-    fun deleteById(id: ID): Boolean
-    fun existsById(id: ID): Boolean
+    fun findAll(pageable: Pageable): Page<T>
+    fun deleteById(id: Long): Boolean
+    fun existsById(id: Long): Boolean
 }

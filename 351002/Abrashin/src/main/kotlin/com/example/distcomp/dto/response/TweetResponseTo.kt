@@ -10,5 +10,6 @@ data class TweetResponseTo(
     var title: String? = null,
     var content: String? = null,
     var created: LocalDateTime? = null,
-    var modified: LocalDateTime? = null
+    var modified: LocalDateTime? = null,
+    var stickers: List<StickerResponseTo> = emptyList()
 )

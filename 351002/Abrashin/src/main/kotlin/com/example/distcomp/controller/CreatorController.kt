@@ -23,8 +23,12 @@ class CreatorController(private val service: CreatorService) {
     }
 
     @GetMapping
-    fun getAll(): List<CreatorResponseTo> {
-        return service.getAll()
+    fun getAll(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "id,desc") sort: Array<String>
+    ): List<CreatorResponseTo> {
+        return service.getAll(page, size, sort)
     }
 
     @PutMapping("/{id}")

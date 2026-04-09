@@ -26,8 +26,12 @@ class TweetController(private val service: TweetService) {
     }
 
     @GetMapping
-    fun getAll(): List<TweetResponseTo> {
-        return service.getAll()
+    fun getAll(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "id,desc") sort: Array<String>
+    ): List<TweetResponseTo> {
+        return service.getAll(page, size, sort)
     }
 
     @PutMapping("/{id}")

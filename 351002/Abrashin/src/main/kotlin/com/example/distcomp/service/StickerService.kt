@@ -6,6 +6,8 @@ import com.example.distcomp.exception.ConflictException
 import com.example.distcomp.exception.NotFoundException
 import com.example.distcomp.mapper.StickerMapper
 import com.example.distcomp.repository.StickerRepository
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 
 @Service
@@ -27,8 +29,16 @@ class StickerService(
         return mapper.toResponse(entity)
     }
 
-    fun getAll(): List<StickerResponseTo> {
-        return repository.findAll().map { mapper.toResponse(it) }
+    fun getAll(page: Int, size: Int, sort: Array<String>): List<StickerResponseTo> {
+        val sortOrder = if (sort.size >= 2) {
+            Sort.by(Sort.Direction.fromString(sort[1]), sort[0])
+        } else if (sort.isNotEmpty()) {
+            Sort.by(sort[0])
+        } else {
+            Sort.unsorted()
+        }
+        val pageable = PageRequest.of(page, size, sortOrder)
+        return repository.findAll(pageable).content.map { mapper.toResponse(it) }
     }
 
     fun patch(id: Long, request: StickerRequestTo): StickerResponseTo {
