@@ -1,6 +1,5 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 from src.schemas.dto import EditorRequestTo, EditorResponseTo
-from src.services.editor import EditorService
 from src.dependencies.services import EditorServiceDep
 
 
@@ -14,10 +13,7 @@ router = APIRouter(
     response_model=EditorResponseTo,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_editor(
-    editor_in: EditorRequestTo,
-    editor_service: EditorServiceDep
-):
+async def create_editor(editor_in: EditorRequestTo, editor_service: EditorServiceDep):
     return await editor_service.create(editor_in)
 
 
@@ -44,17 +40,10 @@ async def get_editor(id: int, editor_service: EditorServiceDep):
     response_model=EditorResponseTo,
     status_code=status.HTTP_200_OK,
 )
-async def update_editor(
-    id: int,
-    editor_in: EditorRequestTo,
-    editor_service: EditorServiceDep
-):
+async def update_editor(id: int, editor_in: EditorRequestTo, editor_service: EditorServiceDep):
     return await editor_service.update(id, editor_in)
 
 
-@router.delete(
-    path="/{id}",
-    status_code=status.HTTP_204_NO_CONTENT
-)
+@router.delete(path="/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_editor(id: int, editor_service: EditorServiceDep):
     await editor_service.delete(id)

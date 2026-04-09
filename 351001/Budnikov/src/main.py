@@ -51,11 +51,11 @@ app = create_fastapi_app()
 
 
 @app.exception_handler(BaseAppException)
-async def app_exception_handler(request: Request, exc: AppException):
+async def app_exception_handler(request: Request, exc: BaseAppException):
     return JSONResponse(
         status_code=exc.status_code,
         content={
             "errorCode": exc.error_code,
-            "errorMessage": exc.error_message
-        }
+            "errorMessage": exc.error_message,
+        },
     )

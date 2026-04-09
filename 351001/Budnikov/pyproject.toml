@@ -9,3 +9,7 @@ dependencies = [
     "tortoise-orm>=1.1.0",
     "uvicorn>=0.44.0",
 ]
+
+[tool.ruff]
+line-length = 120
+

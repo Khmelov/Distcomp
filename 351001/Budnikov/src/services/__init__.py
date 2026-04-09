@@ -1,1 +1,1 @@
-from .editor import EditorService
+from .editor import EditorService as EditorService

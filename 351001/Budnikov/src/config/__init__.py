@@ -1,1 +1,1 @@
-from .database import TORTOISE_CONFIG
+from .database import TORTOISE_CONFIG as TORTOISE_CONFIG

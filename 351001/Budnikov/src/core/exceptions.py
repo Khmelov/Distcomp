@@ -3,4 +3,3 @@ class BaseAppException(Exception):
         self.status_code = status_code
         self.error_code = error_code
         self.error_message = error_message
-

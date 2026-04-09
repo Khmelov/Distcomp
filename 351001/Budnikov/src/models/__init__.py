@@ -1,4 +1,4 @@
-from .editor import Editor
-from .label import Label
-from .issue import Issue
-from .post import Post
+from .editor import Editor as Editor
+from .label import Label as Label
+from .issue import Issue as Issue
+from .post import Post as Post
