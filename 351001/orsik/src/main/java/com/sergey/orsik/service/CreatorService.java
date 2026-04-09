@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface CreatorService {
 
-    List<CreatorResponseTo> findAll();
+    List<CreatorResponseTo> findAll(int page, int size, String sortBy, String sortDir, String search);
 
     CreatorResponseTo findById(Long id);
 

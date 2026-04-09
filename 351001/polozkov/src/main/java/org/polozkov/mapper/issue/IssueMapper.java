@@ -16,10 +16,12 @@ public interface IssueMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "created", ignore = true)
     @Mapping(target = "modified", ignore = true)
+    @Mapping(target = "labels", ignore = true)
     Issue requestDtoToIssue(IssueRequestTo issueRequest);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "created", ignore = true)
     @Mapping(target = "modified", ignore = true)
+    @Mapping(target = "labels", ignore = true)
     Issue updateIssue(@MappingTarget Issue issue, IssueRequestTo issueRequest);
 }

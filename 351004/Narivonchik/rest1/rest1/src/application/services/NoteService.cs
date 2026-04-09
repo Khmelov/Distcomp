@@ -2,6 +2,7 @@
 using rest1.application.DTOs.requests;
 using rest1.application.DTOs.responses;
 using rest1.application.exceptions;
+using rest1.application.exceptions.db;
 using rest1.application.interfaces;
 using rest1.application.interfaces.services;
 using rest1.core.entities;
@@ -22,13 +23,23 @@ public class NoteService : INoteService
         public async Task<NoteResponseTo> CreateNote(NoteRequestTo createNoteRequestTo)
         {
             Note noteFromDto = _mapper.Map<Note>(createNoteRequestTo);
+            try
+            {
+                Note createdNote = await _noteRepository.AddAsync(noteFromDto);
 
-            Note createdNote = await _noteRepository.AddAsync(noteFromDto);
+                NoteResponseTo dtoFromCreatedNote =
+                    _mapper.Map<NoteResponseTo>(createdNote);
 
-            NoteResponseTo dtoFromCreatedNote =
-                _mapper.Map<NoteResponseTo>(createdNote);
-
-            return dtoFromCreatedNote;
+                return dtoFromCreatedNote;
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new NoteAlreadyExistsException(ex.Message, ex);
+            }
+            catch (ForeignKeyViolationException ex)
+            {
+                throw new ReferenceException(ex.Message, ex);
+            }
         }
 
         public async Task DeleteNote(NoteRequestTo deleteNoteRequestTo)

@@ -1,8 +1,8 @@
-package com.example.restapp.controller;
+package com.example.discussion.controller;
 
-import com.example.restapp.dto.request.AuthorRequestTo;
-import com.example.restapp.dto.response.AuthorResponseTo;
-import com.example.restapp.service.AuthorService;
+import com.example.discussion.dto.request.AuthorRequestTo;
+import com.example.discussion.dto.response.AuthorResponseTo;
+import com.example.discussion.service.AuthorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
