@@ -1,0 +1,1 @@
+from .database import TORTOISE_CONFIG
