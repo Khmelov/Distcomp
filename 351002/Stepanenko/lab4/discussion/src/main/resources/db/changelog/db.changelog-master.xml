@@ -7,4 +7,5 @@
 
     <include file="db/changelog/db.changelog-1.0-cassandra.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/db.changelog-1.1-reaction-by-id-restore.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/db.changelog-1.2-reaction-state.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

@@ -37,4 +37,14 @@
             <column name="marker_id" type="BIGINT"><constraints nullable="false" foreignKeyName="fk_tm_marker" referencedTableName="tbl_marker" referencedColumnNames="id" deleteCascade="true"/></column>
         </createTable>
     </changeSet>
+
+    <changeSet id="20240522-data-1" author="student">
+        <insert tableName="tbl_author">
+            <column name="login" value="stepanenko_login"/>
+            <column name="password" value="password123"/>
+            <column name="firstname" value="Ivan"/>
+            <column name="lastname" value="Степаненко"/>
+        </insert>
+    </changeSet>
+
 </databaseChangeLog>

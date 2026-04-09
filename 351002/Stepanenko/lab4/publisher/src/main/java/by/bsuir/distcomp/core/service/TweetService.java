@@ -95,22 +95,19 @@ public class TweetService {
         Tweet tweet = tweetRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tweet not found", 40410));
 
-        // Сохраняем список маркеров перед удалением твита
         Set<Marker> associatedMarkers = new HashSet<>(tweet.getMarkers());
 
+        // Каскадное удаление реакций через Kafka
         try {
             discussionReactionClient.deleteByTweetId(id);
-        } catch (RestClientException ex) {
-            log.warn("Discussion unavailable or error while deleting reactions for tweet {}: {}", id, ex.getMessage());
+        } catch (Exception ex) {
+            // Логируем, но НЕ прерываем удаление самого твита, если обсуждения недоступны
+            log.error("Could not delete reactions for tweet {}: {}", id, ex.getMessage());
         }
 
-        // Удаляем твит (Hibernate сам удалит записи из связующей таблицы tbl_tweet_marker)
         tweetRepository.delete(tweet);
-
-        // Сбрасываем изменения в БД прямо сейчас, чтобы countByMarkersId был актуальным
         tweetRepository.flush();
 
-        // Удаляем маркеры, если они больше не используются ни в одном твите
         for (Marker marker : associatedMarkers) {
             if (tweetRepository.countByMarkersId(marker.getId()) == 0) {
                 markerRepository.delete(marker);

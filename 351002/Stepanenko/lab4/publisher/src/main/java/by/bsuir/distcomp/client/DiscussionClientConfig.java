@@ -11,7 +11,7 @@ import org.springframework.web.client.RestClient;
 import java.time.Duration;
 
 @Configuration
-@ConditionalOnProperty(name = "discussion.mock", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(name = "discussion.transport", havingValue = "rest")
 public class DiscussionClientConfig {
 
     /**

@@ -26,6 +26,7 @@ public class ReactionRestController {
 
     @GetMapping("/tweet/{tweetId}")
     public ResponseEntity<List<ReactionResponseTo>> getByTweetId(@PathVariable Long tweetId) {
+        // Теперь этот метод существует в ReactionService
         return ResponseEntity.ok(reactionService.getByTweetId(tweetId));
     }
 

@@ -1,6 +1,7 @@
 package by.bsuir.distcomp.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import by.bsuir.distcomp.dto.reaction.ReactionState;
 
 public class ReactionResponseTo {
     @JsonProperty("id")
@@ -12,12 +13,20 @@ public class ReactionResponseTo {
     @JsonProperty("content")
     private String content;
 
+    @JsonProperty("state")
+    private ReactionState state;
+
     public ReactionResponseTo() {}
 
     public ReactionResponseTo(Long id, Long tweetId, String content) {
+        this(id, tweetId, content, null);
+    }
+
+    public ReactionResponseTo(Long id, Long tweetId, String content, ReactionState state) {
         this.id = id;
         this.tweetId = tweetId;
         this.content = content;
+        this.state = state;
     }
 
     public Long getId() {
@@ -42,5 +51,13 @@ public class ReactionResponseTo {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public ReactionState getState() {
+        return state;
+    }
+
+    public void setState(ReactionState state) {
+        this.state = state;
     }
 }

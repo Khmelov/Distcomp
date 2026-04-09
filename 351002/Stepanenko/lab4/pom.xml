@@ -10,10 +10,10 @@
     </parent>
 
     <groupId>by.bsuir.distcomp</groupId>
-    <artifactId>lab3</artifactId>
+    <artifactId>lab4</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
-    <name>lab3</name>
+    <name>lab4</name>
 
     <modules>
         <module>common</module>

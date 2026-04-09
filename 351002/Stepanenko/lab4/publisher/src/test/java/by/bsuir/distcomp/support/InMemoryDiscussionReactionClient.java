@@ -3,6 +3,7 @@ package by.bsuir.distcomp.support;
 import by.bsuir.distcomp.client.DiscussionReactionClient;
 import by.bsuir.distcomp.core.exception.ResourceNotFoundException;
 import by.bsuir.distcomp.dto.request.ReactionRequestTo;
+import by.bsuir.distcomp.dto.reaction.ReactionState;
 import by.bsuir.distcomp.dto.response.ReactionResponseTo;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class InMemoryDiscussionReactionClient implements DiscussionReactionClien
     @Override
     public ReactionResponseTo create(ReactionRequestTo dto) {
         long id = ids.incrementAndGet();
-        ReactionResponseTo r = new ReactionResponseTo(id, dto.getTweetId(), dto.getContent());
+        ReactionResponseTo r = new ReactionResponseTo(id, dto.getTweetId(), dto.getContent(), ReactionState.APPROVE);
         byId.put(id, r);
         return r;
     }
@@ -55,7 +56,7 @@ public class InMemoryDiscussionReactionClient implements DiscussionReactionClien
         if (existing == null) {
             throw new ResourceNotFoundException("Reaction not found", 40418);
         }
-        ReactionResponseTo next = new ReactionResponseTo(dto.getId(), dto.getTweetId(), dto.getContent());
+        ReactionResponseTo next = new ReactionResponseTo(dto.getId(), dto.getTweetId(), dto.getContent(), ReactionState.APPROVE);
         byId.put(dto.getId(), next);
         return next;
     }
