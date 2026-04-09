@@ -9,7 +9,7 @@ router = APIRouter(
 
 
 @router.post(
-    path="/",
+    path="",
     response_model=EditorResponseTo,
     status_code=status.HTTP_201_CREATED,
 )
@@ -18,7 +18,7 @@ async def create_editor(editor_in: EditorRequestTo, editor_service: EditorServic
 
 
 @router.get(
-    path="/",
+    path="",
     response_model=list[EditorResponseTo],
     status_code=status.HTTP_200_OK,
 )
