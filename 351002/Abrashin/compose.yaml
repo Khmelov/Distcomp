@@ -7,3 +7,7 @@ services:
       - 'POSTGRES_USER=postgres'
     ports:
       - '5432:5432'
+  cassandra:
+    image: 'cassandra:4.1'
+    ports:
+      - '9042:9042'

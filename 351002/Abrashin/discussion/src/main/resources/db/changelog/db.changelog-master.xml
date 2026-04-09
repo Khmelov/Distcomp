@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="1" author="assistant">
+        <sql>
+            CREATE KEYSPACE IF NOT EXISTS distcomp
+            WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+        </sql>
+    </changeSet>
+
+    <changeSet id="2" author="assistant">
+        <sql>
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_note (
+              tweet_id bigint,
+              id bigint,
+              country text,
+              content text,
+              PRIMARY KEY ((tweet_id), id)
+            );
+        </sql>
+    </changeSet>
+</databaseChangeLog>
