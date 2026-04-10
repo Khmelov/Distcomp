@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Response
 from typing import List
-from app.dtos.marker_dto import MarkerRequestTo, MarkerResponseTo
-from app.services.marker_service import MarkerService
+from dtos.marker_dto import MarkerRequestTo, MarkerResponseTo
+from services.marker_service import MarkerService
 
 router = APIRouter(prefix="/api/v1.0/markers", tags=["markers"])
 service = MarkerService()

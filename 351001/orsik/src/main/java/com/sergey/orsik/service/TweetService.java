@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface TweetService {
 
-    List<TweetResponseTo> findAll();
+    List<TweetResponseTo> findAll(int page, int size, String sortBy, String sortDir, Long creatorId, String title);
 
     TweetResponseTo findById(Long id);
 

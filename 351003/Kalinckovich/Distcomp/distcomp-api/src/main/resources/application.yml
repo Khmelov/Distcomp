@@ -1,6 +1,8 @@
 server:
   port: 24110
 spring:
+  autoconfigure:
+    exclude: org.springframework.boot.cassandra.autoconfigure.CassandraAutoConfiguration
   datasource:
     url: jdbc:postgresql://localhost:${DB_PORT:5432}/${DB_NAME:distcomp}
     username: ${DB_USER:postgres}

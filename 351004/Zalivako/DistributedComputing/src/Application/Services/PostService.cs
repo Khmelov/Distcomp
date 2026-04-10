@@ -1,6 +1,8 @@
 ﻿using Application.DTOs.Requests;
 using Application.DTOs.Responses;
 using Application.Exceptions;
+using Application.Exceptions.Application;
+using Application.Exceptions.Persistance;
 using Application.Interfaces;
 using AutoMapper;
 using Core.Entities;
@@ -23,11 +25,20 @@ namespace Application.Services
         {
             Post postFromDto = _mapper.Map<Post>(createPostRequestTo);
 
-            Post createdPost = await _postRepository.AddAsync(postFromDto);
-
-            PostResponseTo dtoFromCreatedPost = _mapper.Map<PostResponseTo>(createdPost);
-
-            return dtoFromCreatedPost;
+            try
+            {
+                Post createdPost = await _postRepository.AddAsync(postFromDto);
+                PostResponseTo dtoFromCreatedPost = _mapper.Map<PostResponseTo>(createdPost);
+                return dtoFromCreatedPost;
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new PostAlreadyExistsException(ex.Message, ex);
+            }
+            catch (ForeignKeyViolationException ex)
+            {
+                throw new ReferenceException(ex.Message, ex);
+            }
         }
 
         public async Task DeletePost(PostRequestTo deletePostRequestTo)
