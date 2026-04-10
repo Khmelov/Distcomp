@@ -1,8 +1,22 @@
 services:
+  cassandra:
+    image: cassandra:4.1
+    container_name: distcomp-cassandra
+    ports:
+      - "9042:9042"
+    volumes:
+      - ./discussion/init.cql:/docker-entrypoint-initdb.d/init.cql
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    networks:
+      - distcomp-net
+
   postgres:
     image: postgres:15
-    platform: linux/amd64
-    container_name: rest-api-postgres
+    container_name: distcomp-postgres
     environment:
       POSTGRES_DB: distcomp
       POSTGRES_USER: postgres
@@ -10,31 +24,49 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      - postgres_data:/var/lib/postgresql/data
+      - ./publisher/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - distcomp-net
 
-  php:
-    build: .
-    platform: linux/amd64
-    container_name: rest-api-php
+  publisher:
+    build: ./publisher
+    container_name: distcomp-publisher
     ports:
       - "24110:24110"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: distcomp
       DB_USER: postgres
       DB_PASS: postgres
+      DISCUSSION_URL: http://discussion:24130
+    networks:
+      - distcomp-net
 
-  tests:
-    image: khmelov/distcomp:latest
-    platform: linux/amd64
-    container_name: rest-api-tests
+  discussion:
+    build: ./discussion
+    container_name: distcomp-discussion
     ports:
-      - "24100:24100"
+      - "24130:24130"
     depends_on:
-      - php
-volumes:
-  postgres_data:
+      cassandra:
+        condition: service_healthy
+    environment:
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: 9042
+      CASSANDRA_KEYSPACE: distcomp
+    networks:
+      - distcomp-net
+
+networks:
+  distcomp-net:
+    driver: bridge
+    name: distcomp-net

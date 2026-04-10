@@ -57,7 +57,12 @@ class TweetRepository extends AbstractRepository {
         $stmt = $this->db->prepare("SELECT id, editor_id, title, content FROM {$this->table} WHERE id = :id");
         $stmt->execute(['id' => $id]);
         $result = $stmt->fetch();
-        return $result ?: null;  // Возвращаем null, если ничего не найдено
+        if ($result) {
+            // Преобразуем editor_id в editorId
+            $result['editorId'] = $result['editor_id'];
+            unset($result['editor_id']);
+        }
+        return $result ?: null;
     }
     public function attachMarker(int $tweetId, int $markerId): void {
         $stmt = $this->db->prepare(

@@ -17,19 +17,24 @@ class TweetService {
         $this->editorRepository = $editorRepo;
         $this->markerService = $markerService;
     }
+    public function getAll(): array {
+        $tweets = $this->repository->findAll();
 
+        // Конвертируем editor_id в editorId для каждого твита
+        foreach ($tweets as &$tweet) {
+            if (isset($tweet['editor_id'])) {
+                $tweet['editorId'] = $tweet['editor_id'];
+                unset($tweet['editor_id']);
+            }
+        }
+
+        return $tweets;
+    }
     public function getById(int $id): array {
         $tweet = $this->repository->findById($id);
         if (!$tweet) {
             throw new NotFoundException('Tweet', $id);
         }
-
-        // Конвертируем editor_id в editorId
-        if (isset($tweet['editor_id'])) {
-            $tweet['editorId'] = $tweet['editor_id'];
-            unset($tweet['editor_id']);
-        }
-
         return $tweet;
     }
 

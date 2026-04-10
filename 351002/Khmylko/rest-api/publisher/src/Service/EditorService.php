@@ -32,7 +32,13 @@ class EditorService {
         }
         return $editors;
     }
-
+    public function getAll(): array {
+        $editors = $this->repo->findAll();
+        foreach ($editors as &$editor) {
+            unset($editor['password']);
+        }
+        return $editors;
+    }
     public function create(array $data): array {
         if (empty($data['login']) || strlen($data['login']) < 2 || strlen($data['login']) > 64) {
             throw new ValidationException("Login must be 2-64 characters");

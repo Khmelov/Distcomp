@@ -11,7 +11,7 @@ class NoticeController {
     }
 
     public function getAll(): array {
-        return $this->service->getAll();
+        return $this->service->findAll();
     }
 
     public function getById(int $id): array {

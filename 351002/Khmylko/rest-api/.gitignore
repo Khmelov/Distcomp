@@ -63,7 +63,7 @@ dist/
 *.phar
 
 # Project specific
-init.sql
+publisher/init.sql
 dump.sql
 *.dump
 
