@@ -53,7 +53,16 @@ class MarkerService {
         $this->findById($id);
         $this->repository->delete($id);
     }
+    public function findOrCreateByName(string $name): array {
+        // Ищем существующий маркер
+        $marker = $this->repository->findByName($name);
+        if ($marker) {
+            return $marker;
+        }
 
+        // Создаём новый
+        return $this->create(['name' => $name]);
+    }
     public function getById(int $id): array {
         return $this->findById($id);
     }

@@ -11,13 +11,15 @@ abstract class AbstractRepository {
     public function __construct() {
         $this->db = Database::getConnection();
     }
-
+    protected function getTableName(): string {
+        return $this->table;  // Без схемы
+    }
     public function findById(int $id) {
         $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE id = :id");
         $stmt->execute(['id' => $id]);
-        return $stmt->fetch();
+        $result = $stmt->fetch();
+        return $result ?: null;  // Возвращаем null вместо false
     }
-
     public function findAll(array $filters = [], string $sortBy = 'id', string $order = 'ASC', int $page = 1, int $limit = 10): array {
         $offset = ($page - 1) * $limit;
         $sql = "SELECT * FROM {$this->table}";

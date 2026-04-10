@@ -32,21 +32,35 @@ class NoticeService {
     }
 
     public function create(array $data): array {
-
-        // camelCase → snake_case
-        $data['tweet_id'] = $data['tweet_id'] ?? $data['tweetId'] ?? null;
-
-        if (!$data['tweet_id']) {
-            throw new ValidationException("tweetId required");
+        // Конвертируем tweetId в tweet_id
+        if (isset($data['tweetId'])) {
+            $data['tweet_id'] = $data['tweetId'];
         }
 
-        if (!$this->tweetRepository->findById($data['tweet_id'])) {
-            throw new ValidationException("Tweet not found");
+
+        // content должен быть от 4 до 2048 символов
+        if (empty($data['content']) || strlen($data['content']) < 4 || strlen($data['content']) > 2048) {
+            throw new ValidationException("Content must be 4-2048 characters");
+        }
+
+        if (empty($data['tweet_id'])) {
+            throw new ValidationException("tweetId is required");
+        }
+
+        // Проверка существования твита
+        $tweet = $this->tweetRepository->findById($data['tweet_id']);
+        if (!$tweet) {
+            throw new NotFoundException('Tweet', $data['tweet_id']);
         }
 
         $notice = $this->repository->create($data);
 
-        $notice = $this->map($notice);
+        // Конвертируем tweet_id обратно в tweetId
+        if (isset($notice['tweet_id'])) {
+            $notice['tweetId'] = $notice['tweet_id'];
+            unset($notice['tweet_id']);
+        }
+
         return $notice;
     }
 

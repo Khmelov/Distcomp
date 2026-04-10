@@ -21,7 +21,8 @@ class Database {
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 ]);
-                self::$connection->exec("SET search_path TO distcomp");
+
+                // self::$connection->exec("SET search_path TO distcomp");
             } catch (PDOException $e) {
                 die(json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]));
             }

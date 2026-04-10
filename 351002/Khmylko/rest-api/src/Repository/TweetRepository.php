@@ -27,7 +27,15 @@ class TweetRepository extends AbstractRepository {
 
         return $result;
     }
+    public function delete(int $id): void {
+        // Сначала удаляем связи с маркерами
+        $stmt = $this->db->prepare("DELETE FROM tbl_tweet_marker WHERE tweet_id = :tweet_id");
+        $stmt->execute(['tweet_id' => $id]);
 
+        // Потом удаляем сам твит
+        $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+    }
     public function update(int $id, array $data): array {
         $sql = "UPDATE {$this->table} SET title = :title, content = :content, 
                 modified = NOW() WHERE id = :id 
@@ -40,16 +48,27 @@ class TweetRepository extends AbstractRepository {
         ]);
         return $stmt->fetch();
     }
-
+    public function findByEditorIdAndTitle(int $editorId, string $title): ?array {
+        $stmt = $this->db->prepare("SELECT id, editor_id, title, content FROM {$this->table} WHERE editor_id = :editor_id AND title = :title");
+        $stmt->execute(['editor_id' => $editorId, 'title' => $title]);
+        return $stmt->fetch() ?: null;
+    }
     public function findById(int $id): ?array {
         $stmt = $this->db->prepare("SELECT id, editor_id, title, content FROM {$this->table} WHERE id = :id");
         $stmt->execute(['id' => $id]);
         $result = $stmt->fetch();
-        if ($result && isset($result['editor_id'])) {
-            $result['editorId'] = $result['editor_id'];
-        }
-        return $result;
+        return $result ?: null;  // Возвращаем null, если ничего не найдено
     }
+    public function attachMarker(int $tweetId, int $markerId): void {
+        $stmt = $this->db->prepare(
+            "INSERT INTO tbl_tweet_marker (tweet_id, marker_id) VALUES (:tweet_id, :marker_id) ON CONFLICT DO NOTHING"
+        );
+        $stmt->execute([
+            'tweet_id' => $tweetId,
+            'marker_id' => $markerId
+        ]);
+    }
+
 
     public function findAll(array $filters = [], string $sortBy = 'id', string $order = 'ASC', int $page = 1, int $limit = 10): array {
         $offset = ($page - 1) * $limit;

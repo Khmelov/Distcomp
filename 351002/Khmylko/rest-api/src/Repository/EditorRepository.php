@@ -17,7 +17,11 @@ class EditorRepository extends AbstractRepository {
         ]);
         return $stmt->fetch();
     }
-
+    public function findByLogin(string $login): ?array {
+        $stmt = $this->db->prepare("SELECT id, login, firstname, lastname FROM {$this->table} WHERE login = :login");
+        $stmt->execute(['login' => $login]);
+        return $stmt->fetch() ?: null;
+    }
     public function update(int $id, array $data): array {
         $sql = "UPDATE {$this->table} SET login = :login, firstname = :firstname, 
             lastname = :lastname, modified = NOW() WHERE id = :id 

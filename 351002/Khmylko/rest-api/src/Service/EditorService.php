@@ -1,6 +1,7 @@
 <?php
 namespace App\Service;
 
+use App\Exception\ConflictException;
 use App\Repository\EditorRepository;
 use App\Exception\ApiException;
 use App\Exception\ValidationException;
@@ -33,7 +34,29 @@ class EditorService {
     }
 
     public function create(array $data): array {
-        $this->validate($data);
+        if (empty($data['login']) || strlen($data['login']) < 2 || strlen($data['login']) > 64) {
+            throw new ValidationException("Login must be 2-64 characters");
+        }
+
+        // Валидация пароля
+        if (empty($data['password']) || strlen($data['password']) < 8 || strlen($data['password']) > 128) {
+            throw new ValidationException("Password must be 8-128 characters");
+        }
+
+        // Валидация firstname
+        if (empty($data['firstname']) || strlen($data['firstname']) < 2 || strlen($data['firstname']) > 64) {
+            throw new ValidationException("Firstname must be 2-64 characters");
+        }
+
+        // Валидация lastname
+        if (empty($data['lastname']) || strlen($data['lastname']) < 2 || strlen($data['lastname']) > 64) {
+            throw new ValidationException("Lastname must be 2-64 characters");
+        }
+
+        $existing = $this->repo->findByLogin($data['login']);
+        if ($existing) {
+            throw new ConflictException("Login '{$data['login']}' already exists");
+        }
 
         // Хешируем пароль
         $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);

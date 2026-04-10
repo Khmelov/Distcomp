@@ -1,4 +1,16 @@
 <?php
+// ========== CORS ЗАГОЛОВКИ ==========
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Content-Type: application/json');
+
+// Обработка preflight OPTIONS запроса
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\Exception\ApiException;
@@ -11,10 +23,8 @@ use App\Service\TweetService;
 use App\Service\MarkerService;
 use App\Service\NoticeService;
 
-header('Content-Type: application/json');
-
 try {
-    // Инициализация репозиториев (используем PDO, а не InMemory)
+    // Инициализация репозиториев
     $editorRepo = new EditorRepository();
     $tweetRepo = new TweetRepository();
     $markerRepo = new MarkerRepository();
@@ -22,7 +32,7 @@ try {
 
     $services = [
         'editors' => new EditorService($editorRepo),
-        'tweets'  => new TweetService($tweetRepo, $editorRepo),
+        'tweets'  => new TweetService($tweetRepo, $editorRepo, new MarkerService($markerRepo)),
         'markers' => new MarkerService($markerRepo),
         'notices' => new NoticeService($noticeRepo, $tweetRepo)
     ];
@@ -51,7 +61,6 @@ try {
             if ($id) {
                 $out = $service->getById($id);
             } else {
-                // Пагинация и сортировка из query параметров
                 $page = (int)($_GET['page'] ?? 1);
                 $limit = (int)($_GET['limit'] ?? 10);
                 $sort = $_GET['sort'] ?? 'id';

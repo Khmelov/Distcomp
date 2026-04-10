@@ -60,4 +60,9 @@ class MarkerRepository extends AbstractRepository {
         $stmt->execute();
         return $stmt->fetchAll();
     }
+    public function findByName(string $name): ?array {
+        $stmt = $this->db->prepare("SELECT id, name FROM {$this->table} WHERE name = :name");
+        $stmt->execute(['name' => $name]);
+        return $stmt->fetch() ?: null;
+    }
 }
