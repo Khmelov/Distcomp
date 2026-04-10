@@ -19,8 +19,20 @@
               id bigint,
               country text,
               content text,
+              state text,
               PRIMARY KEY ((tweet_id), id)
             );
+        </sql>
+    </changeSet>
+
+    <changeSet id="3" author="assistant">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists keyspaceName="distcomp" tableName="tbl_note" columnName="state"/>
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE distcomp.tbl_note ADD state text;
         </sql>
     </changeSet>
 </databaseChangeLog>

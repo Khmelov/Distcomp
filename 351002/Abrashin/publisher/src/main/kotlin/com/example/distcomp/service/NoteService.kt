@@ -1,26 +1,25 @@
 package com.example.distcomp.service
 
-import com.example.distcomp.client.DiscussionClient
 import com.example.distcomp.dto.request.NoteRequestTo
 import com.example.distcomp.dto.response.NoteResponseTo
 import org.springframework.stereotype.Service
 
 @Service
 class NoteService(
-    private val discussionClient: DiscussionClient
+    private val noteCommandService: NoteCommandService
 ) {
-    fun create(request: NoteRequestTo): NoteResponseTo = discussionClient.create(request)
+    fun create(request: NoteRequestTo): NoteResponseTo = noteCommandService.create(request)
 
-    fun getById(id: Long): NoteResponseTo = discussionClient.getById(id)
+    fun getById(id: Long): NoteResponseTo = noteCommandService.getById(id)
 
     fun getAll(page: Int, size: Int, sort: Array<String>): List<NoteResponseTo> =
-        discussionClient.getAll(page, size, sort)
+        noteCommandService.getAll(page, size, sort)
 
-    fun put(id: Long, request: NoteRequestTo): NoteResponseTo = discussionClient.update(id, request)
+    fun put(id: Long, request: NoteRequestTo): NoteResponseTo = noteCommandService.put(id, request)
 
-    fun patch(id: Long, request: NoteRequestTo): NoteResponseTo = discussionClient.patch(id, request)
+    fun patch(id: Long, request: NoteRequestTo): NoteResponseTo = noteCommandService.patch(id, request)
 
-    fun delete(id: Long) = discussionClient.delete(id)
+    fun delete(id: Long) = noteCommandService.delete(id)
 
-    fun getNotesByTweetId(tweetId: Long): List<NoteResponseTo> = discussionClient.getByTweetId(tweetId)
+    fun getNotesByTweetId(tweetId: Long): List<NoteResponseTo> = noteCommandService.getByTweetId(tweetId)
 }

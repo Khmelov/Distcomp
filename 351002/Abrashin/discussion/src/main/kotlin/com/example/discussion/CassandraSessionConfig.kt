@@ -37,9 +37,19 @@ class CassandraSessionConfig(
                             "id bigint, " +
                             "country text, " +
                             "content text, " +
+                            "state text, " +
                             "PRIMARY KEY ((tweet_id), id))"
                     ).setTimeout(Duration.ofSeconds(15)).build()
                 )
+                val keyspaceId = CqlIdentifier.fromCql(keyspace)
+                val table = bootstrapSession.metadata.keyspaces[keyspaceId]?.tables?.get(CqlIdentifier.fromCql("tbl_note"))
+                if (table?.columns?.containsKey(CqlIdentifier.fromCql("state")) != true) {
+                    bootstrapSession.execute(
+                        SimpleStatement.builder("ALTER TABLE $keyspace.tbl_note ADD state text")
+                            .setTimeout(Duration.ofSeconds(15))
+                            .build()
+                    )
+                }
             }
 
         return CqlSession.builder()

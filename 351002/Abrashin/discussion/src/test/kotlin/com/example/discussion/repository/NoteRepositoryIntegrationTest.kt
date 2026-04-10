@@ -33,8 +33,8 @@ class NoteRepositoryIntegrationTest {
 
     @Test
     fun `stores and loads notes by tweet partition key`() {
-        repository.save(NoteEntity(NoteKey(tweetId = 99, id = 1), "BY", "first"))
-        repository.save(NoteEntity(NoteKey(tweetId = 99, id = 2), "BY", "second"))
+        repository.save(NoteEntity(NoteKey(tweetId = 99, id = 1), "BY", "first", com.example.notecontracts.NoteState.APPROVE))
+        repository.save(NoteEntity(NoteKey(tweetId = 99, id = 2), "BY", "second", com.example.notecontracts.NoteState.APPROVE))
 
         val notes = repository.findByKeyTweetId(99)
 
@@ -54,7 +54,7 @@ class NoteRepositoryIntegrationTest {
                 )
                 session.execute(
                     SimpleStatement.builder(
-                        "CREATE TABLE IF NOT EXISTS distcomp.tbl_note (tweet_id bigint, id bigint, country text, content text, PRIMARY KEY ((tweet_id), id))"
+                        "CREATE TABLE IF NOT EXISTS distcomp.tbl_note (tweet_id bigint, id bigint, country text, content text, state text, PRIMARY KEY ((tweet_id), id))"
                     ).setTimeout(Duration.ofSeconds(10)).build()
                 )
             }

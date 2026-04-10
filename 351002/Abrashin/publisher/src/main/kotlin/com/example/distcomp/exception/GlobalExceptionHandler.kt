@@ -5,10 +5,10 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
-
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.client.RestClientResponseException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 
 @ControllerAdvice
 class GlobalExceptionHandler {
@@ -51,6 +51,24 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(ex.statusCode).body(ex.responseBodyAsString)
     }
 
+    @ExceptionHandler(RemoteDiscussionException::class)
+    fun handleRemoteDiscussion(ex: RemoteDiscussionException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity.status(ex.status).body(
+            ErrorResponse(ex.message ?: "Remote error", ex.remoteCode ?: ERR_INTERNAL)
+        )
+    }
+
+    @ExceptionHandler(NoteRequestTimeoutException::class)
+    fun handleNoteTimeout(ex: NoteRequestTimeoutException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+            .body(ErrorResponse(ex.message ?: "Note request timed out", ERR_SERVICE_UNAVAILABLE))
+    }
+
+    @ExceptionHandler(NoResourceFoundException::class)
+    fun handleNoResourceFound(ex: NoResourceFoundException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(ErrorResponse(ex.message ?: "Not Found", ERR_NOT_FOUND))
+    }
 
     @ExceptionHandler(Exception::class)
     fun handleGeneral(ex: Exception): ResponseEntity<ErrorResponse> {
@@ -62,6 +80,7 @@ class GlobalExceptionHandler {
         const val ERR_FORBIDDEN = 40301
         const val ERR_BAD_REQUEST = 40001
         const val ERR_VALIDATION = 40002
+        const val ERR_SERVICE_UNAVAILABLE = 50301
         const val ERR_INTERNAL = 50001
 
     }

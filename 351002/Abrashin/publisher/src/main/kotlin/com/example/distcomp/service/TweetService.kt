@@ -1,6 +1,5 @@
 package com.example.distcomp.service
 
-import com.example.distcomp.client.DiscussionClient
 import com.example.distcomp.dto.request.TweetRequestTo
 import com.example.distcomp.dto.response.TweetResponseTo
 import com.example.distcomp.dto.response.CreatorResponseTo
@@ -26,7 +25,7 @@ class TweetService(
     private val mapper: TweetMapper,
     private val creatorRepository: CreatorRepository,
     private val stickerRepository: StickerRepository,
-    private val discussionClient: DiscussionClient,
+    private val noteService: NoteService,
     private val creatorMapper: CreatorMapper,
     private val stickerMapper: StickerMapper
 ) {
@@ -124,7 +123,7 @@ class TweetService(
 
     fun getNotesByTweetId(id: Long): List<NoteResponseTo> {
         if (!repository.existsById(id)) throw NotFoundException("Tweet with id $id not found")
-        return discussionClient.getByTweetId(id)
+        return noteService.getNotesByTweetId(id)
     }
 
     fun delete(id: Long) {

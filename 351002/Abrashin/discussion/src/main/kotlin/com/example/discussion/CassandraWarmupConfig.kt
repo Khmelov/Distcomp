@@ -25,7 +25,7 @@ class CassandraWarmup(
             "SELECT * FROM $keyspace.tbl_note LIMIT 1",
             "SELECT * FROM $keyspace.tbl_note WHERE tweet_id = ?",
             "SELECT * FROM $keyspace.tbl_note WHERE id = ? ALLOW FILTERING",
-            "INSERT INTO $keyspace.tbl_note (tweet_id, id, country, content) VALUES (?, ?, ?, ?)",
+            "INSERT INTO $keyspace.tbl_note (tweet_id, id, country, content, state) VALUES (?, ?, ?, ?, ?)",
             "DELETE FROM $keyspace.tbl_note WHERE tweet_id = ? AND id = ?"
         )
 
