@@ -63,7 +63,7 @@ public class ReactionServiceImpl implements ReactionService {
         
         // Ждем ответа из Kafka
         try {
-            ReactionMessage response = responseManager.waitForResponse(savedReaction.getId(), 1);
+            ReactionMessage response = responseManager.waitForResponse(savedReaction.getId(), 3);
             if (response != null) {
                 // Обновляем статус в БД
                 savedReaction.setState(ReactionState.valueOf(response.getState()));
@@ -102,21 +102,35 @@ public class ReactionServiceImpl implements ReactionService {
     @Transactional
     public ReactionResponseTo update(ReactionRequestTo request) {
         Reaction reaction = reactionRepository.findById(request.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Reaction not found with id: " + request.getId()));
+                .orElseThrow(() -> new EntityNotFoundException("Reaction not found"));
         
         reaction.setContent(request.getContent());
-        reaction.setTweetId(request.getTweetId());
-        
         Reaction updated = reactionRepository.save(reaction);
+
+        // ОТПРАВЛЯЕМ В KAFKA ОБНОВЛЕНИЕ
+        reactionProducer.sendToInTopic(ReactionMessage.builder()
+                .id(updated.getId())
+                .tweetId(updated.getTweetId())
+                .content(updated.getContent())
+                .state(updated.getState().name())
+                .build());
+
         return reactionMapper.toResponseTo(updated);
     }
 
     @Override
     @Transactional
     public void deleteById(Long id) {
-        if (!reactionRepository.existsById(id)) {
-            throw new EntityNotFoundException("Reaction not found with id: " + id);
-        }
+        Reaction reaction = reactionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Reaction not found"));
+
+        // ОТПРАВЛЯЕМ В KAFKA СИГНАЛ УДАЛЕНИЯ
+        reactionProducer.sendToInTopic(ReactionMessage.builder()
+                .id(reaction.getId())
+                .tweetId(reaction.getTweetId())
+                .state("DELETE") // Указываем статус удаления
+                .build());
+
         reactionRepository.deleteById(id);
     }
 }

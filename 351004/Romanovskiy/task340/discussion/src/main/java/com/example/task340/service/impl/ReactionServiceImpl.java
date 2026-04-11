@@ -54,7 +54,7 @@ public class ReactionServiceImpl implements ReactionService {
                 .filter(r -> r.getId().equals(id))
                 .findFirst()
                 .map(reactionMapper::toResponse)
-                .orElseThrow(() -> new RuntimeException("Reaction not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Reaction not found with id: " + id));
     }
 
     @Override

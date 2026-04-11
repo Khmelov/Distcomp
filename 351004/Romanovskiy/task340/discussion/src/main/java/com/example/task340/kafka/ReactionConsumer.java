@@ -25,31 +25,53 @@ public class ReactionConsumer {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void consume(ReactionMessage message) {
-        log.info("Consumed message: id={}, tweetId={}, country={}", 
-                 message.getId(), message.getTweetId(), message.getCountry());
+        log.info("Consumed message: id={}, state={}", message.getId(), message.getState());
+
+        // 1. Обработка УДАЛЕНИЯ
+        if ("DELETE".equals(message.getState())) {
+            reactionRepository.findAll().stream()
+                    .filter(r -> r.getId().equals(message.getId()))
+                    .findFirst()
+                    .ifPresent(reactionRepository::delete);
+            log.info("Deleted reaction id={} from Cassandra", message.getId());
+            return;
+        }
+
+        // 2. Обработка СОЗДАНИЯ / ОБНОВЛЕНИЯ
+        String state = message.getState();
         
-        // Выполняем модерацию
-        String newState = performModeration(message);
-        message.setState(newState);
-        
-        // Сохраняем в базу данных
+        // Если пришло PENDING — значит это новая реакция, требующая модерации
+        if ("PENDING".equals(state)) {
+            state = performModeration(message);
+        }
+
+        // Ключ партиции в Cassandra не может быть null
+        String country = (message.getCountry() == null || message.getCountry().isEmpty()) 
+                         ? "Global" : message.getCountry();
+
         Reaction reaction = Reaction.builder()
                 .id(message.getId())
                 .tweetId(message.getTweetId())
-                .country(message.getCountry())
+                .country(country)
                 .content(message.getContent())
-                .state(newState)
+                .state(state)
                 .build();
-        
+
         reactionRepository.save(reaction);
-        log.info("Saved reaction with state={}", newState);
+        log.info("Saved/Updated reaction id={} in Cassandra with state={}", message.getId(), state);
         
-        // Отправляем результат обратно в publisher через out-topic
-        reactionProducer.sendToOutTopic(message);
+        // Отправляем результат обратно в Publisher только для новых реакций
+        if ("PENDING".equals(message.getState())) {
+            message.setState(state);
+            message.setCountry(country);
+            reactionProducer.sendToOutTopic(message);
+        }
     }
 
+    // ТОТ САМЫЙ МЕТОД, КОТОРОГО НЕ ХВАТАЛО
     private String performModeration(ReactionMessage message) {
-        // Простой алгоритм модерации на основе стоп-слов
+        if (message.getContent() == null) return ReactionState.APPROVE.name();
+        
         String[] stopWords = {"bad", "hate", "spam", "abuse"};
         String content = message.getContent().toLowerCase();
         
