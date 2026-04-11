@@ -6,7 +6,7 @@ class Tweet(Base):
     __table_args__ = {"schema": "distcomp"}
 
     id = Column(BigInteger, primary_key=True, index=True)
-    author_id = Column(BigInteger, ForeignKey("distcomp.tbl_author.id"), nullable=False)
+    author_id = Column(BigInteger, ForeignKey("distcomp.tbl_author.id", ondelete="CASCADE"), nullable=False)
     title = Column(String(64), nullable=False)
     content = Column(String(2048), nullable=False)
     created = Column(DateTime, nullable=False)
