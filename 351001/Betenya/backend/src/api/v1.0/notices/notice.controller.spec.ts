@@ -13,6 +13,7 @@ describe('NoticesController', () => {
     id: BigInt(1),
     content: 'Test notice content',
     articleId: BigInt(1),
+    state: 'APPROVE',
   };
 
   const mockNoticeRequest: NoticeRequestTo = {

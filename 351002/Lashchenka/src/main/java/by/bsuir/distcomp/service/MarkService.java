@@ -6,19 +6,21 @@ import by.bsuir.distcomp.entity.Mark;
 import by.bsuir.distcomp.exception.DuplicateException;
 import by.bsuir.distcomp.exception.ResourceNotFoundException;
 import by.bsuir.distcomp.mapper.MarkMapper;
-import by.bsuir.distcomp.repository.impl.InMemoryMarkRepository;
+import by.bsuir.distcomp.repository.MarkRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class MarkService {
 
-    private final InMemoryMarkRepository markRepository;
+    private final MarkRepository markRepository;
     private final MarkMapper markMapper;
 
-    public MarkService(InMemoryMarkRepository markRepository, MarkMapper markMapper) {
+    public MarkService(MarkRepository markRepository, MarkMapper markMapper) {
         this.markRepository = markRepository;
         this.markMapper = markMapper;
     }
@@ -32,12 +34,14 @@ public class MarkService {
         return markMapper.toResponseDto(saved);
     }
 
+    @Transactional(readOnly = true)
     public MarkResponseTo getById(Long id) {
         Mark entity = markRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mark with id " + id + " not found", 40409));
         return markMapper.toResponseDto(entity);
     }
 
+    @Transactional(readOnly = true)
     public List<MarkResponseTo> getAll() {
         return markRepository.findAll().stream()
                 .map(markMapper::toResponseDto)
@@ -45,14 +49,13 @@ public class MarkService {
     }
 
     public MarkResponseTo update(MarkRequestTo dto) {
-        if (!markRepository.existsById(dto.getId())) {
-            throw new ResourceNotFoundException("Mark with id " + dto.getId() + " not found", 40410);
-        }
+        Mark existing = markRepository.findById(dto.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Mark with id " + dto.getId() + " not found", 40410));
         if (markRepository.existsByNameAndIdNot(dto.getName(), dto.getId())) {
             throw new DuplicateException("Mark with name '" + dto.getName() + "' already exists", 40306);
         }
-        Mark entity = markMapper.toEntity(dto);
-        Mark updated = markRepository.update(entity);
+        markMapper.updateEntityFromDto(dto, existing);
+        Mark updated = markRepository.save(existing);
         return markMapper.toResponseDto(updated);
     }
 

@@ -1,4 +1,6 @@
-﻿using RestApiTask.Infrastructure.Exceptions;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using RestApiTask.Infrastructure.Exceptions;
 using RestApiTask.Models;
 
 namespace RestApiTask.Infrastructure;
@@ -30,17 +32,39 @@ public class ExceptionMiddleware
 
     private static Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
-        var (statusCode, subCode) = ex switch
+        var (statusCode, subCode, message) = ex switch
         {
-            NotFoundException => (StatusCodes.Status404NotFound, "01"),
-            ValidationException => (StatusCodes.Status400BadRequest, "01"),
-            _ => (StatusCodes.Status500InternalServerError, "00")
+            NotFoundException => (StatusCodes.Status404NotFound, "01", ex.Message),
+            ForbiddenException => (StatusCodes.Status403Forbidden, "01", ex.Message),
+            ValidationException => (StatusCodes.Status400BadRequest, "01", ex.Message),
+            DbUpdateException dbEx when IsUniqueViolation(dbEx) =>
+                (StatusCodes.Status403Forbidden, "01", "Entity already exists"),
+            DbUpdateException dbEx when IsForeignKeyViolation(dbEx) =>
+                (StatusCodes.Status403Forbidden, "01", "Invalid reference"),
+            _ => (StatusCodes.Status500InternalServerError, "00", ex.Message)
         };
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = statusCode;
 
-        var response = new ErrorResponse(ex.Message, $"{statusCode}{subCode}");
+        var response = new ErrorResponse(message, $"{statusCode}{subCode}");
         return context.Response.WriteAsJsonAsync(response);
+    }
+
+    private static bool IsUniqueViolation(DbUpdateException exception) =>
+        FindPostgresException(exception)?.SqlState == PostgresErrorCodes.UniqueViolation;
+
+    private static bool IsForeignKeyViolation(DbUpdateException exception) =>
+        FindPostgresException(exception)?.SqlState == PostgresErrorCodes.ForeignKeyViolation;
+
+    private static PostgresException? FindPostgresException(Exception? ex)
+    {
+        while (ex is not null)
+        {
+            if (ex is PostgresException pgEx) return pgEx;
+            ex = ex.InnerException;
+        }
+
+        return null;
     }
 }

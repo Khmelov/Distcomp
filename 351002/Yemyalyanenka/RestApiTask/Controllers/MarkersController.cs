@@ -1,9 +1,10 @@
-п»їusing Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using RestApiTask.Models.DTOs;
+using RestApiTask.Repositories;
 using RestApiTask.Services.Interfaces;
 using AutoMapper;
 
-namespace RestApiTask.Controllers;
+namespace RestApiTask.Controllers; 
 
 [ApiController]
 [Route("markers")]
@@ -19,8 +20,17 @@ public class MarkersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<MarkerResponseTo>>> GetAll() => Ok(await _service.GetAllAsync());
+    public async Task<ActionResult<IEnumerable<MarkerResponseTo>>> GetAll([FromQuery] QueryOptions? options)
+    {
+        // Если параметры запроса не переданы, принудительно устанавливаем options в null,
+        // чтобы сработала логика по умолчанию в MarkerService (PageSize = 200)
+        if (Request.Query.Count == 0)
+        {
+            options = null;
+        }
 
+        return Ok(await _service.GetAllAsync(options));
+    }
     [HttpGet("{id}")]
     public async Task<ActionResult<MarkerResponseTo>> GetById(long id) => Ok(await _service.GetByIdAsync(id));
 
@@ -28,7 +38,7 @@ public class MarkersController : ControllerBase
     public async Task<ActionResult<MarkerResponseTo>> Create([FromBody] MarkerRequestTo request)
     {
         var result = await _service.CreateAsync(request);
-        return StatusCode(201, result);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpPut]
