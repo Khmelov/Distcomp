@@ -1,4 +1,5 @@
 using ArticleHouse.DAO.Models;
+using Additions.DAO;
 
 namespace ArticleHouse.DAO.Interfaces;
 

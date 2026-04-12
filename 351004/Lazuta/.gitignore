@@ -659,4 +659,5 @@ ssl/
 
 
 # /config
-/tools
+tools/
+
