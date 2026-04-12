@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	kafkacontroller "labs/discussion/internal/controller/kafka"
+	kafkarepository "labs/discussion/internal/repository/kafka"
+	kafkaservice "labs/discussion/internal/service/kafka"
 	"log"
 	"net/http"
 	"os"
@@ -56,6 +59,10 @@ func (a *App) Run() error {
 	services := service.New(repos)
 	controllers := controller.New(services)
 
+	kafkaRepository := kafkarepository.NewReplyRepository(a.cfg.Brokers)
+	kafkaService := kafkaservice.NewService(repos, kafkaRepository)
+	kafkaController := kafkacontroller.NewConsumerController(a.cfg.Brokers, kafkaService)
+
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(middleware.RequestLogger())
@@ -81,13 +88,19 @@ func (a *App) Run() error {
 		}
 	}()
 
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		log.Printf("Starting kafka server on %s", a.cfg.ServerPort)
+		kafkaController.Start(ctx)
+	}()
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
+	cancel()
 
 	log.Println("Shutting down server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
