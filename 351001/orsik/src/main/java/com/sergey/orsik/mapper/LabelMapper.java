@@ -3,12 +3,31 @@ package com.sergey.orsik.mapper;
 import com.sergey.orsik.dto.request.LabelRequestTo;
 import com.sergey.orsik.dto.response.LabelResponseTo;
 import com.sergey.orsik.entity.Label;
-import org.mapstruct.Mapper;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface LabelMapper {
+import java.util.HashSet;
 
-    Label toEntity(LabelRequestTo request);
+@Component
+public class LabelMapper {
 
-    LabelResponseTo toResponse(Label entity);
+    public Label toEntity(LabelRequestTo request) {
+        if (request == null) {
+            return null;
+        }
+        return new Label(
+                request.getId(),
+                request.getName(),
+                new HashSet<>()
+        );
+    }
+
+    public LabelResponseTo toResponse(Label entity) {
+        if (entity == null) {
+            return null;
+        }
+        return new LabelResponseTo(
+                entity.getId(),
+                entity.getName()
+        );
+    }
 }

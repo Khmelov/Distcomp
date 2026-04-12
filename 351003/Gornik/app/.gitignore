@@ -1,0 +1,26 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Environments & Dependencies ---
+.venv/
+env/
+venv/
+ENV/
+# uv создает эти файлы, их обычно не пушат, если не требуется иное
+.python-version
+
+# --- Environment Variables (СЕКРЕТЫ) ---
+.env
+.env.*
+!.env.example
+
+# --- IDE (PyCharm / VS Code) ---
+.idea/
+.vscode/
+*.swp
+*.swo

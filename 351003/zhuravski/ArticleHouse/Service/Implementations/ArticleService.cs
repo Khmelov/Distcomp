@@ -1,26 +1,34 @@
-using ArticleHouse.DAO;
+using System.Text.Json;
+using Additions.Service;
+using Additions.Service.EventService.Interfaces;
+using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.DTOs;
-using ArticleHouse.Service.Exceptions;
 using ArticleHouse.Service.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using CommonAPI.Service.Events;
 
 namespace ArticleHouse.Service.Implementations;
 
-public class ArticleService : Service, IArticleService
+public class ArticleService : BasicService, IArticleService
 {
-    private readonly ApplicationContext db;
-    private readonly IMarkService markService;
+    private readonly IArticleDAO dao;
+    private readonly IArticleMarkDAO m2mDAO;
+    private readonly IMarkDAO markDAO;
+    private readonly IEventProducerService producerService;
+    private readonly string eventTopic;
 
-    public ArticleService(ApplicationContext db, IMarkService markService)
+    public ArticleService(IArticleDAO dao, IArticleMarkDAO m2mDAO, IMarkDAO markDAO, IEventProducerService producerService, IConfiguration configuration)
     {
-        this.db = db;
-        this.markService = markService;
+        this.dao = dao;
+        this.m2mDAO = m2mDAO;
+        this.markDAO = markDAO;
+        this.producerService = producerService;
+        eventTopic = configuration["Kafka:SendTopic"] ?? "default-topic";
     }
 
     public async Task<ArticleResponseDTO[]> GetAllArticlesAsync()
     {
-        ArticleModel[] models = await db.Articles.ToArrayAsync();
+        ArticleModel[] models = await InvokeDAOMethod(() => dao.GetAllAsync());
         return [.. models.Select(MakeResponseFromModel)];
     }
 
@@ -30,63 +38,47 @@ public class ArticleService : Service, IArticleService
         long[]? markIds = null;
         if (null != dto.Marks)
         {
-            markIds = await markService.ReserveMarkIdsByNamesAsync(dto.Marks);
+            markIds = await InvokeDAOMethod(() => markDAO.ReserveIdsByNamesAsync(dto.Marks));
         }
         ArticleModel model = MakeModelFromRequest(dto);
-        await db.Articles.AddAsync(model);
+        ArticleModel result = await InvokeDAOMethod(() => dao.AddNewAsync(model));
         
         if (null != markIds) {
-            foreach (long markId in markIds)
-            {
-                model.ArticleMarks.Add(new ArticleMark
-                {
-                    Article = model,
-                    MarkId = markId
-                });
-            }
+            await InvokeDAOMethod(() => m2mDAO.LinkArticleWithMarksAsync(result.Id, markIds));
         }
-        await InvokeDAOMethod(() => db.SaveChangesAsync());
 
-        return MakeResponseFromModel(model);
+        return MakeResponseFromModel(result);
     }
 
     public async Task<ArticleResponseDTO> GetArticleByIdAsync(long id)
     {
-        ArticleModel? model = await db.Articles.FirstOrDefaultAsync(o => o.Id == id);
-        if (null == model)
-        {
-            throw new ServiceObjectNotFoundException();
-        }
+        ArticleModel model = await InvokeDAOMethod(() => dao.GetByIdAsync(id));
         return MakeResponseFromModel(model);
     }
 
     public async Task DeleteArticleAsync(long id)
     {
         //Какой богомерзкий API.
-        ArticleModel? model = await db.Articles.Include(a => a.ArticleMarks).FirstOrDefaultAsync(o => o.Id == id);
-        if (null == model)
+        var result = await InvokeDAOMethod(() => dao.GetByIdWithMarksAsync(id));
+        long[] leftMarkIds = result.Item2;
+        await InvokeDAOMethod(async () =>
         {
-            throw new ServiceObjectNotFoundException();
-        }
-        long[] leftMarkIds = [.. model.ArticleMarks.Select(m => m.MarkId)];
-        db.Articles.Remove(model);
-        await InvokeDAOMethod(() => db.SaveChangesAsync());
-        await markService.ReleaseLeftMarksByIdsAsync(leftMarkIds);
+            await dao.DeleteAsync(id);
+            await producerService.ProduceEventAsync(eventTopic, new EventMessage()
+            {
+                Operation = EventNames.ARTICLE_DELETED,
+                Payload = JsonSerializer.Serialize(id)
+            });
+            await markDAO.ReleaseByIdsAsync(leftMarkIds);
+        });
     }
 
     public async Task<ArticleResponseDTO> UpdateArticleByIdAsync(long id, ArticleRequestDTO dto)
     {
-        if (null == dto.Id)
-        {
-            throw new ServiceException();
-        }
-        ArticleModel? model = await db.Articles.FirstOrDefaultAsync(o => o.Id == dto.Id);
-        if (null == model) {
-            throw new ServiceObjectNotFoundException();
-        }
-        ShapeModelFromRequest(ref model, dto);
-        await InvokeDAOMethod(() => db.SaveChangesAsync());
-        return MakeResponseFromModel(model);
+        ArticleModel model = MakeModelFromRequest(dto);
+        model.Id = id;
+        ArticleModel result = await InvokeDAOMethod(() => dao.UpdateAsync(model));
+        return MakeResponseFromModel(result);
     }
 
     private static ArticleModel MakeModelFromRequest(ArticleRequestDTO dto)

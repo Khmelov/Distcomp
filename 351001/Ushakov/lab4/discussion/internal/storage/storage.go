@@ -1,0 +1,34 @@
+package storage
+
+import (
+	"fmt"
+
+	"github.com/Khmelov/Distcomp/351001/Ushakov/labX/discussion/internal/storage/cassandra/message"
+	"github.com/Khmelov/Distcomp/351001/Ushakov/labX/discussion/pkg/cassandra"
+	"github.com/gocql/gocql"
+)
+
+type repository struct {
+	session *gocql.Session
+
+	message.PostRepo
+}
+
+func New(cfg cassandra.Config) (Repository, error) {
+	session, err := cassandra.Connect(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("new repository: %w", err)
+	}
+
+	repo := &repository{
+		session: session,
+
+		PostRepo: *message.New(session),
+	}
+
+	return repo, nil
+}
+
+func (r repository) Close() {
+	r.session.Close()
+}

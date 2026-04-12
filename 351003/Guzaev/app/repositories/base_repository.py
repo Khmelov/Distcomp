@@ -1,40 +1,28 @@
-from typing import Generic, TypeVar, Dict, List, Optional, Callable
+from sqlalchemy.orm import Session
+from typing import Generic, TypeVar, List, Optional
 
 T = TypeVar('T')
 
+class BaseRepository(Generic[T]):
+    def __init__(self, model: T):
+        self.model = model
 
-class InMemoryRepository(Generic[T]):
-    def __init__(self):
-        self._storage: Dict[int, T] = {}
-        self._counter = 1
-
-    def create(self, entity: T) -> T:
-        if hasattr(entity, 'id'):
-            entity.id = self._counter
-            self._counter += 1
-        self._storage[entity.id] = entity
+    def create(self, db: Session, entity: T) -> T:
+        db.add(entity)
+        db.commit()
+        db.refresh(entity)
         return entity
 
-    def get_all(self) -> List[T]:
-        return list(self._storage.values())
+    def get_all(self, db: Session) -> List[T]:
+        return db.query(self.model).all()
 
-    def get_by_id(self, id: int) -> Optional[T]:
-        return self._storage.get(id)
+    def get_by_id(self, db: Session, id: int) -> Optional[T]:
+        return db.query(self.model).filter(self.model.id == id).first()
 
-    def update(self, id: int, entity: T) -> Optional[T]:
-        if id in self._storage:
-            entity.id = id  # Убеждаемся, что ID сохраняется
-            self._storage[id] = entity
-            return entity
-        return None
-
-    def delete(self, id: int) -> bool:
-        if id in self._storage:
-            del self._storage[id]
+    def delete(self, db: Session, id: int) -> bool:
+        entity = self.get_by_id(db, id)
+        if entity:
+            db.delete(entity)
+            db.commit()
             return True
         return False
-
-
-    def find_by_condition(self, condition: Callable[[T], bool]) -> List[T]:
-        """Для кастомных фильтров (например, поиск по логину)"""
-        return [entity for entity in self._storage.values() if condition(entity)]
