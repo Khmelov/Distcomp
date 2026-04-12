@@ -2,14 +2,26 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class KafkaSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="KAFKA_")
+    model_config = SettingsConfigDict(env_prefix="kafka_")
 
     bootstrap_servers: str = Field(default=None)
     topic_in: str = Field(default=None)
     topic_out: str = Field(default=None)
 
+class RedisSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="redis_")
+
+    host: str = Field(default="")
+    port: int = Field(default="6379")
+    db: str = Field(default="")
+
+    @property
+    def get_url(self) -> str:
+        return f"redis://{self.host}:{self.port}/{self.db}"
+
+
 class PostgresSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="POSTGRES_")
+    model_config = SettingsConfigDict(env_prefix="postgres_")
 
     host: str = Field(default="localhost")
     port: int = Field(default=5432, ge=1, le=65535)
@@ -24,6 +36,7 @@ class PostgresSettings(BaseSettings):
 class Settings(BaseSettings):
     postgres: PostgresSettings = PostgresSettings()
     kafka: KafkaSettings = KafkaSettings()
+    redis: RedisSettings = RedisSettings()
     note_service_url: str = Field(default=None)
 
     DEBUG: bool = Field(default=True)
