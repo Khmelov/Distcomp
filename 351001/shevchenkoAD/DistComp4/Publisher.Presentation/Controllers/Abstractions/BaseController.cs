@@ -1,8 +1,8 @@
-﻿using Application.DTOs.Abstractions;
-using Application.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Publisher.Application.Services.Interfaces;
+using Shared.DTOs.Abstractions;
 
-namespace Presentation.Controllers.Abstractions;
+namespace Publisher.Presentation.Controllers.Abstractions;
 
 [ApiController]
 [Route("api/v1.0/[controller]")]
