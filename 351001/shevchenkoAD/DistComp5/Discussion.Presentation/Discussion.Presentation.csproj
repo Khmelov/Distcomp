@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AutoMapper" Version="16.1.1" />
+        <PackageReference Include="Confluent.Kafka" Version="2.14.0" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.25"/>
+        <PackageReference Include="StackExchange.Redis" Version="2.12.14" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Discussion.Application\Discussion.Application.csproj" />
+      <ProjectReference Include="..\Discussion.Domain\Discussion.Domain.csproj" />
+      <ProjectReference Include="..\Discussion.Infrastructure\Discussion.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>
