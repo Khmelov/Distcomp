@@ -5,8 +5,10 @@ using Publisher.Presentation.Controllers.Abstractions;
 
 namespace Publisher.Presentation.Controllers;
 
-public class AuthorsController : BaseController<AuthorRequestTo, AuthorResponseTo> {
+public class AuthorsController : BaseController<AuthorRequestTo, AuthorResponseTo>
+{
     public AuthorsController(IAuthorService service)
-        : base(service) {
+        : base(service)
+    {
     }
 }

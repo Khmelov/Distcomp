@@ -8,7 +8,7 @@ using Shared.DTOs.Abstractions;
 namespace Discussion.Application.Services.Abstractions;
 
 public abstract class BaseService<TEntity, TRequest, TResponse> : IService<TRequest, TResponse>
-    where TEntity : BaseEntity 
+    where TEntity : BaseEntity
     where TRequest : BaseRequestTo
     where TResponse : BaseResponseTo
 {
@@ -16,7 +16,8 @@ public abstract class BaseService<TEntity, TRequest, TResponse> : IService<TRequ
     protected readonly IRepository<TEntity> _repository;
 
     protected BaseService(IRepository<TEntity> repository,
-                          IMapper mapper) {
+        IMapper mapper)
+    {
         _repository = repository;
         _mapper = mapper;
     }
@@ -24,12 +25,14 @@ public abstract class BaseService<TEntity, TRequest, TResponse> : IService<TRequ
     protected abstract int NotFoundSubCode { get; }
     protected abstract string EntityName { get; }
 
-    public virtual async Task<IEnumerable<TResponse>> GetAllAsync() {
+    public virtual async Task<IEnumerable<TResponse>> GetAllAsync()
+    {
         var entities = await _repository.GetAllAsync();
         return _mapper.Map<IEnumerable<TResponse>>(entities);
     }
 
-    public virtual async Task<TResponse> GetByIdAsync(long id) {
+    public virtual async Task<TResponse> GetByIdAsync(long id)
+    {
         var entity = await _repository.GetByIdAsync(id);
         if (entity == null)
             ThrowNotFound(id);
@@ -37,7 +40,8 @@ public abstract class BaseService<TEntity, TRequest, TResponse> : IService<TRequ
         return _mapper.Map<TResponse>(entity);
     }
 
-    public virtual async Task<TResponse> CreateAsync(TRequest request) {
+    public virtual async Task<TResponse> CreateAsync(TRequest request)
+    {
         ValidateRequest(request);
 
         var entity = _mapper.Map<TEntity>(request);
@@ -49,16 +53,14 @@ public abstract class BaseService<TEntity, TRequest, TResponse> : IService<TRequ
         return _mapper.Map<TResponse>(createdEntity);
     }
 
-    public virtual async Task<TResponse> UpdateAsync(TRequest request) {
-        long id = request.Id ?? -1; 
-        
-        if (id < 0)
-        {
-            throw new RestException(400, NotFoundSubCode, "Invalid ID in request body");
-        }
-        
+    public virtual async Task<TResponse> UpdateAsync(TRequest request)
+    {
+        var id = request.Id ?? -1;
+
+        if (id < 0) throw new RestException(400, NotFoundSubCode, "Invalid ID in request body");
+
         ValidateRequest(request);
-        
+
         var existingEntity = await _repository.GetByIdAsync(id);
         if (existingEntity == null)
             ThrowNotFound(id);
@@ -72,7 +74,8 @@ public abstract class BaseService<TEntity, TRequest, TResponse> : IService<TRequ
         return _mapper.Map<TResponse>(updatedEntity);
     }
 
-    public virtual async Task<bool> DeleteAsync(long id) {
+    public virtual async Task<bool> DeleteAsync(long id)
+    {
         var isDeleted = await _repository.DeleteAsync(id);
         if (!isDeleted)
             ThrowNotFound(id);
@@ -81,13 +84,16 @@ public abstract class BaseService<TEntity, TRequest, TResponse> : IService<TRequ
 
     protected abstract void ValidateRequest(TRequest request);
 
-    protected virtual void BeforeCreate(TEntity entity) {
+    protected virtual void BeforeCreate(TEntity entity)
+    {
     }
 
-    protected virtual void BeforeUpdate(TEntity entity) {
+    protected virtual void BeforeUpdate(TEntity entity)
+    {
     }
 
-    protected void ThrowNotFound(long id) {
+    protected void ThrowNotFound(long id)
+    {
         throw new RestException(404, NotFoundSubCode, $"{EntityName} with id {id} not found");
     }
 }

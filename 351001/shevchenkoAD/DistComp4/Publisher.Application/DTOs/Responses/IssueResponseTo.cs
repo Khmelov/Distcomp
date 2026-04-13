@@ -6,23 +6,15 @@ namespace Publisher.Application.DTOs.Responses;
 
 public record IssueResponseTo : BaseResponseTo
 {
-    public IssueResponseTo() { }
+    [JsonPropertyName("authorId")] public long AuthorId { get; init; }
 
-    [JsonPropertyName("authorId")]
-    public long AuthorId { get; init; }
+    [JsonPropertyName("title")] public string Title { get; init; } = null!;
 
-    [JsonPropertyName("title")]
-    public string Title { get; init; } = null!;
+    [JsonPropertyName("content")] public string Content { get; init; } = null!;
 
-    [JsonPropertyName("content")]
-    public string Content { get; init; } = null!;
+    [JsonPropertyName("created")] public DateTime Created { get; init; }
 
-    [JsonPropertyName("created")]
-    public DateTime Created { get; init; }
+    [JsonPropertyName("modified")] public DateTime Modified { get; init; }
 
-    [JsonPropertyName("modified")]
-    public DateTime Modified { get; init; }
-    
-    [JsonPropertyName("comments")]
-    public List<CommentResponseTo>? Comments { get; set; } = new();
+    [JsonPropertyName("comments")] public List<CommentResponseTo>? Comments { get; set; } = new();
 }

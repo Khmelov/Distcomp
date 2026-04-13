@@ -28,24 +28,25 @@ public class CommentRepository : ICommentRepository
     {
         return await _mapper.FetchAsync<Comment>("WHERE issue_id = ?", issueId);
     }
-    
-        public async Task DeleteByIssueIdAsync(long issueId)
+
+    public async Task DeleteByIssueIdAsync(long issueId)
     {
         await _mapper.DeleteAsync<Comment>("WHERE issue_id = ?", issueId);
     }
 
     public async Task<Comment> CreateAsync(Comment entity)
     {
-        try 
+        try
         {
             await _mapper.InsertAsync(entity);
         }
         catch (Exception ex)
         {
-            
         }
+
         return entity;
     }
+
     public async Task<Comment?> UpdateAsync(Comment entity)
     {
         await _mapper.UpdateAsync(entity);
@@ -55,12 +56,10 @@ public class CommentRepository : ICommentRepository
     public async Task<bool> DeleteAsync(long id)
     {
         var existing = await _mapper.FirstOrDefaultAsync<Comment>("WHERE id = ? ALLOW FILTERING", id);
-        
+
         if (existing == null) return false;
-        
+
         await _mapper.DeleteAsync<Comment>("WHERE issue_id = ? AND id = ?", existing.IssueId, id);
         return true;
     }
-    
-
 }

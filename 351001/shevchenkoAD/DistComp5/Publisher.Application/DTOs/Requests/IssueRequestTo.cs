@@ -6,8 +6,6 @@ namespace Publisher.Application.DTOs.Requests;
 
 public record IssueRequestTo : BaseRequestTo
 {
-    public IssueRequestTo() { }
-
     [Required]
     [JsonPropertyName("authorId")]
     public long AuthorId { get; init; }
@@ -22,6 +20,5 @@ public record IssueRequestTo : BaseRequestTo
     [JsonPropertyName("content")]
     public string Content { get; init; } = null!;
 
-    [JsonPropertyName("labels")]
-    public List<string>? Labels { get; init; }
+    [JsonPropertyName("labels")] public List<string>? Labels { get; init; }
 }

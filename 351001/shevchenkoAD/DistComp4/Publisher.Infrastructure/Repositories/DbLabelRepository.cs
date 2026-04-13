@@ -5,5 +5,7 @@ namespace Publisher.Infrastructure.Repositories;
 
 public class DbLabelRepository : DbBaseRepository<Label>
 {
-    public DbLabelRepository(AppDbContext context) : base(context) { }
+    public DbLabelRepository(AppDbContext context) : base(context)
+    {
+    }
 }

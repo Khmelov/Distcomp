@@ -4,9 +4,14 @@ namespace Shared.DTOs.Abstractions;
 
 public abstract record BaseRequestTo
 {
-    [JsonPropertyName("id")]
-    public long? Id { get; init; }
+    protected BaseRequestTo()
+    {
+    }
 
-    protected BaseRequestTo() { }
-    protected BaseRequestTo(long? id) => Id = id;
-}   
+    protected BaseRequestTo(long? id)
+    {
+        Id = id;
+    }
+
+    [JsonPropertyName("id")] public long? Id { get; init; }
+}

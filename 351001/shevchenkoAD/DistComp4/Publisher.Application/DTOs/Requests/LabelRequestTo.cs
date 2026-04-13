@@ -6,8 +6,6 @@ namespace Publisher.Application.DTOs.Requests;
 
 public record LabelRequestTo : BaseRequestTo
 {
-    public LabelRequestTo() { }
-
     [Required]
     [StringLength(32, MinimumLength = 2)]
     [JsonPropertyName("name")]

@@ -7,8 +7,6 @@ namespace Shared.DTOs.Requests;
 
 public record CommentRequestTo : BaseRequestTo
 {
-    public CommentRequestTo() { }
-
     [Required]
     [JsonPropertyName("issueId")]
     public long IssueId { get; init; }
@@ -17,7 +15,6 @@ public record CommentRequestTo : BaseRequestTo
     [StringLength(2048, MinimumLength = 2)]
     [JsonPropertyName("content")]
     public string Content { get; init; } = null!;
-    
-    [JsonPropertyName("state")]
-    public CommentState? State { get; set; } 
+
+    [JsonPropertyName("state")] public CommentState? State { get; set; }
 }

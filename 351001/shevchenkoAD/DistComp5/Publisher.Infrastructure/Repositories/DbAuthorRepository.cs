@@ -5,5 +5,7 @@ namespace Publisher.Infrastructure.Repositories;
 
 public class DbAuthorRepository : DbBaseRepository<Author>
 {
-    public DbAuthorRepository(AppDbContext context) : base(context) { }
+    public DbAuthorRepository(AppDbContext context) : base(context)
+    {
+    }
 }

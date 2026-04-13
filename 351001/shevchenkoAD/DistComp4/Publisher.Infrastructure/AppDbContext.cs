@@ -1,5 +1,5 @@
-﻿using Publisher.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Publisher.Domain.Entities;
 
 namespace Publisher.Infrastructure;
 
@@ -8,20 +8,20 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
-    
+
     public DbSet<Author> Authors { get; set; } = null!;
     public DbSet<Issue> Issues { get; set; } = null!;
     public DbSet<Label> Labels { get; set; } = null!;
-    
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         modelBuilder.Entity<Issue>()
             .HasMany(i => i.Labels)
             .WithMany(l => l.Issues)
             .UsingEntity<Dictionary<string, object>>(
-                "tbl_issue_label", 
+                "tbl_issue_label",
                 j => j.HasOne<Label>()
                     .WithMany()
                     .HasForeignKey("label_id")
@@ -32,7 +32,7 @@ public class AppDbContext : DbContext
                     .OnDelete(DeleteBehavior.Cascade)
             )
             ;
-        
+
         modelBuilder.Entity<Author>()
             .HasIndex(a => a.Login)
             .IsUnique();
@@ -40,8 +40,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Label>()
             .HasIndex(l => l.Name)
             .IsUnique();
-        
-        
+
+
         modelBuilder.Entity<Author>().HasData(new Author
         {
             Id = 1,

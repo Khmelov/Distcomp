@@ -1,10 +1,10 @@
-﻿using System.Linq.Expressions;
-using Discussion.Domain.Abstractions;
+﻿using Discussion.Domain.Abstractions;
 using Discussion.Domain.Entities;
 
 namespace Discussion.Domain.Interfaces;
 
-public interface IRepository<T> where T : BaseEntity {
+public interface IRepository<T> where T : BaseEntity
+{
     Task<IEnumerable<T>> GetAllAsync();
 
     Task<T?> GetByIdAsync(long id);

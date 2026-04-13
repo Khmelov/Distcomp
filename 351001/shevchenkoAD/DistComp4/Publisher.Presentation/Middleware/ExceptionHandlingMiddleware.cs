@@ -1,22 +1,26 @@
 ﻿using System.Text.Json;
-using Publisher.Application.DTOs.Responses;
 using Publisher.Application.Exceptions;
 using Shared.DTOs.Responses;
 
 namespace Publisher.Presentation.Middleware;
 
-public class ExceptionHandlingMiddleware {
+public class ExceptionHandlingMiddleware
+{
     private readonly RequestDelegate _next;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next) {
+    public ExceptionHandlingMiddleware(RequestDelegate next)
+    {
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context) {
-        try {
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
+        {
             await _next(context);
         }
-        catch (RestException ex) {
+        catch (RestException ex)
+        {
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = ex.StatusCode;
 
@@ -27,7 +31,8 @@ public class ExceptionHandlingMiddleware {
             var json = JsonSerializer.Serialize(response);
             await context.Response.WriteAsync(json);
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = 500;
 

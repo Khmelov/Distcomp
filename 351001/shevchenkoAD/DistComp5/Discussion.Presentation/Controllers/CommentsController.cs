@@ -14,14 +14,14 @@ public class CommentsController : BaseController<CommentRequestTo, CommentRespon
     {
         _commentService = service;
     }
-    
+
     [HttpGet("issue/{issueId:long}")]
     public async Task<ActionResult<IEnumerable<CommentResponseTo>>> GetByIssueId(long issueId)
     {
         var result = await _commentService.GetByIssueIdAsync(issueId);
         return Ok(result);
     }
-    
+
     [HttpDelete("issue/{issueId:long}")]
     public async Task<IActionResult> DeleteByIssueId(long issueId)
     {

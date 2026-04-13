@@ -5,8 +5,5 @@ namespace Publisher.Application.DTOs.Responses;
 
 public record LabelResponseTo : BaseResponseTo
 {
-    public LabelResponseTo() { }
-
-    [JsonPropertyName("name")]
-    public string Name { get; init; } = null!;
+    [JsonPropertyName("name")] public string Name { get; init; } = null!;
 }

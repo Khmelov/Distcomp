@@ -5,8 +5,10 @@ using Publisher.Presentation.Controllers.Abstractions;
 
 namespace Publisher.Presentation.Controllers;
 
-public class LabelsController : BaseController<LabelRequestTo, LabelResponseTo> {
+public class LabelsController : BaseController<LabelRequestTo, LabelResponseTo>
+{
     public LabelsController(ILabelService service)
-        : base(service) {
+        : base(service)
+    {
     }
 }

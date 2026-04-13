@@ -1,43 +1,40 @@
 ﻿using AutoMapper;
-using Publisher.Domain.Entities;
-using Publisher.Domain.Interfaces;
 using Publisher.Application.DTOs.Requests;
 using Publisher.Application.DTOs.Responses;
 using Publisher.Application.Exceptions;
 using Publisher.Application.Services.Abstractions;
 using Publisher.Application.Services.Interfaces;
+using Publisher.Domain.Entities;
+using Publisher.Domain.Interfaces;
 using Shared.Interfaces;
 
 namespace Publisher.Application.Services;
 
-public class AuthorService : BaseService<Author, AuthorRequestTo, AuthorResponseTo>, IAuthorService {
+public class AuthorService : BaseService<Author, AuthorRequestTo, AuthorResponseTo>, IAuthorService
+{
     public AuthorService(IRepository<Author> repository,
-                         IMapper mapper,
-                         ICacheService cache)
-        : base(repository, mapper, cache) {
+        IMapper mapper,
+        ICacheService cache)
+        : base(repository, mapper, cache)
+    {
     }
-    
-    public override async Task<AuthorResponseTo> CreateAsync(AuthorRequestTo request) {
+
+    protected override int NotFoundSubCode => 15;
+
+    protected override string EntityName => "Author";
+
+    public override async Task<AuthorResponseTo> CreateAsync(AuthorRequestTo request)
+    {
         ValidateRequest(request);
-        
-        bool exists = await _repository.ExistsAsync(a => a.Login == request.Login);
-        if (exists)
-        {
-            throw new RestException(403, 16, $"Author with login '{request.Login}' already exists");
-        }
-        
+
+        var exists = await _repository.ExistsAsync(a => a.Login == request.Login);
+        if (exists) throw new RestException(403, 16, $"Author with login '{request.Login}' already exists");
+
         return await base.CreateAsync(request);
     }
 
-    protected override int NotFoundSubCode {
-        get { return 15; }
-    }
-
-    protected override string EntityName {
-        get { return "Author"; }
-    }
-
-    protected override void ValidateRequest(AuthorRequestTo req) {
+    protected override void ValidateRequest(AuthorRequestTo req)
+    {
         if (string.IsNullOrWhiteSpace(req.Login) || req.Login.Length < 2 || req.Login.Length > 64)
             throw new RestException(400, 11, "Login must be between 2 and 64 characters");
 

@@ -5,8 +5,10 @@ using Publisher.Presentation.Controllers.Abstractions;
 
 namespace Publisher.Presentation.Controllers;
 
-public class IssuesController : BaseController<IssueRequestTo, IssueResponseTo> {
+public class IssuesController : BaseController<IssueRequestTo, IssueResponseTo>
+{
     public IssuesController(IIssueService service)
-        : base(service) {
+        : base(service)
+    {
     }
 }

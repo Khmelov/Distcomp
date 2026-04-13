@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using Publisher.Domain.Abstractions;
 using Publisher.Domain.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace Publisher.Infrastructure.Abstractions;
 
@@ -36,10 +36,7 @@ public abstract class DbBaseRepository<T> : IRepository<T> where T : BaseEntity
     public virtual async Task<T?> UpdateAsync(T entity)
     {
         var tracked = _dbSet.Local.FirstOrDefault(e => e.Id == entity.Id);
-        if (tracked != null)
-        {
-            _context.Entry(tracked).State = EntityState.Detached;
-        }
+        if (tracked != null) _context.Entry(tracked).State = EntityState.Detached;
 
         _dbSet.Update(entity);
         await _context.SaveChangesAsync();
@@ -56,7 +53,8 @@ public abstract class DbBaseRepository<T> : IRepository<T> where T : BaseEntity
         return true;
     }
 
-    public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate) {
+    public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
+    {
         return await _dbSet.AnyAsync(predicate);
     }
 }

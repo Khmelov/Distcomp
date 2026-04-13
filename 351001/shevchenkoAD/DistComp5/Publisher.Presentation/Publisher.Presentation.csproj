@@ -8,15 +8,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="16.1.1" />
-        <PackageReference Include="Confluent.Kafka" Version="2.14.0" />
+        <PackageReference Include="AutoMapper" Version="16.1.1"/>
+        <PackageReference Include="Confluent.Kafka" Version="2.14.0"/>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.25"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.25">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
-        <PackageReference Include="StackExchange.Redis" Version="2.12.14" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11"/>
+        <PackageReference Include="StackExchange.Redis" Version="2.12.14"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2"/>
     </ItemGroup>
 
@@ -27,9 +27,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Publisher.Application\Publisher.Application.csproj" />
-      <ProjectReference Include="..\Publisher.Domain\Publisher.Domain.csproj" />
-      <ProjectReference Include="..\Publisher.Infrastructure\Publisher.Infrastructure.csproj" />
+        <ProjectReference Include="..\Publisher.Application\Publisher.Application.csproj"/>
+        <ProjectReference Include="..\Publisher.Domain\Publisher.Domain.csproj"/>
+        <ProjectReference Include="..\Publisher.Infrastructure\Publisher.Infrastructure.csproj"/>
     </ItemGroup>
 
 </Project>

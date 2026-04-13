@@ -6,8 +6,6 @@ namespace Publisher.Application.DTOs.Requests;
 
 public record AuthorRequestTo : BaseRequestTo
 {
-    public AuthorRequestTo() { }
-
     [Required]
     [StringLength(64, MinimumLength = 2)]
     [JsonPropertyName("login")]

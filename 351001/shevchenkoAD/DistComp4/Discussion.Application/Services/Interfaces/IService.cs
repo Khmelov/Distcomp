@@ -4,8 +4,8 @@ using Shared.DTOs.Responses;
 
 namespace Discussion.Application.Services.Interfaces;
 
-public interface IService<TRequest, TResponse> 
-    where TRequest : BaseRequestTo 
+public interface IService<TRequest, TResponse>
+    where TRequest : BaseRequestTo
     where TResponse : BaseResponseTo
 {
     Task<IEnumerable<TResponse>> GetAllAsync();

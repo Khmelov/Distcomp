@@ -9,10 +9,10 @@ public static class CassandraInitializer
         session.Execute(@"
             CREATE KEYSPACE IF NOT EXISTS distcomp 
             WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};");
-        
+
         session.ChangeKeyspace("distcomp");
 
-      
+
         session.Execute(@"
             CREATE TABLE IF NOT EXISTS tbl_comment (
                 issue_id bigint,
@@ -22,7 +22,7 @@ public static class CassandraInitializer
                 state text,  
                 PRIMARY KEY (issue_id, id)
             );");
-        
+
         session.Execute("CREATE INDEX IF NOT EXISTS ON tbl_comment (id);");
     }
 }

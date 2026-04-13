@@ -6,14 +6,16 @@ using Shared.Enums;
 
 namespace Discussion.Application.Services.Profiles;
 
-public class MappingProfile : Profile {
-    public MappingProfile() {
+public class MappingProfile : Profile
+{
+    public MappingProfile()
+    {
         CreateMap<CommentRequestTo, Comment>()
             .ForMember(dest => dest.State, opt => opt.MapFrom(src => src.State.ToString()));
 
-        
+
         CreateMap<Comment, CommentResponseTo>()
-            .ForMember(dest => dest.State, opt => opt.MapFrom(src => 
+            .ForMember(dest => dest.State, opt => opt.MapFrom(src =>
                 Enum.Parse<CommentState>(src.State)));
     }
 }
