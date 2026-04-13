@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Scalar.AspNetCore;
 using ServerApp;
 using ServerApp.Infrastructure;
+using ServerApp.Models.DTOs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers(options =>
 {
     options.Conventions.Add(new ApiPrefixConvention(new RouteAttribute("api/v1.0")));
+    options.Filters.Add<GlobalExceptionFilter>();
+});
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errorMsg = string.Join(" | ", context.ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage));
+
+        return new BadRequestObjectResult(new ErrorResponse(errorMsg, 40001));
+    };
 });
 
 builder.Services.AddOpenApi(); 
