@@ -41,9 +41,29 @@ builder.Services.AddControllers(options =>
         };
     });
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        // Просто удаляем все предопределенные сервера
+        // Браузер сам подставит текущий адрес (localhost:24110)
+        document.Servers.Clear();
+        return Task.CompletedTask;
+    });
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
+app.UseCors();
 
 if (app.Environment.IsDevelopment())
 {

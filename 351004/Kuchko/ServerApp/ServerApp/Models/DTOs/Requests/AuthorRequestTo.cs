@@ -3,6 +3,7 @@
 namespace ServerApp.Models.DTOs.Requests;
 
 public record AuthorRequestTo(
+    long? Id,
     [Required]
     [StringLength(64, MinimumLength = 2)]
     string Login,
