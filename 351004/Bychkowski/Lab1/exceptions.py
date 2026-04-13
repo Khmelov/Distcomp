@@ -17,7 +17,6 @@ async def app_exception_handler(request: Request, exc: AppError):
     )
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    # Формируем ошибку валидации в требуемом формате
     error_msg = "; ".join([f"{err['loc'][-1]}: {err['msg']}" for err in exc.errors()])
     return JSONResponse(
         status_code=400,

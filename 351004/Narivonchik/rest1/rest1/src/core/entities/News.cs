@@ -14,5 +14,8 @@ public class News : Entity
 
     // lookup object
     public Creator? Creator { get; set; }
-    public long[]? MarkIds { get; set; }
+    
+    public List<Mark>? Marks { get; set; } = [];
+
+    // public List<Note>? Notes { get; set; }
 }

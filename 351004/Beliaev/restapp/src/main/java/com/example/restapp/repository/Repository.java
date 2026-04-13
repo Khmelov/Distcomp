@@ -1,4 +1,4 @@
-package com.example.restapp.repository;
+package com.example.discussion.repository;
 
 import java.util.List;
 import java.util.Optional;
