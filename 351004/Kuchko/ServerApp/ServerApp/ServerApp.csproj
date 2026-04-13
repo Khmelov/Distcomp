@@ -10,6 +10,7 @@
     <ItemGroup>
 <!--        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />-->
         <!-- Официальный пакет от Microsoft для .NET 9 -->
+        <PackageReference Include="Mapster" Version="7.4.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
         <!-- Современная альтернатива Swagger UI -->
         <PackageReference Include="Scalar.AspNetCore" Version="1.2.45" />
@@ -22,9 +23,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Models\DTOs\Requests\" />
-      <Folder Include="Models\DTOs\Responses\" />
-      <Folder Include="Models\Entities\" />
       <Folder Include="Services\Implementations\" />
       <Folder Include="Services\Interfaces\" />
       <Folder Include="Services\Mapping\" />
