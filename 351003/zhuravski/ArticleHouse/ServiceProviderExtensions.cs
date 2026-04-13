@@ -1,3 +1,5 @@
+using Additions.Service.EventService.Implementations;
+using Additions.Service.EventService.Interfaces;
 using ArticleHouse.DAO.Implementations;
 using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.Service.Implementations;
@@ -17,15 +19,15 @@ static internal class ServiceProviderExtensions
         collection.AddScoped<IArticleDAO, DbArticleDAO>();
 
         collection.AddScoped<ICommentService, CommentService>();
-        collection.AddHttpClient<ICommentDAO, RestCommentDAO>(client =>
-        {
-            client.BaseAddress = new Uri("http://localhost:24130/");
-        });
 
         collection.AddScoped<IMarkService, MarkService>();
         collection.AddScoped<IMarkDAO, DbMarkDAO>();
 
         collection.AddScoped<IArticleMarkDAO, DbArticleMarkDAO>();
+
+        collection.AddSingleton<IEventOrchestratorService, EventOrchestratorService>();
+        collection.AddSingleton<IEventProducerService, KafkaProducerService>();
+        collection.AddHostedService<KafkaConsumerService>();
 
         collection.AddDbContext<ApplicationContext>(options => options.UseNpgsql(connection).UseSnakeCaseNamingConvention());
         return collection;

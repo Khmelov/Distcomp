@@ -14,6 +14,7 @@ public class CommentDiscussionRequest {
     private String content;
 
     public CommentDiscussionRequest(CommentRequestTo dto) {
+        id = dto.getId();
         issueId = dto.getIssueId();
         content = dto.getContent();
     }
