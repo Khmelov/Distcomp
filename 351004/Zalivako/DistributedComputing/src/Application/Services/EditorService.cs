@@ -1,6 +1,7 @@
 ﻿using Application.DTOs.Requests;
 using Application.DTOs.Responses;
 using Application.Exceptions;
+using Application.Exceptions.Application;
 using Application.Interfaces;
 using AutoMapper;
 using Core.Entities;
@@ -22,12 +23,17 @@ namespace Application.Services
         public async Task<EditorResponseTo> CreateEditor(EditorRequestTo createEditorRequestTo)
         {
             Editor editorFromDto = _mapper.Map<Editor>(createEditorRequestTo);
+            try
+            {
+                Editor createdEditor = await _editorRepository.AddAsync(editorFromDto);
+                EditorResponseTo dtoFromCreatedEditor = _mapper.Map<EditorResponseTo>(createdEditor);
+                return dtoFromCreatedEditor;
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new EditorAlreadyExistsException(ex.Message, ex);
+            }
 
-            Editor createdEditor = await _editorRepository.AddAsync(editorFromDto);
-
-            EditorResponseTo dtoFromCreatedEditor = _mapper.Map<EditorResponseTo>(createdEditor);
-
-            return dtoFromCreatedEditor;
         }
 
         public async Task DeleteEditor(EditorRequestTo deleteEditorRequestTo)

@@ -1,84 +1,92 @@
-using ArticleHouse.DAO;
-using ArticleHouse.DAO.Models;
+using System.Text.Json;
+using Additions.Service;
+using Additions.Service.EventService.Interfaces;
 using ArticleHouse.Service.DTOs;
-using ArticleHouse.Service.Exceptions;
 using ArticleHouse.Service.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using CommonAPI.Service.Events;
 
 namespace ArticleHouse.Service.Implementations;
 
-public class CommentService : Service, ICommentService
+public class CommentService : BasicService, ICommentService
 {
-    private readonly ApplicationContext db;
-    public CommentService(ApplicationContext db)
+    private readonly IEventProducerService producerService;
+    private readonly string eventTopic;
+    
+    public CommentService(IEventProducerService producerService, IConfiguration configuration)
     {
-        this.db = db;
+        this.producerService = producerService;
+        eventTopic = configuration["Kafka:SendTopic"] ?? "default-topic";
     }
     public async Task<CommentResponseDTO> CreateCommentAsync(CommentRequestDTO dto)
     {
-        CommentModel model = MakeModelFromRequest(dto);
-        await db.Comments.AddAsync(model);
-        await InvokeDAOMethod(() => db.SaveChangesAsync());
-        return MakeResponseFromModel(model);
+        CommentPayload model = MakePayloadFromRequest(dto);
+        EventMessage message = new()
+        {
+            Operation = EventNames.COMMENT_ADD,
+            Payload = JsonSerializer.Serialize(model)
+        };
+        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message);
+        return MakeResponseFromPayload(result.GetPayload<CommentPayload>()!);
     }
 
     public async Task DeleteCommentAsync(long id)
     {
-        CommentModel? model = await db.Comments.FirstOrDefaultAsync(o => o.Id == id);
-        if (null == model)
+        await producerService.ProduceEventWithResponseAsync(eventTopic, new EventMessage()
         {
-            throw new ServiceObjectNotFoundException();
-        }
-        db.Comments.Remove(model);
-        await InvokeDAOMethod(() => db.SaveChangesAsync());
+            Operation = EventNames.COMMENT_DELETE,
+            Payload = JsonSerializer.Serialize(id)
+        });
     }
 
     public async Task<CommentResponseDTO[]> GetAllCommentsAsync()
     {
-        CommentModel[] models = await db.Comments.ToArrayAsync();
-        return [.. models.Select(MakeResponseFromModel)];
+        EventMessage message = new()
+        {
+            Operation = EventNames.MANY_COMMENTS_GET
+        };
+        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message);
+        return [.. result.GetPayload<ManyCommentsPayload>()!.Comments.Select(MakeResponseFromPayload)];
     }
 
     public async Task<CommentResponseDTO> GetCommentByIdAsync(long id)
     {
-        CommentModel? model = await db.Comments.FirstOrDefaultAsync(o => o.Id == id);
-        if (null == model)
+        EventMessage message = new()
         {
-            throw new ServiceObjectNotFoundException();
-        }
-        return MakeResponseFromModel(model);
+            Operation = EventNames.COMMENT_GET,
+            Payload = JsonSerializer.Serialize(id)
+        };
+        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message);
+        return MakeResponseFromPayload(result.GetPayload<CommentPayload>()!);
     }
 
     public async Task<CommentResponseDTO> UpdateCommentByIdAsync(long id, CommentRequestDTO dto)
     {
-        if (null == dto.Id)
+        CommentPayload model = MakePayloadFromRequest(dto);
+        model.Id = id;
+        EventMessage message = new()
         {
-            throw new ServiceException();
-        }
-        CommentModel? model = await db.Comments.FirstOrDefaultAsync(o => o.Id == dto.Id);
-        if (null == model) {
-            throw new ServiceObjectNotFoundException();
-        }
-        ShapeModelFromRequest(ref model, dto);
-        await InvokeDAOMethod(() => db.SaveChangesAsync());
-        return MakeResponseFromModel(model);
+            Operation = EventNames.COMMENT_UPDATE,
+            Payload = JsonSerializer.Serialize(model)
+        };
+        var result = await producerService.ProduceEventWithResponseAsync(eventTopic, message);
+        return MakeResponseFromPayload(result.GetPayload<CommentPayload>()!);
     }
 
-    private static CommentModel MakeModelFromRequest(CommentRequestDTO dto)
+    private static CommentPayload MakePayloadFromRequest(CommentRequestDTO dto)
     {
-        CommentModel result = new();
-        ShapeModelFromRequest(ref result, dto);
+        CommentPayload result = new();
+        ShapePayloadFromRequest(ref result, dto);
         return result;
     }
 
-    private static void ShapeModelFromRequest(ref CommentModel model, CommentRequestDTO dto)
+    private static void ShapePayloadFromRequest(ref CommentPayload model, CommentRequestDTO dto)
     {
         model.Id = dto.Id ?? 0;
         model.ArticleId = dto.ArticleId;
         model.Content = dto.Content;
     }
 
-    private static CommentResponseDTO MakeResponseFromModel(CommentModel model)
+    private static CommentResponseDTO MakeResponseFromPayload(CommentPayload model)
     {
         return new CommentResponseDTO()
         {

@@ -5,7 +5,7 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 
 @Configuration
 @EnableR2dbcRepositories(
-        basePackages = "com.distcomp.data.repository",
+        basePackages = "com.distcomp.data.r2dbc.repository",
         repositoryBaseClass = org.springframework.data.r2dbc.repository.support.SimpleR2dbcRepository.class
 )
 public class R2dbcConfig {

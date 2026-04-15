@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Response
 from typing import List
-from app.dtos.tweet_dto import TweetRequestTo, TweetResponseTo
-from app.services.tweet_service import TweetService
+from dtos.tweet_dto import TweetRequestTo, TweetResponseTo
+from services.tweet_service import TweetService
 
 router = APIRouter(prefix="/api/v1.0/tweets", tags=["tweets"])
 service = TweetService()

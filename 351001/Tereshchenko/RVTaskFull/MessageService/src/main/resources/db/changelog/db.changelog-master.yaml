@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-discussion-schema
+      author: codex
+      changes:
+        - sql:
+            splitStatements: true
+            stripComments: true
+            sql: |
+              CREATE KEYSPACE IF NOT EXISTS distcomp
+              WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
+              CREATE TABLE IF NOT EXISTS distcomp.tbl_message (
+                  id bigint PRIMARY KEY,
+                  tweet_id bigint,
+                  bucket int,
+                  content text
+              );
+
+              CREATE TABLE IF NOT EXISTS distcomp.tbl_message_by_tweet (
+                  tweet_id bigint,
+                  bucket int,
+                  id bigint,
+                  content text,
+                  PRIMARY KEY ((tweet_id, bucket), id)
+              );
