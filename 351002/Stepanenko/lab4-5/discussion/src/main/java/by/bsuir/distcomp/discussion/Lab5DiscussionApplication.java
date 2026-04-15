@@ -7,9 +7,9 @@ import org.springframework.data.cassandra.repository.config.EnableCassandraRepos
 
 @SpringBootApplication
 @EnableCassandraRepositories(basePackages = "by.bsuir.distcomp.discussion.repository")
-public class DiscussionApplication {
+public class Lab5DiscussionApplication {
     public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(DiscussionApplication.class);
+        SpringApplication app = new SpringApplication(Lab5DiscussionApplication.class);
         app.addInitializers(new CassandraKeyspaceInitializer());
         app.run(args);
     }

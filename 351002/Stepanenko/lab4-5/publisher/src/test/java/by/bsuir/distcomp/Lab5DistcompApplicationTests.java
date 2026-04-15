@@ -4,7 +4,7 @@ import by.bsuir.distcomp.support.PublisherIntegrationTest;
 import org.junit.jupiter.api.Test;
 
 @PublisherIntegrationTest
-class DistcompApplicationTests {
+class Lab5DistcompApplicationTests {
     @Test
     void contextLoads() {
     }

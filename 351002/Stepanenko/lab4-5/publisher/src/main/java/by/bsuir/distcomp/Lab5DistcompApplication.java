@@ -4,8 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class DistcompApplication {
+public class Lab5DistcompApplication {
     public static void main(String[] args) {
-        SpringApplication.run(DistcompApplication.class, args);
+        SpringApplication.run(Lab5DistcompApplication.class, args);
     }
 }
