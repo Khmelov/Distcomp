@@ -13,7 +13,6 @@ from sqlalchemy.orm import registry, relationship
 
 from src.models.editor import Editor
 from src.models.marker import Marker
-from src.models.post import Post
 from src.models.tweet import Tweet
 
 metadata = MetaData()
@@ -54,15 +53,6 @@ markers_table = Table(
     Column("name", String(32), nullable=False, unique=True),
 )
 
-posts_table = Table(
-    "tbl_post",
-    metadata,
-    Column("id", BigInteger, primary_key=True, autoincrement=True),
-    Column("tweet_id", BigInteger, ForeignKey("tbl_tweet.id", ondelete="CASCADE"), nullable=False),
-    Column("content", String(2048), nullable=False),
-)
-
-
 def run_mappers() -> None:
     if mapper_registry.mappers:
         return
@@ -87,4 +77,3 @@ def run_mappers() -> None:
         },
     )
 
-    mapper_registry.map_imperatively(Post, posts_table)

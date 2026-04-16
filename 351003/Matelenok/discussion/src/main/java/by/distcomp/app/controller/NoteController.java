@@ -39,9 +39,9 @@ public class NoteController {
         return noteService.createNote(request);
     }
 
-    @PutMapping
-    public NoteResponseTo updateNote(@Valid @RequestBody NoteRequestTo request) {
-        return noteService.updateNote(request);
+    @PutMapping("/{id}")
+    public NoteResponseTo updateNote(@PathVariable Long id, @Valid @RequestBody NoteRequestTo request) {
+        return noteService.updateNote(id, request);
     }
 
     @DeleteMapping("/{id}")

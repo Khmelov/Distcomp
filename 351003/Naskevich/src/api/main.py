@@ -1,13 +1,17 @@
+import uvicorn
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from .v1 import editors, markers, posts, tweets
+from src.api.posts_kafka import posts_kafka_router
+from src.api.v1 import editors, markers, posts, tweets
 from src.database.tables import run_mappers
 from src.exceptions import EntityAlreadyExistsException, EntityNotFoundException
 
 run_mappers()
 
 app = FastAPI(title="REST API Lab")
+app.include_router(posts_kafka_router)
 
 
 @app.exception_handler(EntityNotFoundException)
@@ -32,3 +36,7 @@ app.include_router(editors.router, prefix=API_PREFIX)
 app.include_router(tweets.router, prefix=API_PREFIX)
 app.include_router(markers.router, prefix=API_PREFIX)
 app.include_router(posts.router, prefix=API_PREFIX)
+
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=24110, log_level="info")
