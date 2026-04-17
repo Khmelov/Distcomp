@@ -1,15 +1,15 @@
 using System.Text.Json;
-using Additions.Service;
-using Additions.Service.EventService.Interfaces;
+using Additions.Messaging;
+using Additions.Messaging.Interfaces;
 using CommentMicroservice.Service.Interfaces;
-using CommonAPI.Service.Events;
+using CommonAPI.Messaging;
 
 namespace CommentMicroservice.Service.Implementations.EventHandlers;
 
 public class GetManyCommentsHandler : IEventHandler
 {
     private readonly ICommentService commentService;
-    private readonly IEventProducerService producerService;
+    private readonly IEventProducer producerService;
     private readonly string eventTopic;
 
     public string SupportedOperation
@@ -20,7 +20,7 @@ public class GetManyCommentsHandler : IEventHandler
         }
     }
 
-    public GetManyCommentsHandler(ICommentService commentService, IEventProducerService producerService,
+    public GetManyCommentsHandler(ICommentService commentService, IEventProducer producerService,
                                     IConfiguration configuration)
     {
         this.commentService = commentService;
@@ -51,7 +51,7 @@ public class GetManyCommentsHandler : IEventHandler
                 InReplyTo = message.MessageId
             };
         }
-        catch (ServiceException e)
+        catch (MessagingException e)
         {
             error = e.Message;
         }

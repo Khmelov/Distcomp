@@ -1,16 +1,14 @@
-using System.Text.Json;
-using Additions.Service;
-using Additions.Service.EventService.Interfaces;
-using CommentMicroservice.Service.DTOs;
+using Additions.Messaging;
+using Additions.Messaging.Interfaces;
 using CommentMicroservice.Service.Interfaces;
-using CommonAPI.Service.Events;
+using CommonAPI.Messaging;
 
 namespace CommentMicroservice.Service.Implementations.EventHandlers;
 
 public class ArticleDeletedHandler : IEventHandler
 {
     private readonly ICommentService commentService;
-    private readonly IEventProducerService producerService;
+    private readonly IEventProducer producerService;
     private readonly string eventTopic;
 
     public string SupportedOperation
@@ -21,7 +19,7 @@ public class ArticleDeletedHandler : IEventHandler
         }
     }
 
-    public ArticleDeletedHandler(ICommentService commentService, IEventProducerService producerService,
+    public ArticleDeletedHandler(ICommentService commentService, IEventProducer producerService,
                                     IConfiguration configuration)
     {
         this.commentService = commentService;
@@ -37,7 +35,7 @@ public class ArticleDeletedHandler : IEventHandler
             {
                 await commentService.DeleteCommentsByArticleIdAsync(payload.Value);
             }
-            catch (ServiceException) {}
+            catch (MessagingException) {}
         }
     }
 }
