@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Additions.Service.EventService.Interfaces;
+namespace Additions.Messaging.Interfaces;
 
 public class EventMessage
 {

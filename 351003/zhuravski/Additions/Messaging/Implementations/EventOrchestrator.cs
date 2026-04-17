@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
-using Additions.Service.EventService.Interfaces;
+using Additions.Messaging.Interfaces;
 
-namespace Additions.Service.EventService.Implementations;
+namespace Additions.Messaging.Implementations;
 
-public class EventOrchestratorService : IEventOrchestratorService
+public class EventOrchestrator : IEventOrchestrator
 {
     private static readonly TimeSpan TIMEOUT = TimeSpan.FromSeconds(5);
     private readonly ConcurrentDictionary<string, TaskCompletionSource<EventMessage>> pendingRequests = [];
@@ -19,13 +19,13 @@ public class EventOrchestratorService : IEventOrchestratorService
             var completed = await Task.WhenAny(tcs.Task, timeoutTask);
             if (completed == timeoutTask)
             {
-                throw new ServiceException(
+                throw new MessagingException(
                     $"No response received for MessageId {messageId} within {TIMEOUT}");
             }
             EventMessage result = await tcs.Task;
             if (result.Error != null)
             {
-                throw new ServiceException(result.Error);
+                throw new MessagingException(result.Error);
             }
             return result;
         }

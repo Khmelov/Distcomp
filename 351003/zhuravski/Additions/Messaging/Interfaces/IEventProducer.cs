@@ -1,6 +1,6 @@
-namespace Additions.Service.EventService.Interfaces;
+namespace Additions.Messaging.Interfaces;
 
-public interface IEventProducerService
+public interface IEventProducer
 {
     Task ProduceEventAsync(string topic, EventMessage message);
     Task<EventMessage> ProduceEventWithResponseAsync(string topic, EventMessage message);
