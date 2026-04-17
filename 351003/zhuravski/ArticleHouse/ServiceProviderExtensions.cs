@@ -1,5 +1,5 @@
-using Additions.Service.EventService.Implementations;
-using Additions.Service.EventService.Interfaces;
+using Additions.Messaging.Implementations;
+using Additions.Messaging.Interfaces;
 using ArticleHouse.DAO.Implementations;
 using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.Service.Implementations;
@@ -25,9 +25,9 @@ static internal class ServiceProviderExtensions
 
         collection.AddScoped<IArticleMarkDAO, DbArticleMarkDAO>();
 
-        collection.AddSingleton<IEventOrchestratorService, EventOrchestratorService>();
-        collection.AddSingleton<IEventProducerService, KafkaProducerService>();
-        collection.AddHostedService<KafkaConsumerService>();
+        collection.AddSingleton<IEventOrchestrator, EventOrchestrator>();
+        collection.AddSingleton<IEventProducer, KafkaProducer>();
+        collection.AddHostedService<KafkaConsumer>();
 
         collection.AddDbContext<ApplicationContext>(options => options.UseNpgsql(connection).UseSnakeCaseNamingConvention());
         return collection;

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Additions.Messaging;
 using Additions.Messaging.Interfaces;
 using Additions.Service;
 using CommentMicroservice.Service.DTOs;
@@ -59,7 +58,7 @@ public class UpdateCommentHandler : IEventHandler
                     InReplyTo = message.MessageId
                 };
             }
-            catch (MessagingException e)
+            catch (ServiceException e)
             {
                 error = e.Message;
             }

@@ -1,6 +1,6 @@
 using System.Text.Json;
+using Additions.Messaging.Interfaces;
 using Additions.Service;
-using Additions.Service.EventService.Interfaces;
 using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.DTOs;
@@ -14,15 +14,16 @@ public class ArticleService : BasicService, IArticleService
     private readonly IArticleDAO dao;
     private readonly IArticleMarkDAO m2mDAO;
     private readonly IMarkDAO markDAO;
-    private readonly IEventProducerService producerService;
+    private readonly IEventProducer eventProducer;
     private readonly string eventTopic;
 
-    public ArticleService(IArticleDAO dao, IArticleMarkDAO m2mDAO, IMarkDAO markDAO, IEventProducerService producerService, IConfiguration configuration)
+    public ArticleService(IArticleDAO dao, IArticleMarkDAO m2mDAO, IMarkDAO markDAO,
+                          IEventProducer eventProducer, IConfiguration configuration)
     {
         this.dao = dao;
         this.m2mDAO = m2mDAO;
         this.markDAO = markDAO;
-        this.producerService = producerService;
+        this.eventProducer = eventProducer;
         eventTopic = configuration["Kafka:SendTopic"] ?? "default-topic";
     }
 
@@ -61,10 +62,10 @@ public class ArticleService : BasicService, IArticleService
         //Какой богомерзкий API.
         var result = await InvokeDAOMethod(() => dao.GetByIdWithMarksAsync(id));
         long[] leftMarkIds = result.Item2;
-        await InvokeDAOMethod(async () =>
+        await InvokeLowerMethod(async () =>
         {
             await dao.DeleteAsync(id);
-            await producerService.ProduceEventAsync(eventTopic, new EventMessage()
+            await eventProducer.ProduceEventAsync(eventTopic, new EventMessage()
             {
                 Operation = EventNames.ARTICLE_DELETED,
                 Payload = JsonSerializer.Serialize(id)

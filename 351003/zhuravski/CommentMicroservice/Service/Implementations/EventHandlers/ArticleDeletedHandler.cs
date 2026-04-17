@@ -1,5 +1,5 @@
-using Additions.Messaging;
 using Additions.Messaging.Interfaces;
+using Additions.Service;
 using CommentMicroservice.Service.Interfaces;
 using CommonAPI.Messaging;
 
@@ -35,7 +35,7 @@ public class ArticleDeletedHandler : IEventHandler
             {
                 await commentService.DeleteCommentsByArticleIdAsync(payload.Value);
             }
-            catch (MessagingException) {}
+            catch (ServiceException) {}
         }
     }
 }

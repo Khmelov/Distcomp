@@ -1,6 +1,6 @@
 using System.Text.Json;
-using Additions.Messaging;
 using Additions.Messaging.Interfaces;
+using Additions.Service;
 using CommentMicroservice.Service.Interfaces;
 using CommonAPI.Messaging;
 
@@ -50,7 +50,7 @@ public class GetCommentHandler : IEventHandler
                     InReplyTo = message.MessageId
                 };
             }
-            catch (MessagingException e)
+            catch (ServiceException e)
             {
                 error = e.Message;
             }
