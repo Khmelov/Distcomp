@@ -1,7 +1,0 @@
-{
-  "Cassandra": {
-    "Host": "localhost",
-    "Port": 9042,
-    "Keyspace": "distcomp"
-  }
-}
