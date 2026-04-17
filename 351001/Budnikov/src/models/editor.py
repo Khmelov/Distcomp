@@ -2,7 +2,7 @@ from tortoise import fields, models
 
 
 class Editor(models.Model):
-    id = fields.BigIntField(pk=True)
+    id = fields.IntField(pk=True)
     login = fields.CharField(max_length=64, unique=True)
     password = fields.CharField(max_length=128)
     firstname = fields.CharField(max_length=64)

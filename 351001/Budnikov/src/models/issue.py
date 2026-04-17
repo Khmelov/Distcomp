@@ -2,7 +2,7 @@ from tortoise import fields, models
 
 
 class Issue(models.Model):
-    id = fields.BigIntField(pk=True)
+    id = fields.IntField(pk=True)
     editor = fields.ForeignKeyField("models.Editor", related_name="issues")
     title = fields.CharField(max_length=64, unique=True)
     content = fields.CharField(max_length=2048)

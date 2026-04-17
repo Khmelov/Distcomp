@@ -30,7 +30,9 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Res
 
     async def create(self, create_dto: CreateSchemaType) -> ResponseSchemaType:
         try:
-            obj = await self.model.create(**create_dto.model_dump())
+            data = create_dto.model_dump(exclude_unset=True)
+            obj = await self.model.create(**data)
+            await obj.refresh_from_db()
         except IntegrityError as e:
             raise BaseAppException(403, "40301", f"Validation Error: {str(e)}")
         return self.response_schema.model_validate(obj)
@@ -40,7 +42,9 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Res
         if not obj:
             raise BaseAppException(404, "40402", f"{self.model.__name__} not found")
         try:
-            await obj.update_from_dict(update_dto.model_dump(exclude_unset=True)).save()
+            data = update_dto.model_dump(exclude_unset=True)
+            await obj.update_from_dict(data).save()
+            await obj.refresh_from_db()
         except IntegrityError as e:
             raise BaseAppException(403, "40301", f"Validation Error: {str(e)}")
         return self.response_schema.model_validate(obj)

@@ -44,6 +44,7 @@ class IssueRequestTo(BaseModel):
     content: str = Field(min_length=2, max_length=2048)
     editor_id: int = Field(alias="editorId")
     label_ids: list[int] = Field(default_factory=list, alias="labelIds")
+    labels: list[str] = Field(default_factory=list)
 
 
 class IssueResponseTo(BaseModel):
