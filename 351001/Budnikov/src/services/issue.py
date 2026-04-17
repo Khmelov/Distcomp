@@ -1,3 +1,5 @@
+from tortoise.exceptions import IntegrityError
+
 from src.services.base import BaseCRUDService
 from src.models import Issue, Editor, Label
 from src.schemas.dto import IssueRequestTo, IssueResponseTo, EditorResponseTo, LabelResponseTo, PostResponseTo
@@ -13,9 +15,12 @@ class IssueService(BaseCRUDService[Issue, IssueRequestTo, IssueRequestTo, IssueR
         if not editor:
             raise BaseAppException(400, "40003", f"Editor with id {create_dto.editor_id} not found")
 
-        issue = await self.model.create(
-            title=create_dto.title, content=create_dto.content, editor_id=create_dto.editor_id
-        )
+        try:
+            issue = await self.model.create(
+                title=create_dto.title, content=create_dto.content, editor_id=create_dto.editor_id
+            )
+        except IntegrityError as e:
+            raise BaseAppException(403, "40301", f"Validation Error: {str(e)}")
 
         if create_dto.label_ids:
             labels = await Label.filter(id__in=create_dto.label_ids)
@@ -37,7 +42,11 @@ class IssueService(BaseCRUDService[Issue, IssueRequestTo, IssueRequestTo, IssueR
         issue.title = update_dto.title
         issue.content = update_dto.content
         issue.editor_id = update_dto.editor_id
-        await issue.save()
+
+        try:
+            await issue.save()
+        except IntegrityError as e:
+            raise BaseAppException(403, "40301", f"Validation Error: {str(e)}")
 
         if update_dto.label_ids is not None:
             labels = await Label.filter(id__in=update_dto.label_ids)
@@ -65,12 +74,12 @@ class IssueService(BaseCRUDService[Issue, IssueRequestTo, IssueRequestTo, IssueR
         return [PostResponseTo.model_validate(post) for post in issue.posts]
 
     async def search_issues(
-        self,
-        label_names: list[str] | None = None,
-        label_ids: list[int] | None = None,
-        editor_login: str | None = None,
-        title: str | None = None,
-        content: str | None = None,
+            self,
+            label_names: list[str] | None = None,
+            label_ids: list[int] | None = None,
+            editor_login: str | None = None,
+            title: str | None = None,
+            content: str | None = None,
     ) -> list[IssueResponseTo]:
 
         query = self.model.all()

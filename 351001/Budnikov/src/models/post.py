@@ -5,3 +5,6 @@ class Post(models.Model):
     id = fields.IntField(pk=True)
     content = fields.TextField()
     issue = fields.ForeignKeyField("models.Issue", related_name="posts")
+
+    class Meta():
+        table = "tbl_post"

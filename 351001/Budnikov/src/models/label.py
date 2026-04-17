@@ -8,4 +8,4 @@ class Label(models.Model):
     issues: fields.ManyToManyRelation["Issue"]
 
     class Meta:
-        table = "labels"
+        table = "tbl_label"

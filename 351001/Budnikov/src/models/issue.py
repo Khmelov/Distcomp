@@ -4,7 +4,7 @@ from tortoise import fields, models
 class Issue(models.Model):
     id = fields.BigIntField(pk=True)
     editor = fields.ForeignKeyField("models.Editor", related_name="issues")
-    title = fields.CharField(max_length=64)
+    title = fields.CharField(max_length=64, unique=True)
     content = fields.CharField(max_length=2048)
     created = fields.DatetimeField(auto_now_add=True)
     modified = fields.DatetimeField(auto_now=True)
@@ -13,4 +13,4 @@ class Issue(models.Model):
     posts: fields.ReverseRelation["Post"]
 
     class Meta:
-        table = "issues"
+        table = "tbl_issue"

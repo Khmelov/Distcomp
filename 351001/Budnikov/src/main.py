@@ -29,7 +29,6 @@ def create_fastapi_app():
         app,
         config=TORTOISE_CONFIG,
         generate_schemas=True,
-        add_exception_handlers=True,
     )
 
     return app
@@ -59,3 +58,16 @@ async def app_exception_handler(request: Request, exc: BaseAppException):
             "errorMessage": exc.error_message,
         },
     )
+
+
+# @app.exception_handler(IntegrityError)
+# async def integrity_error_handler(request: Request, exc: IntegrityError):
+#     logging.error(f"Integrity Error: {str(exc)}")
+#
+#     return JSONResponse(
+#         status_code=403,
+#         content={
+#             "errorCode": "40301",
+#             "errorMessage": f"Resource already exists: {str(exc)}",
+#         },
+#     )

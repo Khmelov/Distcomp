@@ -28,7 +28,7 @@ class LabelResponseTo(BaseModel):
 
 
 class PostRequestTo(BaseModel):
-    content: str = Field(min_length=1)
+    content: str = Field(min_length=2, max_length=2048)
     issue_id: int = Field(alias="issueId")
 
 

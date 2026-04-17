@@ -11,4 +11,4 @@ class Editor(models.Model):
     issues: fields.ReverseRelation["Issue"]
 
     class Meta:
-        table = "editors"
+        table = "tbl_editor"

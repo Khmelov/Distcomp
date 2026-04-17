@@ -1,6 +1,9 @@
 from typing import TypeVar, Generic, Type, List
+
 from tortoise.models import Model
+from tortoise.exceptions import IntegrityError
 from pydantic import BaseModel
+
 from src.core.exceptions import BaseAppException
 
 
@@ -26,14 +29,20 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Res
         return self.response_schema.model_validate(obj)
 
     async def create(self, create_dto: CreateSchemaType) -> ResponseSchemaType:
-        obj = await self.model.create(**create_dto.model_dump())
+        try:
+            obj = await self.model.create(**create_dto.model_dump())
+        except IntegrityError as e:
+            raise BaseAppException(403, "40301", f"Validation Error: {str(e)}")
         return self.response_schema.model_validate(obj)
 
     async def update(self, obj_id: int, update_dto: UpdateSchemaType) -> ResponseSchemaType:
         obj = await self.model.get_or_none(id=obj_id)
         if not obj:
             raise BaseAppException(404, "40402", f"{self.model.__name__} not found")
-        await obj.update_from_dict(update_dto.model_dump(exclude_unset=True)).save()
+        try:
+            await obj.update_from_dict(update_dto.model_dump(exclude_unset=True)).save()
+        except IntegrityError as e:
+            raise BaseAppException(403, "40301", f"Validation Error: {str(e)}")
         return self.response_schema.model_validate(obj)
 
     async def delete(self, obj_id: int) -> None:
