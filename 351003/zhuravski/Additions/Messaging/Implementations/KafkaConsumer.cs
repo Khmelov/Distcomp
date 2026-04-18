@@ -1,17 +1,17 @@
 using System.Text.Json;
-using Additions.Service.EventService.Interfaces;
+using Additions.Messaging.Interfaces;
 using Confluent.Kafka;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Additions.Service.EventService.Implementations;
+namespace Additions.Messaging.Implementations;
 
-public class KafkaConsumerService : BaseEventConsumerService
+public class KafkaConsumer : BaseEventConsumer
 {
     private readonly string topic;
     private readonly IConsumer<string, string> consumer;
-    private readonly ILogger<KafkaConsumerService> logger;
-    private readonly IEventOrchestratorService eventOrchestrator;
+    private readonly ILogger<KafkaConsumer> logger;
+    private readonly IEventOrchestrator eventOrchestrator;
     private readonly Dictionary<string, IEventHandler> handlerMap = [];
 
     private void InitHandlerMap(IEnumerable<IEventHandler> handlers)
@@ -22,8 +22,8 @@ public class KafkaConsumerService : BaseEventConsumerService
         }
     }
 
-    public KafkaConsumerService(IConfiguration configuration, ILogger<KafkaConsumerService> logger,
-                                IEventOrchestratorService eventOrchestrator, IEnumerable<IEventHandler> eventHandlers)
+    public KafkaConsumer(IConfiguration configuration, ILogger<KafkaConsumer> logger,
+                         IEventOrchestrator eventOrchestrator, IEnumerable<IEventHandler> eventHandlers)
     {
         this.logger = logger;
         this.eventOrchestrator = eventOrchestrator;

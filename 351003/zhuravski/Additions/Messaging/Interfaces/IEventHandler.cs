@@ -1,4 +1,4 @@
-namespace Additions.Service.EventService.Interfaces;
+namespace Additions.Messaging.Interfaces;
 
 public interface IEventHandler
 {

@@ -1,17 +1,17 @@
 using System.Text.Json;
-using Additions.Service.EventService.Interfaces;
+using Additions.Messaging.Interfaces;
 using Confluent.Kafka;
 using Microsoft.Extensions.Configuration;
 
-namespace Additions.Service.EventService.Implementations;
+namespace Additions.Messaging.Implementations;
 
-public class KafkaProducerService : IEventProducerService, IDisposable
+public class KafkaProducer : IEventProducer, IDisposable
 {
     private readonly IProducer<string, string> producer;
     private bool isDisposed = false;
-    private readonly IEventOrchestratorService eventOrchestrator;
+    private readonly IEventOrchestrator eventOrchestrator;
 
-    public KafkaProducerService(IConfiguration configuration, IEventOrchestratorService eventOrchestrator)
+    public KafkaProducer(IConfiguration configuration, IEventOrchestrator eventOrchestrator)
     {
         this.eventOrchestrator = eventOrchestrator;
 
@@ -36,7 +36,7 @@ public class KafkaProducerService : IEventProducerService, IDisposable
         catch (ProduceException<string, string> e)
         {
             
-            throw new ServiceException($"Failed to produce message to {topic}: {e.Error.Reason}");
+            throw new MessagingException($"Failed to produce message to {topic}: {e.Error.Reason}");
         }
     }
 
@@ -47,7 +47,7 @@ public class KafkaProducerService : IEventProducerService, IDisposable
         EventMessage result = await responseTask;
         if (result.Error != null)
         {
-            throw new ServiceFailedOperationException(result.Error);
+            throw new MessagingFailedOperationException(result.Error);
         }
         return result;
     }
