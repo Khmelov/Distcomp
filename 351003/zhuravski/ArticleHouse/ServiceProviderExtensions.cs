@@ -7,6 +7,7 @@ using Additions.Messaging.Implementations;
 using Additions.Messaging.Interfaces;
 using ArticleHouse.DAO.Implementations;
 using ArticleHouse.DAO.Interfaces;
+using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.Implementations;
 using ArticleHouse.Service.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -56,8 +57,8 @@ static internal class ServiceProviderExtensions
         });
 
         collection.AddAuthorizationBuilder()
-            .AddPolicy("AdminOnly", policy => policy.RequireRole("ADMIN"))
-            .AddPolicy("CustomerOrAdmin", policy => policy.RequireRole("CUSTOMER", "ADMIN"));
+            .AddPolicy("AdminOnly", policy => policy.RequireRole(CreatorModel.ADMIN_ROLE))
+            .AddPolicy("CustomerOrAdmin", policy => policy.RequireRole(CreatorModel.CUSTOMER_ROLE, CreatorModel.ADMIN_ROLE));
 
         collection.AddScoped<IArticleMarkDAO, DbArticleMarkDAO>();
 

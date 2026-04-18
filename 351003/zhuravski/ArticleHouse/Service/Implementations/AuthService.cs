@@ -24,10 +24,18 @@ public class AuthService : BasicService, IAuthService
         this.logger = logger;
     }
 
-    public async Task<AuthResponseDTO> LoginAsync(string login, string password)
+    public async Task<AuthResponseDTO> LoginAsync(LoginRequestDTO dto)
     {
-        var creator = await InvokeLowerMethod(() => creatorDao.GetByLoginAsync(login)); 
-        if (!BCrypt.Net.BCrypt.Verify(password, creator.Password))
+        CreatorModel creator = default!;
+        try
+        {
+            creator = await creatorDao.GetByLoginAsync(dto.Login); 
+        }
+        catch (DAOObjectNotFoundException)
+        {
+            throw new ServiceException("Invalid credentials", 401);
+        }
+        if (!BCrypt.Net.BCrypt.Verify(dto.Password, creator.Password))
         {
             throw new ServiceException("Invalid credentials", 401);//40101);
         }
@@ -52,7 +60,7 @@ public class AuthService : BasicService, IAuthService
             Role = dto.Role 
         };
 
-        var created = await creatorDao.AddNewAsync(model);
+        var created = await InvokeLowerMethod(() => creatorDao.AddNewAsync(model));
         return MakeResponseFromModel(created);
     }
 
@@ -69,16 +77,12 @@ public class AuthService : BasicService, IAuthService
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, creator.Login), // sub = login
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.Role, creator.Role),
-            new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
-            new Claim("exp", DateTimeOffset.UtcNow.AddMinutes(60).ToUnixTimeSeconds().ToString())
+            new Claim(JwtRegisteredClaimNames.Sub, creator.Login),
+            new Claim("role", creator.Role),
+            new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
         };
 
         var token = new JwtSecurityToken(
-            issuer: config["Jwt:Issuer"],
-            audience: config["Jwt:Audience"],
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(60),
             signingCredentials: creds
