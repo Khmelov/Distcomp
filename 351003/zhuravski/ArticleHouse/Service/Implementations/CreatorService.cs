@@ -90,7 +90,6 @@ public class CreatorService : BasicService, ICreatorService
             FirstName = model.FirstName,
             LastName = model.LastName,
             Login = model.Login,
-            Password = model.Password,
             Role = model.Role
         };
     }

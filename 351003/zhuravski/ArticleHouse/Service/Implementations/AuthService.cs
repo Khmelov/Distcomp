@@ -101,7 +101,6 @@ public class AuthService : BasicService, IAuthService
             FirstName = model.FirstName,
             LastName = model.LastName,
             Login = model.Login,
-            Password = model.Password,
             Role = model.Role
         };
     }
