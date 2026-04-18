@@ -3,10 +3,9 @@ using ArticleHouse;
 using ArticleHouse.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
-var connection = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddOpenApi();
-builder.Services.AddArticleHouseServices(connection);
+builder.Services.AddArticleHouseServices(builder.Configuration);
 
 var app = builder.Build();
 
