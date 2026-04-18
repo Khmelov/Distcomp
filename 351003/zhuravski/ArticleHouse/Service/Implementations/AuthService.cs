@@ -57,7 +57,7 @@ public class AuthService : BasicService, IAuthService
             Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             FirstName = dto.FirstName,
             LastName = dto.LastName,
-            Role = dto.Role 
+            Role = dto.Role ?? CreatorModel.CUSTOMER_ROLE
         };
 
         var created = await InvokeLowerMethod(() => creatorDao.AddNewAsync(model));

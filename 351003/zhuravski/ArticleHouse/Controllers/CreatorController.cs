@@ -45,14 +45,13 @@ public class CreatorController : ControllerBase
     }
 
     [HttpGet("creators/{id}")]
-    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<CreatorResponseDTO>> GetById(long id)
     {
         return Ok(await creatorService.GetCreatorByIdAsync(id));
     }
 
     [HttpDelete("creators/{id}")]
-    [AllowAnonymous]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult> DeleteById(long id)
     {
         await creatorService.DeleteCreatorAsync(id);
