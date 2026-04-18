@@ -1,3 +1,4 @@
+using Additions.Cache;
 using Additions.DAO;
 using Additions.Messaging;
 
@@ -16,6 +17,10 @@ public abstract class BasicService
             HandleLowerException(e);
         }
         catch (MessagingException e)
+        {
+            HandleLowerException(e);
+        }
+        catch (CacheException e)
         {
             HandleLowerException(e);
         }
@@ -38,6 +43,11 @@ public abstract class BasicService
             return default!;
         }
         catch (MessagingException e)
+        {
+            HandleLowerException(e);
+            return default!;
+        }
+        catch (CacheException e)
         {
             HandleLowerException(e);
             return default!;
