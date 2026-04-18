@@ -77,13 +77,15 @@ public class AuthService : BasicService, IAuthService
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, creator.Login),
-            new Claim("role", creator.Role),
-            new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+            new Claim(ClaimTypes.Name, creator.Login),
+            new Claim(ClaimTypes.Role, creator.Role),
+            new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
         };
 
         var token = new JwtSecurityToken(
-            claims: claims,
+            config["Jwt:Issuer"],
+            config["Jwt:Audience"],
+            claims,
             expires: DateTime.UtcNow.AddMinutes(60),
             signingCredentials: creds
         );
