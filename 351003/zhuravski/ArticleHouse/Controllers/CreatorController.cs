@@ -57,4 +57,22 @@ public class CreatorController : ControllerBase
         await creatorService.DeleteCreatorAsync(id);
         return Ok();
     }
+
+    [HttpPut("creators/{id}")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult> Update(long id, CreatorRequestDTO dto)
+    {
+        return Ok(await creatorService.UpdateCreatorByIdAsync(id, dto));
+    }
+
+    [HttpPut("creators")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult> Update(CreatorRequestDTO dto)
+    {
+        if (dto.Id == null)
+        {
+            return BadRequest();
+        }
+        return Ok(await creatorService.UpdateCreatorByIdAsync(dto.Id.Value, dto));
+    }
 }
