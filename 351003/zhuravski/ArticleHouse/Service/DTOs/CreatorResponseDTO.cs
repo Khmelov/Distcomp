@@ -11,4 +11,5 @@ public record CreatorResponseDTO
     public required string FirstName {get; init;}
     [JsonPropertyName("lastname")]
     public required string LastName {get; init;}
+    public required string Role {get; init;}
 };

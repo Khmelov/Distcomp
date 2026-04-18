@@ -56,9 +56,11 @@ public class CreatorService : BasicService, ICreatorService
 
     public async Task<CreatorResponseDTO> UpdateCreatorByIdAsync(long creatorId, CreatorRequestDTO dto)
     {
+        CreatorModel origin = await InvokeLowerMethod(() => dao.GetByIdAsync(creatorId));
         CreatorModel model = MakeModelFromRequest(dto);
         model.Id = creatorId;
-        CreatorModel result = await InvokeDAOMethod(() => dao.UpdateAsync(model));
+        model.Role = origin.Role;
+        CreatorModel result = await InvokeLowerMethod(() => dao.UpdateAsync(model));
         await cache.RemoveAsync($"creator:{creatorId}");
         return MakeResponseFromModel(result);
     }
@@ -77,6 +79,7 @@ public class CreatorService : BasicService, ICreatorService
         model.LastName = dto.LastName;
         model.Login = dto.Login;
         model.Password = dto.Password;
+        model.Role = CreatorModel.CUSTOMER_ROLE;
     }
 
     private static CreatorResponseDTO MakeResponseFromModel(CreatorModel model)
@@ -87,7 +90,8 @@ public class CreatorService : BasicService, ICreatorService
             FirstName = model.FirstName,
             LastName = model.LastName,
             Login = model.Login,
-            Password = model.Password
+            Password = model.Password,
+            Role = model.Role
         };
     }
 }

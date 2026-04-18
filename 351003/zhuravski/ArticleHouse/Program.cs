@@ -18,6 +18,9 @@ if (app.Environment.IsDevelopment())
 app.UseStaticFiles("/static");
 app.UseMiddleware<ExcMiddleware>();
 
+app.UseAuthentication(); 
+app.UseAuthorization();
+
 app.MapGet("/", async (HttpContext context) =>
 {
     context.Response.ContentType = "text/html";
