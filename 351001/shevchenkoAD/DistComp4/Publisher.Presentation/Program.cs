@@ -65,7 +65,7 @@ public class Program
         {
             options.SwaggerDoc("v1", new OpenApiInfo
             {
-                Title = "Task330 NoSQL",
+                Title = "Task340 Kafka",
                 Version = "v1.0"
             });
         });
@@ -108,7 +108,7 @@ public class Program
         }
 
         app.UseSwagger();
-        app.UseSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "Task330 NoSQL"); });
+        app.UseSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "Task340 Kafka"); });
 
         app.UseMiddleware<ExceptionHandlingMiddleware>();
         app.MapControllers();

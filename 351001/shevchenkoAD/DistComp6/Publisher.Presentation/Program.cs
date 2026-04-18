@@ -1,7 +1,11 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 using System.Text.Json.Serialization;
 using Confluent.Kafka;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Publisher.Application.Services;
 using Publisher.Application.Services.Interfaces;
@@ -10,6 +14,7 @@ using Publisher.Domain.Entities;
 using Publisher.Domain.Interfaces;
 using Publisher.Infrastructure;
 using Publisher.Infrastructure.Repositories;
+using Publisher.Infrastructure.Security;
 using Publisher.Infrastructure.Services;
 using Publisher.Presentation.Background;
 using Publisher.Presentation.Middleware;
@@ -23,7 +28,37 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
         var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddHttpContextAccessor();
+
+        builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey =
+                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                };
+            });
+
+        builder.Services.AddAuthorization();
+
+        builder.Services.AddSingleton<ITokenProvider, TokenProvider>();
+        builder.Services.AddScoped<IAuthService, AuthService>();
+
 
         builder.WebHost.UseUrls("http://localhost:24110");
 
@@ -80,7 +115,7 @@ public class Program
         {
             options.SwaggerDoc("v1", new OpenApiInfo
             {
-                Title = "Task350 Reddis",
+                Title = "Task361 Security",
                 Version = "v1.0"
             });
         });
@@ -125,11 +160,13 @@ public class Program
         }
 
         app.UseSwagger();
-        app.UseSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "Task350 Reddis"); });
+        app.UseSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "Task361 Security"); });
 
         app.UseMiddleware<ExceptionHandlingMiddleware>();
-        app.MapControllers();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
+        app.MapControllers();
         app.Run();
     }
 }
