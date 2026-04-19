@@ -16,11 +16,17 @@ def get_notice_service() -> NoticeService:
     return notice_service
 
 
-@router.post("", response_model=NoticeResponseTo, status_code=status.HTTP_201_CREATED)
-def create_notice(dto: NoticeRequestTo) -> NoticeResponseTo:
+@router.post("", status_code=status.HTTP_201_CREATED)
+def create_notice(dto: NoticeRequestTo) :
     service = NoticeService(NoticeRepository())
     try:
-        return service.create_notice(dto)
+        res = service.create_notice(dto)
+        if not res:
+            return HTTPException(
+            detail={"errorMessage": "стоп слово в тексте"},
+            status_code=400
+        )
+        return res
     except ValueError as ex:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

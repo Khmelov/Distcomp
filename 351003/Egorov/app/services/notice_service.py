@@ -2,36 +2,42 @@ from typing import List, Optional
 from app.dtos.notice_request import NoticeRequestTo
 from app.dtos.notice_response import NoticeResponseTo
 from app.models.notice import Notice
-from app.repositories.notice_repository import NoticeRepository  # Изменен импорт
+from app.repositories.notice_repository import NoticeRepository
+from discussion.kafka import use
 
 
 class NoticeService:
     def __init__(self, notice_repository: NoticeRepository):
         self._notice_repository = notice_repository
-        self._current_id = 1  # Для генерации ID
+        self._current_id = 1
 
     def _generate_id(self) -> int:
-        # Простая генерация ID (в Cassandra нет автоинкремента)
         current = self._current_id
         self._current_id += 1
         return current
 
-    def create_notice(self, dto: NoticeRequestTo) -> NoticeResponseTo:
-        # Валидация длины
+    def create_notice(self, dto: NoticeRequestTo) -> NoticeResponseTo | None:
         if len(dto.content) < 2 or len(dto.content) > 2048:
             raise ValueError("Content must be between 2 and 2048 characters")
 
-        # Создание entity
         entity = Notice(
             id=self._generate_id(),
             content=dto.content,
             story_id=dto.story_id,
-            country="Belarus"  # Добавлено поле country (partition key)
+            country="Belarus"
         )
 
-        # Сохранение в Cassandra
-        created = self._notice_repository.create(entity)
-        return self._to_response(created)
+        to_kafka = {
+            "id": self._generate_id(),
+            "content": dto.content,
+            "story_id": dto.story_id,
+            "country": "Belarus",
+            "state": "PENDING",
+        }
+
+        if use(to_kafka):
+            created = self._notice_repository.create(entity)
+            return self._to_response(created)
 
     def get_notice(self, notice_id: int) -> Optional[NoticeResponseTo]:
         entity = self._notice_repository.get_by_id(notice_id)
@@ -41,21 +47,18 @@ class NoticeService:
         return [self._to_response(n) for n in self._notice_repository.get_all()]
 
     def update_notice(self, notice_id: int, dto: NoticeRequestTo) -> Optional[NoticeResponseTo]:
-        # Проверка существования
         existing = self._notice_repository.get_by_id(notice_id)
         if existing is None:
             return None
 
-        # Валидация длины
         if len(dto.content) < 2 or len(dto.content) > 2048:
             raise ValueError("Content must be between 2 and 2048 characters")
 
-        # Обновление
         entity = Notice(
             id=notice_id,
             content=dto.content,
             story_id=dto.story_id,
-            country=existing.country  # Сохраняем существующую страну
+            country=existing.country
         )
 
         updated = self._notice_repository.update(entity)
@@ -70,8 +73,6 @@ class NoticeService:
         return True
 
     def get_notices_by_story(self, story_id: int) -> List[NoticeResponseTo]:
-        # В Cassandra нужно указывать partition key (country)
-        # Для упрощения используем get_all и фильтруем
         notices = [n for n in self._notice_repository.get_all() if n.story_id == story_id]
         return [self._to_response(n) for n in notices]
 
