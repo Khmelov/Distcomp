@@ -39,6 +39,11 @@ public class MarksController : ControllerBase
                 createdMark
             );
         }
+        catch (MarkAlreadyExistsException ex)
+        {
+            _logger.LogError(ex, "Mark already exists");
+            return StatusCode(403);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating mark");

@@ -1,6 +1,7 @@
 ﻿using Application.DTOs.Requests;
 using Application.DTOs.Responses;
 using Application.Exceptions;
+using Application.Exceptions.Application;
 using Application.Interfaces;
 using AutoMapper;
 using Core.Entities;
@@ -23,11 +24,16 @@ namespace Application.Services
         {
             Marker markerFromDto = _mapper.Map<Marker>(createMarkerRequestTo);
 
-            Marker createdMarker = await _markerRepository.AddAsync(markerFromDto);
-
-            MarkerResponseTo dtoFromCreatedMarker = _mapper.Map<MarkerResponseTo>(createdMarker);
-
-            return dtoFromCreatedMarker;
+            try
+            {
+                Marker createdMarker = await _markerRepository.AddAsync(markerFromDto);
+                MarkerResponseTo dtoFromCreatedMarker = _mapper.Map<MarkerResponseTo>(createdMarker);
+                return dtoFromCreatedMarker;
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new MarkerAlreadyExistsException(ex.Message, ex);
+            }
         }
 
         public async Task DeleteMarker(MarkerRequestTo deleteMarkerRequestTo)
