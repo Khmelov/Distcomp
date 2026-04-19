@@ -2,9 +2,11 @@ package com.example.news.service;
 
 import com.example.common.dto.MarkerRequestTo;
 import com.example.common.dto.MarkerResponseTo;
+import com.example.common.exception.MarkerNotFoundException;
+import com.example.common.exception.MessageNotFoundException;
 import com.example.news.entity.Marker;
-import com.example.news.exception.EntityNotFoundException;
-import com.example.news.exception.LoginAlreadyExistsException;
+import com.example.common.exception.EntityNotFoundException;
+import com.example.common.exception.LoginAlreadyExistsException;
 import com.example.news.mapper.MarkerMapper;
 import com.example.news.repository.MarkerRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,13 +37,13 @@ public class MarkerService {
     public MarkerResponseTo findById(Long id) {
         return markerRepository.findById(id)
                 .map(markerMapper::toResponse)
-                .orElseThrow(() -> new EntityNotFoundException("Marker not found", "40403"));
+                .orElseThrow(() -> new MarkerNotFoundException("Marker not found with id: " + id));
     }
 
     @Transactional
     public MarkerResponseTo update(Long id, MarkerRequestTo request) {
         Marker existingMarker = markerRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Marker not found", "40403"));
+                .orElseThrow(() -> new MarkerNotFoundException("Marker not found with id: " + id));
 
         existingMarker.setName(request.name());
 
@@ -51,7 +53,7 @@ public class MarkerService {
     @Transactional
     public void delete(Long id) {
         if (!markerRepository.existsById(id)) {
-            throw new EntityNotFoundException("Marker not found", "40403");
+            throw new MarkerNotFoundException("Marker not found with id: " + id);
         }
         markerRepository.deleteById(id);
     }
