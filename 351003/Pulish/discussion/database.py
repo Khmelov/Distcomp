@@ -5,29 +5,37 @@ from config import settings
 
 class CassandraDB:
     def __init__(self):
-        self.cluster = Cluster([settings.CASSANDRA_HOST],
-                               port=settings.CASSANDRA_PORT)
+        self.cluster = Cluster(
+            [settings.CASSANDRA_HOST], port=settings.CASSANDRA_PORT
+        )
         self.session = self.cluster.connect()
         self.session.row_factory = dict_factory
         self.init_db()
 
     def init_db(self):
         self.session.execute("""
-            CREATE KEYSPACE IF NOT EXISTS distcomp 
-            WITH replication = {'class': 'SimpleStrategy',
-                              'replication_factor': 1};
+            CREATE KEYSPACE IF NOT EXISTS distcomp
+            WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
         """)
-        self.session.set_keyspace('distcomp')
+        self.session.set_keyspace("distcomp")
 
         self.session.execute("""
             CREATE TABLE IF NOT EXISTS tbl_comment (
                 id int PRIMARY KEY,
                 topic_id int,
-                content text
+                content text,
+                state text
             );
         """)
         self.session.execute(
-            "CREATE INDEX IF NOT EXISTS ON tbl_comment (topic_id);")
+            "CREATE INDEX IF NOT EXISTS ON tbl_comment (topic_id);"
+        )
+        try:
+            self.session.execute(
+                "ALTER TABLE tbl_comment ADD state text;"
+            )
+        except Exception:
+            pass
 
 
 db = CassandraDB()

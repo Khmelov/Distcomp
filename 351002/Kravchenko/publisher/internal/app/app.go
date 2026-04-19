@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"labs/publisher/internal/client/kafka"
 	"labs/publisher/internal/client"
 	"labs/publisher/internal/config"
 	editorctrl "labs/publisher/internal/controller/editor"
@@ -49,10 +50,9 @@ func (a *App) Run() error {
 	}
 	log.Println("Successfully connected to the database!")
 
-	disClient := client.NewDiscussionClient(a.cfg.DiscussionBaseURL)
+	disClient := kafka.NewKafkaDiscussionClient(a.cfg.Brokers)
 
 	repos := repository.NewCas(db, disClient)
-	//repos := repository.NewPg(db)
 	services := service.New(repos)
 
 	editorController := editorctrl.NewEditorController(services.EditorService())

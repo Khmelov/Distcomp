@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using Additions.DAO;
 
 namespace ArticleHouse.DAO.Models;
 

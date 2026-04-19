@@ -20,8 +20,13 @@ public class LabelController {
     }
 
     @GetMapping
-    public List<LabelResponseTo> findAll() {
-        return labelService.findAll();
+    public List<LabelResponseTo> findAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String name) {
+        return labelService.findAll(page, size, sortBy, sortDir, name);
     }
 
     @GetMapping("/{id}")
