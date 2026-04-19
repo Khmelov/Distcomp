@@ -12,6 +12,7 @@ class NoticeService:
         self._current_id = 1
 
     def _generate_id(self) -> int:
+        # Простая генерация ID (в Cassandra нет автоинкремента)
         current = self._current_id
         self._current_id += 1
         return current
@@ -20,6 +21,7 @@ class NoticeService:
         if len(dto.content) < 2 or len(dto.content) > 2048:
             raise ValueError("Content must be between 2 and 2048 characters")
 
+        # Создание entity
         entity = Notice(
             id=self._generate_id(),
             content=dto.content,
@@ -58,7 +60,7 @@ class NoticeService:
             id=notice_id,
             content=dto.content,
             story_id=dto.story_id,
-            country=existing.country
+            country=existing.country  # Сохраняем существующую страну
         )
 
         updated = self._notice_repository.update(entity)
@@ -73,6 +75,8 @@ class NoticeService:
         return True
 
     def get_notices_by_story(self, story_id: int) -> List[NoticeResponseTo]:
+        # В Cassandra нужно указывать partition key (country)
+        # Для упрощения используем get_all и фильтруем
         notices = [n for n in self._notice_repository.get_all() if n.story_id == story_id]
         return [self._to_response(n) for n in notices]
 

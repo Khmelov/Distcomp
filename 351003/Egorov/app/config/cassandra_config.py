@@ -1,4 +1,5 @@
 from cassandra.cluster import Cluster
+from requests import session
 
 
 class CassandraConfig:
@@ -17,6 +18,7 @@ class CassandraConfig:
 
         self.session.set_keyspace('distcomp')
 
+        # Создание таблицы для Notice
         self.session.execute("""
             CREATE TABLE IF NOT EXISTS tbl_notice (
                 country text,
@@ -34,4 +36,5 @@ class CassandraConfig:
             self.cluster.shutdown()
 
 
+# Синглтон для использования во всем приложении
 cassandra_config = CassandraConfig()
