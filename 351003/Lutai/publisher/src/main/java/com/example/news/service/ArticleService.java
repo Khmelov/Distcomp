@@ -69,28 +69,18 @@ public class ArticleService {
 
         return articleMapper.toResponse(savedArticle);
     }
-
-//    public ArticleResponseTo findById(Long id) {
-//        return articleRepository.findById(id)
-//                .map(articleMapper::toResponse)
-//                .orElseThrow(() -> new EntityNotFoundException("Article not found with id: " + id, "40401"));
-//    }
-
     public ArticleResponseTo findById(Long id) {
-        // 1. Берем базовые данные статьи из Postgres через маппер
         ArticleResponseTo baseResponse = articleRepository.findById(id)
                 .map(articleMapper::toResponse)
                 .orElseThrow(() -> new EntityNotFoundException("Article not found with id: " + id, "40401"));
 
-        // 2. Идем в сервис Discussion за сообщениями (Cassandra)
         List<MessageResponseTo> messages;
         try {
             messages = discussionClient.getMessagesByArticleId(id);
         } catch (Exception e) {
-            messages = List.of(); // Если сервис упал, возвращаем пустой список
+            messages = List.of();
         }
 
-        // 3. Создаем НОВЫЙ рекорд, копируя данные и добавляя сообщения
         return new ArticleResponseTo(
                 baseResponse.id(),
                 baseResponse.writerId(),
@@ -99,7 +89,7 @@ public class ArticleService {
                 baseResponse.created(),
                 baseResponse.modified(),
                 baseResponse.markerIds(),
-                messages // <-- Передаем полученные сообщения в конструктор
+                messages
         );
     }
 
@@ -134,23 +124,11 @@ public class ArticleService {
                 .map(marker -> new MarkerResponseTo(marker.getId(), marker.getName()))
                 .collect(Collectors.toList());
     }
-
-//    public List<MessageResponseTo> getMessagesByArticleId(Long id) {
-//        Article article = articleRepository.findById(id)
-//                .orElseThrow(() -> new EntityNotFoundException("Article not found", "40401"));
-//
-//        return article.getMessages().stream()
-//                .map(msg -> new MessageResponseTo(msg.getId(), article.getId(), msg.getContent()))
-//                .collect(Collectors.toList());
-//    }
-
     public List<MessageResponseTo> getMessagesByArticleId(Long id) {
-        // Проверяем, существует ли статья вообще
         if (!articleRepository.existsById(id)) {
             throw new EntityNotFoundException("Article not found", "40401");
         }
 
-        // Просто перенаправляем запрос в микросервис обсуждений
         try {
             return discussionClient.getMessagesByArticleId(id);
         } catch (Exception e) {

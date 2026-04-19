@@ -22,7 +22,6 @@ public class MessageService {
     private final KafkaTemplate<String, MessageResponseTo> kafkaTemplate;
     private static final String IN_TOPIC = "InTopic";
 
-    // Создание сообщения через Kafka (Асинхронно)
     public MessageResponseTo create(MessageRequestTo request) {
         Long generatedId = System.currentTimeMillis();
 
@@ -42,12 +41,8 @@ public class MessageService {
     public void listenOutTopic(@Payload MessageResponseTo messageDto) {
         System.out.println("Модерация завершена для сообщения ID: " + messageDto.id());
         System.out.println("Статус: " + messageDto.state());
-
-        // Здесь можно добавить логику уведомления пользователя через WebSocket
-        // или просто логирование для отладки
     }
 
-    // Остальные методы пока остаются на REST, как требует задание (не отключать REST)
     public List<MessageResponseTo> findAll(int page, int size, String sortBy) {
         MessageResponseTo[] response = restTemplate.getForObject(DISCUSSION_URL, MessageResponseTo[].class);
         return response != null ? Arrays.asList(response) : List.of();

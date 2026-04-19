@@ -33,11 +33,10 @@ public class MessageService {
 
         if (content.contains("спам") || content.contains("реклама")) {
             finalState = MessageState.DECLINE;
-        } else if (content.length() < 3) { // Слишком короткие сообщения
+        } else if (content.length() < 3) {
             finalState = MessageState.DECLINE;
         }
 
-        // Сохранение в Cassandra
         Message messageEntity = Message.builder()
                 .key(new MessageKey(messageDto.articleId(), messageDto.id()))
                 .content(messageDto.content())
@@ -45,7 +44,6 @@ public class MessageService {
                 .build();
         messageRepository.save(messageEntity);
 
-        // Отправка подтверждения в OutTopic
         MessageResponseTo updatedResponse = new MessageResponseTo(
                 messageDto.id(), messageDto.articleId(), messageDto.content(), finalState
         );

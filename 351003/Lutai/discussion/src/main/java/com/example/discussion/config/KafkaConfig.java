@@ -11,8 +11,8 @@ public class KafkaConfig {
     @Bean
     public NewTopic inTopic() {
         return TopicBuilder.name("InTopic")
-                .partitions(3) // Разделяем данные на 3 части для масштабирования
-                .replicas(1)   // Replication Factor (для 1 брокера ставим 1)
+                .partitions(3)
+                .replicas(1)
                 .build();
     }
 
