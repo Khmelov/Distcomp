@@ -6,19 +6,21 @@ import by.bsuir.distcomp.entity.Editor;
 import by.bsuir.distcomp.exception.DuplicateException;
 import by.bsuir.distcomp.exception.ResourceNotFoundException;
 import by.bsuir.distcomp.mapper.EditorMapper;
-import by.bsuir.distcomp.repository.impl.InMemoryEditorRepository;
+import by.bsuir.distcomp.repository.EditorRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class EditorService {
 
-    private final InMemoryEditorRepository editorRepository;
+    private final EditorRepository editorRepository;
     private final EditorMapper editorMapper;
 
-    public EditorService(InMemoryEditorRepository editorRepository, EditorMapper editorMapper) {
+    public EditorService(EditorRepository editorRepository, EditorMapper editorMapper) {
         this.editorRepository = editorRepository;
         this.editorMapper = editorMapper;
     }
@@ -32,12 +34,14 @@ public class EditorService {
         return editorMapper.toResponseDto(saved);
     }
 
+    @Transactional(readOnly = true)
     public EditorResponseTo getById(Long id) {
         Editor entity = editorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Editor with id " + id + " not found", 40401));
         return editorMapper.toResponseDto(entity);
     }
 
+    @Transactional(readOnly = true)
     public List<EditorResponseTo> getAll() {
         return editorRepository.findAll().stream()
                 .map(editorMapper::toResponseDto)
@@ -45,14 +49,13 @@ public class EditorService {
     }
 
     public EditorResponseTo update(EditorRequestTo dto) {
-        if (!editorRepository.existsById(dto.getId())) {
-            throw new ResourceNotFoundException("Editor with id " + dto.getId() + " not found", 40402);
-        }
+        Editor existing = editorRepository.findById(dto.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Editor with id " + dto.getId() + " not found", 40402));
         if (editorRepository.existsByLoginAndIdNot(dto.getLogin(), dto.getId())) {
             throw new DuplicateException("Editor with login '" + dto.getLogin() + "' already exists", 40302);
         }
-        Editor entity = editorMapper.toEntity(dto);
-        Editor updated = editorRepository.update(entity);
+        editorMapper.updateEntityFromDto(dto, existing);
+        Editor updated = editorRepository.save(existing);
         return editorMapper.toResponseDto(updated);
     }
 

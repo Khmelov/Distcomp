@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { V1AppModule } from './api/v1.0/v1.module';
 import { RouterModule } from '@nestjs/core';
+import { KafkaModule } from './kafka/kafka.module';
 
 @Module({
   imports: [
+    KafkaModule,
     V1AppModule,
     RouterModule.register([
       {

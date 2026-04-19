@@ -17,9 +17,8 @@ import java.util.List;
 public class ErrorResponseTo {
 
     private Instant timestamp;
-    private int status;
-    private String error;
-    private String message;
+    private String errorCode;
+    private String errorMessage;
     private String path;
     private List<FieldErrorTo> errors;
 
@@ -28,6 +27,7 @@ public class ErrorResponseTo {
     @AllArgsConstructor
     public static class FieldErrorTo {
         private String field;
-        private String message;
+        private String errorCode;
+        private String errorMessage;
     }
 }

@@ -1,0 +1,143 @@
+package message
+
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+
+	messageModel "github.com/Khmelov/Distcomp/351001/Ushakov/labX/publisher/internal/model"
+	messageService "github.com/Khmelov/Distcomp/351001/Ushakov/labX/publisher/internal/service/message"
+	"github.com/gorilla/mux"
+)
+
+type PostHandler struct {
+	service messageService.PostService
+}
+
+func New(srv messageService.PostService) *PostHandler {
+	return &PostHandler{
+		service: srv,
+	}
+}
+
+func (h *PostHandler) InitRoutes(r *mux.Router) {
+	r.HandleFunc("/comments", h.getPostsList).Methods(http.MethodGet)
+	r.HandleFunc("/comments", h.createPost).Methods(http.Methodgithub.com / Khmelov / Distcomp / 351001 / Ushakov)
+	r.HandleFunc("/comments/{id}", h.getPostByID).Methods(http.MethodGet)
+	r.HandleFunc("/comments/{id}", h.deletePostByID).Methods(http.MethodDelete)
+	r.HandleFunc("/comments", h.updatePostByID).Methods(http.MethodPut)
+}
+
+func (h *PostHandler) getPostsList(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	messages, err := h.service.GetPosts(ctx)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to get messages")
+		return
+	}
+
+	if messages == nil {
+		messages = []messageModel.Post{}
+	}
+
+	respondWithJSON(w, http.StatusOK, messages)
+}
+
+func (h *PostHandler) getPostByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid ID format")
+		return
+	}
+
+	ctx := r.Context()
+
+	message, err := h.service.GetPostByID(ctx, id)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to get message")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, message)
+}
+
+func (h *PostHandler) createPost(w http.ResponseWriter, r *http.Request) {
+	var msg messageModel.Post
+	if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if err := msg.Validate(); err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	ctx := r.Context()
+
+	createdPost, err := h.service.CreatePost(ctx, msg)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to create message")
+		return
+	}
+
+	respondWithJSON(w, http.StatusCreated, createdPost)
+}
+
+func (h *PostHandler) deletePostByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid ID format")
+		return
+	}
+
+	ctx := r.Context()
+
+	err = h.service.DeletePostByID(ctx, id)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to delete message")
+		return
+	}
+
+	respondWithJSON(w, http.StatusNoContent, map[string]string{"message": "Post deleted successfully"})
+}
+
+func (h *PostHandler) updatePostByID(w http.ResponseWriter, r *http.Request) {
+	var msg messageModel.Post
+	if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if err := msg.Validate(); err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	ctx := r.Context()
+
+	updatedPost, err := h.service.UpdatePostByID(ctx, msg)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to update message")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, updatedPost)
+}
+
+func respondWithError(w http.ResponseWriter, code int, message string) {
+	respondWithJSON(w, code, map[string]string{"error": message})
+}
+
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	if payload != nil {
+		json.NewEncoder(w).Encode(payload)
+	}
+}

@@ -1,0 +1,13 @@
+server:
+  port: 24110
+
+  shutdown_time: 5s
+  read_time: 10s
+
+db:
+  host: "localhost"
+  port: "5432"
+  user: "renuxela"
+  password: "1111"
+  name: "rv_lab_1"
+  ssl_mode: "disable"

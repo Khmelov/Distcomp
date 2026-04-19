@@ -1,27 +1,25 @@
-from fastapi import APIRouter, status, Body
-from app.schemas.note import NoteRequestTo, NoteResponseTo
-from app.services.note_service import NoteService
-from typing import List
+from fastapi import APIRouter, status, Depends, HTTPException
+from schemas.note import NoteRequestTo, NoteResponseTo
+from clients.discussion_client import DiscussionClient
+from kafka_producer import kafka_producer
+from kafka_config import IN_TOPIC
 
 router = APIRouter()
-service = NoteService()
+discussion_client = DiscussionClient()
+
 
 @router.post("", response_model=NoteResponseTo, status_code=status.HTTP_201_CREATED)
-async def create(dto: NoteRequestTo = Body(...)):
-    return service.create(dto)
+async def create_note(dto: NoteRequestTo):
+    # Сначала создаем заметку через REST в discussion
+    note = await discussion_client.create_note(dto)
+    if not note:
+        raise HTTPException(status_code=500, detail="Failed to create note")
 
-@router.get("", response_model=List[NoteResponseTo])
-async def get_all():
-    return service.get_all()
+    # Отправляем в Kafka для модерации
+    await kafka_producer.send_message(
+        IN_TOPIC,
+        key=str(note.issueId),  # Ключ - issueId для гарантии попадания в одну партицию
+        value=note.model_dump()
+    )
 
-@router.get("/{id}", response_model=NoteResponseTo)
-async def get_by_id(id: int):
-    return service.get_by_id(id)
-
-@router.put("/{id}", response_model=NoteResponseTo)
-async def update(id: int, dto: NoteRequestTo = Body(...)):
-    return service.update(id, dto)
-
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete(id: int):
-    service.delete(id)
+    return note

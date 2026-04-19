@@ -1,0 +1,84 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="1" author="student">
+        <createTable tableName="tbl_user" schemaName="public">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="student">
+        <createTable tableName="tbl_article" schemaName="public">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP"/>
+            <column name="modified" type="TIMESTAMP"/>
+            <column name="user_id" type="BIGINT"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_article"
+                baseColumnNames="user_id"
+                referencedTableName="tbl_user"
+                referencedColumnNames="id"
+                constraintName="fk_article_user"/>
+    </changeSet>
+
+    <changeSet id="4" author="student">
+        <createTable tableName="tbl_sticker" schemaName="public">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5" author="student">
+        <createTable tableName="tbl_article_sticker" schemaName="public">
+            <column name="article_id" type="BIGINT"/>
+            <column name="sticker_id" type="BIGINT"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_article_sticker"
+                baseColumnNames="article_id"
+                referencedTableName="tbl_article"
+                referencedColumnNames="id"
+                constraintName="fk_article_sticker_article"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_article_sticker"
+                baseColumnNames="sticker_id"
+                referencedTableName="tbl_sticker"
+                referencedColumnNames="id"
+                constraintName="fk_article_sticker_sticker"/>
+    </changeSet>
+
+</databaseChangeLog>
