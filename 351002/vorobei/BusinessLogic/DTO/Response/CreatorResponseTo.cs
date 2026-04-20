@@ -17,5 +17,22 @@ namespace BusinessLogic.DTO.Response
 
         [JsonPropertyName("lastname")]
         public string LastName { get; set; } = string.Empty;
+
+        public override bool Equals(object obj)
+        {
+            if (obj is not CreatorResponseTo other)
+                return false;
+
+            return Id == other.Id &&
+                   Login == other.Login &&
+                   Password == other.Password &&
+                   FirstName == other.FirstName &&
+                   LastName == other.LastName;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id, Login, Password, FirstName, LastName);
+        }
     }
 }

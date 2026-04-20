@@ -3,6 +3,7 @@ using BusinessLogic.Servicies;
 using BusinessLogic.DTO.Response;
 using BusinessLogic.DTO.Request;
 using DataAccess.Models;
+using Infrastructure.Exceptions;
 
 namespace Presentation.Controllers
 {

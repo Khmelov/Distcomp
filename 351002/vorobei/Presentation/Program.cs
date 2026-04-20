@@ -1,34 +1,75 @@
+using AutoMapper;
 using BusinessLogic.DTO.Request;
 using BusinessLogic.DTO.Response;
 using BusinessLogic.Profiles;
-using BusinessLogic.Services;
+using BusinessLogic.Repositories;
+using Infrastructure.ServiceImplementation;
 using BusinessLogic.Servicies;
 using DataAccess.Models;
-using BusinessLogic.Repositories;
+using Infrastructure.DatabaseContext;
 using Infrastructure.RepositoriesImplementation;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddDbContext<DistcompContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsqlOptions => npgsqlOptions
+            .MigrationsAssembly("Infrastructure")
+            .MigrationsHistoryTable("__EFMigrationsHistory", "public")
+    ));
+
 builder.Services.AddControllers();
-builder.Services.AddSingleton<IRepository<Creator>, InMemoryRepository<Creator>>();
+builder.Services.AddScoped<IRepository<Creator>, EfCoreRepository<Creator>>();
 builder.Services.AddScoped<IBaseService<CreatorRequestTo, CreatorResponseTo>,
-                           BaseService<Creator, CreatorRequestTo, CreatorResponseTo>>();
-builder.Services.AddSingleton<IRepository<Mark>, InMemoryRepository<Mark>>();
+                           CreatorService>();
+builder.Services.AddScoped<IRepository<Mark>, EfCoreRepository<Mark>>();
 builder.Services.AddScoped<IBaseService<MarkRequestTo, MarkResponseTo>,
                            BaseService<Mark, MarkRequestTo, MarkResponseTo>>();
-builder.Services.AddSingleton<IRepository<Story>, InMemoryRepository<Story>>();
-builder.Services.AddScoped<IBaseService<StoryRequestTo, StoryResponseTo>,
-                           BaseService<Story, StoryRequestTo, StoryResponseTo>>();
-builder.Services.AddSingleton<IRepository<Post>, InMemoryRepository<Post>>();
-builder.Services.AddScoped<IBaseService<PostRequestTo, PostResponseTo>,
-                           BaseService<Post, PostRequestTo, PostResponseTo>>();
+builder.Services.AddScoped<IRepository<Story>, EfCoreRepository<Story>>();
+builder.Services.AddScoped<IBaseService<StoryRequestTo, StoryResponseTo>>(provider =>
+{
+    var storyRepository = provider.GetRequiredService<IRepository<Story>>();
+    var creatorRepository = provider.GetRequiredService<IRepository<Creator>>();
+    var markRepository = provider.GetRequiredService<IRepository<Mark>>();
+    var context = provider.GetRequiredService<DistcompContext>();
+    var mapper = provider.GetRequiredService<IMapper>();
+    return new StoryService(storyRepository, creatorRepository, markRepository, context, mapper);
+});
+builder.Services.AddScoped<IRepository<Post>, EfCoreRepository<Post>>();
+builder.Services.AddScoped<IBaseService<PostRequestTo, PostResponseTo>>(provider =>
+{
+    var storyRepository = provider.GetRequiredService<IRepository<Story>>();
+    var postRepository = provider.GetRequiredService<IRepository<Post>>();
+    var mapper = provider.GetRequiredService<IMapper>();
+    return new PostService(postRepository, storyRepository, mapper);
+});
 
-builder.Services.AddAutoMapper(typeof(UserProfile));
+builder.Services.AddSingleton(provider =>
+{
+    var config = new MapperConfiguration(
+        cfg =>
+        {
+            cfg.AddProfile<UserProfile>();
+        },
+        provider.GetService<ILoggerFactory>()
+    );
+
+    return config.CreateMapper();
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DistcompContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {
