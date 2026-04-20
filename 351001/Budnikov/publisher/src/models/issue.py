@@ -10,7 +10,5 @@ class Issue(models.Model):
     modified = fields.DatetimeField(auto_now=True)
     labels = fields.ManyToManyField("models.Label", related_name="issues", through="m2m_issues_labels")
 
-    posts: fields.ReverseRelation["Post"]
-
     class Meta:
         table = "tbl_issue"

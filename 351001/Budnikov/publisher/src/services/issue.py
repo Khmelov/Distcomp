@@ -1,3 +1,5 @@
+import os
+
 from tortoise.exceptions import IntegrityError
 from tortoise.transactions import in_transaction
 
@@ -5,6 +7,9 @@ from src.services.base import BaseCRUDService
 from src.models import Issue, Editor, Label
 from src.schemas.dto import IssueRequestTo, IssueResponseTo, EditorResponseTo, LabelResponseTo, PostResponseTo
 from src.core.exceptions import BaseAppException
+
+
+DISCUSSION_URL = os.getenv("DISCUSSION_SERVICE_URL", "http://localhost:24130/api/v1.0/posts")
 
 
 class IssueService(BaseCRUDService[Issue, IssueRequestTo, IssueRequestTo, IssueResponseTo]):
@@ -103,11 +108,6 @@ class IssueService(BaseCRUDService[Issue, IssueRequestTo, IssueRequestTo, IssueR
         if not issue: raise BaseAppException(404, "40403", "Issue not found")
         return [LabelResponseTo.model_validate(label) for label in issue.labels]
 
-    async def get_posts_by_issue(self, issue_id: int) -> list[PostResponseTo]:
-        issue = await self.model.get_or_none(id=issue_id).prefetch_related("posts")
-        if not issue: raise BaseAppException(404, "40403", "Issue not found")
-        return [PostResponseTo.model_validate(post) for post in issue.posts]
-
     async def search_issues(self, label_names=None, label_ids=None, editor_login=None, title=None, content=None):
         query = self.model.all()
         if label_names: query = query.filter(labels__name__in=label_names)
@@ -131,10 +131,18 @@ class IssueService(BaseCRUDService[Issue, IssueRequestTo, IssueRequestTo, IssueR
         return [LabelResponseTo.model_validate(label) for label in issue.labels]
 
     async def get_posts_by_issue(self, issue_id: int) -> list[PostResponseTo]:
-        issue = await self.model.get_or_none(id=issue_id).prefetch_related("posts")
+        issue = await self.model.get_or_none(id=issue_id)
         if not issue:
             raise BaseAppException(404, "40403", "Issue not found")
-        return [PostResponseTo.model_validate(post) for post in issue.posts]
+
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"{DISCUSSION_URL}?issueId={issue_id}")
+                if resp.status_code == 200:
+                    return [PostResponseTo(**p) for p in resp.json()]
+                return []
+        except httpx.ConnectError:
+            return []
 
     async def search_issues(
             self,

@@ -18,7 +18,6 @@ TORTOISE_CONFIG = {
         "models": {
             "models": [
                 "src.models.editor",
-                "src.models.post",
                 "src.models.issue",
                 "src.models.label",
             ],

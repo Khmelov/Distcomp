@@ -15,9 +15,24 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
-    build: .
-    container_name: distcomp_app
+  cassandra:
+      image: cassandra:4.1
+      container_name: distcomp_cassandra
+      restart: always
+      ports:
+        - "9042:9042"
+      environment:
+        - CASSANDRA_CLUSTER_NAME=DiscussionCluster
+      healthcheck:
+        test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces' || exit 1"]
+        interval: 15s
+        timeout: 10s
+        retries: 5
+        start_period: 90s
+
+  publisher:
+    build: ./publisher
+    container_name: distcomp_publisher
     restart: always
     ports:
       - "24110:24110"
@@ -27,6 +42,19 @@ services:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
       POSTGRES_DB: distcomp
+      DISCUSSION_SERVICE_URL: http://discussion:24130/api/v1.0/posts
     depends_on:
       db:
+        condition: service_healthy
+
+  discussion:
+    build: ./discussion
+    container_name: distcomp_discussion
+    restart: always
+    ports:
+      - "24130:24130"
+    environment:
+      CASSANDRA_HOST: cassandra
+    depends_on:
+      cassandra:
         condition: service_healthy

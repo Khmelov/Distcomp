@@ -36,7 +36,7 @@ class PostResponseTo(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
     id: int
     content: str
-    issue_id: int = Field(serialization_alias="issueId")
+    issue_id: int = Field(alias="issueId")
 
 
 class IssueRequestTo(BaseModel):
