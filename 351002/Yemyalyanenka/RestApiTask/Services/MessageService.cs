@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using RestApiTask.Infrastructure.Exceptions;
 using RestApiTask.Models.DTOs;
 using RestApiTask.Models.Entities;
@@ -20,8 +20,16 @@ namespace RestApiTask.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<MessageResponseTo>> GetAllAsync() =>
-            _mapper.Map<IEnumerable<MessageResponseTo>>(await _repo.GetAllAsync());
+        public async Task<IEnumerable<MessageResponseTo>> GetAllAsync(QueryOptions? options = null)
+        {
+            if (options is null)
+            {
+                return _mapper.Map<IEnumerable<MessageResponseTo>>(await _repo.GetAllAsync());
+            }
+
+            var page = await _repo.GetAllAsync(options);
+            return _mapper.Map<IEnumerable<MessageResponseTo>>(page.Items);
+        }
 
         public async Task<MessageResponseTo> GetByIdAsync(long id)
         {
@@ -53,7 +61,7 @@ namespace RestApiTask.Services
         private async Task Validate(MessageRequestTo r)
         {
             if (r.Content.Length < 2 || r.Content.Length > 2048) throw new ValidationException("Content: 2-2048 chars");
-            if (await _articleRepo.GetByIdAsync(r.ArticleId) == null) throw new ValidationException("Invalid ArticleId");
+            if (await _articleRepo.GetByIdAsync(r.ArticleId) == null) throw new ForbiddenException("Invalid ArticleId");
         }
     }
 }
