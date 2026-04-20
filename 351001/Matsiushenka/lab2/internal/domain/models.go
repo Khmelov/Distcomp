@@ -4,8 +4,6 @@ import (
 	"time"
 )
 
-// --- ENTITIES ---
-
 type Editor struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
 	Login     string    `gorm:"unique;not null;size:50" json:"login"`
@@ -51,8 +49,6 @@ type Note struct {
 
 func (Note) TableName() string { return "tbl_note" }
 
-// --- DTOs (Data Transfer Objects) ---
-
 type EditorDTO struct {
 	ID        *uint  `json:"id,omitempty"`
 	Login     string `json:"login" binding:"required,min=3,max=50"`
@@ -66,7 +62,7 @@ type TopicDTO struct {
 	EditorID uint     `json:"editorId" binding:"required"`
 	Title    string   `json:"title" binding:"required,min=3,max=50"`
 	Content  string   `json:"content" binding:"required"`
-	Markers  []string `json:"markers,omitempty"` // Имена маркеров
+	Markers  []string `json:"markers,omitempty"`
 }
 
 type MarkerDTO struct {
