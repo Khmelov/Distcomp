@@ -4,6 +4,7 @@ from app.dto.user import UserRequestTo, UserResponseTo
 from app.models.user import User
 from app.models.mark import Mark
 from app.core.exceptions import NotFoundException, AppException
+from app.cache.redis_client import cache_get, cache_set, cache_delete
 
 
 class UserService:
@@ -20,17 +21,30 @@ class UserService:
         except IntegrityError:
             self.db.rollback()
             raise AppException("Login already exists", 40301, 403)
-        return self._to_response(user)
+        result = self._to_response(user)
+        cache_set(f"user:{user.id}", result.model_dump())
+        cache_delete("users:all")
+        return result
 
     def find_all(self):
+        cached = cache_get("users:all")
+        if cached is not None:
+            return [UserResponseTo(**u) for u in cached]
         users = self.db.query(User).all()
-        return [self._to_response(u) for u in users]
+        result = [self._to_response(u) for u in users]
+        cache_set("users:all", [r.model_dump() for r in result])
+        return result
 
     def find_by_id(self, id: int):
+        cached = cache_get(f"user:{id}")
+        if cached is not None:
+            return UserResponseTo(**cached)
         user = self.db.query(User).filter(User.id == id).first()
         if not user:
             raise NotFoundException("User not found", 40401)
-        return self._to_response(user)
+        result = self._to_response(user)
+        cache_set(f"user:{id}", result.model_dump())
+        return result
 
     def update(self, dto: UserRequestTo):
         user = self.db.query(User).filter(User.id == dto.id).first()
@@ -46,7 +60,10 @@ class UserService:
         except IntegrityError:
             self.db.rollback()
             raise AppException("Login already exists", 40301, 403)
-        return self._to_response(user)
+        result = self._to_response(user)
+        cache_set(f"user:{user.id}", result.model_dump())
+        cache_delete("users:all")
+        return result
 
     def delete(self, id: int):
         user = self.db.query(User).filter(User.id == id).first()
@@ -66,6 +83,9 @@ class UserService:
             if mark_in_db and len(mark_in_db.topics) == 0:
                 self.db.delete(mark_in_db)
         self.db.commit()
+
+        cache_delete(f"user:{id}")
+        cache_delete("users:all")
 
     def _to_response(self, user: User) -> UserResponseTo:
         return UserResponseTo(id=user.id, login=user.login,
