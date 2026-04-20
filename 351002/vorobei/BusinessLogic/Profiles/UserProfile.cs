@@ -7,7 +7,7 @@ namespace BusinessLogic.Profiles
 {
     public class UserProfile : Profile
     {
-        public UserProfile() 
+        public UserProfile()
         {
             CreateMap<CreatorRequestTo, Creator>();
             CreateMap<Creator, CreatorResponseTo>();
@@ -18,8 +18,10 @@ namespace BusinessLogic.Profiles
             CreateMap<PostRequestTo, Post>();
             CreateMap<Post, PostResponseTo>();
 
-            CreateMap<StoryRequestTo, Story>();
+            CreateMap<StoryRequestTo, Story>()
+                .ForMember(dest => dest.Marks, opt => opt.Ignore());
             CreateMap<Story, StoryResponseTo>();
-        }        
+
+        }
     }
 }
