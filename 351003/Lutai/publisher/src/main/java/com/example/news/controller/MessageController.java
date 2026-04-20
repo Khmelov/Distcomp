@@ -36,10 +36,11 @@ public class MessageController {
         return new ResponseEntity<>(messageService.create(request), HttpStatus.CREATED);
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     public ResponseEntity<MessageResponseTo> update(
+            @PathVariable Long id,
             @Valid @RequestBody MessageRequestTo request) {
-        return ResponseEntity.ok(messageService.update(request.id(), request));
+        return ResponseEntity.ok(messageService.update(id, request));
     }
 
     @DeleteMapping("/{id}")

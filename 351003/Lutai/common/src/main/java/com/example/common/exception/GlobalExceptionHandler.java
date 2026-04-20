@@ -38,4 +38,6 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleDuplicateLogin(LoginAlreadyExistsException ex) {
         return new ErrorResponse(ex.getMessage(), "40301");
     }
+
+
 }

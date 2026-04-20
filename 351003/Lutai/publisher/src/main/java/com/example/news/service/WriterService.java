@@ -8,6 +8,8 @@ import com.example.common.exception.LoginAlreadyExistsException;
 import com.example.news.mapper.WriterMapper;
 import com.example.news.repository.WriterRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -43,6 +45,7 @@ public class WriterService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "writers", key = "#id")
     public WriterResponseTo findById(Long id) {
         return writerRepository.findById(id)
                 .map(writerMapper::toResponse)
@@ -50,6 +53,7 @@ public class WriterService {
     }
 
     @Transactional
+    @CacheEvict(value = "writers", key = "#id")
     public WriterResponseTo update(Long id, WriterRequestTo request) {
         Writer existingWriter = writerRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Writer not found", "40401"));
@@ -63,6 +67,7 @@ public class WriterService {
     }
 
     @Transactional
+    @CacheEvict(value = "writers", key = "#id")
     public void delete(Long id) {
         if (!writerRepository.existsById(id)) {
             throw new EntityNotFoundException("Writer not found", "40401");

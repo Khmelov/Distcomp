@@ -4,12 +4,14 @@ import com.example.common.dto.MessageRequestTo;
 import com.example.common.dto.MessageResponseTo;
 import com.example.common.dto.model.enums.MessageState;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,6 +23,7 @@ public class MessageService {
     private final String DISCUSSION_URL = "http://localhost:24130/api/v1.0/messages";
     private final KafkaTemplate<String, MessageResponseTo> kafkaTemplate;
     private static final String IN_TOPIC = "InTopic";
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public MessageResponseTo create(MessageRequestTo request) {
         Long generatedId = System.currentTimeMillis();
@@ -37,11 +40,13 @@ public class MessageService {
         return pendingMessage;
     }
 
-    @KafkaListener(topics = "OutTopic", groupId = "publisher-group")
-    public void listenOutTopic(@Payload MessageResponseTo messageDto) {
-        System.out.println("Модерация завершена для сообщения ID: " + messageDto.id());
-        System.out.println("Статус: " + messageDto.state());
-    }
+@KafkaListener(topics = "OutTopic", groupId = "publisher-group")
+public void listenOutTopic(@Payload MessageResponseTo messageDto) {
+    String cacheKey = "messages::" + messageDto.id();
+    redisTemplate.opsForValue().set(cacheKey, messageDto, Duration.ofMinutes(5));
+
+    System.out.println("Message cached from Kafka: " + messageDto.id());
+}
 
     public List<MessageResponseTo> findAll(int page, int size, String sortBy) {
         MessageResponseTo[] response = restTemplate.getForObject(DISCUSSION_URL, MessageResponseTo[].class);
@@ -49,15 +54,33 @@ public class MessageService {
     }
 
     public MessageResponseTo findById(Long id) {
+        String cacheKey = "messages::" + id;
+
+        MessageResponseTo cached = (MessageResponseTo) redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) return cached;
+
+        kafkaTemplate.send("InTopic", id.toString(), new MessageResponseTo(id, null, null, null));
+
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() - start < 1000) {
+            cached = (MessageResponseTo) redisTemplate.opsForValue().get(cacheKey);
+            if (cached != null) return cached;
+
+            try { Thread.sleep(100); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+        }
+
         return restTemplate.getForObject(DISCUSSION_URL + "/" + id, MessageResponseTo.class);
     }
 
     public void delete(Long id) {
+        redisTemplate.delete("messages::" + id);
         restTemplate.delete(DISCUSSION_URL + "/" + id);
     }
 
     public MessageResponseTo update(Long id, MessageRequestTo request) {
+        redisTemplate.delete("messages::" + id);
         restTemplate.put(DISCUSSION_URL + "/" + id, request);
-        return findById(id);
+
+        return new MessageResponseTo(id, request.articleId(), request.content(), MessageState.APPROVE);
     }
 }
