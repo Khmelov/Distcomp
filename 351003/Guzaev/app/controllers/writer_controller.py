@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Response
 from typing import List
-from app.dtos.writer_dto import WriterRequestTo, WriterResponseTo
-from app.services.writer_service import WriterService
+from dtos.writer_dto import WriterRequestTo, WriterResponseTo
+from services.writer_service import WriterService
 
 router = APIRouter(prefix="/api/v1.0/writers", tags=["writers"])
 service = WriterService()
