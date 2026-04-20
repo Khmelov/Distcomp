@@ -5,6 +5,7 @@ from app.models.user import User
 from app.models.mark import Mark
 from app.core.exceptions import NotFoundException, AppException
 from app.cache.redis_client import cache_get, cache_set, cache_delete
+from app.core.security import hash_password
 
 
 class UserService:
@@ -12,8 +13,13 @@ class UserService:
         self.db = db
 
     def create(self, dto: UserRequestTo) -> UserResponseTo:
-        user = User(login=dto.login, password=dto.password,
-                    firstname=dto.firstname, lastname=dto.lastname)
+        user = User(
+            login=dto.login,
+            password=hash_password(dto.password),
+            firstname=dto.firstname,
+            lastname=dto.lastname,
+            role=dto.role,
+        )
         try:
             self.db.add(user)
             self.db.commit()
@@ -54,6 +60,7 @@ class UserService:
         user.login = dto.login
         user.firstname = dto.firstname
         user.lastname = dto.lastname
+        user.role = dto.role
         try:
             self.db.commit()
             self.db.refresh(user)
@@ -88,6 +95,10 @@ class UserService:
         cache_delete("users:all")
 
     def _to_response(self, user: User) -> UserResponseTo:
-        return UserResponseTo(id=user.id, login=user.login,
-                              firstname=user.firstname,
-                              lastname=user.lastname)
+        return UserResponseTo(
+            id=user.id,
+            login=user.login,
+            firstname=user.firstname,
+            lastname=user.lastname,
+            role=user.role,
+        )

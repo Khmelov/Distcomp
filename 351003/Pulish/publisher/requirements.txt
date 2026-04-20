@@ -11,12 +11,14 @@ httpx==0.28.1
 idna==3.11
 iniconfig==2.3.0
 packaging==26.0
+passlib[bcrypt]==1.7.4
 pluggy==1.6.0
 pydantic==2.12.5
 pydantic_core==2.41.5
 pydantic-settings==2.3.4
 Pygments==2.19.2
 pytest==9.0.2
+python-jose[cryptography]==3.3.0
 redis>=5.0.0
 starlette==0.50.0
 typing-inspection==0.4.2
