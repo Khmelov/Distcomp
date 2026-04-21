@@ -15,6 +15,8 @@ class Settings(BaseSettings):
 
     DISCUSSION_SERVICE_URL: str = "http://localhost:24130/api/v1.0"
 
+    KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
+
     @property
     def DATABASE_URL(self) -> str:
         return (
