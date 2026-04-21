@@ -8,6 +8,10 @@ import by.bsuir.distcomp.exception.ResourceNotFoundException;
 import by.bsuir.distcomp.mapper.TweetMapper;
 import by.bsuir.distcomp.repository.EditorRepository;
 import by.bsuir.distcomp.repository.TweetRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +35,8 @@ public class TweetService {
         this.tweetMapper = tweetMapper;
     }
 
+    @Caching(put = @CachePut(value = "tweets", key = "#result.id"),
+            evict = @CacheEvict(value = "tweets", key = "'all'"))
     public TweetResponseTo create(TweetRequestTo dto) {
         if (!editorRepository.existsById(dto.getEditorId())) {
             throw new ResourceNotFoundException("Editor with id " + dto.getEditorId() + " not found", 40404);
@@ -45,6 +51,7 @@ public class TweetService {
         return tweetMapper.toResponseDto(saved);
     }
 
+    @Cacheable(value = "tweets", key = "#id")
     @Transactional(readOnly = true)
     public TweetResponseTo getById(Long id) {
         Tweet entity = tweetRepository.findById(id)
@@ -52,6 +59,7 @@ public class TweetService {
         return tweetMapper.toResponseDto(entity);
     }
 
+    @Cacheable(value = "tweets", key = "'all'")
     @Transactional(readOnly = true)
     public List<TweetResponseTo> getAll() {
         return tweetRepository.findAll().stream()
@@ -59,6 +67,8 @@ public class TweetService {
                 .collect(Collectors.toList());
     }
 
+    @Caching(put = @CachePut(value = "tweets", key = "#result.id"),
+            evict = @CacheEvict(value = "tweets", key = "'all'"))
     public TweetResponseTo update(TweetRequestTo dto) {
         Tweet existing = tweetRepository.findById(dto.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Tweet with id " + dto.getId() + " not found", 40406));
@@ -76,6 +86,10 @@ public class TweetService {
         return tweetMapper.toResponseDto(updated);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "tweets", key = "#id"),
+            @CacheEvict(value = "tweets", key = "'all'")
+    })
     public void deleteById(Long id) {
         if (!tweetRepository.existsById(id)) {
             throw new ResourceNotFoundException("Tweet with id " + id + " not found", 40408);

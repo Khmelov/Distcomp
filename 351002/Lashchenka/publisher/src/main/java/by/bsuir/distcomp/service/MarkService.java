@@ -7,6 +7,10 @@ import by.bsuir.distcomp.exception.DuplicateException;
 import by.bsuir.distcomp.exception.ResourceNotFoundException;
 import by.bsuir.distcomp.mapper.MarkMapper;
 import by.bsuir.distcomp.repository.MarkRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +29,8 @@ public class MarkService {
         this.markMapper = markMapper;
     }
 
+    @Caching(put = @CachePut(value = "marks", key = "#result.id"),
+            evict = @CacheEvict(value = "marks", key = "'all'"))
     public MarkResponseTo create(MarkRequestTo dto) {
         if (markRepository.existsByName(dto.getName())) {
             throw new DuplicateException("Mark with name '" + dto.getName() + "' already exists", 40305);
@@ -34,6 +40,7 @@ public class MarkService {
         return markMapper.toResponseDto(saved);
     }
 
+    @Cacheable(value = "marks", key = "#id")
     @Transactional(readOnly = true)
     public MarkResponseTo getById(Long id) {
         Mark entity = markRepository.findById(id)
@@ -41,6 +48,7 @@ public class MarkService {
         return markMapper.toResponseDto(entity);
     }
 
+    @Cacheable(value = "marks", key = "'all'")
     @Transactional(readOnly = true)
     public List<MarkResponseTo> getAll() {
         return markRepository.findAll().stream()
@@ -48,6 +56,8 @@ public class MarkService {
                 .collect(Collectors.toList());
     }
 
+    @Caching(put = @CachePut(value = "marks", key = "#result.id"),
+            evict = @CacheEvict(value = "marks", key = "'all'"))
     public MarkResponseTo update(MarkRequestTo dto) {
         Mark existing = markRepository.findById(dto.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Mark with id " + dto.getId() + " not found", 40410));
@@ -59,6 +69,10 @@ public class MarkService {
         return markMapper.toResponseDto(updated);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "marks", key = "#id"),
+            @CacheEvict(value = "marks", key = "'all'")
+    })
     public void deleteById(Long id) {
         if (!markRepository.existsById(id)) {
             throw new ResourceNotFoundException("Mark with id " + id + " not found", 40411);
