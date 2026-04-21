@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using RestApiTask.Models.DTOs;
+using RestApiTask.Repositories;
 using RestApiTask.Services.Interfaces;
 using AutoMapper;
 
@@ -19,7 +20,8 @@ public class MessagesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<MessageResponseTo>>> GetAll() => Ok(await _service.GetAllAsync());
+    public async Task<ActionResult<IEnumerable<MessageResponseTo>>> GetAll([FromQuery] QueryOptions? options) =>
+        Ok(await _service.GetAllAsync(options));
 
     [HttpGet("{id}")]
     public async Task<ActionResult<MessageResponseTo>> GetById(long id) => Ok(await _service.GetByIdAsync(id));
