@@ -3,7 +3,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from src.deps import get_topic_service
+from src.deps.base import get_topic_service
 from src.schemas.topic import TopicRequestTo, TopicResponseTo
 from src.services import TopicService
 

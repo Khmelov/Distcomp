@@ -4,7 +4,7 @@ from typing import List
 from fastapi import APIRouter
 from fastapi.params import Depends
 
-from src.deps import get_tag_service
+from src.deps.base import get_tag_service
 from src.schemas.tag import TagResponseTo, TagRequestTo
 from src.services import TagService
 

@@ -3,7 +3,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from src.deps import get_author_service
+from src.deps.base import get_author_service
 from src.schemas.author import AuthorResponseTo, AuthorRequestTo
 from src.services.author import AuthorService
 

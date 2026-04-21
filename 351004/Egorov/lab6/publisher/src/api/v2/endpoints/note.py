@@ -3,7 +3,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from src.deps import get_note_service
+from src.deps.base import get_note_service
 from src.schemas.note import NoteResponseTo, NoteRequestTo
 from src.services import NoteService
 

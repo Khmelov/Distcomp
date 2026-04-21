@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from src.core import init_redis, close_redis, init_kafka_producer, close_kafka_producer
 from src.core.database import engine
 from src.domain.models import Base
+from src.api.v2 import router_v2
 from src.api.v1 import router_v1
 from src.core.errors import register_error_handlers
 
@@ -37,3 +38,4 @@ app = FastAPI(title="DistComp", version="1.0", lifespan=lifespan)
 register_error_handlers(app)
 
 app.include_router(router_v1, prefix="/api")
+app.include_router(router_v2, prefix="/api")
