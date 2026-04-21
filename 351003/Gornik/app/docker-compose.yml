@@ -1,0 +1,29 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "24110:24110"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres # Исправлено с 1234
+      - POSTGRES_DB=distcomp       # Изменено для соответствия требованиям (или оставьте rv_db, если так задумано)
+      - POSTGRES_HOST=pg
+      - POSTGRES_PORT=5432
+    depends_on:
+      - pg
+
+  pg:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=distcomp       # Должно совпадать с POSTGRES_DB в app
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pg_data:

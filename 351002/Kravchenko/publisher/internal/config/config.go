@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -16,6 +17,7 @@ type Config struct {
 	DBName            string
 	JWTSecret         string
 	DiscussionBaseURL string
+	Brokers           []string
 }
 
 func Load() (*Config, error) {
@@ -31,6 +33,7 @@ func Load() (*Config, error) {
 		DBPassword: getEnv("DB_PASSWORD", "postgres"),
 		DBName:     getEnv("DB_NAME", "distcomp"),
 		JWTSecret:  getEnv("JWT_SECRET", "your-secret-key"),
+		Brokers:    strings.Split(getEnv("BROKERS", "localhost"), ","),
 
 		// Читаем из окружения, по умолчанию ставим локальный адрес Discussion
 		DiscussionBaseURL: getEnv("DISCUSSION_BASE_URL", "http://localhost:24130"),
