@@ -6,3 +6,9 @@ class ResourceAlreadyExistsError(AppError):
 
 class ResourceNotFoundError(AppError):
     pass
+
+class UnauthorizedError(AppError):
+    pass
+
+class ForbiddenError(AppError):
+    pass

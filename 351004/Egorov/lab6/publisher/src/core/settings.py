@@ -1,6 +1,12 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+class AuthSettings(BaseSettings):
+    token_lifetime: int = Field(default=1800)
+    algorithm: str = Field(default="HS256")
+    secret_key: str = Field(default="super-secret-key")
+
+
 class KafkaSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="kafka_")
 
@@ -37,6 +43,7 @@ class Settings(BaseSettings):
     postgres: PostgresSettings = PostgresSettings()
     kafka: KafkaSettings = KafkaSettings()
     redis: RedisSettings = RedisSettings()
+    auth: AuthSettings = AuthSettings()
     note_service_url: str = Field(default=None)
 
     DEBUG: bool = Field(default=True)

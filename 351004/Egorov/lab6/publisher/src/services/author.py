@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.repositories import AuthorRepository
 from src.schemas.author import AuthorResponseTo, AuthorRequestTo
+from .auth import AuthService
 
 
 class AuthorService:
@@ -20,6 +21,7 @@ class AuthorService:
         return [AuthorResponseTo.model_validate(a) for a in authors]
 
     async def create(self, dto: AuthorRequestTo) -> AuthorResponseTo:
+        dto.password = AuthService.get_hashed_password(dto.password)
         user_args = dto.model_dump()
         created_author = await self.author_repo.create(**user_args)
         await self.session.commit()

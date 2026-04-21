@@ -7,6 +7,13 @@ from src.deps.base import get_author_service
 from src.schemas.author import AuthorResponseTo, AuthorRequestTo
 from src.services.author import AuthorService
 
+public_router = APIRouter(prefix="/authors")
+
+@public_router.post("", response_model=AuthorResponseTo, status_code=HTTPStatus.CREATED)
+async def create(request: AuthorRequestTo, service: AuthorService = Depends(get_author_service)):
+    return await service.create(request)
+
+
 router = APIRouter(prefix="/authors")
 
 @router.get("", response_model=List[AuthorResponseTo], status_code=HTTPStatus.OK)
@@ -16,11 +23,6 @@ async def get_all(service: AuthorService = Depends(get_author_service)):
 @router.get("/{author_id}", response_model=AuthorResponseTo, status_code=HTTPStatus.OK)
 async def get_by_id(author_id: int, service: AuthorService = Depends(get_author_service)):
     return await service.get_one(author_id)
-
-@router.post("", response_model=AuthorResponseTo, status_code=HTTPStatus.CREATED)
-async def create(request: AuthorRequestTo, service: AuthorService = Depends(get_author_service)):
-    return await service.create(request)
-
 
 @router.put("/{author_id}", response_model=AuthorResponseTo, status_code=HTTPStatus.OK)
 async def update(author_id: int, dto: AuthorRequestTo, service: AuthorService = Depends(get_author_service)):

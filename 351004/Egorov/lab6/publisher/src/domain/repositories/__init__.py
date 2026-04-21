@@ -52,3 +52,8 @@ class TagRepository(SqlAlchemyRepository[Tag]):
 class AuthorRepository(SqlAlchemyRepository[Author]):
     def __init__(self, session: AsyncSession):
         super().__init__(session, Author)
+
+    async def get_by_login(self, login: str) -> Author | None:
+        query = select(Author).where(Author.login == login)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
