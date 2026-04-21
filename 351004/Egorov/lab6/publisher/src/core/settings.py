@@ -2,9 +2,11 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class AuthSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="auth_")
+
     token_lifetime: int = Field(default=1800)
     algorithm: str = Field(default="HS256")
-    secret_key: str = Field(default="super-secret-key")
+    secret_key: str = Field(default="")
 
 
 class KafkaSettings(BaseSettings):
