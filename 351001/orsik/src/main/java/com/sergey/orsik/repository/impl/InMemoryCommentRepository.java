@@ -24,7 +24,8 @@ public class InMemoryCommentRepository implements CrudRepository<Comment> {
         storage.put(entity.getId(), new Comment(
                 entity.getId(),
                 entity.getTweetId(),
-                entity.getContent()
+                entity.getContent(),
+                entity.getCreated()
         ));
         return entity;
     }
@@ -40,7 +41,8 @@ public class InMemoryCommentRepository implements CrudRepository<Comment> {
                 .map(c -> new Comment(
                         c.getId(),
                         c.getTweetId(),
-                        c.getContent()
+                        c.getContent(),
+                        c.getCreated()
                 ))
                 .toList();
     }

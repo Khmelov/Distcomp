@@ -4,6 +4,7 @@ import com.sergey.orsik.entity.Tweet;
 import com.sergey.orsik.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +28,8 @@ public class InMemoryTweetRepository implements CrudRepository<Tweet> {
                 entity.getTitle(),
                 entity.getContent(),
                 entity.getCreated(),
-                entity.getModified()
+                entity.getModified(),
+                entity.getLabels() != null ? new HashSet<>(entity.getLabels()) : new HashSet<>()
         ));
         return entity;
     }
@@ -46,7 +48,8 @@ public class InMemoryTweetRepository implements CrudRepository<Tweet> {
                         t.getTitle(),
                         t.getContent(),
                         t.getCreated(),
-                        t.getModified()
+                        t.getModified(),
+                        t.getLabels() != null ? new HashSet<>(t.getLabels()) : new HashSet<>()
                 ))
                 .toList();
     }

@@ -4,6 +4,7 @@ import com.sergey.orsik.entity.Label;
 import com.sergey.orsik.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +22,11 @@ public class InMemoryLabelRepository implements CrudRepository<Label> {
         if (entity.getId() == null) {
             entity.setId(idGenerator.getAndIncrement());
         }
-        storage.put(entity.getId(), new Label(entity.getId(), entity.getName()));
+        storage.put(entity.getId(), new Label(
+                entity.getId(),
+                entity.getName(),
+                entity.getTweets() != null ? new HashSet<>(entity.getTweets()) : new HashSet<>()
+        ));
         return entity;
     }
 
@@ -33,7 +38,11 @@ public class InMemoryLabelRepository implements CrudRepository<Label> {
     @Override
     public List<Label> findAll() {
         return storage.values().stream()
-                .map(l -> new Label(l.getId(), l.getName()))
+                .map(l -> new Label(
+                        l.getId(),
+                        l.getName(),
+                        l.getTweets() != null ? new HashSet<>(l.getTweets()) : new HashSet<>()
+                ))
                 .toList();
     }
 
