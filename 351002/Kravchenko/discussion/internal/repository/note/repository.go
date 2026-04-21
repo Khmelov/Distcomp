@@ -20,7 +20,6 @@ func NewNoteCassandraRepository(session gocqlx.Session) Repository {
 	return &noteCassandraRepository{session: session}
 }
 
-// Локальная Cassandra модель для корректного StructScan/BindStruct
 type cassandraNote struct {
 	ID      int64  `db:"id"`
 	IssueID int64  `db:"issue_id"`
@@ -159,7 +158,6 @@ func (r *noteCassandraRepository) List(ctx context.Context, limit, offset int) (
 			continue
 		}
 
-		// создаём новый объект для каждого элемента
 		n := fromCassandra(&cNote)
 		notes = append(notes, n)
 

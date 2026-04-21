@@ -17,3 +17,9 @@ public class ServiceForbiddenOperationException : ServiceException
     public ServiceForbiddenOperationException() {}
     public ServiceForbiddenOperationException(string? message) : base(message) { }
 }
+
+public class ServiceFailedOperationException : ServiceException
+{
+    public ServiceFailedOperationException() {}
+    public ServiceFailedOperationException(string? message) : base(message) { }
+}
