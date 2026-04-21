@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface CommentService {
 
-    List<CommentResponseTo> findAll();
+    List<CommentResponseTo> findAll(int page, int size, String sortBy, String sortDir, Long tweetId, String content);
 
     CommentResponseTo findById(Long id);
 

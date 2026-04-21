@@ -3,11 +3,13 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from routers import router
 from exceptions import AppError, app_exception_handler, validation_exception_handler
+from database import init_db
 
-app = FastAPI(title="Task310 REST API")
+init_db()
+
+app = FastAPI(title="Task320 JPA REST API")
 
 app.include_router(router)
-
 app.add_exception_handler(AppError, app_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 

@@ -1,4 +1,7 @@
-using ArticleHouse.DAO;
+using Additions.Service.EventService.Implementations;
+using Additions.Service.EventService.Interfaces;
+using ArticleHouse.DAO.Implementations;
+using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.Service.Implementations;
 using ArticleHouse.Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -10,9 +13,21 @@ static internal class ServiceProviderExtensions
     public static IServiceCollection AddArticleHouseServices(this IServiceCollection collection, string? connection)
     {
         collection.AddScoped<ICreatorService, CreatorService>();
+        collection.AddScoped<ICreatorDAO, DbCreatorDAO>();
+
         collection.AddScoped<IArticleService, ArticleService>();
+        collection.AddScoped<IArticleDAO, DbArticleDAO>();
+
         collection.AddScoped<ICommentService, CommentService>();
+
         collection.AddScoped<IMarkService, MarkService>();
+        collection.AddScoped<IMarkDAO, DbMarkDAO>();
+
+        collection.AddScoped<IArticleMarkDAO, DbArticleMarkDAO>();
+
+        collection.AddSingleton<IEventOrchestratorService, EventOrchestratorService>();
+        collection.AddSingleton<IEventProducerService, KafkaProducerService>();
+        collection.AddHostedService<KafkaConsumerService>();
 
         collection.AddDbContext<ApplicationContext>(options => options.UseNpgsql(connection).UseSnakeCaseNamingConvention());
         return collection;

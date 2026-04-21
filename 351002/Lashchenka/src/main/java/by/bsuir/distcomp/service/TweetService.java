@@ -6,23 +6,25 @@ import by.bsuir.distcomp.entity.Tweet;
 import by.bsuir.distcomp.exception.DuplicateException;
 import by.bsuir.distcomp.exception.ResourceNotFoundException;
 import by.bsuir.distcomp.mapper.TweetMapper;
-import by.bsuir.distcomp.repository.impl.InMemoryEditorRepository;
-import by.bsuir.distcomp.repository.impl.InMemoryTweetRepository;
+import by.bsuir.distcomp.repository.EditorRepository;
+import by.bsuir.distcomp.repository.TweetRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class TweetService {
 
-    private final InMemoryTweetRepository tweetRepository;
-    private final InMemoryEditorRepository editorRepository;
+    private final TweetRepository tweetRepository;
+    private final EditorRepository editorRepository;
     private final TweetMapper tweetMapper;
 
-    public TweetService(InMemoryTweetRepository tweetRepository, 
-                        InMemoryEditorRepository editorRepository,
+    public TweetService(TweetRepository tweetRepository,
+                        EditorRepository editorRepository,
                         TweetMapper tweetMapper) {
         this.tweetRepository = tweetRepository;
         this.editorRepository = editorRepository;
@@ -43,12 +45,14 @@ public class TweetService {
         return tweetMapper.toResponseDto(saved);
     }
 
+    @Transactional(readOnly = true)
     public TweetResponseTo getById(Long id) {
         Tweet entity = tweetRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tweet with id " + id + " not found", 40405));
         return tweetMapper.toResponseDto(entity);
     }
 
+    @Transactional(readOnly = true)
     public List<TweetResponseTo> getAll() {
         return tweetRepository.findAll().stream()
                 .map(tweetMapper::toResponseDto)
@@ -56,7 +60,7 @@ public class TweetService {
     }
 
     public TweetResponseTo update(TweetRequestTo dto) {
-        Tweet existingTweet = tweetRepository.findById(dto.getId())
+        Tweet existing = tweetRepository.findById(dto.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Tweet with id " + dto.getId() + " not found", 40406));
         if (!editorRepository.existsById(dto.getEditorId())) {
             throw new ResourceNotFoundException("Editor with id " + dto.getEditorId() + " not found", 40407);
@@ -64,10 +68,11 @@ public class TweetService {
         if (tweetRepository.existsByTitleAndIdNot(dto.getTitle(), dto.getId())) {
             throw new DuplicateException("Tweet with title '" + dto.getTitle() + "' already exists", 40304);
         }
-        Tweet entity = tweetMapper.toEntity(dto);
-        entity.setCreated(existingTweet.getCreated());
-        entity.setModified(LocalDateTime.now());
-        Tweet updated = tweetRepository.update(entity);
+        LocalDateTime originalCreated = existing.getCreated();
+        tweetMapper.updateEntityFromDto(dto, existing);
+        existing.setCreated(originalCreated);
+        existing.setModified(LocalDateTime.now());
+        Tweet updated = tweetRepository.save(existing);
         return tweetMapper.toResponseDto(updated);
     }
 
