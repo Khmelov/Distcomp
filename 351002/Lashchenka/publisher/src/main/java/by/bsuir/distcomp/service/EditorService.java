@@ -6,11 +6,13 @@ import by.bsuir.distcomp.entity.Editor;
 import by.bsuir.distcomp.exception.DuplicateException;
 import by.bsuir.distcomp.exception.ResourceNotFoundException;
 import by.bsuir.distcomp.mapper.EditorMapper;
+import by.bsuir.distcomp.model.EditorRole;
 import by.bsuir.distcomp.repository.EditorRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +25,12 @@ public class EditorService {
 
     private final EditorRepository editorRepository;
     private final EditorMapper editorMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public EditorService(EditorRepository editorRepository, EditorMapper editorMapper) {
+    public EditorService(EditorRepository editorRepository, EditorMapper editorMapper, PasswordEncoder passwordEncoder) {
         this.editorRepository = editorRepository;
         this.editorMapper = editorMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Caching(put = @CachePut(value = "editors", key = "#result.id"),
@@ -36,6 +40,8 @@ public class EditorService {
             throw new DuplicateException("Editor with login '" + dto.getLogin() + "' already exists", 40301);
         }
         Editor entity = editorMapper.toEntity(dto);
+        entity.setRole(EditorRole.CUSTOMER);
+        entity.setPassword(encodePassword(dto.getPassword()));
         Editor saved = editorRepository.save(entity);
         return editorMapper.toResponseDto(saved);
     }
@@ -65,6 +71,9 @@ public class EditorService {
             throw new DuplicateException("Editor with login '" + dto.getLogin() + "' already exists", 40302);
         }
         editorMapper.updateEntityFromDto(dto, existing);
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            existing.setPassword(encodePassword(dto.getPassword()));
+        }
         Editor updated = editorRepository.save(existing);
         return editorMapper.toResponseDto(updated);
     }
@@ -78,5 +87,15 @@ public class EditorService {
             throw new ResourceNotFoundException("Editor with id " + id + " not found", 40403);
         }
         editorRepository.deleteById(id);
+    }
+
+    private String encodePassword(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        if (raw.startsWith("$2a$") || raw.startsWith("$2b$") || raw.startsWith("$2y$")) {
+            return raw;
+        }
+        return passwordEncoder.encode(raw);
     }
 }

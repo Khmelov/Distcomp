@@ -8,5 +8,6 @@
     <include file="db/changelog/changes/01-create-schema.xml"/>
     <include file="db/changelog/changes/02-create-tables.xml"/>
     <include file="db/changelog/changes/03-drop-reaction-table.xml"/>
+    <include file="db/changelog/changes/04-editor-role.xml"/>
 
 </databaseChangeLog>
