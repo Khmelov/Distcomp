@@ -3,15 +3,32 @@ package com.sergey.orsik.mapper;
 import com.sergey.orsik.dto.request.CommentRequestTo;
 import com.sergey.orsik.dto.response.CommentResponseTo;
 import com.sergey.orsik.entity.Comment;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.ReportingPolicy;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface CommentMapper {
+@Component
+public class CommentMapper {
 
-    @BeanMapping(unmappedSourcePolicy = ReportingPolicy.IGNORE)
-    Comment toEntity(CommentRequestTo request);
+    public Comment toEntity(CommentRequestTo request) {
+        if (request == null) {
+            return null;
+        }
+        return new Comment(
+                request.getId(),
+                request.getTweetId(),
+                request.getContent(),
+                request.getCreated()
+        );
+    }
 
-    CommentResponseTo toResponse(Comment entity);
+    public CommentResponseTo toResponse(Comment entity) {
+        if (entity == null) {
+            return null;
+        }
+        return new CommentResponseTo(
+                entity.getId(),
+                entity.getTweetId(),
+                entity.getContent(),
+                entity.getCreated()
+        );
+    }
 }
