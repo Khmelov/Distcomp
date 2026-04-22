@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: rv-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: rv-cassandra
+    restart: unless-stopped
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    # Порт 9042 в контейнере открывается позже, чем процесс в docker ps — иначе Nest видит ECONNREFUSED
+    healthcheck:
+      test: ["CMD", "cqlsh", "localhost", "9042", "-e", "DESCRIBE KEYSPACES"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+      start_period: 120s
+
+volumes:
+  pg_data:
+  cassandra_data:

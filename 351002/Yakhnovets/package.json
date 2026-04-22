@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "workspaces": ["rest-task", "discussion-task"],
+  "scripts": {
+    "build:all": "npm run build -w rest-task -w discussion-task",
+    "start:publisher": "npm run start -w rest-task",
+    "start:discussion": "npm run start -w discussion-task"
+  },
+  "dependencies": {
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.1.0",
+    "globals": "^17.4.0",
+    "typescript-eslint": "^8.57.2"
+  }
+}
