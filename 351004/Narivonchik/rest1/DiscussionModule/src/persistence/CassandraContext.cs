@@ -47,13 +47,14 @@ public class CassandraContext
     public void CreateTableIfNotExists()
     {
         var createTableQuery = @"
-            CREATE TABLE IF NOT EXISTS tbl_notes (
-                id bigint PRIMARY KEY,
-                news_id bigint,
-                content text,
-                country text
-            )";
-        
+        CREATE TABLE IF NOT EXISTS tbl_notes (
+            id bigint PRIMARY KEY,
+            news_id bigint,
+            content text,
+            country text,
+            state text
+        )";
+    
         _session.Execute(createTableQuery);
     }
     

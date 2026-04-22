@@ -1,5 +1,6 @@
 using AutoMapper;
 using Publisher.Dto;
+using Publisher.DTO;
 using Publisher.Model;
 
 namespace Publisher.Mapper {

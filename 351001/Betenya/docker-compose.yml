@@ -41,6 +41,18 @@ services:
       retries: 10
       start_period: 60s
 
+  redis:
+    image: redis:7
+    container_name: redis-distcomp
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # ── Kafka ─────────────────────────────────────────────────────────────────
 
   zookeeper:
@@ -105,6 +117,8 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/distcomp?schema=distcomp
       DISCUSSION_URL: http://discussion:24130
       KAFKA_BROKER: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
       PORT: "24110"
     depends_on:
       postgres:
@@ -112,6 +126,8 @@ services:
       discussion:
         condition: service_started
       kafka:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     restart: unless-stopped
 

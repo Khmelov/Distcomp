@@ -21,6 +21,9 @@ public interface NoteCassandraReactiveRepository extends ReactiveCassandraReposi
 
     Flux<Note> findByKeyCountryAndKeyTopicId(String country, Long topicId, Pageable pageable);
 
+    /**
+     * Find all by country
+     */
     Flux<Note> findByKeyCountry(String country, Pageable pageable);
 
     @Query("DELETE FROM tbl_note WHERE country = ?0 AND topic_id = ?1")
