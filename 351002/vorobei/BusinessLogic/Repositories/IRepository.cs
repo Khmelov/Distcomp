@@ -2,12 +2,12 @@
 {
     public interface IRepository<TEntity> where TEntity : class
     {
-        List<TEntity> GetAll();
-        TEntity GetById(int id);
-        TEntity Create(TEntity entity);
-        TEntity Update(TEntity entity);
-        void Delete(int id);    
-        bool Exists(int id);
-        int GetLastId();
+        Task<List<TEntity>> GetAllAsync();
+        Task<TEntity> GetByIdAsync(int id);
+        Task<TEntity> CreateAsync(TEntity entity);
+        Task<TEntity> UpdateAsync(TEntity entity);
+        Task DeleteAsync(int id);
+        Task<bool> ExistsAsync(int id);
+        Task<int> GetLastIdAsync();
     }
 }

@@ -7,7 +7,7 @@ namespace Distcomp.Application.Interfaces
         NoteResponseTo Create(NoteRequestTo request);
         NoteResponseTo? GetById(long id);
         IEnumerable<NoteResponseTo> GetAll();
-        NoteResponseTo Update(long id, NoteRequestTo request);
+        NoteResponseTo? Update(long id, NoteRequestTo request);
         bool Delete(long id);
     }
 }

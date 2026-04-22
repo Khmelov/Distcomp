@@ -28,6 +28,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddScoped<ReactionService>();
+builder.Services.AddHostedService<KafkaService>();
 
 builder.WebHost.ConfigureKestrel(options => {
     options.ListenLocalhost(24130);

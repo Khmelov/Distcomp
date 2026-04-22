@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  cassandra:
+    image: cassandra:4.1
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: "DistcompCluster"
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'SELECT now() FROM system.local'"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+
+  discussion:
+    build:
+      context: .
+      dockerfile: RW.Discussion/Dockerfile
+    ports:
+      - "24130:24130"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:24130
+      Cassandra__ContactPoint: cassandra
+      Cassandra__Port: 9042
+      Cassandra__Keyspace: distcomp
+    depends_on:
+      cassandra:
+        condition: service_healthy
+
+  publisher:
+    build:
+      context: .
+      dockerfile: RW.Api/Dockerfile
+    ports:
+      - "24110:24110"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:24110
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=distcomp;Username=postgres;Password=postgres"
+      DiscussionServiceUrl: "http://discussion:24130/"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discussion:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  cassandra_data:
