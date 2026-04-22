@@ -8,13 +8,20 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  UseFilters,
+  UseGuards,
 } from '@nestjs/common';
-import { ReactionService } from '../service/reaction.service';
-import { ReactionRequestTo } from '../dto/reaction-request.to';
-import { ReactionResponseTo } from '../dto/reaction-response.to';
+import { JwtAuthGuard } from '../security/jwt-auth.guard';
+import { RolesGuard } from '../security/roles.guard';
+import { ReactionRequestTo } from '../reaction/dto/reaction-request.to';
+import { ReactionResponseTo } from '../reaction/dto/reaction-response.to';
+import { ReactionService } from '../reaction/service/reaction.service';
+import { V2HttpExceptionFilter } from './v2-http-exception.filter';
 
-@Controller('api/v1.0/reactions')
-export class ReactionController {
+@UseFilters(V2HttpExceptionFilter)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('api/v2.0/reactions')
+export class V2ReactionController {
   constructor(private readonly service: ReactionService) {}
 
   @Get()

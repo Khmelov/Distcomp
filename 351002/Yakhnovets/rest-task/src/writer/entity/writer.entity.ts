@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Issue } from '../../issue/entity/issue.entity';
+import { WriterRole } from '../../security/role.enum';
 
 @Entity('tbl_writer')
 export class Writer {
@@ -17,6 +18,9 @@ export class Writer {
 
   @Column({ type: 'varchar', length: 64 })
   lastname: string;
+
+  @Column({ type: 'varchar', length: 16, default: WriterRole.CUSTOMER })
+  role: WriterRole;
 
   @OneToMany(() => Issue, (issue) => issue.writer)
   issues: Issue[];

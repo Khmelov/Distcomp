@@ -1,10 +1,12 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcryptjs';
 import { WriterRequestTo } from '../dto/writer-request.to';
 import { WriterResponseTo } from '../dto/writer-response.to';
 import { Writer } from '../entity/writer.entity';
 import { QueryFailedError, Repository } from 'typeorm';
 import { ReactionService } from '../../reaction/service/reaction.service';
+import { WriterRole } from '../../security/role.enum';
 
 @Injectable()
 export class WriterService {
@@ -25,8 +27,32 @@ export class WriterService {
     return this.toResponse(writer);
   }
 
+  async findAuthWriterByLogin(login: string): Promise<Writer | null> {
+    return this.repository.findOne({ where: { login } });
+  }
+
+  async findWriterEntityByLogin(login: string): Promise<Writer | null> {
+    return this.repository.findOne({ where: { login } });
+  }
+
+  async getWriterEntityById(id: number): Promise<Writer> {
+    const writer = await this.repository.findOne({ where: { id } });
+    if (!writer) throw new NotFoundException(`Writer with id=${id} not found`);
+    return writer;
+  }
+
   async create(dto: WriterRequestTo): Promise<WriterResponseTo> {
     const entity = this.repository.create(this.toEntity(dto));
+    try {
+      const created = await this.repository.save(entity);
+      return this.toResponse(created);
+    } catch (error) {
+      this.handleDbError(error);
+    }
+  }
+
+  async createSecure(dto: WriterRequestTo): Promise<WriterResponseTo> {
+    const entity = this.repository.create(await this.toSecureEntity(dto));
     try {
       const created = await this.repository.save(entity);
       return this.toResponse(created);
@@ -40,6 +66,19 @@ export class WriterService {
     if (!existing) throw new NotFoundException(`Writer with id=${id} not found`);
 
     const updatedEntity = this.repository.merge(existing, this.toEntity(dto));
+    try {
+      const updated = await this.repository.save(updatedEntity);
+      return this.toResponse(updated);
+    } catch (error) {
+      this.handleDbError(error);
+    }
+  }
+
+  async updateSecure(id: number, dto: WriterRequestTo): Promise<WriterResponseTo> {
+    const existing = await this.repository.findOne({ where: { id } });
+    if (!existing) throw new NotFoundException(`Writer with id=${id} not found`);
+
+    const updatedEntity = this.repository.merge(existing, await this.toSecureEntity(dto));
     try {
       const updated = await this.repository.save(updatedEntity);
       return this.toResponse(updated);
@@ -77,6 +116,17 @@ export class WriterService {
       password: dto.password,
       firstname: dto.firstname,
       lastname: dto.lastname,
+      role: dto.role ?? WriterRole.CUSTOMER,
+    };
+  }
+
+  private async toSecureEntity(dto: WriterRequestTo): Promise<Omit<Writer, 'id' | 'issues'>> {
+    return {
+      login: dto.login,
+      password: await bcrypt.hash(dto.password, 10),
+      firstname: dto.firstname,
+      lastname: dto.lastname,
+      role: dto.role ?? WriterRole.CUSTOMER,
     };
   }
 

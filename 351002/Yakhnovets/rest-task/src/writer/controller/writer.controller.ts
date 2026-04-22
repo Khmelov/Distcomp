@@ -13,7 +13,7 @@ import { WriterService } from '../service/writer.service';
 import { WriterRequestTo } from '../dto/writer-request.to';
 import { WriterResponseTo } from '../dto/writer-response.to';
 
-@Controller('writers')
+@Controller('api/v1.0/writers')
 export class WriterController {
   constructor(private readonly service: WriterService) {}
 

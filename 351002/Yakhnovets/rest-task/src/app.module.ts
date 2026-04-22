@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { WriterModule } from './writer/writer.module';
 import { IssueModule } from './issue/issue.module';
 import { MarkModule } from './mark/mark.module';
+import { SecurityModule } from './security/security.module';
+import { V2Module } from './v2/v2.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -19,6 +21,8 @@ import { MarkModule } from './mark/mark.module';
     WriterModule,
     IssueModule,
     MarkModule,
+    SecurityModule,
+    V2Module,
   ],
 })
 export class AppModule {}
