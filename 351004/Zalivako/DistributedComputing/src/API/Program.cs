@@ -1,6 +1,7 @@
 using Application.Interfaces;
 using Application.MappingProfiles;
 using Application.Services;
+using Infrastructure.Kafka;
 using Infrastructure.Persistence.EFCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,7 @@ namespace API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddSingleton<IKafkaProducer, KafkaProducer>();
 
             builder.Services.AddControllers();
 
