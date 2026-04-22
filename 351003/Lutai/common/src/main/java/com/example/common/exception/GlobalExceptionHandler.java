@@ -1,4 +1,4 @@
-package com.example.news.exception;
+package com.example.common.exception;
 
 import com.example.common.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
@@ -38,4 +38,6 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleDuplicateLogin(LoginAlreadyExistsException ex) {
         return new ErrorResponse(ex.getMessage(), "40301");
     }
+
+
 }
