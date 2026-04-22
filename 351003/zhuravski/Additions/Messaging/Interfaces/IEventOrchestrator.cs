@@ -1,6 +1,6 @@
-namespace Additions.Service.EventService.Interfaces;
+namespace Additions.Messaging.Interfaces;
 
-public interface IEventOrchestratorService
+public interface IEventOrchestrator
 {
     Task<EventMessage> ExpectResponse(Guid origin);
     void ResolveResponse(EventMessage message);

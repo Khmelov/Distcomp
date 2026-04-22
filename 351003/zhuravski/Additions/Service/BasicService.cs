@@ -1,10 +1,11 @@
 using Additions.DAO;
+using Additions.Messaging;
 
 namespace Additions.Service;
 
 public abstract class BasicService
 {
-    protected static async Task InvokeDAOMethod(Func<Task> call)
+    protected static async Task InvokeLowerMethod(Func<Task> call)
     {
         try
         {
@@ -12,11 +13,20 @@ public abstract class BasicService
         }
         catch (DAOException e)
         {
-            HandleDAOException(e);
+            HandleLowerException(e);
+        }
+        catch (MessagingException e)
+        {
+            HandleLowerException(e);
         }
     }
 
-    protected static async Task<T> InvokeDAOMethod<T>(Func<Task<T>> call)
+    protected static Task InvokeDAOMethod(Func<Task> call)
+    {
+        return InvokeLowerMethod(call);
+    }
+
+    protected static async Task<T> InvokeLowerMethod<T>(Func<Task<T>> call)
     {
         try
         {
@@ -24,12 +34,22 @@ public abstract class BasicService
         }
         catch (DAOException e)
         {
-            HandleDAOException(e);
+            HandleLowerException(e);
+            return default!;
+        }
+        catch (MessagingException e)
+        {
+            HandleLowerException(e);
             return default!;
         }
     }
 
-    protected static void HandleDAOException(Exception e)
+    protected static Task<T> InvokeDAOMethod<T>(Func<Task<T>> call)
+    {
+        return InvokeLowerMethod(call);
+    }
+
+    protected static void HandleLowerException(Exception e)
     {
         if (e is DAOUpdateException)
         {
