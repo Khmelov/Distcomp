@@ -1,6 +1,13 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+class KafkaSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="KAFKA_")
+
+    bootstrap_servers: str = Field(default=None)
+    topic_in: str = Field(default=None)
+    topic_out: str = Field(default=None)
+
 class PostgresSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="POSTGRES_")
 
@@ -16,6 +23,7 @@ class PostgresSettings(BaseSettings):
 
 class Settings(BaseSettings):
     postgres: PostgresSettings = PostgresSettings()
+    kafka: KafkaSettings = KafkaSettings()
     note_service_url: str = Field(default=None)
 
     DEBUG: bool = Field(default=True)

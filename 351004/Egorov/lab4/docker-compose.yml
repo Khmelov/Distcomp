@@ -46,6 +46,40 @@ services:
       retries: 5
       start_period: 10s
 
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: ds_kafka
+    environment:
+      KAFKA_ENABLE_KRAFT: ${KAFKA_ENABLE_KRAFT}
+      KAFKA_PROCESS_ROLES: ${KAFKA_PROCESS_ROLES}
+      KAFKA_NODE_ID: ${KAFKA_NODE_ID}
+      CLUSTER_ID: ${CLUSTER_ID}
+
+      KAFKA_LISTENERS: ${KAFKA_LISTENERS}
+      KAFKA_ADVERTISED_LISTENERS: ${KAFKA_ADVERTISED_LISTENERS}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP}
+      KAFKA_CONTROLLER_LISTENER_NAMES: ${KAFKA_CONTROLLER_LISTENER_NAMES}
+      KAFKA_CONTROLLER_QUORUM_VOTERS: ${KAFKA_CONTROLLER_QUORUM_VOTERS}
+      KAFKA_INTER_BROKER_LISTENER_NAME: ${KAFKA_INTER_BROKER_LISTENER_NAME}
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: ${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR}
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: ${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR}
+      KAFKA_LOG_DIRS: ${KAFKA_LOG_DIRS}
+    ports:
+      - "${KAFKA_PORT}:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    restart: unless-stopped
+    networks:
+      - dc-network
+    healthcheck:
+      test: [ "CMD", "kafka-topics", "--bootstrap-server", "localhost:${KAFKA_PORT}", "--list" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
   publisher-service:
     build:
       context: ./publisher
@@ -54,10 +88,13 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       NOTE_SERVICE_URL: http://discussion-service:${DISCUSSION_PORT}/api/v1.0
+      KAFKA_BOOTSTRAP_SERVERS: kafka:${KAFKA_PORT}
     ports:
       - "${PUBLISHER_PORT}:${PUBLISHER_PORT}"
     depends_on:
       postgres:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -74,10 +111,13 @@ services:
     container_name: discussion-service
     environment:
       MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:${MONGO_PORT}/${MONGO_NAME}?authSource=admin
+      KAFKA_BOOTSTRAP_SERVERS: kafka:${KAFKA_PORT}
     ports:
       - "${DISCUSSION_PORT}:${DISCUSSION_PORT}"
     depends_on:
       mongodb:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -90,6 +130,7 @@ services:
 volumes:
   postgres_data:
   mongodb_data:
+  kafka_data:
 
 networks:
   dc-network:
