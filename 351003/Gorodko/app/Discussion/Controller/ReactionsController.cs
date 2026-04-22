@@ -1,5 +1,6 @@
 using Discussion.DTO;
 using Discussion.Exceptions;
+using Discussion.Model;
 using Discussion.Service;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
@@ -24,17 +25,6 @@ namespace Discussion.Controllers {
             return Ok(reactions);
         }
 
-        [HttpGet("{country}/{tweetId}/{id}")]
-        public async Task<ActionResult<ReactionResponseTo>> GetReaction(string country, long tweetId, long id) {
-            _logger.LogInformation($"Discussion: Getting reaction {id}");
-
-            var reaction = await _reactionService.GetByIdAsync(country, tweetId, id);
-            if (reaction == null)
-                return NotFound();
-
-            return Ok(reaction);
-        }
-
         [HttpGet("by-tweet/{tweetId}")]
         public async Task<ActionResult<IEnumerable<ReactionResponseTo>>> GetReactionsByTweet(long tweetId, [FromQuery] string? country = null) {
             _logger.LogInformation($"Discussion: Getting reactions for tweet {tweetId}");
@@ -45,16 +35,20 @@ namespace Discussion.Controllers {
 
         [HttpPost]
         public async Task<ActionResult<ReactionResponseTo>> CreateReaction([FromBody] ReactionRequestTo request) {
-            _logger.LogInformation($"Discussion: Creating reaction for tweet {request.TweetId}");
+            _logger.LogInformation($"Discussion REST: Creating reaction for tweet {request.TweetId}");
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try {
+                request.State = request.Content.ToLower().Contains("badword")
+                    ? ReactionState.DECLINE
+                    : ReactionState.APPROVE;
+
                 var reaction = await _reactionService.CreateAsync(request);
 
                 return CreatedAtAction(
-                    nameof(GetReaction),
+                    nameof(GetReactionById),
                     new { country = reaction.Country, tweetId = reaction.TweetId, id = reaction.Id },
                     reaction);
             }

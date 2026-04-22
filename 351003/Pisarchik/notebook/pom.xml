@@ -13,7 +13,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>notebook</name>
-    <description>Multi-module notebook: publisher (Postgres) and discussion (Cassandra)</description>
+    <description>Multi-module notebook: publisher (PostgreSQL), discussion (Apache Cassandra)</description>
     <modules>
         <module>notebook-api</module>
         <module>discussion</module>
