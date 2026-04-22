@@ -1,8 +1,8 @@
-﻿using Application.DTOs.Abstractions;
-using Application.Services.Interfaces;
+﻿using Discussion.Application.DTOs.Abstractions;
+using Discussion.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Presentation.Controllers.Abstractions;
+namespace Discussion.Presentation.Controllers.Abstractions;
 
 [ApiController]
 [Route("api/v1.0/[controller]")]
@@ -23,7 +23,7 @@ public abstract class BaseController<TRequest, TResponse> : ControllerBase
         return Ok(result);
     }
 
-    // GET: api/v1.0/entities/5[HttpGet("{id:long}")]
+    // GET: api/v1.0/entities/5
     [HttpGet("{id:long}")]
     public virtual async Task<ActionResult<TResponse>> GetById(long id) {
         var result = await _service.GetByIdAsync(id);
