@@ -28,6 +28,13 @@ services:
       retries: 18
       start_period: 120s
 
+  redis:
+    image: redis:7
+    container_name: rv-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
 volumes:
   pg_data:
   cassandra_data:

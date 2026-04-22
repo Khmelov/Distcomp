@@ -12,11 +12,13 @@ import { firstValueFrom } from 'rxjs';
 import { ReactionRequestTo } from '../dto/reaction-request.to';
 import { ReactionResponseTo } from '../dto/reaction-response.to';
 import { Issue } from '../../issue/entity/issue.entity';
+import { ReactionCacheService } from './reaction-cache.service';
 
 @Injectable()
 export class ReactionService {
   constructor(
     private readonly http: HttpService,
+    private readonly cache: ReactionCacheService,
     @InjectRepository(Issue)
     private readonly issueRepository: Repository<Issue>,
   ) {}
@@ -33,10 +35,16 @@ export class ReactionService {
   }
 
   async getById(id: number): Promise<ReactionResponseTo> {
+    const cached = await this.cache.get(id);
+    if (cached) {
+      return cached;
+    }
+
     try {
       const { data } = await firstValueFrom(
         this.http.get<ReactionResponseTo>(`reactions/${id}`),
       );
+      await this.cache.set(data);
       return data;
     } catch (e) {
       this.mapAxiosError(e);
@@ -49,6 +57,7 @@ export class ReactionService {
       const { data } = await firstValueFrom(
         this.http.post<ReactionResponseTo>('reactions', dto),
       );
+      await this.cache.set(data);
       return data;
     } catch (e) {
       this.mapAxiosError(e);
@@ -61,6 +70,7 @@ export class ReactionService {
       const { data } = await firstValueFrom(
         this.http.put<ReactionResponseTo>(`reactions/${id}`, dto),
       );
+      await this.cache.set(data);
       return data;
     } catch (e) {
       this.mapAxiosError(e);
@@ -70,13 +80,20 @@ export class ReactionService {
   async delete(id: number): Promise<void> {
     try {
       await firstValueFrom(this.http.delete(`reactions/${id}`));
+      await this.cache.delete(id);
     } catch (e) {
       this.mapAxiosError(e);
     }
   }
 
   async deleteByIssueId(issueId: number): Promise<void> {
+    const reactions = await this.getAll();
     await firstValueFrom(this.http.delete(`reactions/by-issue/${issueId}`));
+    await Promise.all(
+      reactions
+        .filter((reaction) => reaction.issueId === issueId)
+        .map((reaction) => this.cache.delete(reaction.id)),
+    );
   }
 
   private async ensureIssueExists(issueId: number): Promise<void> {
