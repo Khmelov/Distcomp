@@ -1,4 +1,4 @@
-# app/repositories/article_repo.py
+
 from typing import List, Dict, Any, Optional, Tuple
 from sqlalchemy import select, asc, desc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +12,6 @@ class ArticleRepository(BaseRepository[ArticleModel]):
     async def create(self, obj: ArticleModel) -> ArticleModel:
         self.session.add(obj)
         await self.session.flush()
-        # If obj.markers contains Marker instances, SQLAlchemy will fill association
         await self.session.commit()
         await self.session.refresh(obj)
         return obj
@@ -29,8 +28,7 @@ class ArticleRepository(BaseRepository[ArticleModel]):
         existing.title = obj.title
         existing.content = obj.content
         existing.writer_id = obj.writer_id
-        # Update markers: simplest approach — replace association list
-        existing.markers = obj.markers  # obj.markers should be list of Marker objects
+        existing.markers = obj.markers
         await self.session.commit()
         await self.session.refresh(existing)
         return existing
@@ -43,23 +41,12 @@ class ArticleRepository(BaseRepository[ArticleModel]):
         await self.session.commit()
 
     async def list(self, filters: Dict[str, Any] | None = None, page: int = 1, size: int = 20, sort: List[Tuple[str,str]] | None = None) -> List[ArticleModel]:
-        """
-        Supported filters:
-            - marker_ids: List[int]
-            - marker_names: List[str]
-            - writer_login: str
-            - title: str (substring)
-            - content: str (substring)
-        Semantics: marker filter = OR (match any of provided); other filters ANDed.
-        """
         q = select(ArticleModel).distinct()
 
         if filters:
-            # marker ids or names require joins
             if "marker_ids" in filters and filters["marker_ids"]:
                 q = q.join(article_marker, ArticleModel.id == article_marker.c.article_id).where(article_marker.c.marker_id.in_(filters["marker_ids"]))
             if "marker_names" in filters and filters["marker_names"]:
-                # join marker table
                 q = q.join(article_marker, ArticleModel.id == article_marker.c.article_id).join(MarkerModel, article_marker.c.marker_id == MarkerModel.id).where(MarkerModel.name.in_(filters["marker_names"]))
             if "writer_login" in filters and filters["writer_login"]:
                 q = q.join(WriterModel, ArticleModel.writer_id == WriterModel.id).where(WriterModel.login == filters["writer_login"])
@@ -68,7 +55,6 @@ class ArticleRepository(BaseRepository[ArticleModel]):
             if "content" in filters and filters["content"]:
                 q = q.where(ArticleModel.content.ilike(f"%{filters['content']}%"))
 
-        # sorting
         if sort:
             for field, direction in sort:
                 col = getattr(ArticleModel, field, None)

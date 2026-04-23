@@ -1,4 +1,4 @@
-package com.example.Task310.exception; // Убедитесь, что здесь exception!
+package com.example.Task310.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

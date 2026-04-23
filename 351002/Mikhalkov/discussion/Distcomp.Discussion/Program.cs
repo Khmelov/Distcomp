@@ -1,3 +1,4 @@
+using Distcomp.Discussion.Infrastructure.Messaging;
 using Distcomp.Discussion.Infrastructure.Data;
 using Distcomp.Discussion.Infrastructure.Repositories;
 
@@ -10,6 +11,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<CassandraProvider>();
 builder.Services.AddScoped<NoteRepository>();
+
+builder.Services.AddHostedService<KafkaConsumerService>();
 
 var app = builder.Build();
 

@@ -7,15 +7,20 @@ import { PrismaService } from '../../../services/prisma.service';
 import { KafkaService } from '../../../kafka/kafka.service';
 import { NoticeRequestTo } from '../../../dto/notices/NoticeRequestTo.dto';
 import { NoticeResponseTo } from '../../../dto/notices/NoticeResponseTo.dto';
+import { RedisService } from '../../../redis/redis.service';
 
 const DISCUSSION_URL = process.env.DISCUSSION_URL ?? 'http://localhost:24130';
 const NOTICES_API = `${DISCUSSION_URL}/api/v1.0/notices`;
+
+const CACHE_PREFIX = 'notice';
+const CACHE_TTL = 60;
 
 @Injectable()
 export class NoticesService {
   constructor(
     private prisma: PrismaService,
     private kafkaService: KafkaService,
+    private redis: RedisService,
   ) {}
 
   /** Serialize a DTO to a plain JSON-safe object (BigInt → Number) */
@@ -46,39 +51,54 @@ export class NoticesService {
     }
 
     // Use Kafka transport if available, otherwise fall back to HTTP
+    let result: NoticeResponseTo;
     if (this.kafkaService.isReady()) {
       const raw = await this.kafkaService.sendAndWait(
         'CREATE',
         this.serializeDto(notice),
         String(Number(notice.articleId)), // key = articleId for partition affinity
       );
-      return this.toResponseTo(raw as Record<string, unknown>);
+      result = this.toResponseTo(raw as Record<string, unknown>);
+    } else {
+      // Fallback to HTTP
+      const res = await fetch(NOTICES_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(this.serializeDto(notice)),
+      });
+
+      if (!res.ok) {
+        throw new InternalServerErrorException('Discussion service error on create');
+      }
+
+      result = this.toResponseTo((await res.json()) as Record<string, unknown>);
     }
 
-    // Fallback to HTTP
-    const res = await fetch(NOTICES_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(this.serializeDto(notice)),
-    });
+    await this.redis.del(`${CACHE_PREFIX}:all`);
 
-    if (!res.ok) {
-      throw new InternalServerErrorException('Discussion service error on create');
-    }
-
-    return this.toResponseTo((await res.json()) as Record<string, unknown>);
+    return result;
   }
 
   async getAll(): Promise<NoticeResponseTo[]> {
+    const cached = await this.redis.get<NoticeResponseTo[]>(`${CACHE_PREFIX}:all`);
+    if (cached) return cached.map((r) => this.toResponseTo(r as unknown as Record<string, unknown>));
+
     const res = await fetch(NOTICES_API);
     if (!res.ok) {
       throw new InternalServerErrorException('Discussion service error on getAll');
     }
     const list = (await res.json()) as Record<string, unknown>[];
-    return list.map((raw) => this.toResponseTo(raw));
+    const notices = list.map((raw) => this.toResponseTo(raw));
+
+    await this.redis.set(`${CACHE_PREFIX}:all`, list, CACHE_TTL);
+
+    return notices;
   }
 
   async getNotice(id: number): Promise<NoticeResponseTo> {
+    const cached = await this.redis.get<Record<string, unknown>>(`${CACHE_PREFIX}:${id}`);
+    if (cached) return this.toResponseTo(cached);
+
     const res = await fetch(`${NOTICES_API}/${id}`);
     if (res.status === 404) {
       throw new NotFoundException('Notice not found');
@@ -86,7 +106,11 @@ export class NoticesService {
     if (!res.ok) {
       throw new InternalServerErrorException('Discussion service error on get');
     }
-    return this.toResponseTo((await res.json()) as Record<string, unknown>);
+
+    const raw = (await res.json()) as Record<string, unknown>;
+    await this.redis.set(`${CACHE_PREFIX}:${id}`, raw, CACHE_TTL);
+
+    return this.toResponseTo(raw);
   }
 
   async updateNotice(id: number, notice: NoticeRequestTo): Promise<NoticeResponseTo> {
@@ -110,7 +134,12 @@ export class NoticesService {
     if (!res.ok) {
       throw new InternalServerErrorException('Discussion service error on update');
     }
-    return this.toResponseTo((await res.json()) as Record<string, unknown>);
+
+    const result = this.toResponseTo((await res.json()) as Record<string, unknown>);
+
+    await this.redis.del(`${CACHE_PREFIX}:${id}`, `${CACHE_PREFIX}:all`);
+
+    return result;
   }
 
   async deleteNotice(id: number): Promise<void> {
@@ -121,5 +150,7 @@ export class NoticesService {
     if (!res.ok) {
       throw new InternalServerErrorException('Discussion service error on delete');
     }
+
+    await this.redis.del(`${CACHE_PREFIX}:${id}`, `${CACHE_PREFIX}:all`);
   }
 }

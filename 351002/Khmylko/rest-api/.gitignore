@@ -1,0 +1,80 @@
+# Composer
+vendor/
+composer.phar
+composer.lock
+
+# Docker
+docker-compose.override.yml
+.docker/
+docker/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.editorconfig
+.project
+.classpath
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+error_log
+logs/
+log.txt
+
+# Temp files
+tmp/
+temp/
+*.tmp
+*.temp
+cache/
+*.cache
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# PHP
+php_error.log
+php_errors.log
+
+# PostgreSQL data (если volume локально)
+postgres_data/
+*.sql
+
+# Test results
+test-results/
+coverage/
+phpunit.xml
+.phpunit.result.cache
+
+# Build
+build/
+dist/
+*.phar
+
+# Project specific
+publisher/init.sql
+dump.sql
+*.dump
+
+# Session files
+sessions/
+sess_*
+
+# Uploads
+uploads/
+storage/
+
+# Config with passwords
+config/database.php
+config/local.php

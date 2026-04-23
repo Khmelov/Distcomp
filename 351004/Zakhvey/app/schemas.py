@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
+from typing import List, Optional
 
 # --- User DTOs ---
 class UserRequestTo(BaseModel):
@@ -14,21 +14,7 @@ class UserResponseTo(BaseModel):
     login: str
     firstname: str
     lastname: str
-
-# --- Issue DTOs ---
-class IssueRequestTo(BaseModel):
-    userId: int
-    title: str = Field(..., min_length=2, max_length=64)
-    content: str = Field(..., min_length=4, max_length=2048)
-    labelIds: list[int] = []
-
-class ArticleResponseTo(BaseModel):
-    id: int
-    userId: int
-    title: str
-    content: str
-    created: datetime
-    modified: datetime
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Label DTOs ---
 class LabelRequestTo(BaseModel):
@@ -37,6 +23,23 @@ class LabelRequestTo(BaseModel):
 class LabelResponseTo(BaseModel):
     id: int
     name: str
+    model_config = ConfigDict(from_attributes=True)
+
+# --- Issue DTOs ---
+class IssueRequestTo(BaseModel):
+    userId: int
+    title: str = Field(..., min_length=2, max_length=64)
+    content: str = Field(..., min_length=4, max_length=2048)
+    labels: Optional[List[str]] = Field(default=[])  # <-- Безопасный дефолт
+
+class ArticleResponseTo(BaseModel):
+    id: int
+    userId: int
+    title: str
+    content: str
+    created: datetime
+    modified: datetime
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Comment DTOs ---
 class CommentRequestTo(BaseModel):
@@ -47,3 +50,4 @@ class CommentResponseTo(BaseModel):
     id: int
     issueId: int
     content: str
+    model_config = ConfigDict(from_attributes=True)
