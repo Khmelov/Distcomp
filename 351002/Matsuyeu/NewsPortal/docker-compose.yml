@@ -11,17 +11,24 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d distcomp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   newsportal:
     build: .
     ports:
       - "24110:80"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy 
     environment:
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=distcomp;Username=postgres;Password=postgres
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80 
+      - ASPNETCORE_URLS=http://+:80
 
 volumes:
   postgres_data:

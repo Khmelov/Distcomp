@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using NewsPortal.Data;
@@ -58,7 +57,27 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.EnsureCreated();
+    try
+    {
+        //Проверяем, нужно ли применять миграции
+        if (dbContext.Database.GetPendingMigrations().Any())
+        {
+            dbContext.Database.Migrate();
+            Console.WriteLine($"Applied migrations: {string.Join(", ", dbContext.Database.GetAppliedMigrations())}");
+        }
+        else
+        {
+            Console.WriteLine("Database is up to date. No migrations to apply.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Migration error: {ex.Message}");
+        //Логируем InnerException для деталей
+        if (ex.InnerException != null)
+            Console.WriteLine($"Details: {ex.InnerException.Message}");
+        throw; //Или продолжаем работу, если БД уже создана
+    }
 }
 
 if (app.Environment.IsDevelopment())
