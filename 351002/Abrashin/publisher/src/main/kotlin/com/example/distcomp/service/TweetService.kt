@@ -1,18 +1,21 @@
 package com.example.distcomp.service
 
+import com.example.distcomp.cache.CacheKeys
+import com.example.distcomp.cache.CacheNames
+import com.example.distcomp.cache.CacheSupport
 import com.example.distcomp.dto.request.TweetRequestTo
-import com.example.distcomp.dto.response.TweetResponseTo
 import com.example.distcomp.dto.response.CreatorResponseTo
 import com.example.distcomp.dto.response.NoteResponseTo
 import com.example.distcomp.dto.response.StickerResponseTo
+import com.example.distcomp.dto.response.TweetResponseTo
 import com.example.distcomp.exception.ConflictException
 import com.example.distcomp.exception.NotFoundException
-import com.example.distcomp.mapper.TweetMapper
+import com.example.distcomp.mapper.CreatorMapper
+import com.example.distcomp.mapper.StickerMapper
 import com.example.distcomp.repository.CreatorRepository
 import com.example.distcomp.repository.StickerRepository
 import com.example.distcomp.repository.TweetRepository
-import com.example.distcomp.mapper.CreatorMapper
-import com.example.distcomp.mapper.StickerMapper
+import com.example.distcomp.mapper.TweetMapper
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
@@ -27,13 +30,14 @@ class TweetService(
     private val stickerRepository: StickerRepository,
     private val noteService: NoteService,
     private val creatorMapper: CreatorMapper,
-    private val stickerMapper: StickerMapper
+    private val stickerMapper: StickerMapper,
+    private val cacheSupport: CacheSupport
 ) {
     @Transactional
     fun create(request: TweetRequestTo): TweetResponseTo {
         val creatorId = request.creatorId ?: throw ConflictException("Creator ID is required")
         if (!creatorRepository.existsById(creatorId)) throw NotFoundException("Creator with id $creatorId not found")
-        
+
         request.title?.let { title ->
             if (repository.existsByCreatorIdAndTitle(creatorId, title)) {
                 throw ConflictException("Tweet with title $title already exists for creator $creatorId")
@@ -42,7 +46,7 @@ class TweetService(
 
         val entity = mapper.toEntity(request)
         entity.creatorId = creatorId
-        
+
         entity.stickers = request.stickers?.map { name ->
             stickerRepository.findByName(name) ?: stickerRepository.save(com.example.distcomp.model.Sticker(name = name))
         } ?: emptyList()
@@ -51,30 +55,36 @@ class TweetService(
         entity.created = now
         entity.modified = now
         val saved = repository.save(entity)
-        return mapper.toResponse(saved)
-    }
-
-    fun getById(id: Long): TweetResponseTo {
-        val entity = repository.findById(id) ?: throw NotFoundException("Tweet with id $id not found")
-        return mapper.toResponse(entity)
-    }
-
-    fun getAll(page: Int, size: Int, sort: Array<String>): List<TweetResponseTo> {
-        val sortOrder = if (sort.size >= 2) {
-            Sort.by(Sort.Direction.fromString(sort[1]), sort[0])
-        } else if (sort.isNotEmpty()) {
-            Sort.by(sort[0])
-        } else {
-            Sort.unsorted()
+        return mapper.toResponse(saved).also { response ->
+            response.id?.let { cacheSupport.put(CacheNames.TWEETS_BY_ID, it, response) }
+            cacheSupport.clear(CacheNames.TWEETS_PAGE)
+            cacheSupport.clear(CacheNames.STICKERS_PAGE)
         }
-        val pageable = PageRequest.of(page, size, sortOrder)
-        return repository.findAll(pageable).content.map { mapper.toResponse(it) }
     }
+
+    fun getById(id: Long): TweetResponseTo =
+        cacheSupport.getOrPut(CacheNames.TWEETS_BY_ID, id) {
+            val entity = repository.findById(id) ?: throw NotFoundException("Tweet with id $id not found")
+            mapper.toResponse(entity)
+        }
+
+    fun getAll(page: Int, size: Int, sort: Array<String>): List<TweetResponseTo> =
+        cacheSupport.getOrPut(CacheNames.TWEETS_PAGE, CacheKeys.page(page, size, sort)) {
+            val sortOrder = if (sort.size >= 2) {
+                Sort.by(Sort.Direction.fromString(sort[1]), sort[0])
+            } else if (sort.isNotEmpty()) {
+                Sort.by(sort[0])
+            } else {
+                Sort.unsorted()
+            }
+            val pageable = PageRequest.of(page, size, sortOrder)
+            repository.findAll(pageable).content.map { mapper.toResponse(it) }
+        }
 
     @Transactional
     fun patch(id: Long, request: TweetRequestTo): TweetResponseTo {
         val existing = repository.findById(id) ?: throw NotFoundException("Tweet with id $id not found")
-        
+
         request.creatorId?.let { newCreatorId ->
             if (!creatorRepository.existsById(newCreatorId)) throw NotFoundException("Creator with id $newCreatorId not found")
             existing.creatorId = newCreatorId
@@ -86,12 +96,8 @@ class TweetService(
         if (newTitle != null) {
             val duplicate = repository.existsByCreatorIdAndTitle(currentCreatorId, newTitle)
             if (duplicate && (newTitle != existing.title || request.creatorId != null)) {
-                // If the title changed or the creator changed, we need to make sure the combination is unique.
-                // Wait, if ONLY the content changed, duplicate will be TRUE (because it's the SAME tweet).
-                // So we should only throw if it's a DIFFERENT tweet.
-                // Since this check is based on the combination, if it's the SAME combination as current, it's fine.
                 if (newTitle != existing.title || (request.creatorId != null && request.creatorId != existing.creatorId)) {
-                     throw ConflictException("Tweet with title $newTitle already exists for creator $currentCreatorId")
+                    throw ConflictException("Tweet with title $newTitle already exists for creator $currentCreatorId")
                 }
             }
         }
@@ -103,23 +109,32 @@ class TweetService(
                 stickerRepository.findByName(name) ?: stickerRepository.save(com.example.distcomp.model.Sticker(name = name))
             }
         }
-        
+
         existing.modified = LocalDateTime.now()
         val saved = repository.save(existing)
-        return mapper.toResponse(saved)
+        return mapper.toResponse(saved).also { response ->
+            cacheSupport.put(CacheNames.TWEETS_BY_ID, id, response)
+            cacheSupport.clear(CacheNames.TWEETS_PAGE)
+            cacheSupport.evict(CacheNames.TWEET_CREATORS, id)
+            cacheSupport.evict(CacheNames.TWEET_STICKERS, id)
+            cacheSupport.clear(CacheNames.STICKERS_PAGE)
+        }
     }
 
-    fun getCreatorByTweetId(id: Long): CreatorResponseTo {
-        val tweet = repository.findById(id) ?: throw NotFoundException("Tweet with id $id not found")
-        val creatorId = tweet.creatorId ?: throw NotFoundException("Creator for tweet $id not found")
-        val creator = creatorRepository.findById(creatorId) ?: throw NotFoundException("Creator with id $creatorId not found")
-        return creatorMapper.toResponse(creator)
-    }
+    fun getCreatorByTweetId(id: Long): CreatorResponseTo =
+        cacheSupport.getOrPut(CacheNames.TWEET_CREATORS, id) {
+            val tweet = repository.findById(id) ?: throw NotFoundException("Tweet with id $id not found")
+            val creatorId = tweet.creatorId ?: throw NotFoundException("Creator for tweet $id not found")
+            val creator = creatorRepository.findById(creatorId)
+                ?: throw NotFoundException("Creator with id $creatorId not found")
+            creatorMapper.toResponse(creator)
+        }
 
-    fun getStickersByTweetId(id: Long): List<StickerResponseTo> {
-        val tweet = repository.findById(id) ?: throw NotFoundException("Tweet with id $id not found")
-        return tweet.stickers.map { stickerMapper.toResponse(it) }
-    }
+    fun getStickersByTweetId(id: Long): List<StickerResponseTo> =
+        cacheSupport.getOrPut(CacheNames.TWEET_STICKERS, id) {
+            val tweet = repository.findById(id) ?: throw NotFoundException("Tweet with id $id not found")
+            tweet.stickers.map { stickerMapper.toResponse(it) }
+        }
 
     fun getNotesByTweetId(id: Long): List<NoteResponseTo> {
         if (!repository.existsById(id)) throw NotFoundException("Tweet with id $id not found")
@@ -130,5 +145,10 @@ class TweetService(
         if (!repository.deleteById(id)) {
             throw NotFoundException("Tweet with id $id not found")
         }
+        cacheSupport.evict(CacheNames.TWEETS_BY_ID, id)
+        cacheSupport.clear(CacheNames.TWEETS_PAGE)
+        cacheSupport.evict(CacheNames.TWEET_CREATORS, id)
+        cacheSupport.evict(CacheNames.TWEET_STICKERS, id)
+        cacheSupport.evict(CacheNames.NOTES_BY_TWEET_ID, id)
     }
 }
