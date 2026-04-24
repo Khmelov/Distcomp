@@ -12,5 +12,7 @@ namespace BusinessLogic.DTO.Request
 
         [StringLength(2048, MinimumLength = 4, ErrorMessage = "Content should be from 4 to 2048 symbols")]
         public string Content { get; set; } = string.Empty;
+
+        public List<string> Marks { get; set; } = new List<string>();
     }
 }

@@ -10,3 +10,4 @@ class NoticeResponseTo(BaseModel):
     id: int
     tweetId: int
     content: str
+    model_config = {"from_attributes": True, "populate_by_name": True}

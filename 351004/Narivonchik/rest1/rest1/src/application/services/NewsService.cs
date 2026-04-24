@@ -2,6 +2,7 @@
 using rest1.application.DTOs.requests;
 using rest1.application.DTOs.responses;
 using rest1.application.exceptions;
+using rest1.application.exceptions.db;
 using rest1.application.interfaces;
 using rest1.application.interfaces.services;
 using rest1.core.entities;
@@ -13,28 +14,40 @@ namespace rest1.application.services;
         private readonly IMapper _mapper;
 
         private readonly INewsRepository _newsRepository;
+        private readonly IMarkRepository _markRepository;
 
-        public NewsService(IMapper mapper, INewsRepository repository)
+        public NewsService(IMapper mapper, INewsRepository repository,  IMarkRepository markRepository)
         {
             _mapper = mapper;
             _newsRepository = repository;
+            _markRepository = markRepository;
         }
 
         public async Task<NewsResponseTo> CreateNews(NewsRequestTo createNewsRequestTo)
         {
             News newsFromDto = _mapper.Map<News>(createNewsRequestTo);
 
-            News createdNews = await _newsRepository.AddAsync(newsFromDto);
-
-            NewsResponseTo dtoFromCreatedNews = _mapper.Map<NewsResponseTo>(createdNews);
-
-            return dtoFromCreatedNews;
+            try
+            {
+                News createdNews = await _newsRepository.AddAsync(newsFromDto);
+                NewsResponseTo dtoFromCreatedNews = _mapper.Map<NewsResponseTo>(createdNews);
+                return dtoFromCreatedNews;
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new NewsAlreadyExistsException(ex.Message, ex);
+            }
+            catch (ForeignKeyViolationException ex)
+            {
+                throw new NewsReferenceException(ex.Message, ex);
+            }
         }
 
         public async Task DeleteNews(NewsRequestTo deleteNewsRequestTo)
         {
             News newsFromDto = _mapper.Map<News>(deleteNewsRequestTo);
             _ = await _newsRepository.DeleteAsync(newsFromDto) ?? throw new NewNotFoundException($"Deleted news {newsFromDto} was not found");
+            await _markRepository.DeleteMarksWithoutNews();
         }
 
         public async Task<IEnumerable<NewsResponseTo>> GetAllNews()

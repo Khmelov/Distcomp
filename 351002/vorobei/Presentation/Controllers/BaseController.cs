@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using BusinessLogic.DTO.Response;
 using BusinessLogic.Servicies;
-
 using DataAccess.Models;
+using Infrastructure.Exceptions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Controllers
 {
@@ -20,15 +21,15 @@ namespace Presentation.Controllers
         }
 
         [HttpGet]
-        public virtual ActionResult<List<TResponse>> GetAll()
+        public async virtual Task<ActionResult<List<TResponse>>> GetAllAsync()
         {
-            return Ok(_service.GetAll());
+            return Ok(await _service.GetAllAsync());
         }
 
         [HttpGet("{id}")]
-        public virtual ActionResult<TResponse> GetById(int id)
+        public async virtual Task<ActionResult<TResponse>> GetByIdAsync(int id)
         {
-            TResponse? response = _service.GetById(id);
+            TResponse? response = await _service.GetByIdAsync(id);
             if (response != null)
             {
                 return Ok(response);
@@ -37,16 +38,23 @@ namespace Presentation.Controllers
         }
 
         [HttpPost]
-        public virtual ActionResult<TResponse> Create([FromBody] TRequest entity)
+        public async virtual Task<ActionResult<TResponse>> CreateAsync([FromBody] TRequest entity)
         {
-            TResponse response = _service.Create(entity);
-            return Created($"{response.Id}", response);
+            try
+            {
+                TResponse? response = await _service.CreateAsync(entity);
+                return Created($"{response.Id}", response);
+            }
+            catch (BaseException ex)
+            {
+                return StatusCode(ex.StatusCode, new { error = ex.Message });
+            }
         }
 
         [HttpPut]
-        public virtual ActionResult<TResponse> Update([FromBody] TRequest entity)
+        public async virtual Task<ActionResult<TResponse>> UpdateAsync([FromBody] TRequest entity)
         {
-            TResponse? response = _service.Update(entity);
+            TResponse? response = await _service.UpdateAsync(entity);
             if (response != null)
             {
                 return Ok(response);
@@ -55,9 +63,9 @@ namespace Presentation.Controllers
         }
 
         [HttpDelete("{id}")]
-        public virtual ActionResult Delete(int id)
+        public async virtual Task<ActionResult> Delete(int id)
         {
-            bool wasFound = _service.DeleteById(id);
+            bool wasFound = await _service.DeleteByIdAsync(id);
             if (wasFound)
             {
                 return NoContent();

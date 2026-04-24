@@ -1,9 +1,9 @@
 using Application.Interfaces;
 using Application.MappingProfiles;
 using Application.Services;
-using AutoMapper;
-using Infrastructure.Persistence.InMemory;
-using System.Security.Cryptography;
+using Infrastructure.Kafka;
+using Infrastructure.Persistence.EFCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace API
 {
@@ -14,6 +14,7 @@ namespace API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddSingleton<IKafkaProducer, KafkaProducer>();
 
             builder.Services.AddControllers();
 
@@ -25,10 +26,23 @@ namespace API
                     config.AddProfile<PostProfile>();
                 });
 
-            builder.Services.AddSingleton<INewsRepository, NewsInMemoryRepository>();
-            builder.Services.AddSingleton<IEditorRepository, EditorInMemoryRepository>();
-            builder.Services.AddSingleton<IMarkerRepository, MarkerInMemoryRepository>();
-            builder.Services.AddSingleton<IPostRepository, PostInMemoryRepository>();
+            // add postgres
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseNpgsql(connectionString)
+            );
+
+            // add microservices
+            var discussionUrl = builder.Configuration["DiscussionService:BaseUrl"];
+            builder.Services.AddHttpClient("discussion", client =>
+            {
+                client.BaseAddress = new Uri(discussionUrl!);
+            });
+
+            builder.Services.AddScoped<INewsRepository, NewsEfRepository>();
+            builder.Services.AddScoped<IEditorRepository, EditorEfRepository>();
+            builder.Services.AddScoped<IMarkerRepository, MarkerEfRepository>();
+            builder.Services.AddScoped<IPostRepository, PostEfRepository>();
 
             builder.Services.AddScoped<INewsService, NewsService>();
             builder.Services.AddScoped<IEditorService, EditorService>();
