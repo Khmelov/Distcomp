@@ -1,0 +1,11 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: distcomp_app
+    ports:
+      - "24110:24110"
+    env_file:
+      - .env
+    restart: unless-stopped

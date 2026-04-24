@@ -1,0 +1,597 @@
+basePath: /api/v1.0
+definitions:
+  apperrors.ErrorResponse:
+    properties:
+      errorCode:
+        type: integer
+      errorMessage:
+        type: string
+    type: object
+  dto.ArticleRequestTo:
+    properties:
+      content:
+        maxLength: 2048
+        minLength: 4
+        type: string
+      editorId:
+        type: integer
+      id:
+        type: integer
+      title:
+        maxLength: 64
+        minLength: 2
+        type: string
+    required:
+    - content
+    - editorId
+    - title
+    type: object
+  dto.ArticleResponseTo:
+    properties:
+      content:
+        type: string
+      created:
+        type: string
+      editorId:
+        type: integer
+      id:
+        type: integer
+      modified:
+        type: string
+      title:
+        type: string
+    type: object
+  dto.CommentRequestTo:
+    properties:
+      articleId:
+        type: integer
+      content:
+        maxLength: 2048
+        minLength: 2
+        type: string
+      id:
+        type: integer
+    required:
+    - articleId
+    - content
+    type: object
+  dto.CommentResponseTo:
+    properties:
+      articleId:
+        type: integer
+      content:
+        type: string
+      id:
+        type: integer
+    type: object
+  dto.EditorRequestTo:
+    properties:
+      firstname:
+        maxLength: 64
+        minLength: 2
+        type: string
+      id:
+        type: integer
+      lastname:
+        maxLength: 64
+        minLength: 2
+        type: string
+      login:
+        maxLength: 64
+        minLength: 2
+        type: string
+      password:
+        maxLength: 128
+        minLength: 8
+        type: string
+    required:
+    - firstname
+    - lastname
+    - login
+    - password
+    type: object
+  dto.EditorResponseTo:
+    properties:
+      firstname:
+        type: string
+      id:
+        type: integer
+      lastname:
+        type: string
+      login:
+        type: string
+    type: object
+  dto.TagRequestTo:
+    properties:
+      id:
+        type: integer
+      name:
+        maxLength: 32
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
+  dto.TagResponseTo:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+host: localhost:24110
+info:
+  contact: {}
+  description: REST API for Editor, Article, Tag, and Comment management.
+  title: DistComp API
+  version: "1.0"
+paths:
+  /articles:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ArticleResponseTo'
+            type: array
+      summary: Get all Articles
+      tags:
+      - Article
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Article details
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ArticleRequestTo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ArticleResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Create Article
+      tags:
+      - Article
+  /articles/{id}:
+    delete:
+      parameters:
+      - description: Article ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Delete Article
+      tags:
+      - Article
+    get:
+      parameters:
+      - description: Article ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ArticleResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Get Article by ID
+      tags:
+      - Article
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Article ID
+        in: path
+        name: id
+        type: integer
+      - description: Article details
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ArticleRequestTo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ArticleResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Update Article
+      tags:
+      - Article
+  /comments:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.CommentResponseTo'
+            type: array
+      summary: Get all Comments
+      tags:
+      - Comment
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Comment details
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CommentRequestTo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CommentResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Create Comment
+      tags:
+      - Comment
+  /comments/{id}:
+    delete:
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Delete Comment
+      tags:
+      - Comment
+    get:
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CommentResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Get Comment by ID
+      tags:
+      - Comment
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        type: integer
+      - description: Comment details
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CommentRequestTo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CommentResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Update Comment
+      tags:
+      - Comment
+  /editors:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.EditorResponseTo'
+            type: array
+      summary: Get all Editors
+      tags:
+      - Editor
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Editor details
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.EditorRequestTo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.EditorResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Create Editor
+      tags:
+      - Editor
+  /editors/{id}:
+    delete:
+      parameters:
+      - description: Editor ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Delete Editor
+      tags:
+      - Editor
+    get:
+      parameters:
+      - description: Editor ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.EditorResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Get Editor by ID
+      tags:
+      - Editor
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Editor ID
+        in: path
+        name: id
+        type: integer
+      - description: Editor details
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.EditorRequestTo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.EditorResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Update Editor
+      tags:
+      - Editor
+  /tags:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.TagResponseTo'
+            type: array
+      summary: Get all Tags
+      tags:
+      - Tag
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tag details
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TagRequestTo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.TagResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Create Tag
+      tags:
+      - Tag
+  /tags/{id}:
+    delete:
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Delete Tag
+      tags:
+      - Tag
+    get:
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TagResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Get Tag by ID
+      tags:
+      - Tag
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        type: integer
+      - description: Tag details
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TagRequestTo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TagResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+      summary: Update Tag
+      tags:
+      - Tag
+swagger: "2.0"
