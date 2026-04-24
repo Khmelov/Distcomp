@@ -1,5 +1,6 @@
 from sqlalchemy import text
 
+from app.cache.client import RedisCacheClient
 from app.models.issue import Issue
 from app.models.notice import Notice
 from app.models.sticker import Sticker
@@ -10,6 +11,18 @@ from app.services.notice import NoticeService
 from app.services.sticker import StickerService
 from app.services.user import UserService
 from app.settings import settings
+
+_cache_client: RedisCacheClient | None = None
+
+
+def set_cache_client(cache_client: RedisCacheClient | None) -> None:
+    global _cache_client
+    _cache_client = cache_client
+
+
+def get_cache_client() -> RedisCacheClient | None:
+    return _cache_client
+
 
 if settings.storage == "memory":
     user_repository = InMemoryRepository[User]()
@@ -66,15 +79,16 @@ else:
         notice_repository.delete_all_for_issue(issue_id)
 
 
-user_service = UserService(user_repository)
-sticker_service = StickerService(sticker_repository)
+user_service = UserService(user_repository, cache_getter=get_cache_client)
+sticker_service = StickerService(sticker_repository, cache_getter=get_cache_client)
 issue_service = IssueService(
     issue_repository,
     user_repository,
     sticker_repository,
+    cache_getter=get_cache_client,
     delete_notices_for_issue=_delete_notices_for_issue_memory,
 )
-notice_service = NoticeService(notice_repository, issue_repository)
+notice_service = NoticeService(notice_repository, issue_repository, cache_getter=get_cache_client)
 
 
 def reset_storage() -> None:
