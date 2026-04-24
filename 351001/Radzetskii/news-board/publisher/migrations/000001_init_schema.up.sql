@@ -1,0 +1,41 @@
+-- CREATE SCHEMA IF NOT EXISTS distcomp;
+-- SET search_path TO distcomp;
+
+CREATE TABLE IF NOT EXISTS tbl_user (
+    id BIGSERIAL PRIMARY KEY,
+    login TEXT NOT NULL CHECK (LENGTH(login) BETWEEN 2 AND 64),
+    password TEXT NOT NULL CHECK (LENGTH(password) BETWEEN 8 AND 128),
+    firstname TEXT NOT NULL CHECK (LENGTH(firstname) BETWEEN 2 AND 64),
+    lastname TEXT NOT NULL CHECK (LENGTH(lastname) BETWEEN 2 AND 64)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_login ON tbl_user (login);
+
+CREATE TABLE IF NOT EXISTS tbl_news (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES tbl_user(id) ON DELETE CASCADE,
+    title TEXT NOT NULL CHECK (LENGTH(title) BETWEEN 2 AND 64),
+    content TEXT NOT NULL CHECK (LENGTH(content) BETWEEN 4 AND 2048),
+    created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    modified TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_news_user_title_content ON tbl_news (user_id, title, content);
+
+CREATE TABLE IF NOT EXISTS tbl_marker (
+    id BIGSERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE CHECK (LENGTH(name) BETWEEN 2 AND 32)
+);
+
+CREATE TABLE IF NOT EXISTS tbl_notice (
+    id BIGSERIAL PRIMARY KEY,
+    news_id BIGINT NOT NULL REFERENCES tbl_news(id) ON DELETE CASCADE,
+    content TEXT NOT NULL CHECK (LENGTH(content) BETWEEN 2 AND 2048)
+);
+
+
+CREATE TABLE IF NOT EXISTS tbl_news_marker (
+    news_id BIGINT NOT NULL REFERENCES tbl_news(id) ON DELETE CASCADE,
+    marker_id BIGINT NOT NULL REFERENCES tbl_marker(id) ON DELETE CASCADE,
+    PRIMARY KEY (news_id, marker_id)
+);

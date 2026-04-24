@@ -35,11 +35,13 @@ builder.Services.AddScoped<IRepository<Tweet>, TweetRepository>();
 builder.Services.AddScoped<IStickerRepository, StickerRepository>();
 builder.Services.AddScoped<IRepository<Sticker>, StickerRepository>();
 //builder.Services.AddScoped<IRepository<Reaction>, ReactionRepository>();
-builder.Services.AddScoped<IRepository<Tweet>, TweetRepository>();
 
 builder.Services.AddScoped<EditorService>();
 builder.Services.AddScoped<TweetService>();
 builder.Services.AddScoped<StickerService>();
+
+builder.Services.AddSingleton<KafkaService>();
+builder.Services.AddHostedService<KafkaResponseListener>();
 //builder.Services.AddScoped<ReactionService>();
 
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
