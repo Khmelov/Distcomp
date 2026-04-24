@@ -14,31 +14,46 @@ namespace Application.Services
         private readonly IMapper _mapper;
 
         private readonly IPostRepository _postRepository;
+        private readonly IKafkaProducer _kafkaProducer;   // будет добавлен позже
 
-        public PostService(IMapper mapper, IPostRepository repository)
+        public PostService(IMapper mapper, IPostRepository postRepository, IKafkaProducer kafkaProducer)
         {
             _mapper = mapper;
-            _postRepository = repository;
+            _postRepository = postRepository;
+            _kafkaProducer = kafkaProducer;
         }
 
-        public async Task<PostResponseTo> CreatePost(PostRequestTo createPostRequestTo)
+        public async Task<PostResponseTo> CreatePost(PostRequestTo request)
         {
-            Post postFromDto = _mapper.Map<Post>(createPostRequestTo);
+            var post = _mapper.Map<Post>(request);
+            post.State = PostState.PENDING;
 
-            try
-            {
-                Post createdPost = await _postRepository.AddAsync(postFromDto);
-                PostResponseTo dtoFromCreatedPost = _mapper.Map<PostResponseTo>(createdPost);
-                return dtoFromCreatedPost;
-            }
-            catch (InvalidOperationException ex)
-            {
-                throw new PostAlreadyExistsException(ex.Message, ex);
-            }
-            catch (ForeignKeyViolationException ex)
-            {
-                throw new ReferenceException(ex.Message, ex);
-            }
+            var created = await _postRepository.AddAsync(post);
+            var response = _mapper.Map<PostResponseTo>(created);
+
+            // Отправка в Kafka
+            await _kafkaProducer.SendPostAsync(created);
+
+            return response;
+        }
+
+        public async Task<PostResponseTo?> UpdatePost(PostRequestTo request)
+        {
+            var post = _mapper.Map<Post>(request);
+            // Важно: сохранить текущий State, если он уже был изменён (например, через Kafka)
+            var existing = await _postRepository.GetByIdAsync(post.Id);
+            if (existing == null) return null;
+            post.State = existing.State;   // не сбрасываем статус при обновлении контента
+
+            var updated = await _postRepository.UpdateAsync(post);
+            if (updated == null) return null;
+
+            var response = _mapper.Map<PostResponseTo>(updated);
+
+            // Отправка в Kafka при обновлении
+            await _kafkaProducer.SendPostAsync(updated);
+
+            return response;
         }
 
         public async Task DeletePost(PostRequestTo deletePostRequestTo)
@@ -73,18 +88,6 @@ namespace Application.Services
             PostResponseTo demandedPostResponseTo = _mapper.Map<PostResponseTo>(demandedPost);
 
             return demandedPostResponseTo;
-        }
-
-        public async Task<PostResponseTo> UpdatePost(PostRequestTo updatePostRequestTo)
-        {
-            Post postFromDto = _mapper.Map<Post>(updatePostRequestTo);
-
-            Post updatePost = await _postRepository.UpdateAsync(postFromDto)
-                ?? throw new PostNotFoundException($"Update post {postFromDto} was not found");
-
-            PostResponseTo updatePostResponseTo = _mapper.Map<PostResponseTo>(updatePost);
-
-            return updatePostResponseTo;
         }
     }
 }

@@ -1,0 +1,5 @@
+Collecting redis
+  Downloading redis-7.4.0-py3-none-any.whl.metadata (12 kB)
+Downloading redis-7.4.0-py3-none-any.whl (409 kB)
+Installing collected packages: redis
+Successfully installed redis-7.4.0

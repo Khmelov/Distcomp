@@ -3,9 +3,12 @@ using Distcomp.Application.Mapping;
 using Distcomp.Application.Services;
 using Distcomp.Domain.Models;
 using Distcomp.Infrastructure.Data;
+using Distcomp.Infrastructure.Messaging;
 using Distcomp.Infrastructure.Repositories;
+using Distcomp.Infrastructure.Caching;
 using Distcomp.WebApi.Middleware;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,9 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+var redisConnectionString = builder.Configuration.GetSection("Redis:ConnectionString").Value ?? "localhost:6379";
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConnectionString));
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -34,6 +40,11 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IIssueService, IssueService>();
 builder.Services.AddScoped<IMarkerService, MarkerService>();
+
+builder.Services.AddSingleton<KafkaProducerService>();
+builder.Services.AddSingleton<KafkaRequestReplyService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<KafkaRequestReplyService>());
+builder.Services.AddSingleton<RedisCacheService>();
 
 builder.Services.AddHttpClient("DiscussionClient", client =>
 {
