@@ -15,11 +15,7 @@ class EditorController {
     }
 
     public function getById(int $id): array {
-        $result = $this->service->getById($id);
-        if (!$result) {
-            return ['error' => 'Editor not found'];
-        }
-        return $result;
+        return $this->service->getById($id);
     }
 
     public function create(array $data): array {
