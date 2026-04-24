@@ -13,7 +13,6 @@ app.include_router(articles_router)
 app.include_router(markers_router)
 app.include_router(notes_router)
 
-
 if __name__ == "__main__":
     uvicorn.run("main:app", reload = True, host = "0.0.0.0", port = 24110, http = "h11")
 

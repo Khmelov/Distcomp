@@ -1,4 +1,5 @@
 using DiscussionService.Interfaces;
+using DiscussionService.Kafka;
 using DiscussionService.MappingProfiles;
 using DiscussionService.Repositories;
 using DiscussionService.Services;
@@ -13,6 +14,9 @@ namespace DiscussionService
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+
+            builder.Services.AddSingleton<IKafkaProducer, KafkaProducer>();
+            builder.Services.AddHostedService<KafkaPostConsumer>();
 
             // MongoDB
             var mongoClient = new MongoClient("mongodb://localhost:27017");

@@ -58,7 +58,6 @@ class WriterService:
         try:
             self.repo.delete(id)
         except KeyError:
-            # репозиторий может бросать KeyError — конвертируем в AppError
             raise AppError(status_code=404, message="Writer not found", suffix=7)
         return None
 

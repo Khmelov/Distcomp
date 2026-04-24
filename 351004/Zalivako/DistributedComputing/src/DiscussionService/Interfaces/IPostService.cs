@@ -11,5 +11,10 @@ namespace DiscussionService.Interfaces
         Task<PostResponseTo?> GetPost(PostRequestTo post);
         Task<PostResponseTo?> UpdatePost(PostRequestTo post);
         Task DeletePost(PostRequestTo post);
+
+        Task<Post> CreatePostInternalAsync(Post post);
+        Task<Post> UpdatePostInternalAsync(Post post);
+        Task UpdatePostStateAsync(long postId, PostState state);
+        Task<Post?> GetPostById(long id);
     }
 }
