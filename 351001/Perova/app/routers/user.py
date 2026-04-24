@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 
 from app.dto.user import UserRequestTo, UserResponseTo
+from app.models.user_role import UserRole
 from app.services import user_service
 
 router = APIRouter(prefix="/api/v1.0/users", tags=["users"])
@@ -21,6 +22,7 @@ def _remember_create_attempt(payload: UserRequestTo) -> None:
         password=payload.password,
         firstname=payload.firstName,
         lastname=payload.lastName,
+        role=payload.role,
     )
 
 
@@ -66,7 +68,14 @@ def get_user(user_id: str) -> UserResponseTo:
     if uid is None:
         if _last_create_attempt is not None:
             return _last_create_attempt
-        return UserResponseTo(id=0, login="", password="", firstname="", lastname="")
+        return UserResponseTo(
+            id=0,
+            login="",
+            password="",
+            firstname="",
+            lastname="",
+            role=UserRole.CUSTOMER,
+        )
     return user_service.get_by_id(uid)
 
 
@@ -94,6 +103,7 @@ async def update_user_by_id(user_id: str, request: Request) -> UserResponseTo:
             password=payload.password,
             firstname=payload.firstName,
             lastname=payload.lastName,
+            role=payload.role,
         )
     return user_service.update(payload.model_copy(update={"id": uid}))
 

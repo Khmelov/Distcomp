@@ -6,6 +6,7 @@ from app.dto.user import UserRequestTo, UserResponseTo
 from app.exceptions import EntityDuplicateException, EntityNotFoundException
 from app.models.user import User
 from app.repositories import CrudRepository
+from app.security.passwords import hash_password, verify_password
 
 
 class UserService:
@@ -42,9 +43,10 @@ class UserService:
         self._ensure_unique_login(request.login)
         user = User(
             login=request.login,
-            password=request.password,
+            password=hash_password(request.password),
             firstname=request.firstName,
             lastname=request.lastName,
+            role=request.role,
         )
         created = self._repository.create(user)
         response = self._to_response(created)
@@ -59,9 +61,10 @@ class UserService:
             raise EntityNotFoundException("User", request.id)
         self._ensure_unique_login(request.login, ignore_user_id=request.id)
         existing.login = request.login
-        existing.password = request.password
+        existing.password = hash_password(request.password)
         existing.firstname = request.firstName
         existing.lastname = request.lastName
+        existing.role = request.role
         updated = self._repository.update(existing)
         response = self._to_response(updated)
         self._invalidate_user_cache(response.id)
@@ -74,6 +77,14 @@ class UserService:
 
     def find_by_login(self, login: str) -> User | None:
         return next((user for user in self._repository.find_all() if user.login == login), None)
+
+    def authenticate(self, login: str, password: str) -> User | None:
+        user = self.find_by_login(login)
+        if user is None:
+            return None
+        if not verify_password(password, user.password):
+            return None
+        return user
 
     def _ensure_unique_login(self, login: str, ignore_user_id: int | None = None) -> None:
         for user in self._repository.find_all():
@@ -88,6 +99,7 @@ class UserService:
             password=user.password,
             firstname=user.firstname,
             lastname=user.lastname,
+            role=user.role,
         )
 
     def _invalidate_user_cache(self, user_id: int | None = None) -> None:

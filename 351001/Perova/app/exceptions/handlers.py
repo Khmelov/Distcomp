@@ -31,6 +31,20 @@ class GatewayTimeoutException(Exception):
         super().__init__(self.message)
 
 
+class AuthenticationException(Exception):
+    def __init__(self, message: str = "Authentication required"):
+        self.message = message
+        self.error_code = 40101
+        super().__init__(self.message)
+
+
+class AuthorizationException(Exception):
+    def __init__(self, message: str = "Access denied"):
+        self.message = message
+        self.error_code = 40302
+        super().__init__(self.message)
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(EntityNotFoundException)
     async def handle_not_found(_: Request, exc: EntityNotFoundException) -> JSONResponse:
@@ -57,6 +71,20 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def handle_gateway_timeout(_: Request, exc: GatewayTimeoutException) -> JSONResponse:
         return JSONResponse(
             status_code=504,
+            content={"errorMessage": exc.message, "errorCode": exc.error_code},
+        )
+
+    @app.exception_handler(AuthenticationException)
+    async def handle_authentication(_: Request, exc: AuthenticationException) -> JSONResponse:
+        return JSONResponse(
+            status_code=401,
+            content={"errorMessage": exc.message, "errorCode": exc.error_code},
+        )
+
+    @app.exception_handler(AuthorizationException)
+    async def handle_authorization(_: Request, exc: AuthorizationException) -> JSONResponse:
+        return JSONResponse(
+            status_code=403,
             content={"errorMessage": exc.message, "errorCode": exc.error_code},
         )
 

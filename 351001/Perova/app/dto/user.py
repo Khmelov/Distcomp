@@ -1,5 +1,7 @@
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
+from app.models.user_role import UserRole
+
 
 class UserRequestTo(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -17,6 +19,7 @@ class UserRequestTo(BaseModel):
         max_length=64,
         validation_alias=AliasChoices("lastName", "lastname"),
     )
+    role: UserRole = UserRole.CUSTOMER
 
 
 class UserResponseTo(BaseModel):
@@ -25,3 +28,4 @@ class UserResponseTo(BaseModel):
     password: str
     firstname: str
     lastname: str
+    role: UserRole

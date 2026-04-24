@@ -7,7 +7,17 @@ from app.cache.client import RedisCacheClient
 from app.db.session import dispose_engine, init_engine
 from app.exceptions import register_exception_handlers
 from app.middleware import ReplayBodyMiddleware, StripTrailingSlashMiddleware
-from app.routers import issue_router, notice_router, sticker_router, user_router
+from app.routers import (
+    issue_router,
+    notice_router,
+    sticker_router,
+    user_router,
+    v2_auth_router,
+    v2_issue_router,
+    v2_notice_router,
+    v2_sticker_router,
+    v2_user_router,
+)
 from app.settings import settings
 
 
@@ -52,6 +62,11 @@ app.include_router(user_router)
 app.include_router(issue_router)
 app.include_router(sticker_router)
 app.include_router(notice_router)
+app.include_router(v2_auth_router)
+app.include_router(v2_user_router)
+app.include_router(v2_issue_router)
+app.include_router(v2_sticker_router)
+app.include_router(v2_notice_router)
 
 register_exception_handlers(app)
 

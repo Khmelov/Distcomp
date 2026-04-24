@@ -1,4 +1,6 @@
 from app.exceptions.handlers import (
+    AuthenticationException,
+    AuthorizationException,
     EntityDuplicateException,
     EntityNotFoundException,
     EntityValidationException,
@@ -11,5 +13,7 @@ __all__ = [
     "EntityValidationException",
     "EntityDuplicateException",
     "GatewayTimeoutException",
+    "AuthenticationException",
+    "AuthorizationException",
     "register_exception_handlers",
 ]
