@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -13,12 +14,17 @@ import (
 
 	"distcomp/internal/apperrors"
 	"distcomp/internal/config"
-	"distcomp/internal/repository/memory"
+	"distcomp/internal/repository/postgres"
 	"distcomp/internal/service"
 	v1 "distcomp/internal/transport/http/v1"
+	"distcomp/pkg/client/postgresql"
 	"distcomp/pkg/logger"
 
+	_ "distcomp/docs"
+
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type App struct {
@@ -26,13 +32,31 @@ type App struct {
 	logger   *slog.Logger
 	router   *gin.Engine
 	services *service.Manager
+	db       *sql.DB
 }
 
 func Run() error {
 	cfg := config.Load()
 	log := logger.SetupLogger(cfg.Env)
 
-	storage := memory.NewStorage()
+	ctx, cancelInit := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancelInit()
+
+	dbCfg := postgresql.Config{
+		Host:     cfg.DBHost,
+		Port:     cfg.DBPort,
+		User:     cfg.DBUser,
+		Password: cfg.DBPass,
+		DBName:   cfg.DBName,
+		Schema:   cfg.DBSchema,
+	}
+	db, err := postgresql.NewClient(ctx, dbCfg, log)
+	if err != nil {
+		log.Error("Failed to initialize database client", slog.Any("error", err))
+		return err
+	}
+
+	storage := postgres.NewStorage(db)
 	services := service.NewManager(storage)
 
 	if cfg.Env == "prod" {
@@ -40,7 +64,6 @@ func Run() error {
 	}
 	router := gin.Default()
 
-	// Настройка глобальных JSON-ошибок для неизвестных роутов
 	router.HandleMethodNotAllowed = true
 	router.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, apperrors.New("endpoint not found", apperrors.CodeNotFound))
@@ -48,6 +71,8 @@ func Run() error {
 	router.NoMethod(func(c *gin.Context) {
 		c.JSON(http.StatusMethodNotAllowed, apperrors.New("method not allowed", apperrors.CodeBadRequest))
 	})
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	handlers := v1.NewHandler(services)
 	api := router.Group("/api")
@@ -58,6 +83,7 @@ func Run() error {
 		logger:   log,
 		router:   router,
 		services: services,
+		db:       db,
 	}
 
 	addr := fmt.Sprintf("%s:%s", app.cfg.Host, app.cfg.Port)
@@ -81,12 +107,14 @@ func Run() error {
 
 	app.logger.Info("shutting down server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelShutdown()
 
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		app.logger.Error("server forced to shutdown", slog.Any("error", err))
-		return err
+	}
+	if err := app.db.Close(); err != nil {
+		app.logger.Error("database connection close error", slog.Any("error", err))
 	}
 
 	app.logger.Info("server exiting")

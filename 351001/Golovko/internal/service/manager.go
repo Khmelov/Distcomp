@@ -25,8 +25,6 @@ func NewManager(repo repository.Storage) *Manager {
 	}
 }
 
-// --- Editor Service ---
-
 type editorService struct {
 	repo repository.Storage
 }
@@ -52,8 +50,8 @@ func (s *editorService) GetByID(ctx context.Context, id int64) (dto.EditorRespon
 	return dto.EditorResponseTo{ID: e.ID, Login: e.Login, FirstName: e.FirstName, LastName: e.LastName}, nil
 }
 
-func (s *editorService) GetAll(ctx context.Context) ([]dto.EditorResponseTo, error) {
-	editors, err := s.repo.GetAllEditors(ctx)
+func (s *editorService) GetAll(ctx context.Context, params repository.ListParams) ([]dto.EditorResponseTo, error) {
+	editors, err := s.repo.GetAllEditors(ctx, params)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +74,6 @@ func (s *editorService) Delete(ctx context.Context, id int64) error {
 	return s.repo.DeleteEditor(ctx, id)
 }
 
-// --- Article Service ---
-
 type articleService struct {
 	repo repository.Storage
 }
@@ -86,7 +82,7 @@ func (s *articleService) Create(ctx context.Context, req dto.ArticleRequestTo) (
 	if _, err := s.repo.GetEditorByID(ctx, req.EditorID); err != nil {
 		return dto.ArticleResponseTo{}, err
 	}
-	now := time.Now()
+	now := time.Now().UTC()
 	a := &domain.Article{
 		EditorID: req.EditorID,
 		Title:    req.Title,
@@ -94,13 +90,24 @@ func (s *articleService) Create(ctx context.Context, req dto.ArticleRequestTo) (
 		Created:  now,
 		Modified: now,
 	}
+	
+	// ИЗМЕНЕНИЯ ЗДЕСЬ (парсим строки)
+	for _, tagName := range req.Tags {
+		a.Tags = append(a.Tags, domain.Tag{Name: tagName})
+	}
+
 	if err := s.repo.CreateArticle(ctx, a); err != nil {
 		return dto.ArticleResponseTo{}, err
 	}
-	return dto.ArticleResponseTo{
+
+	res := dto.ArticleResponseTo{
 		ID: a.ID, EditorID: a.EditorID, Title: a.Title, Content: a.Content,
 		Created: a.Created.Format(time.RFC3339), Modified: a.Modified.Format(time.RFC3339),
-	}, nil
+	}
+	for _, t := range a.Tags {
+		res.Tags = append(res.Tags, dto.TagResponseTo{ID: t.ID, Name: t.Name})
+	}
+	return res, nil
 }
 
 func (s *articleService) GetByID(ctx context.Context, id int64) (dto.ArticleResponseTo, error) {
@@ -108,14 +115,18 @@ func (s *articleService) GetByID(ctx context.Context, id int64) (dto.ArticleResp
 	if err != nil {
 		return dto.ArticleResponseTo{}, err
 	}
-	return dto.ArticleResponseTo{
+	res := dto.ArticleResponseTo{
 		ID: a.ID, EditorID: a.EditorID, Title: a.Title, Content: a.Content,
 		Created: a.Created.Format(time.RFC3339), Modified: a.Modified.Format(time.RFC3339),
-	}, nil
+	}
+	for _, t := range a.Tags {
+		res.Tags = append(res.Tags, dto.TagResponseTo{ID: t.ID, Name: t.Name})
+	}
+	return res, nil
 }
 
-func (s *articleService) GetAll(ctx context.Context) ([]dto.ArticleResponseTo, error) {
-	articles, err := s.repo.GetAllArticles(ctx)
+func (s *articleService) GetAll(ctx context.Context, params repository.ListParams) ([]dto.ArticleResponseTo, error) {
+	articles, err := s.repo.GetAllArticles(ctx, params)
 	if err != nil {
 		return nil, err
 	}
@@ -124,6 +135,9 @@ func (s *articleService) GetAll(ctx context.Context) ([]dto.ArticleResponseTo, e
 		res[i] = dto.ArticleResponseTo{
 			ID: a.ID, EditorID: a.EditorID, Title: a.Title, Content: a.Content,
 			Created: a.Created.Format(time.RFC3339), Modified: a.Modified.Format(time.RFC3339),
+		}
+		for _, t := range a.Tags {
+			res[i].Tags = append(res[i].Tags, dto.TagResponseTo{ID: t.ID, Name: t.Name})
 		}
 	}
 	return res, nil
@@ -140,21 +154,31 @@ func (s *articleService) Update(ctx context.Context, id int64, req dto.ArticleRe
 	old.EditorID = req.EditorID
 	old.Title = req.Title
 	old.Content = req.Content
-	old.Modified = time.Now()
+	old.Modified = time.Now().UTC()
+	
+	// ИЗМЕНЕНИЯ ЗДЕСЬ (парсим строки)
+	old.Tags = nil
+	for _, tagName := range req.Tags {
+		old.Tags = append(old.Tags, domain.Tag{Name: tagName})
+	}
+
 	if err := s.repo.UpdateArticle(ctx, old); err != nil {
 		return dto.ArticleResponseTo{}, err
 	}
-	return dto.ArticleResponseTo{
+
+	res := dto.ArticleResponseTo{
 		ID: old.ID, EditorID: old.EditorID, Title: old.Title, Content: old.Content,
 		Created: old.Created.Format(time.RFC3339), Modified: old.Modified.Format(time.RFC3339),
-	}, nil
+	}
+	for _, t := range old.Tags {
+		res.Tags = append(res.Tags, dto.TagResponseTo{ID: t.ID, Name: t.Name})
+	}
+	return res, nil
 }
 
 func (s *articleService) Delete(ctx context.Context, id int64) error {
 	return s.repo.DeleteArticle(ctx, id)
 }
-
-// --- Tag Service ---
 
 type tagService struct {
 	repo repository.Storage
@@ -176,8 +200,8 @@ func (s *tagService) GetByID(ctx context.Context, id int64) (dto.TagResponseTo, 
 	return dto.TagResponseTo{ID: t.ID, Name: t.Name}, nil
 }
 
-func (s *tagService) GetAll(ctx context.Context) ([]dto.TagResponseTo, error) {
-	tags, err := s.repo.GetAllTags(ctx)
+func (s *tagService) GetAll(ctx context.Context, params repository.ListParams) ([]dto.TagResponseTo, error) {
+	tags, err := s.repo.GetAllTags(ctx, params)
 	if err != nil {
 		return nil, err
 	}
@@ -199,8 +223,6 @@ func (s *tagService) Update(ctx context.Context, id int64, req dto.TagRequestTo)
 func (s *tagService) Delete(ctx context.Context, id int64) error {
 	return s.repo.DeleteTag(ctx, id)
 }
-
-// --- Comment Service ---
 
 type commentService struct {
 	repo repository.Storage
@@ -225,8 +247,8 @@ func (s *commentService) GetByID(ctx context.Context, id int64) (dto.CommentResp
 	return dto.CommentResponseTo{ID: c.ID, ArticleID: c.ArticleID, Content: c.Content}, nil
 }
 
-func (s *commentService) GetAll(ctx context.Context) ([]dto.CommentResponseTo, error) {
-	comments, err := s.repo.GetAllComments(ctx)
+func (s *commentService) GetAll(ctx context.Context, params repository.ListParams) ([]dto.CommentResponseTo, error) {
+	comments, err := s.repo.GetAllComments(ctx, params)
 	if err != nil {
 		return nil, err
 	}

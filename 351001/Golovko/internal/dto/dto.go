@@ -18,19 +18,21 @@ type EditorResponseTo struct {
 
 // --- ARTICLE ---
 type ArticleRequestTo struct {
-	ID       int64  `json:"id,omitempty"`
-	EditorID int64  `json:"editorId" binding:"required"`
-	Title    string `json:"title" binding:"required,min=2,max=64"`
-	Content  string `json:"content" binding:"required,min=4,max=2048"`
+	ID       int64    `json:"id,omitempty"`
+	EditorID int64    `json:"editorId" binding:"required"`
+	Title    string   `json:"title" binding:"required,min=2,max=64"`
+	Content  string   `json:"content" binding:"required,min=4,max=2048"`
+	Tags     []string `json:"tags,omitempty"` // <--- ИЗМЕНИЛИ ЗДЕСЬ
 }
 
 type ArticleResponseTo struct {
-	ID       int64  `json:"id"`
-	EditorID int64  `json:"editorId"`
-	Title    string `json:"title"`
-	Content  string `json:"content"`
-	Created  string `json:"created"`
-	Modified string `json:"modified"`
+	ID       int64           `json:"id"`
+	EditorID int64           `json:"editorId"`
+	Title    string          `json:"title"`
+	Content  string          `json:"content"`
+	Created  string          `json:"created"`
+	Modified string          `json:"modified"`
+	Tags     []TagResponseTo `json:"tags,omitempty"`
 }
 
 // --- TAG ---

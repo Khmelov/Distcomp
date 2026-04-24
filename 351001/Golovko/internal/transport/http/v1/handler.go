@@ -7,10 +7,12 @@ import (
 
 	"distcomp/internal/apperrors"
 	"distcomp/internal/dto"
-	"distcomp/internal/repository/memory"
+	"distcomp/internal/repository"
+	"distcomp/internal/repository/postgres"
 	"distcomp/internal/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 )
 
 type Handler struct {
@@ -66,14 +68,34 @@ func (h *Handler) InitRoutes(api *gin.RouterGroup) {
 	}
 }
 
+func parseListParams(c *gin.Context) repository.ListParams {
+	var params repository.ListParams
+	if limit, err := strconv.Atoi(c.Query("limit")); err == nil {
+		params.Limit = limit
+	}
+	if offset, err := strconv.Atoi(c.Query("offset")); err == nil {
+		params.Offset = offset
+	}
+	params.SortBy = c.Query("sort")
+	params.Order = c.Query("order")
+	return params
+}
+
 func parseID(c *gin.Context) (int64, error) {
 	return strconv.ParseInt(c.Param("id"), 10, 64)
 }
 
 func handleError(c *gin.Context, err error) {
-	if errors.Is(err, memory.ErrNotFound) {
+	if errors.Is(err, postgres.ErrNotFound) {
 		c.JSON(http.StatusNotFound, apperrors.New("entity not found", apperrors.CodeNotFound))
 		return
+	}
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) {
+		if pqErr.Code == "23505" {
+			c.JSON(http.StatusForbidden, apperrors.New(err.Error(), 40301))
+			return
+		}
 	}
 	c.JSON(http.StatusBadRequest, apperrors.New(err.Error(), apperrors.CodeBadRequest))
 }
@@ -85,6 +107,7 @@ func handleError(c *gin.Context, err error) {
 // @Param        input body dto.EditorRequestTo true "Editor details"
 // @Success      201  {object}  dto.EditorResponseTo
 // @Failure      400  {object}  apperrors.ErrorResponse
+// @Failure      403  {object}  apperrors.ErrorResponse
 // @Router       /editors [post]
 func (h *Handler) createEditor(c *gin.Context) {
 	var req dto.EditorRequestTo
@@ -125,10 +148,15 @@ func (h *Handler) getEditorByID(c *gin.Context) {
 // @Summary      Get all Editors
 // @Tags         Editor
 // @Produce      json
+// @Param        limit   query     int     false  "Limit"
+// @Param        offset  query     int     false  "Offset"
+// @Param        sort    query     string  false  "Sort Field"
+// @Param        order   query     string  false  "Sort Order (asc/desc)"
 // @Success      200  {array}   dto.EditorResponseTo
 // @Router       /editors [get]
 func (h *Handler) getAllEditors(c *gin.Context) {
-	res, err := h.services.Editor.GetAll(c.Request.Context())
+	params := parseListParams(c)
+	res, err := h.services.Editor.GetAll(c.Request.Context(), params)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -200,6 +228,7 @@ func (h *Handler) deleteEditor(c *gin.Context) {
 // @Param        input body dto.ArticleRequestTo true "Article details"
 // @Success      201  {object}  dto.ArticleResponseTo
 // @Failure      400  {object}  apperrors.ErrorResponse
+// @Failure      403  {object}  apperrors.ErrorResponse
 // @Router       /articles [post]
 func (h *Handler) createArticle(c *gin.Context) {
 	var req dto.ArticleRequestTo
@@ -240,10 +269,15 @@ func (h *Handler) getArticleByID(c *gin.Context) {
 // @Summary      Get all Articles
 // @Tags         Article
 // @Produce      json
+// @Param        limit   query     int     false  "Limit"
+// @Param        offset  query     int     false  "Offset"
+// @Param        sort    query     string  false  "Sort Field"
+// @Param        order   query     string  false  "Sort Order (asc/desc)"
 // @Success      200  {array}   dto.ArticleResponseTo
 // @Router       /articles [get]
 func (h *Handler) getAllArticles(c *gin.Context) {
-	res, err := h.services.Article.GetAll(c.Request.Context())
+	params := parseListParams(c)
+	res, err := h.services.Article.GetAll(c.Request.Context(), params)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -355,10 +389,15 @@ func (h *Handler) getTagByID(c *gin.Context) {
 // @Summary      Get all Tags
 // @Tags         Tag
 // @Produce      json
+// @Param        limit   query     int     false  "Limit"
+// @Param        offset  query     int     false  "Offset"
+// @Param        sort    query     string  false  "Sort Field"
+// @Param        order   query     string  false  "Sort Order (asc/desc)"
 // @Success      200  {array}   dto.TagResponseTo
 // @Router       /tags [get]
 func (h *Handler) getAllTags(c *gin.Context) {
-	res, err := h.services.Tag.GetAll(c.Request.Context())
+	params := parseListParams(c)
+	res, err := h.services.Tag.GetAll(c.Request.Context(), params)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -470,10 +509,15 @@ func (h *Handler) getCommentByID(c *gin.Context) {
 // @Summary      Get all Comments
 // @Tags         Comment
 // @Produce      json
+// @Param        limit   query     int     false  "Limit"
+// @Param        offset  query     int     false  "Offset"
+// @Param        sort    query     string  false  "Sort Field"
+// @Param        order   query     string  false  "Sort Order (asc/desc)"
 // @Success      200  {array}   dto.CommentResponseTo
 // @Router       /comments [get]
 func (h *Handler) getAllComments(c *gin.Context) {
-	res, err := h.services.Comment.GetAll(c.Request.Context())
+	params := parseListParams(c)
+	res, err := h.services.Comment.GetAll(c.Request.Context(), params)
 	if err != nil {
 		handleError(c, err)
 		return

@@ -17,6 +17,11 @@ definitions:
         type: integer
       id:
         type: integer
+      tags:
+        description: <--- ИЗМЕНИЛИ ЗДЕСЬ
+        items:
+          type: string
+        type: array
       title:
         maxLength: 64
         minLength: 2
@@ -38,6 +43,10 @@ definitions:
         type: integer
       modified:
         type: string
+      tags:
+        items:
+          $ref: '#/definitions/dto.TagResponseTo'
+        type: array
       title:
         type: string
     type: object
@@ -128,6 +137,23 @@ info:
 paths:
   /articles:
     get:
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Sort Field
+        in: query
+        name: sort
+        type: string
+      - description: Sort Order (asc/desc)
+        in: query
+        name: order
+        type: string
       produces:
       - application/json
       responses:
@@ -159,6 +185,10 @@ paths:
             $ref: '#/definitions/dto.ArticleResponseTo'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/apperrors.ErrorResponse'
       summary: Create Article
@@ -245,6 +275,23 @@ paths:
       - Article
   /comments:
     get:
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Sort Field
+        in: query
+        name: sort
+        type: string
+      - description: Sort Order (asc/desc)
+        in: query
+        name: order
+        type: string
       produces:
       - application/json
       responses:
@@ -362,6 +409,23 @@ paths:
       - Comment
   /editors:
     get:
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Sort Field
+        in: query
+        name: sort
+        type: string
+      - description: Sort Order (asc/desc)
+        in: query
+        name: order
+        type: string
       produces:
       - application/json
       responses:
@@ -393,6 +457,10 @@ paths:
             $ref: '#/definitions/dto.EditorResponseTo'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/apperrors.ErrorResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/apperrors.ErrorResponse'
       summary: Create Editor
@@ -479,6 +547,23 @@ paths:
       - Editor
   /tags:
     get:
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Sort Field
+        in: query
+        name: sort
+        type: string
+      - description: Sort Order (asc/desc)
+        in: query
+        name: order
+        type: string
       produces:
       - application/json
       responses:

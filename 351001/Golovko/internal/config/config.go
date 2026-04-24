@@ -8,9 +8,15 @@ import (
 )
 
 type Config struct {
-	Host string
-	Port string
-	Env  string
+	Host      string
+	Port      string
+	Env       string
+	DBHost    string
+	DBPort    string
+	DBUser    string
+	DBPass    string
+	DBName    string
+	DBSchema  string
 }
 
 func Load() *Config {
@@ -19,9 +25,15 @@ func Load() *Config {
 	}
 
 	return &Config{
-		Host: getEnv("HTTP_HOST", "localhost"),
-		Port: getEnv("HTTP_PORT", "24110"),
-		Env:  getEnv("ENV", "local"),
+		Host:     getEnv("HTTP_HOST", "0.0.0.0"),
+		Port:     getEnv("HTTP_PORT", "24110"),
+		Env:      getEnv("ENV", "local"),
+		DBHost:   getEnv("DB_HOST", "localhost"),
+		DBPort:   getEnv("DB_PORT", "5432"),
+		DBUser:   getEnv("DB_USER", "postgres"),
+		DBPass:   getEnv("DB_PASSWORD", "postgres"),
+		DBName:   getEnv("DB_NAME", "postgres"),
+		DBSchema: getEnv("DB_SCHEMA", "distcomp"),
 	}
 }
 

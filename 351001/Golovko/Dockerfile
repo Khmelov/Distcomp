@@ -13,7 +13,7 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /usr/local/src/bin/app /app/
-COPY .env /app/.env
+COPY --from=builder /usr/local/src/.env /app/.env
 
 EXPOSE 24110
 

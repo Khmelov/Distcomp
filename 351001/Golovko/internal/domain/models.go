@@ -17,6 +17,7 @@ type Article struct {
 	Content  string
 	Created  time.Time
 	Modified time.Time
+	Tags     []Tag
 }
 
 type Tag struct {
