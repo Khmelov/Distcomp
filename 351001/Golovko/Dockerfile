@@ -6,15 +6,21 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build -o ./bin/app cmd/app/main.go
+RUN go build -o /bin/publisher cmd/publisher/main.go
+RUN go build -o /bin/discussion cmd/discussion/main.go
 
-FROM alpine:latest
+FROM alpine:latest AS publisher
 
 WORKDIR /app
-
-COPY --from=builder /usr/local/src/bin/app /app/
-COPY --from=builder /usr/local/src/.env /app/.env
-
+COPY --from=builder /bin/publisher /app/
+COPY .env /app/.env
 EXPOSE 24110
+CMD ["./publisher"]
 
-CMD ["./app"]
+FROM alpine:latest AS discussion
+
+WORKDIR /app
+COPY --from=builder /bin/discussion /app/
+COPY .env /app/.env
+EXPOSE 24130
+CMD ["./discussion"]

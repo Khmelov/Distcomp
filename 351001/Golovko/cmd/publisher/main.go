@@ -1,8 +1,7 @@
-package app
+package main
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -14,9 +13,9 @@ import (
 
 	"distcomp/internal/apperrors"
 	"distcomp/internal/config"
-	"distcomp/internal/repository/postgres"
-	"distcomp/internal/service"
-	v1 "distcomp/internal/transport/http/v1"
+	"distcomp/internal/publisher/repository/postgres"
+	"distcomp/internal/publisher/service"
+	v1 "distcomp/internal/publisher/transport/http/v1"
 	"distcomp/pkg/client/postgresql"
 	"distcomp/pkg/logger"
 
@@ -27,15 +26,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-type App struct {
-	cfg      *config.Config
-	logger   *slog.Logger
-	router   *gin.Engine
-	services *service.Manager
-	db       *sql.DB
-}
-
-func Run() error {
+func main() {
 	cfg := config.Load()
 	log := logger.SetupLogger(cfg.Env)
 
@@ -53,11 +44,16 @@ func Run() error {
 	db, err := postgresql.NewClient(ctx, dbCfg, log)
 	if err != nil {
 		log.Error("Failed to initialize database client", slog.Any("error", err))
-		return err
+		os.Exit(1)
+	}
+
+	discussionURL := os.Getenv("DISCUSSION_SERVICE_URL")
+	if discussionURL == "" {
+		discussionURL = "http://discussion_app:24130/api/v1.0/comments"
 	}
 
 	storage := postgres.NewStorage(db)
-	services := service.NewManager(storage)
+	services := service.NewManager(storage, discussionURL)
 
 	if cfg.Env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -78,45 +74,40 @@ func Run() error {
 	api := router.Group("/api")
 	handlers.InitRoutes(api)
 
-	app := &App{
-		cfg:      cfg,
-		logger:   log,
-		router:   router,
-		services: services,
-		db:       db,
+	port := os.Getenv("PUBLISHER_PORT")
+	if port == "" {
+		port = "24110"
 	}
 
-	addr := fmt.Sprintf("%s:%s", app.cfg.Host, app.cfg.Port)
+	addr := fmt.Sprintf("0.0.0.0:%s", port)
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: app.router,
+		Handler: router,
 	}
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			app.logger.Error("failed to start server", slog.Any("error", err))
-			os.Exit(1)
+			log.Error("failed to start server", slog.Any("error", err))
 		}
 	}()
 
-	app.logger.Info("server started", slog.String("address", addr))
+	log.Info("Publisher server started", slog.String("address", addr))
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	app.logger.Info("shutting down server...")
+	log.Info("shutting down server...")
 
 	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelShutdown()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		app.logger.Error("server forced to shutdown", slog.Any("error", err))
+		log.Error("server forced to shutdown", slog.Any("error", err))
 	}
-	if err := app.db.Close(); err != nil {
-		app.logger.Error("database connection close error", slog.Any("error", err))
+	if err := db.Close(); err != nil {
+		log.Error("database connection close error", slog.Any("error", err))
 	}
 
-	app.logger.Info("server exiting")
-	return nil
+	log.Info("server exiting")
 }

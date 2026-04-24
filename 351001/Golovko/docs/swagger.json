@@ -1,13 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "REST API for Editor, Article, Tag, and Comment management.",
-        "title": "DistComp API",
-        "contact": {},
-        "version": "1.0"
+        "contact": {}
     },
-    "host": "localhost:24110",
-    "basePath": "/api/v1.0",
     "paths": {
         "/articles": {
             "get": {

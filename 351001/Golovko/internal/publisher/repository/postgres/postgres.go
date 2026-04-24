@@ -18,7 +18,27 @@ type store struct {
 	db *sql.DB
 }
 
-func NewStorage(db *sql.DB) repository.Storage {
+type Storage interface {
+	CreateEditor(ctx context.Context, editor *domain.Editor) error
+	GetEditorByID(ctx context.Context, id int64) (*domain.Editor, error)
+	GetAllEditors(ctx context.Context, params repository.ListParams) ([]*domain.Editor, error)
+	UpdateEditor(ctx context.Context, editor *domain.Editor) error
+	DeleteEditor(ctx context.Context, id int64) error
+
+	CreateArticle(ctx context.Context, article *domain.Article) error
+	GetArticleByID(ctx context.Context, id int64) (*domain.Article, error)
+	GetAllArticles(ctx context.Context, params repository.ListParams) ([]*domain.Article, error)
+	UpdateArticle(ctx context.Context, article *domain.Article) error
+	DeleteArticle(ctx context.Context, id int64) error
+
+	CreateTag(ctx context.Context, tag *domain.Tag) error
+	GetTagByID(ctx context.Context, id int64) (*domain.Tag, error)
+	GetAllTags(ctx context.Context, params repository.ListParams) ([]*domain.Tag, error)
+	UpdateTag(ctx context.Context, tag *domain.Tag) error
+	DeleteTag(ctx context.Context, id int64) error
+}
+
+func NewStorage(db *sql.DB) Storage {
 	return &store{db: db}
 }
 
@@ -42,7 +62,6 @@ func applyPagination(query string, params repository.ListParams) string {
 	return query
 }
 
-// Очистка тегов, на которые больше нет ссылок (orphan removal)
 func (s *store) cleanOrphanedTags(ctx context.Context) {
 	_, _ = s.db.ExecContext(ctx, `DELETE FROM distcomp.tbl_tag WHERE id NOT IN (SELECT tag_id FROM distcomp.tbl_article_tag)`)
 }
@@ -106,10 +125,7 @@ func (s *store) DeleteEditor(ctx context.Context, id int64) error {
 	if err != nil || rows == 0 {
 		return ErrNotFound
 	}
-
-	// Вычищаем сирот
 	s.cleanOrphanedTags(ctx)
-
 	return nil
 }
 
@@ -138,7 +154,6 @@ func (s *store) CreateArticle(ctx context.Context, article *domain.Article) erro
 			return err
 		}
 	}
-
 	return tx.Commit()
 }
 
@@ -152,11 +167,7 @@ func (s *store) GetArticleByID(ctx context.Context, id int64) (*domain.Article, 
 		return nil, err
 	}
 
-	tagQuery := `
-		SELECT t.id, t.name 
-		FROM distcomp.tbl_tag t 
-		JOIN distcomp.tbl_article_tag at ON t.id = at.tag_id 
-		WHERE at.article_id = $1`
+	tagQuery := `SELECT t.id, t.name FROM distcomp.tbl_tag t JOIN distcomp.tbl_article_tag at ON t.id = at.tag_id WHERE at.article_id = $1`
 	rows, err := s.db.QueryContext(ctx, tagQuery, id)
 	if err == nil {
 		defer rows.Close()
@@ -167,7 +178,6 @@ func (s *store) GetArticleByID(ctx context.Context, id int64) (*domain.Article, 
 			}
 		}
 	}
-
 	return &a, nil
 }
 
@@ -201,7 +211,6 @@ func (s *store) GetAllArticles(ctx context.Context, params repository.ListParams
 			tagRows.Close()
 		}
 	}
-
 	return articles, nil
 }
 
@@ -237,7 +246,6 @@ func (s *store) UpdateArticle(ctx context.Context, article *domain.Article) erro
 		}
 	}
 
-	// Вычищаем сирот (если удалили тег из статьи при апдейте)
 	if _, err = tx.ExecContext(ctx, `DELETE FROM distcomp.tbl_tag WHERE id NOT IN (SELECT tag_id FROM distcomp.tbl_article_tag)`); err != nil {
 		return err
 	}
@@ -255,10 +263,7 @@ func (s *store) DeleteArticle(ctx context.Context, id int64) error {
 	if err != nil || rows == 0 {
 		return ErrNotFound
 	}
-
-	// Вычищаем сирот
 	s.cleanOrphanedTags(ctx)
-
 	return nil
 }
 
@@ -313,68 +318,6 @@ func (s *store) UpdateTag(ctx context.Context, tag *domain.Tag) error {
 
 func (s *store) DeleteTag(ctx context.Context, id int64) error {
 	query := `DELETE FROM distcomp.tbl_tag WHERE id = $1`
-	res, err := s.db.ExecContext(ctx, query, id)
-	if err != nil {
-		return err
-	}
-	rows, err := res.RowsAffected()
-	if err != nil || rows == 0 {
-		return ErrNotFound
-	}
-	return nil
-}
-
-// --- COMMENT ---
-
-func (s *store) CreateComment(ctx context.Context, comment *domain.Comment) error {
-	query := `INSERT INTO distcomp.tbl_comment (article_id, content) VALUES ($1, $2) RETURNING id`
-	return s.db.QueryRowContext(ctx, query, comment.ArticleID, comment.Content).Scan(&comment.ID)
-}
-
-func (s *store) GetCommentByID(ctx context.Context, id int64) (*domain.Comment, error) {
-	query := `SELECT id, article_id, content FROM distcomp.tbl_comment WHERE id = $1`
-	var c domain.Comment
-	err := s.db.QueryRowContext(ctx, query, id).Scan(&c.ID, &c.ArticleID, &c.Content)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, ErrNotFound
-	}
-	return &c, err
-}
-
-func (s *store) GetAllComments(ctx context.Context, params repository.ListParams) ([]*domain.Comment, error) {
-	query := applyPagination(`SELECT id, article_id, content FROM distcomp.tbl_comment`, params)
-	rows, err := s.db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var comments []*domain.Comment
-	for rows.Next() {
-		var c domain.Comment
-		if err := rows.Scan(&c.ID, &c.ArticleID, &c.Content); err != nil {
-			return nil, err
-		}
-		comments = append(comments, &c)
-	}
-	return comments, nil
-}
-
-func (s *store) UpdateComment(ctx context.Context, comment *domain.Comment) error {
-	query := `UPDATE distcomp.tbl_comment SET article_id = $1, content = $2 WHERE id = $3`
-	res, err := s.db.ExecContext(ctx, query, comment.ArticleID, comment.Content, comment.ID)
-	if err != nil {
-		return err
-	}
-	rows, err := res.RowsAffected()
-	if err != nil || rows == 0 {
-		return ErrNotFound
-	}
-	return nil
-}
-
-func (s *store) DeleteComment(ctx context.Context, id int64) error {
-	query := `DELETE FROM distcomp.tbl_comment WHERE id = $1`
 	res, err := s.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return err

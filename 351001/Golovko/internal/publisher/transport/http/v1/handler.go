@@ -4,12 +4,13 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"distcomp/internal/apperrors"
 	"distcomp/internal/dto"
+	"distcomp/internal/publisher/repository/postgres"
+	"distcomp/internal/publisher/service"
 	"distcomp/internal/repository"
-	"distcomp/internal/repository/postgres"
-	"distcomp/internal/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
@@ -86,7 +87,7 @@ func parseID(c *gin.Context) (int64, error) {
 }
 
 func handleError(c *gin.Context, err error) {
-	if errors.Is(err, postgres.ErrNotFound) {
+	if errors.Is(err, postgres.ErrNotFound) || strings.Contains(err.Error(), "entity not found") {
 		c.JSON(http.StatusNotFound, apperrors.New("entity not found", apperrors.CodeNotFound))
 		return
 	}
@@ -476,6 +477,12 @@ func (h *Handler) createComment(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, apperrors.New("validation error: "+err.Error(), apperrors.CodeValidationFailed))
 		return
 	}
+
+	if _, err := h.services.Article.GetByID(c.Request.Context(), req.ArticleID); err != nil {
+		handleError(c, err)
+		return
+	}
+
 	res, err := h.services.Comment.Create(c.Request.Context(), req)
 	if err != nil {
 		handleError(c, err)
@@ -552,6 +559,11 @@ func (h *Handler) updateComment(c *gin.Context) {
 		}
 	} else {
 		id = req.ID
+	}
+
+	if _, err := h.services.Article.GetByID(c.Request.Context(), req.ArticleID); err != nil {
+		handleError(c, err)
+		return
 	}
 
 	res, err := h.services.Comment.Update(c.Request.Context(), id, req)
