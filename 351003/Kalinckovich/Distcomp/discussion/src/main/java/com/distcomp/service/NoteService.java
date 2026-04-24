@@ -1,141 +1,315 @@
 package com.distcomp.service;
 
-import com.distcomp.errorhandling.exceptions.NoteNotFoundException;
-import com.distcomp.errorhandling.model.ValidationError;
-import com.distcomp.repository.cassandra.NoteCassandraReactiveRepository;
+import com.distcomp.config.kafka.KafkaCorrelationManager;
 import com.distcomp.dto.note.NoteCreateRequest;
 import com.distcomp.dto.note.NotePatchRequest;
 import com.distcomp.dto.note.NoteResponseDto;
 import com.distcomp.dto.note.NoteUpdateRequest;
-import com.distcomp.mapper.note.NoteMapper;
-import com.distcomp.model.note.Note;
-import com.distcomp.validation.model.ValidationArgs;
-import com.distcomp.validation.note.NoteValidator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
+import com.distcomp.errorhandling.exceptions.BusinessValidationException;
+import com.distcomp.errorhandling.exceptions.NoteNotFoundException;
+import com.distcomp.errorhandling.model.ValidationError;
+import com.distcomp.event.note.NoteInboundEvent;
+import com.distcomp.event.note.NoteOutboundEvent;
+import com.distcomp.publisher.abstraction.KafkaEventPublisher;
+import com.distcomp.config.kafka.KafkaTopic;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service("cassandraNoteService")
+@RequiredArgsConstructor
 public class NoteService {
 
     private static final String DEFAULT_COUNTRY = "default";
+    private static final long KAFKA_RESPONSE_TIMEOUT_SECONDS = 30;
 
-    private final NoteCassandraReactiveRepository noteRepository;
-    private final NoteMapper noteMapper;
-    private final NoteValidator noteValidator;
+    private final KafkaEventPublisher kafkaEventPublisher;
+    private final KafkaCorrelationManager correlationManager;
 
-    @Autowired
-    public NoteService(final NoteCassandraReactiveRepository noteRepository,
-                       final NoteMapper noteMapper,
-                       final NoteValidator noteValidator) {
-        this.noteRepository = noteRepository;
-        this.noteMapper = noteMapper;
-        this.noteValidator = noteValidator;
-    }
+    
 
     public Mono<NoteResponseDto> findById(final Long topicId, final Long noteId) {
-        return noteValidator.validateNoteExists(topicId, noteId)
-                .then(noteRepository.findById(new Note.NoteKey(DEFAULT_COUNTRY, topicId, noteId)))
-                .map(noteMapper::toResponse);
+        return Mono.fromCallable(() -> {
+            final String correlationId = correlationManager.registerRequest();
+
+            final NoteInboundEvent event = NoteInboundEvent.findById(correlationId, topicId, noteId);
+            kafkaEventPublisher.publish(KafkaTopic.IN_TOPIC, correlationId, event);
+
+            return waitForNoteResponse(correlationId);
+        }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
 
     public Flux<NoteResponseDto> findAllByTopicId(final Long topicId, final int page, final int size) {
-        return noteRepository.findByKeyCountryAndKeyTopicId(DEFAULT_COUNTRY, topicId, PageRequest.of(page, size))
-                .map(noteMapper::toResponse);
+        return Mono.fromCallable(() -> {
+                    final String correlationId = correlationManager.registerRequest();
+
+                    final NoteInboundEvent event = NoteInboundEvent.findAll(correlationId, topicId, page, size);
+                    kafkaEventPublisher.publish(KafkaTopic.IN_TOPIC, correlationId, event);
+
+                    return waitForNoteListResponse(correlationId);
+                }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                .flatMapMany(Flux::fromIterable);
     }
 
     public Mono<NoteResponseDto> create(final NoteCreateRequest request) {
-        return noteValidator.validateCreate(request, ValidationArgs.empty())
-                .flatMap(validationResult -> {
-                    final Long newId = IdGenerator.nextId();
-                    final Note entity = noteMapper.toEntityWithKey(request, DEFAULT_COUNTRY, newId);
-                    return noteRepository.save(entity);
-                })
-                .map(noteMapper::toResponse);
+        return Mono.fromCallable(() -> {
+            final String correlationId = correlationManager.registerRequest();
+            final Long generatedId = IdGenerator.nextId();
+
+            final NoteInboundEvent event = NoteInboundEvent.create(correlationId, request, generatedId, DEFAULT_COUNTRY);
+            kafkaEventPublisher.publish(KafkaTopic.IN_TOPIC, correlationId, event);
+
+            
+            return NoteResponseDto.builder()
+                    .id(generatedId)
+                    .topicId(request.getTopicId())
+                    .country(DEFAULT_COUNTRY)
+                    .content(request.getContent())
+                    .build();
+        }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
 
     public Mono<NoteResponseDto> update(final Long topicId, final Long noteId, final NoteUpdateRequest request) {
-        final ValidationArgs args = ValidationArgs.of(topicId, Map.of("noteId", noteId));
-        return noteValidator.validateUpdate(request, args)
-                .flatMap(_ -> noteRepository.findById(new Note.NoteKey(DEFAULT_COUNTRY, topicId, noteId)))
-                .flatMap(existing -> {
-                    final Note updated = noteMapper.updateFromDto(request, existing);
-                    return noteRepository.save(updated);
-                })
-                .map(noteMapper::toResponse);
+        return Mono.fromCallable(() -> {
+            final String correlationId = correlationManager.registerRequest();
+
+            final NoteInboundEvent event = NoteInboundEvent.update(correlationId, topicId, noteId, request, DEFAULT_COUNTRY);
+            kafkaEventPublisher.publish(KafkaTopic.IN_TOPIC, correlationId, event);
+
+            return waitForNoteResponse(correlationId);
+        }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
 
     public Mono<NoteResponseDto> patch(final Long topicId, final Long noteId, final NotePatchRequest request) {
-        return noteValidator.validateNoteExists(topicId, noteId)
-                .then(noteRepository.findById(new Note.NoteKey(DEFAULT_COUNTRY, topicId, noteId)))
-                .flatMap(existing -> {
-                    final Note updated = noteMapper.updateFromPatch(request, existing);
-                    return noteRepository.save(updated);
-                })
-                .map(noteMapper::toResponse);
+        return Mono.fromCallable(() -> {
+            final String correlationId = correlationManager.registerRequest();
+
+            final NoteInboundEvent event = NoteInboundEvent.patch(correlationId, topicId, noteId, request, DEFAULT_COUNTRY);
+            kafkaEventPublisher.publish(KafkaTopic.IN_TOPIC, correlationId, event);
+
+            return waitForNoteResponse(correlationId);
+        }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
 
     public Mono<Void> delete(final Long topicId, final Long noteId) {
-        return noteValidator.validateNoteExists(topicId, noteId)
-                .then(noteRepository.deleteById(new Note.NoteKey(DEFAULT_COUNTRY, topicId, noteId)));
+        return Mono.fromRunnable(() -> {
+                    final String correlationId = correlationManager.registerRequest();
+
+                    final NoteInboundEvent event = NoteInboundEvent.delete(correlationId, topicId, noteId);
+                    kafkaEventPublisher.publish(KafkaTopic.IN_TOPIC, correlationId, event);
+
+                    waitForVoidResponse(correlationId);
+                }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                .then();
     }
 
     
 
     public Mono<NoteResponseDto> findById(final Long id) {
-        return noteValidator.validateNoteExists(id)
-                .then(noteRepository.findByNoteId(id))
-                .map(noteMapper::toResponse);
+        return Mono.fromCallable(() -> {
+            final String correlationId = correlationManager.registerRequest();
+
+            final NoteInboundEvent event = NoteInboundEvent.findById(correlationId, id);
+            kafkaEventPublisher.publish(KafkaTopic.IN_TOPIC, correlationId, event);
+
+            return waitForNoteResponse(correlationId);
+        }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
 
     public Flux<NoteResponseDto> findAll(final int page, final int size) {
-        return noteRepository.findByKeyCountry(DEFAULT_COUNTRY, PageRequest.of(page, size))
-                .map(noteMapper::toResponse);
+        return Mono.fromCallable(() -> {
+                    final String correlationId = correlationManager.registerRequest();
+
+                    final NoteInboundEvent event = NoteInboundEvent.findAll(correlationId, page, size);
+                    kafkaEventPublisher.publish(KafkaTopic.IN_TOPIC, correlationId, event);
+
+                    return waitForNoteListResponse(correlationId);
+                }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                .flatMapMany(Flux::fromIterable);
     }
 
     public Mono<NoteResponseDto> update(final Long id, final NoteUpdateRequest request) {
-        return noteValidator.validateNoteExists(id)
-                .then(noteRepository.findByNoteId(id))
-                .flatMap(existing -> {
-                    
-                    if (!existing.getTopicId().equals(request.getTopicId())) {
-                        final List<ValidationError> errors = List.of(
-                                new ValidationError("topicId", "Topic ID cannot be changed")
-                        );
-                        return Mono.error(new NoteNotFoundException(errors)); 
-                    }
-                    final Note updated = noteMapper.updateFromDto(request, existing);
-                    return noteRepository.save(updated);
-                })
-                .map(noteMapper::toResponse);
+        return Mono.fromCallable(() -> {
+            final String correlationId = correlationManager.registerRequest();
+
+            final NoteInboundEvent event = NoteInboundEvent.update(correlationId, id, request);
+            kafkaEventPublisher.publish(KafkaTopic.IN_TOPIC, correlationId, event);
+
+            return waitForNoteResponse(correlationId);
+        }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
 
     public Mono<NoteResponseDto> patch(final Long id, final NotePatchRequest request) {
-        return noteValidator.validateNoteExists(id)
-                .then(noteRepository.findByNoteId(id))
-                .flatMap(existing -> {
-                    
-                    if (request.getContent() != null) {
-                        existing.setContent(request.getContent());
-                    }
-                    
-                    return noteRepository.save(existing);
-                })
-                .map(noteMapper::toResponse);
+        return Mono.fromCallable(() -> {
+            final String correlationId = correlationManager.registerRequest();
+
+            final NoteInboundEvent event = NoteInboundEvent.patch(correlationId, id, request);
+            kafkaEventPublisher.publish(KafkaTopic.IN_TOPIC, correlationId, event);
+
+            return waitForNoteResponse(correlationId);
+        }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
 
     public Mono<Void> delete(final Long id) {
-        return noteValidator.validateNoteExists(id)
-                .then(noteRepository.findByNoteId(id))
-                .flatMap(noteRepository::delete);
+        return Mono.fromRunnable(() -> {
+                    final String correlationId = correlationManager.registerRequest();
+
+                    final NoteInboundEvent event = NoteInboundEvent.delete(correlationId, id);
+                    kafkaEventPublisher.publish(KafkaTopic.IN_TOPIC, correlationId, event);
+
+                    waitForVoidResponse(correlationId);
+                }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                .then();
     }
 
     public Mono<Void> deleteByTopicId(final Long topicId) {
-        return noteRepository.deleteByCountryAndTopicId(DEFAULT_COUNTRY, topicId);
+        return Mono.fromRunnable(() -> {
+                    final String correlationId = correlationManager.registerRequest();
+
+                    final NoteInboundEvent event = NoteInboundEvent.deleteByTopicId(correlationId, topicId);
+                    kafkaEventPublisher.publish(KafkaTopic.IN_TOPIC, correlationId, event);
+
+                    waitForVoidResponse(correlationId);
+                }).subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                .then();
+    }
+
+    
+
+    private NoteResponseDto waitForNoteResponse(final String correlationId) {
+        try {
+            final Object response = correlationManager.waitForResponse(
+                    correlationId,
+                    Object.class,
+                    KAFKA_RESPONSE_TIMEOUT_SECONDS,
+                    TimeUnit.SECONDS
+            );
+
+            if (response instanceof final NoteOutboundEvent outbound) {
+                
+                if (outbound.getStatus() == NoteOutboundEvent.OperationStatus.FAILURE) {
+                    throw new BusinessValidationException(
+                            List.of(
+                                    ValidationError.builder()
+                                            .field("kafka")
+                                            .message(outbound.getMessage())
+                                            .build()
+                            )
+                    );
+                }
+                return convertToNoteResponseDto(outbound);
+            }
+
+            throw new IllegalStateException("Unexpected response type: " + response.getClass());
+
+        } catch (final NoteNotFoundException e) {
+            
+            throw e;
+        } catch (final BusinessValidationException e) {
+            
+            throw e;
+        } catch (final Exception e) {
+            log.error("Failed to wait for Kafka response: {}", correlationId, e);
+            
+            throw new BusinessValidationException(
+                    List.of(
+                            ValidationError.builder()
+                                    .field("kafka")
+                                    .message("Failed to process request: " + e.getMessage())
+                                    .build()
+                    )
+            );
+        }
+    }
+
+    private List<NoteResponseDto> waitForNoteListResponse(final String correlationId) {
+        try {
+            final Object response = correlationManager.waitForResponse(
+                    correlationId,
+                    Object.class,
+                    KAFKA_RESPONSE_TIMEOUT_SECONDS,
+                    TimeUnit.SECONDS
+            );
+
+            if (response instanceof final NoteOutboundEvent outbound) {
+                if (outbound.getStatus() == NoteOutboundEvent.OperationStatus.FAILURE) {
+                    throw new BusinessValidationException(
+                            List.of(
+                                    ValidationError.builder()
+                                            .field("kafka")
+                                            .message(outbound.getMessage())
+                                            .build()
+                            )
+                    );
+                }
+                return outbound.getResponseList().stream()
+                        .map(this::convertToNoteResponseDto)
+                        .toList();
+            }
+
+            throw new IllegalStateException("Unexpected response type: " + response.getClass());
+
+        } catch (final NoteNotFoundException e) {
+            throw e;
+        } catch (final BusinessValidationException e) {
+            throw e;
+        } catch (final Exception e) {
+            log.error("Failed to wait for Kafka response: {}", correlationId, e);
+            throw new BusinessValidationException(
+                    List.of(
+                            ValidationError.builder()
+                                    .field("kafka")
+                                    .message("Failed to process request: " + e.getMessage())
+                                    .build()
+                    )
+            );
+        }
+    }
+
+    private void waitForVoidResponse(final String correlationId) {
+        try {
+            correlationManager.waitForResponse(
+                    correlationId,
+                    Object.class,
+                    KAFKA_RESPONSE_TIMEOUT_SECONDS,
+                    TimeUnit.SECONDS
+            );
+        } catch (final NoteNotFoundException e) {
+            throw e;
+        } catch (final BusinessValidationException e) {
+            throw e;
+        } catch (final Exception e) {
+            log.error("Failed to wait for Kafka response: {}", correlationId, e);
+            throw new BusinessValidationException(
+                    List.of(
+                            ValidationError.builder()
+                                    .field("kafka")
+                                    .message("Failed to process request: " + e.getMessage())
+                                    .build()
+                    )
+            );
+        }
+    }
+
+    private NoteResponseDto convertToNoteResponseDto(final NoteOutboundEvent.NoteResponseData data) {
+        return NoteResponseDto.builder()
+                .id(data.getId())
+                .topicId(data.getTopicId())
+                .country(data.getCountry())
+                .content(data.getContent())
+                .build();
+    }
+
+    private NoteResponseDto convertToNoteResponseDto(final NoteOutboundEvent outbound) {
+        if (outbound.getResponseData() == null) {
+            return null;
+        }
+        return convertToNoteResponseDto(outbound.getResponseData());
     }
 }

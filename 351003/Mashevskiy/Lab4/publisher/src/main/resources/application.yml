@@ -1,0 +1,46 @@
+server:
+  port: 24110
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+        delivery.timeout.ms: 3000
+        request.timeout.ms: 2000
+    consumer:
+      group-id: publisher-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.value.default.type: "com.example.publisher.dto.NoteMessage"
+        spring.json.use.type.headers: false
+      auto-offset-reset: earliest
+    admin:
+      auto-create: false
+
+  datasource:
+    url: jdbc:h2:mem:publisherdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+logging:
+  level:
+    com.example.publisher: DEBUG
+    org.springframework.kafka: INFO
