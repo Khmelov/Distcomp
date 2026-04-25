@@ -1,0 +1,14 @@
+{
+  "name": "khmylko/rest-api",
+  "description": "REST API",
+  "type": "project",
+  "require": {
+    "php": ">=8.1",
+    "ext-pdo": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  }
+}

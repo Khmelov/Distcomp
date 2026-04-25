@@ -8,11 +8,11 @@ class PostgresSettings(BaseSettings):
     port: int = Field(default=5432, ge=1, le=65535)
     user: str = Field(default=None)
     password: str = Field(default=None)
-    name: str = Field(default=None)
+    db: str = Field(default=None)
 
     @property
     def get_database_url(self) -> str:
-        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
 
 class Settings(BaseSettings):
     postgres: PostgresSettings = PostgresSettings()

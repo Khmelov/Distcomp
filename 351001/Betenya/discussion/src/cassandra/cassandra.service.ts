@@ -1,0 +1,85 @@
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Client } from 'cassandra-driver';
+
+const KEYSPACE = 'distcomp';
+
+@Injectable()
+export class CassandraService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(CassandraService.name);
+
+  readonly client: Client;
+
+  constructor() {
+    const host = process.env.CASSANDRA_HOST ?? 'localhost';
+    const port = parseInt(process.env.CASSANDRA_PORT ?? '9042', 10);
+
+    this.client = new Client({
+      contactPoints: [`${host}:${port}`],
+      localDataCenter: 'datacenter1',
+      // Connect without keyspace first — keyspace may not exist yet
+    });
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.connectWithRetry();
+    await this.initSchema();
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    await this.client.shutdown();
+  }
+
+  private async connectWithRetry(attempts = 15, delayMs = 5000): Promise<void> {
+    for (let i = 1; i <= attempts; i++) {
+      try {
+        await this.client.connect();
+        this.logger.log('Connected to Cassandra');
+        return;
+      } catch (err) {
+        this.logger.warn(`Cassandra not ready (attempt ${i}/${attempts}): ${err.message}`);
+        if (i === attempts) throw err;
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+    }
+  }
+
+  private async initSchema(): Promise<void> {
+    // Create keyspace
+    await this.client.execute(
+      `CREATE KEYSPACE IF NOT EXISTS ${KEYSPACE}
+       WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}`,
+    );
+
+    await this.client.execute(
+      `CREATE TABLE IF NOT EXISTS ${KEYSPACE}.tbl_notice (
+         id         bigint PRIMARY KEY,
+         article_id bigint,
+         content    text,
+         state      text
+       )`,
+    );
+
+    // Ensure the state column exists (may be missing if table was created before lab 4)
+    try {
+      await this.client.execute(
+        `ALTER TABLE ${KEYSPACE}.tbl_notice ADD state text`,
+      );
+      this.logger.log('Added state column to tbl_notice');
+    } catch (err) {
+      // Column already exists — safe to ignore
+      if (!err.message?.includes('already exists')) {
+        throw err;
+      }
+    }
+
+    // Counter table for auto-incrementing numeric IDs
+    await this.client.execute(
+      `CREATE TABLE IF NOT EXISTS ${KEYSPACE}.tbl_counter (
+         name  text PRIMARY KEY,
+         value counter
+       )`,
+    );
+
+    this.logger.log('Cassandra schema initialised');
+  }
+}

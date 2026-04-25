@@ -30,17 +30,26 @@
             <artifactId>spring-boot-starter-data-cassandra</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-liquibase</artifactId>
         </dependency>
         <dependency>
             <groupId>org.liquibase.ext</groupId>
             <artifactId>liquibase-cassandra</artifactId>
             <version>${liquibase.cassandra.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ing.data</groupId>
+            <artifactId>cassandra-jdbc-wrapper</artifactId>
+            <version>4.16.3</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

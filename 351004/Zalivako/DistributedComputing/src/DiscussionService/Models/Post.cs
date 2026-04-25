@@ -3,6 +3,14 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace DiscussionService.Models
 {
+
+    public enum PostState
+    {
+        PENDING,
+        APPROVE,
+        DECLINE
+    }
+
     public class Post
     {
         [BsonId] // основной ключ
@@ -17,5 +25,8 @@ namespace DiscussionService.Models
 
         [BsonElement("country")]
         public string Country { get; set; } = string.Empty;
+
+        [BsonElement("state")]
+        public PostState State { get; set; } = PostState.PENDING;
     }
 }
