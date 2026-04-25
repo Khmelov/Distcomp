@@ -91,4 +91,12 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="3" author="matvei">
+        <addColumn tableName="tbl_author">
+            <column name="role" type="VARCHAR(16)" defaultValue="CUSTOMER">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

@@ -3,6 +3,7 @@ package com.example.task361.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import com.example.task361.security.Role;
 
 @Entity
 @Table(name = "tbl_author")
@@ -17,6 +18,10 @@ public class Author extends BaseEntity {
 
     @Column(length = 128, nullable = false)
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 16, nullable = false)
+    private Role role;
 
     @Column(name = "firstname", length = 64)
     private String firstname;

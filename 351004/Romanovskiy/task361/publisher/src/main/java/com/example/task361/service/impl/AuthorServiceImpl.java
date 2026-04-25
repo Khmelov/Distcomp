@@ -6,6 +6,7 @@ import com.example.task361.domain.entity.Author;
 import com.example.task361.exception.EntityNotFoundException;
 import com.example.task361.mapper.AuthorMapper;
 import com.example.task361.repository.AuthorRepository;
+import com.example.task361.security.Role;
 import com.example.task361.service.AuthorService;
 import lombok.RequiredArgsConstructor;
 
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,11 +29,16 @@ public class AuthorServiceImpl implements AuthorService {
 
     private final AuthorRepository authorRepository;
     private final AuthorMapper authorMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @CachePut(value = "authors", key = "#result.id")
     public AuthorResponseTo create(AuthorRequestTo request) {
         Author author = authorMapper.toEntity(request);
+        if (author.getRole() == null) {
+            author.setRole(Role.CUSTOMER);
+        }
+        author.setPassword(encodeIfNeeded(author.getPassword()));
         Author savedAuthor = authorRepository.save(author);
         return authorMapper.toResponse(savedAuthor);
     }
@@ -51,6 +58,10 @@ public class AuthorServiceImpl implements AuthorService {
             throw new EntityNotFoundException("Cannot update: Author not found");
         }
         Author author = authorMapper.toEntity(request);
+        if (author.getRole() == null) {
+            author.setRole(Role.CUSTOMER);
+        }
+        author.setPassword(encodeIfNeeded(author.getPassword()));
         Author saved = authorRepository.save(author);
         return authorMapper.toResponse(saved);
     }
@@ -73,5 +84,16 @@ public class AuthorServiceImpl implements AuthorService {
         return authorRepository.findAll(pageable).getContent().stream()
                 .map(authorMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    private String encodeIfNeeded(String rawOrEncodedPassword) {
+        if (rawOrEncodedPassword == null || rawOrEncodedPassword.isBlank()) {
+            return rawOrEncodedPassword;
+        }
+        // BCrypt хэш обычно начинается с $2a/$2b/$2y
+        if (rawOrEncodedPassword.startsWith("$2")) {
+            return rawOrEncodedPassword;
+        }
+        return passwordEncoder.encode(rawOrEncodedPassword);
     }
 }

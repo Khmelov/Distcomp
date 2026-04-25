@@ -1,4 +1,4 @@
-package com.example.task361.controller;
+package com.example.task361.controller.v2;
 
 import com.example.task361.domain.dto.request.MarkerRequestTo;
 import com.example.task361.domain.dto.response.MarkerResponseTo;
@@ -6,19 +6,20 @@ import com.example.task361.service.MarkerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1.0/markers")
+@RequestMapping("/api/v2.0/markers")
 @RequiredArgsConstructor
-public class MarkerController {
-
+public class MarkerV2Controller {
     private final MarkerService markerService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public MarkerResponseTo create(@Valid @RequestBody MarkerRequestTo request) {
         return markerService.create(request);
     }
@@ -37,6 +38,7 @@ public class MarkerController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public MarkerResponseTo update(@PathVariable Long id, @Valid @RequestBody MarkerRequestTo request) {
         request.setId(id);
         return markerService.update(request);
@@ -44,6 +46,7 @@ public class MarkerController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteById(@PathVariable Long id) {
         markerService.deleteById(id);
     }

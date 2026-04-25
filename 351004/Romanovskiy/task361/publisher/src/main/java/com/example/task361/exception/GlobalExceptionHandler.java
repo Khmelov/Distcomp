@@ -2,6 +2,9 @@ package com.example.task361.exception;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -30,6 +33,20 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN) // Должно быть 403
     public ErrorResponse handleDataIntegrity(DataIntegrityViolationException ex) {
         return new ErrorResponse("Database error: duplicate or constraint violation", 40301);
+    }
+
+    // 3a. Ошибки авторизации (403)
+    @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleAccessDenied(Exception ex) {
+        return new ErrorResponse("Forbidden", 40301);
+    }
+
+    // 3b. Ошибки аутентификации (401)
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleAuthentication(AuthenticationException ex) {
+        return new ErrorResponse("Unauthorized", 40101);
     }
 
     // 4. Все остальные ошибки (500)
