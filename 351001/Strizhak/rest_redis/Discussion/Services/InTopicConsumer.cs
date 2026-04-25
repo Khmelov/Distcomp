@@ -42,7 +42,7 @@ public class InTopicConsumer : BackgroundService
         _producer = new ProducerBuilder<string, string>(_producerConfig).Build();
         
         _consumer.Subscribe("InTopic");
-        _consumer.Consume(TimeSpan.FromMilliseconds(500));
+        _consumer.Consume(TimeSpan.FromMilliseconds(50));
         _logger.LogInformation("InTopicConsumer started.");
 
         while (!stoppingToken.IsCancellationRequested)
@@ -111,7 +111,7 @@ public class InTopicConsumer : BackgroundService
                 // 3. ОТПРАВКА ОТВЕТА
                 if (!string.IsNullOrEmpty(msg.CorrelationId))
                 {
-                    // Даже если result == null, мы создаем конверт, чтобы Publisher получил "null" и разблокировался
+                   
                     var responseEnvelope = new KafkaMessage
                     {
                         CorrelationId = msg.CorrelationId,
@@ -125,7 +125,7 @@ public class InTopicConsumer : BackgroundService
 
                     await _producer.ProduceAsync("OutTopic", new Message<string, string>
                     {
-                        Key = cr.Message.Key ?? "default", // Используем тот же ключ, что пришел
+                        Key = cr.Message.Key ?? "default", 
                         Value = val
                     });
                 }

@@ -27,6 +27,12 @@ builder.Services.AddScoped<IService<User, UserRequestTo, UserResponseTo>, UserSe
 builder.Services.AddScoped<IService<Topic, TopicRequestTo, TopicResponseTo>, TopicService>();
 builder.Services.AddScoped<IService<Tag, TagRequestTo, TagResponseTo>, TagService>();
 
+//redis
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = "localhost:6379";
+    options.InstanceName = "Publisher_";
+});
 
 builder.Services.AddSingleton<KafkaResponseTracker>();
 builder.Services.AddScoped<KafkaReactionRepository>();

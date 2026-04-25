@@ -1,6 +1,6 @@
 ﻿using Confluent.Kafka;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
+using Microsoft.Extensions.Caching.Distributed; 
 using Publisher.Data;
 using Publisher.Dtos;
 using Publisher.Dtos.Kafka;
@@ -13,20 +13,21 @@ namespace Publisher.Repositories
     {
         private readonly IProducer<string, string> _producer;
         private readonly KafkaResponseTracker _tracker;
-        private readonly string _inTopic = "InTopic";
-        private long _nextId = 0;
         private readonly AppDbContext _context;
-        private long GenerateId() => Interlocked.Increment(ref _nextId);
-        public KafkaReactionRepository(KafkaResponseTracker tracker, AppDbContext context)
+        private readonly IDistributedCache _cache;
+        private readonly string _inTopic = "InTopic";
+
+        public KafkaReactionRepository(KafkaResponseTracker tracker, AppDbContext context, IDistributedCache cache)
         {
             _tracker = tracker;
+            _context = context;
+            _cache = cache; 
             var config = new ProducerConfig { BootstrapServers = "localhost:9092" };
             _producer = new ProducerBuilder<string, string>(config).Build();
-            _context = context;
         }
+
         private async Task<long> GetNextIdFromPostgres()
         {
-            // Используем EF Core для выполнения команды получения следующего значения
             using var command = _context.Database.GetDbConnection().CreateCommand();
             command.CommandText = "SELECT nextval('distcomp.tbl_reaction_id_seq')";
 
@@ -37,22 +38,19 @@ namespace Publisher.Repositories
             return Convert.ToInt64(result);
         }
 
-        // --- CREATE (Fire-and-forget по ТЗ) ---
+        // --- CREATE ---
         public async Task<ReactionResponseTo> CreateAsync(ReactionRequestTo request)
         {
-            // 1. Берем честный ID из Postgres
             long realId = await GetNextIdFromPostgres();
 
-            // 2. Создаем НОВЫЙ объект ответа, в который ПИШЕМ этот ID
             var result = new ReactionResponseTo
             {
-                Id = realId, // Теперь тут 1
+                Id = realId,
                 TopicId = request.TopicId,
                 Content = request.Content,
                 State = "PENDING"
             };
 
-            // 3. В Кафку шлем этот же объект result (чтобы Discussion тоже получил Id=1)
             var msg = new KafkaMessage { Method = "CREATE", Payload = JsonSerializer.SerializeToElement(result) };
             await _producer.ProduceAsync(_inTopic, new Message<string, string>
             {
@@ -60,42 +58,87 @@ namespace Publisher.Repositories
                 Value = JsonSerializer.Serialize(msg)
             });
 
-            // 4. Возвращаем КЛИЕНТУ объект с Id=1
+            await _cache.RemoveAsync("reactions_all");
+
             return result;
         }
 
-
-        // --- GET BY ID (Блокирующий) ---
+        // --- GET BY ID ---
         public async Task<ReactionResponseTo?> FindByIdAsync(long id)
         {
-            return await SendRequestAsync<ReactionResponseTo>("FIND_BY_ID", id, id.ToString());
+            string cacheKey = $"reaction_{id}";
+
+            // 1. Пытаемся взять из кэша
+            var cachedData = await _cache.GetStringAsync(cacheKey);
+            if (!string.IsNullOrEmpty(cachedData))
+            {
+                return JsonSerializer.Deserialize<ReactionResponseTo>(cachedData);
+            }
+
+            // 2. Если в кэше нет — идем в Kafka
+            var reaction = await SendRequestAsync<ReactionResponseTo>("FIND_BY_ID", id, id.ToString());
+
+            // 3. Если получили ответ — сохраняем в кэш на 5 минут
+            if (reaction != null)
+            {
+                var options = new DistributedCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+                await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(reaction), options);
+            }
+
+            return reaction;
         }
 
-        // --- GET ALL (Блокирующий) ---
+        // --- GET ALL ---
         public async Task<IEnumerable<ReactionResponseTo>> GetAllAsync()
         {
-            // Отправляем запрос без конкретного ID в Payload (или передаем 0)
+            string cacheKey = "reactions_all";
+
+            // 1. Проверяем кэш всего списка
+            var cachedData = await _cache.GetStringAsync(cacheKey);
+            if (!string.IsNullOrEmpty(cachedData))
+            {
+                return JsonSerializer.Deserialize<List<ReactionResponseTo>>(cachedData) ?? new List<ReactionResponseTo>();
+            }
+
+            // 2. Запрашиваем через Kafka
             var results = await SendRequestAsync<List<ReactionResponseTo>>("GET_ALL", null, "all-key");
+
+            // 3. Сохраняем результат в кэш
+            if (results != null)
+            {
+                var options = new DistributedCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(1));
+                await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(results), options);
+            }
+
             return results ?? new List<ReactionResponseTo>();
         }
 
-        // --- DELETE (Блокирующий) ---
+        // --- DELETE ---
         public async Task DeleteAsync(long id)
         {
-            // Ждем подтверждения удаления (например, Discussion пришлет "true" или объект)
             await SendRequestAsync<object>("DELETE", id, id.ToString());
+
+            // Инвалидация кэша: удаляем конкретную запись и сбрасываем общий список
+            await _cache.RemoveAsync($"reaction_{id}");
+            await _cache.RemoveAsync("reactions_all");
         }
-        // --- UPDATE (Блокирующий) ---
+
+        // --- UPDATE ---
         public async Task<ReactionResponseTo?> UpdateAsync(ReactionRequestTo request)
         {
-            // Отправляем объект целиком, ждем результат обновления
-            return await SendRequestAsync<ReactionResponseTo>(
-                "UPDATE",
-                request,
-                request.Id.ToString() // Используем Id как ключ партиции
-            );
+            var updated = await SendRequestAsync<ReactionResponseTo>("UPDATE", request, request.Id.ToString());
+
+            if (updated != null)
+            {
+                // Обновляем данные в кэше 
+                string cacheKey = $"reaction_{updated.Id}";
+                await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(updated));
+                await _cache.RemoveAsync("reactions_all");
+            }
+
+            return updated;
         }
-        // --- Вспомогательный универсальный метод для Request-Response через Kafka ---
+
         private async Task<T?> SendRequestAsync<T>(string method, object? payload, string kafkaKey)
         {
             var correlationId = Guid.NewGuid().ToString();
@@ -114,7 +157,7 @@ namespace Publisher.Repositories
                 Value = JsonSerializer.Serialize(msg)
             });
 
-            // Ждем 2 секунды (Таймаут по ТЗ)
+           
             if (await Task.WhenAny(waitTask, Task.Delay(2000)) == waitTask)
             {
                 var responseJson = await waitTask;
@@ -127,6 +170,5 @@ namespace Publisher.Repositories
             _tracker.CancelWait(correlationId);
             throw new TimeoutException("504 Gateway Timeout");
         }
-        
     }
 }
