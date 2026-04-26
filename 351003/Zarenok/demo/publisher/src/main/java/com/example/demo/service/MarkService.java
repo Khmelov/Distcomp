@@ -8,6 +8,9 @@ import com.example.demo.model.Mark;
 import com.example.demo.repository.MarkRepository;
 import com.example.demo.specification.MarkSpecifications;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -51,12 +54,14 @@ public class MarkService {
                 .map(mapper::toMarkResponse);
     }
 
+    @Cacheable(value = "marks", key = "#id", condition = "#id != null")
     public MarkResponseTo findById(Long id) {
         Mark mark = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Mark not found"));
         return mapper.toMarkResponse(mark);
     }
 
+    @CacheEvict(value = "marks", key = "#id", condition = "#id != null")
     public MarkResponseTo update(Long id, MarkRequestTo dto) {
         Mark existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Mark not found"));
@@ -71,6 +76,10 @@ public class MarkService {
         return mapper.toMarkResponse(updated);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "marks", key = "#id", condition = "#id != null"),
+            @CacheEvict(value = "allMarks", allEntries = true)
+    })
     public void delete(Long id) {
         if (!repository.existsById(id)) {
             throw new NotFoundException("Mark not found");

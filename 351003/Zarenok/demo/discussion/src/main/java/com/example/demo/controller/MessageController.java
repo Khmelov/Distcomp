@@ -74,6 +74,14 @@ public class MessageController {
         return ResponseEntity.ok(service.update(issueId, id, dto));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<MessageResponseTo> updateByIdOnly(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody MessageRequestTo dto) {
+        // Обновляем сообщение, найденное по id (через вторичный индекс)
+        return ResponseEntity.ok(service.updateByIdOnly(id, dto));
+    }
+
     // DELETE /api/v1.0/messages/{issueId}/{id}
     @DeleteMapping("/{issueId}/{id}")
     public ResponseEntity<Void> delete(@PathVariable("issueId") Long issueId,

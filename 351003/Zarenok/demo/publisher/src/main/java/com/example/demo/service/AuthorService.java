@@ -8,6 +8,9 @@ import com.example.demo.model.Author;
 import com.example.demo.repository.AuthorRepository;
 import com.example.demo.specification.AuthorSpecifications;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -37,6 +40,7 @@ public class AuthorService {
         return mapper.toAuthorResponse(saved);
     }
     //READ
+    @Cacheable(value = "authors", key = "#id", condition = "#id != null")
     public AuthorResponseTo findById(Long id) {
         Author entity = authorRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Author not found"));
@@ -58,6 +62,7 @@ public class AuthorService {
     }
 
     //UPDATE
+    @CacheEvict(value = "authors", key = "#id", condition = "#id != null")
     public AuthorResponseTo update(Long id, AuthorRequestTo dto) {
         if (authorRepository.existsByLogin(dto.getLogin())) {
             throw new DuplicateException("Login already exists");
@@ -72,6 +77,10 @@ public class AuthorService {
         return mapper.toAuthorResponse(updated);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "authors", key = "#id", condition = "#id != null"),
+            @CacheEvict(value = "allAuthors", allEntries = true)
+    })
     public void delete(Long id) {
 
         if (!authorRepository.existsById(id)) {

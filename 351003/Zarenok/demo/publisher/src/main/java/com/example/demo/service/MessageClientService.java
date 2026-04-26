@@ -6,16 +6,21 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +32,7 @@ public class MessageClientService {
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
+    private final RedisTemplate<String, MessageResponseTo> redisTemplate;
 
     public MessageResponseTo create(MessageRequestTo dto) {
         try {
@@ -43,12 +49,33 @@ public class MessageClientService {
         }
     }
 
+    /*
+    @Cacheable(value = "messages", key = "#id", condition = "#id != null")
     public MessageResponseTo findById(Long id) {
+        System.out.println(">>> ACTUALLY CALLING DISCUSSION FOR ID " + id);
         return webClient.get()
                 .uri("/messages/{id}", id)
                 .retrieve()
                 .bodyToMono(MessageResponseTo.class)
                 .block();
+    }
+
+     */
+    public MessageResponseTo findById(Long id) {
+        String key = "messages::" + id;
+        MessageResponseTo cached = redisTemplate.opsForValue().get(key);
+        if (cached != null) {
+            return cached;
+        }
+        MessageResponseTo message = webClient.get()
+                .uri("/messages/{id}", id)
+                .retrieve()
+                .bodyToMono(MessageResponseTo.class)
+                .block();
+        if (message != null) {
+            redisTemplate.opsForValue().set(key, message, Duration.ofMinutes(20));
+        }
+        return message;
     }
 
     public Page<MessageResponseTo> findAll(Pageable pageable, String contentFilter, Long issueIdFilter) {
@@ -108,6 +135,8 @@ public class MessageClientService {
         };
     }
 
+    /*
+    @CacheEvict(value = "messages", key = "#id", condition = "#id != null")
     public MessageResponseTo update(Long id, MessageRequestTo dto) {
         MessageResponseTo existing = findById(id);
         Long issueId = existing.getIssueId();
@@ -120,6 +149,31 @@ public class MessageClientService {
                 .block();
     }
 
+     */
+
+    public MessageResponseTo update(Long id, MessageRequestTo dto) {
+        MessageResponseTo existing = findById(id);
+        Long issueId = existing.getIssueId();
+        dto.setIssueId(issueId);
+
+        MessageResponseTo updated = webClient.put()
+                .uri("/messages/{issueId}/{id}", issueId, id)
+                .bodyValue(dto)
+                .retrieve()
+                .bodyToMono(MessageResponseTo.class)
+                .block();
+
+        String key = "messages::" + id;
+        redisTemplate.delete(key);
+
+        return updated;
+    }
+
+    /*
+    @Caching(evict = {
+            @CacheEvict(value = "messages", key = "#id", condition = "#id != null"),
+            @CacheEvict(value = "allMessages", allEntries = true)
+    })
     public void delete(Long id) {
         MessageResponseTo existing = findById(id);
         Long issueId = existing.getIssueId();
@@ -128,5 +182,18 @@ public class MessageClientService {
                 .retrieve()
                 .toBodilessEntity()
                 .block();
+    }
+
+     */
+    public void delete(Long id) {
+        MessageResponseTo existing = findById(id);
+        Long issueId = existing.getIssueId();
+        webClient.delete()
+                .uri("/messages/{issueId}/{id}", issueId, id)
+                .retrieve()
+                .toBodilessEntity()
+                .block();
+        String key = "messages::" + id;
+        redisTemplate.delete(key);
     }
 }

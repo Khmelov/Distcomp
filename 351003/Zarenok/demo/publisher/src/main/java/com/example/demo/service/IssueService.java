@@ -12,6 +12,9 @@ import com.example.demo.repository.IssueRepository;
 import com.example.demo.repository.MarkRepository;
 import com.example.demo.specification.IssueSpecifications;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -65,6 +68,7 @@ public class IssueService {
         return mapper.toIssueResponse(saved);
     }
 
+    @Cacheable(value = "issues", key = "#id", condition = "#id != null")
     public IssueResponseTo findById(Long id) {
         Issue issue = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Issue not found"));
@@ -85,6 +89,7 @@ public class IssueService {
                 .map(mapper::toIssueResponse);
     }
 
+    @CacheEvict(value = "issues", key = "#id", condition = "#id != null")
     public IssueResponseTo update(Long id, IssueRequestTo dto) {
         Issue existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Issue not found"));
@@ -119,6 +124,10 @@ public class IssueService {
     }
 
 
+    @Caching(evict = {
+            @CacheEvict(value = "issues", key = "#id", condition = "#id != null"),
+            @CacheEvict(value = "allIssues", allEntries = true)
+    })
     public void delete(Long id) {
         Issue issue = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Issue not found"));

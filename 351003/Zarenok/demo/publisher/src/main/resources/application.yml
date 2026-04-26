@@ -25,3 +25,19 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: TRACE
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # Время жизни кеша в миллисекундах (10 минут)
+      cache-null-values: false # Не кешируем null-значения
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms # Таймаут операций
+      lettuce:
+        pool:
+          max-active: 8   # Максимальное количество активных подключений
+          max-idle: 8
+          min-idle: 0

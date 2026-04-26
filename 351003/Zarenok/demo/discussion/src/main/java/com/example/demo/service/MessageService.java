@@ -146,6 +146,31 @@ public class MessageService {
         return mapper.toResponse(updated);
     }
 
+    public MessageResponseTo updateByIdOnly(Long id, MessageRequestTo dto) {
+        Query query = Query.query(Criteria.where("id").is(id)).withAllowFiltering();
+        Message existing = cassandraTemplate.selectOne(query, Message.class);
+        if (existing == null) {
+            throw new NotFoundException("Message not found with id: " + id);
+        }
+
+        if (dto.getContent() != null) {
+            existing.setContent(dto.getContent());
+        }
+        if (dto.getIssueId() != null && !existing.getKey().getIssueId().equals(dto.getIssueId())) {
+            MessageKey newKey = new MessageKey(dto.getIssueId(), existing.getKey().getId());
+            Message newMessage = new Message();
+            newMessage.setKey(newKey);
+            newMessage.setContent(existing.getContent());
+            newMessage.setState(existing.getState());
+            repository.delete(existing);
+            Message saved = repository.save(newMessage);
+            return mapper.toResponse(saved);
+        } else {
+            Message saved = repository.save(existing);
+            return mapper.toResponse(saved);
+        }
+    }
+
     // DELETE
     public void delete(Long issueId, Long id) {
         MessageKey key = new MessageKey(issueId, id);
