@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
 
-# Many-to-many association table for Issue and Marker
 issue_marker = Table(
     "tbl_issue_marker",
     Base.metadata,
@@ -22,6 +21,7 @@ class Editor(Base):
     password = Column(String(128), nullable=False)
     firstname = Column(String(64), nullable=False)
     lastname = Column(String(64), nullable=False)
+    role = Column(String(16), nullable=False, default="CUSTOMER")
 
     issues = relationship("Issue", back_populates="editor", cascade="all, delete-orphan")
 
