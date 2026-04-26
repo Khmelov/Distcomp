@@ -32,6 +32,8 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
     "dotenv": "^17.2.3",
+    "ioredis": "^5.10.1",
+    "kafkajs": "^2.2.4",
     "pg": "^8.18.0",
     "prisma": "^7.3.0",
     "reflect-metadata": "^0.2.2",
@@ -42,7 +44,7 @@
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.0.1",
+    "@nestjs/testing": "^11.1.14",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
@@ -62,22 +64,5 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
   }
 }

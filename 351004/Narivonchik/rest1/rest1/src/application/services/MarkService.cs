@@ -23,12 +23,16 @@ public class MarkService : IMarkService
     {
         Mark markFromDto = _mapper.Map<Mark>(createMarkRequestTo);
 
-        Mark createdMark = await _markRepository.AddAsync(markFromDto);
-
-        MarkResponseTo dtoFromCreatedMark =
-            _mapper.Map<MarkResponseTo>(createdMark);
-
-        return dtoFromCreatedMark;
+        try
+        {
+            Mark createdMark = await _markRepository.AddAsync(markFromDto);
+            MarkResponseTo dtoFromCreatedMark = _mapper.Map<MarkResponseTo>(createdMark);
+            return dtoFromCreatedMark;
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new MarkAlreadyExistsException(ex.Message, ex);
+        }
     }
 
     public async Task DeleteMark(MarkRequestTo deleteMarkRequestTo)

@@ -24,11 +24,16 @@ public class CreatorService : ICreatorService
     {
         Creator creatorFromDto = _mapper.Map<Creator>(createCreatorRequestTo);
  
-        Creator createdCreator = await _creatorRepository.AddAsync(creatorFromDto);
-
-        CreatorResponseTo dtoFromCreatedEditor = _mapper.Map<CreatorResponseTo>(createdCreator);
-
-        return dtoFromCreatedEditor;
+        try
+        {
+            Creator createdCreator = await _creatorRepository.AddAsync(creatorFromDto);
+            CreatorResponseTo dtoFromCreatedCreator = _mapper.Map<CreatorResponseTo>(createdCreator);
+            return dtoFromCreatedCreator;
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new CreatorAlreadyExistsException(ex.Message, ex);
+        }
     }
 
     public async Task DeleteCreator(CreatorRequestTo deleteCreatorRequestTo)
