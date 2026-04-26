@@ -1,5 +1,3 @@
--- CREATE SCHEMA IF NOT EXISTS distcomp;
--- SET search_path TO distcomp;
 
 CREATE TABLE IF NOT EXISTS tbl_user (
     id BIGSERIAL PRIMARY KEY,
@@ -20,7 +18,7 @@ CREATE TABLE IF NOT EXISTS tbl_news (
     modified TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_news_user_title_content ON tbl_news (user_id, title, content);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_news_title ON tbl_news (title);
 
 CREATE TABLE IF NOT EXISTS tbl_marker (
     id BIGSERIAL PRIMARY KEY,

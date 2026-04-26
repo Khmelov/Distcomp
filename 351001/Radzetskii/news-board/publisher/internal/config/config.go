@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+	AppPort           string
 	DBHost            string
 	DBPort            string
 	DBUser            string
@@ -16,6 +17,9 @@ type Config struct {
 	DBSchema          string
 	DBSSLMode         string
 	DiscussionBaseURL string
+	KafkaBrokers      string
+	KafkaGroup        string
+	RedisAddr         string
 }
 
 func Load(path string) *Config {
@@ -25,6 +29,7 @@ func Load(path string) *Config {
 	}
 
 	return &Config{
+		AppPort:           getEnv("APP_PORT", "24110"),
 		DBHost:            getEnv("DB_HOST", "localhost"),
 		DBPort:            getEnv("DB_PORT", "5432"),
 		DBUser:            getEnv("DB_USER", "postgres"),
@@ -33,6 +38,9 @@ func Load(path string) *Config {
 		DBSchema:          getEnv("DB_SCHEMA", "distcomp"),
 		DBSSLMode:         getEnv("DB_SSLMODE", "disable"),
 		DiscussionBaseURL: getEnv("DISCUSSION_BASE_URL", "http://localhost:24130"),
+		KafkaBrokers:      getEnv("KAFKA_BROKERS", "localhost:9092"),
+		KafkaGroup:        getEnv("KAFKA_GROUP", "publisher-group"),
+		RedisAddr:         getEnv("REDIS_ADDR", "localhost:6379"), // ДОБАВЛЕНО
 	}
 }
 

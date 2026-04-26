@@ -33,16 +33,16 @@ func (h *MarkerHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	}
 }
 
-// Create создает новый маркер
-// @Summary Создать маркер
-// @Tags Markers
-// @Accept json
-// @Produce json
-// @Param marker body dto.MarkerRequestTo true "Данные маркера"
-// @Success 201 {object} dto.MarkerResponseTo
-// @Failure 400 {object} dto.ErrorResponse "Неверный JSON или ошибка валидации"
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /markers [post]
+
+//@Summary Создать маркер
+//@Tags Markers
+//@Accept json
+//@Produce json
+//@Param marker body dto.MarkerRequestTo true "Данные маркера"
+//@Success 201 {object} dto.MarkerResponseTo
+//@Failure 400 {object} dto.ErrorResponse "Неверный JSON или ошибка валидации"
+//@Failure 500 {object} dto.ErrorResponse
+//@Router /markers [post]
 func (h *MarkerHandler) Create(c *gin.Context) {
 	var req dto.MarkerRequestTo
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -61,7 +61,7 @@ func (h *MarkerHandler) Create(c *gin.Context) {
 	}
 	resp, err := h.markerService.Create(c.Request.Context(), &req)
 	if err != nil {
-		// внутренняя ошибка — добавляем в контекст, middleware обработает
+		
 		c.Error(err)
 		return
 	}
