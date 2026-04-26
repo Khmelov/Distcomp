@@ -1,7 +1,6 @@
 import json
-import asyncio
 import threading
-from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
+from kafka import KafkaConsumer, KafkaProducer
 import app.services.comment_service as svc
 from app.schemas.comment import CommentCreate, CommentUpdate
 
@@ -11,79 +10,74 @@ OUT_TOPIC = "OutTopic"
 
 STOP_WORDS = {"spam", "bad", "hate", "fuck", "abuse"}
 
+producer = KafkaProducer(
+    bootstrap_servers=KAFKA_BOOTSTRAP,
+    value_serializer=lambda v: json.dumps(v).encode(),
+)
+
 
 def _moderate(content: str) -> str:
     words = set(content.lower().split())
     return "DECLINE" if words & STOP_WORDS else "APPROVE"
 
 
-async def _run():
-    producer = AIOKafkaProducer(
-        bootstrap_servers=KAFKA_BOOTSTRAP,
-        value_serializer=lambda v: json.dumps(v).encode(),
-    )
-    consumer = AIOKafkaConsumer(
-        IN_TOPIC,
-        bootstrap_servers=KAFKA_BOOTSTRAP,
-        value_deserializer=lambda m: json.loads(m.decode()),
-        auto_offset_reset="earliest",
-        group_id="discussion-group",
-    )
-    await producer.start()
-    await consumer.start()
-    print("[discussion] kafka consumer ready")
+def _send_out(payload: dict):
+    producer.send(OUT_TOPIC, value=payload)
+    producer.flush()
 
-    async def send_out(payload: dict):
-        await producer.send_and_wait(OUT_TOPIC, value=payload)
 
-    try:
-        async for msg in consumer:
-            data = msg.value
-            print(f"[discussion] received: {data}")
-            method = data.get("method")
-            cid = data.get("correlationId")
-            try:
-                if method == "POST":
-                    state = _moderate(data["content"])
-                    svc.create(CommentCreate(issueId=data["issueId"], content=data["content"]), comment_id=data["id"], state=state)
+def _handle(msg: dict):
+    method = msg.get("method")
+    cid = msg.get("correlationId")
 
-                elif method == "GET_ALL":
-                    results = svc.get_all()
-                    await send_out({"correlationId": cid, "data": [r.model_dump(by_alias=True) for r in results]})
+    if method == "POST":
+        # Нет ответа в OutTopic — fire-and-forget
+        state = _moderate(msg["content"])
+        data = CommentCreate(issueId=msg["issueId"], content=msg["content"])
+        svc.create(data, comment_id=msg["id"], state=state)
+        return  # не отвечаем
 
-                elif method == "GET":
-                    r = svc.get_by_id(data["id"])
-                    if r:
-                        await send_out({"correlationId": cid, "data": r.model_dump(by_alias=True)})
-                    else:
-                        await send_out({"correlationId": cid, "error": {"errorMessage": f"Comment {data['id']} not found", "errorCode": 40401}})
+    elif method == "GET_ALL":
+        results = svc.get_all()
+        _send_out({"correlationId": cid, "data": [r.model_dump(by_alias=True) for r in results]})
 
-                elif method == "PUT":
-                    r = svc.update(data["id"], CommentUpdate(issueId=data["issueId"], content=data["content"]))
-                    if r:
-                        await send_out({"correlationId": cid, "data": r.model_dump(by_alias=True)})
-                    else:
-                        await send_out({"correlationId": cid, "error": {"errorMessage": f"Comment {data['id']} not found", "errorCode": 40401}})
+    elif method == "GET":
+        r = svc.get_by_id(msg["id"])
+        if r:
+            _send_out({"correlationId": cid, "data": r.model_dump(by_alias=True)})
+        else:
+            _send_out({"correlationId": cid, "error": {"errorMessage": f"Comment {msg['id']} not found", "errorCode": 40401}})
 
-                elif method == "DELETE":
-                    found = svc.delete(data["id"])
-                    if found:
-                        await send_out({"correlationId": cid, "data": {}})
-                    else:
-                        await send_out({"correlationId": cid, "error": {"errorMessage": f"Comment {data['id']} not found", "errorCode": 40401}})
-            except Exception as e:
-                print(f"[kafka_worker] error: {e}")
-    finally:
-        await consumer.stop()
-        await producer.stop()
+    elif method == "PUT":
+        data = CommentUpdate(issueId=msg["issueId"], content=msg["content"])
+        r = svc.update(msg["id"], data)
+        if r:
+            _send_out({"correlationId": cid, "data": r.model_dump(by_alias=True)})
+        else:
+            _send_out({"correlationId": cid, "error": {"errorMessage": f"Comment {msg['id']} not found", "errorCode": 40401}})
+
+    elif method == "DELETE":
+        found = svc.delete(msg["id"])
+        if found:
+            _send_out({"correlationId": cid, "data": {}})
+        else:
+            _send_out({"correlationId": cid, "error": {"errorMessage": f"Comment {msg['id']} not found", "errorCode": 40401}})
 
 
 def start_kafka_worker():
-    def _thread():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(_run())
+    def _run():
+        consumer = KafkaConsumer(
+            IN_TOPIC,
+            bootstrap_servers=KAFKA_BOOTSTRAP,
+            value_deserializer=lambda m: json.loads(m.decode()),
+            auto_offset_reset="earliest",
+            group_id="discussion-group",
+        )
+        for msg in consumer:
+            try:
+                _handle(msg.value)
+            except Exception as e:
+                print(f"[kafka_worker] error: {e}")
 
-    t = threading.Thread(target=_thread, daemon=True)
+    t = threading.Thread(target=_run, daemon=True)
     t.start()
-    print("[discussion] kafka thread launched")

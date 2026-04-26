@@ -1,0 +1,15 @@
+server:
+  port: 24110
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/distcomp
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+discussion:
+  url: http://localhost:24130/api/v1.0
