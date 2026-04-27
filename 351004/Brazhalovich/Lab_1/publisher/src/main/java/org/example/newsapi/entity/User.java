@@ -30,9 +30,7 @@ public class User {
     @Column(length = 64)
     private String lastname;
 
-    // Связь один-ко-многим с новостями
-    // mappedBy указывает на поле "user" в классе News
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @ToString.Exclude // Важно! Исключаем из toString, чтобы не было рекурсии и переполнения стека
+    @ToString.Exclude
     private List<News> news;
 }

@@ -48,5 +48,5 @@ public class News {
     )
     private Set<Marker> markers = new HashSet<>();
 
-    // Поле comments удалено
+
 }

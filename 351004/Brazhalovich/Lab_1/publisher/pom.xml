@@ -82,6 +82,11 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
         <!-- Testcontainers (добавлено для тестов) -->
         <dependency>
             <groupId>org.testcontainers</groupId>

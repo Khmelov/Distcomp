@@ -18,11 +18,10 @@ public class Comment {
     @PrimaryKey
     private Long id;
 
-
-
     @Column("news_id")
     private Long newsId;
 
     private String content;
 
+    private String state; // PENDING, APPROVE, DECLINE
 }

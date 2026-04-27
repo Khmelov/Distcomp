@@ -10,7 +10,7 @@ public class WebClientConfig {
     @Bean
     public WebClient discussionWebClient() {
         return WebClient.builder()
-                .baseUrl("http://localhost:24130/api/v1.0/comments")
+                .baseUrl("http://localhost:24130")   // только хост+порт
                 .build();
     }
 }
