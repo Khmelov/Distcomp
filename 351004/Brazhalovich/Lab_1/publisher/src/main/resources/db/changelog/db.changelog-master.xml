@@ -6,5 +6,6 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
 
     <include file="changeset/v1.0.0-create-tables.xml" relativeToChangelogFile="true"/>
+    <include file="changeset/v1.0.1-add-role-and-comment-userid.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 public class CommentRequestTo {
     @NotNull
     private Long newsId;
-
+    @NotNull
+    private Long userId;
     @Size(min = 2, max = 2048)
     private String content;
 }

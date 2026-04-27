@@ -14,14 +14,12 @@ import org.springframework.data.cassandra.core.mapping.Table;
 @AllArgsConstructor
 @Builder
 public class Comment {
-
     @PrimaryKey
     private Long id;
-
     @Column("news_id")
     private Long newsId;
-
+    @Column("user_id")
+    private Long userId;
     private String content;
-
-    private String state; // PENDING, APPROVE, DECLINE
+    private String state;
 }

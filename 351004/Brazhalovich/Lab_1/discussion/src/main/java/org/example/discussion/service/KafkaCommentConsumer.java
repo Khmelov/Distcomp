@@ -38,6 +38,7 @@ public class KafkaCommentConsumer {
                     .id(message.getId())
                     .newsId(message.getNewsId())
                     .content(message.getContent())
+                    .state("APPROVE")
                     .build();
             commentRepository.save(comment);
         }

@@ -2,7 +2,6 @@ package org.example.newsapi.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.util.List;
 
 @Entity
@@ -12,7 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq_gen")
     @SequenceGenerator(name = "user_seq_gen", sequenceName = "user_seq", allocationSize = 1)
@@ -29,6 +27,9 @@ public class User {
 
     @Column(length = 64)
     private String lastname;
+
+    @Column(nullable = false, length = 20)
+    private String role;   // "ADMIN" или "CUSTOMER"
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude

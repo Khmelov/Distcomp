@@ -1,32 +1,25 @@
 package org.example.newsapi;
 
-import org.springframework.boot.CommandLineRunner;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.context.annotation.Primary;
 
 @SpringBootApplication
 public class NewsApiApplication {
+
     public static void main(String[] args) {
         SpringApplication.run(NewsApiApplication.class, args);
     }
-    @Bean
-    public CommandLineRunner testDiscussion(WebClient.Builder webClientBuilder) {
-        return args -> {
-            WebClient client = webClientBuilder.baseUrl("http://localhost:24130").build();
-            try {
-                String result = client.get()
-                        .uri("/api/v1.0/comments")
-                        .retrieve()
-                        .bodyToMono(String.class)
-                        .block();
-                System.out.println("Connection OK, response: " + result);
-            } catch (Exception e) {
-                System.err.println("Connection FAILED: " + e.getMessage());
-                e.printStackTrace();
-            }
-        };
-    }
 
+    @Bean
+    @Primary
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return mapper;
+    }
 }

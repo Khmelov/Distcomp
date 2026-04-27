@@ -8,6 +8,8 @@ import org.example.newsapi.exception.AlreadyExistsException;
 import org.example.newsapi.exception.NotFoundException;
 import org.example.newsapi.mapper.UserMapper;
 import org.example.newsapi.repository.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,16 +17,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true) // По умолчанию транзакции только на чтение
+@Transactional(readOnly = true)
 public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)  // инвалидируем весь кеш пользователей при создании
     public UserResponseTo create(UserRequestTo request) {
         if (userRepository.existsByLogin(request.getLogin())) {
-            throw new AlreadyExistsException("Login already exists"); // Теперь это даст 403
+            throw new AlreadyExistsException("Login already exists");
         }
         User user = userMapper.toEntity(request);
         return userMapper.toDto(userRepository.save(user));
@@ -35,6 +38,7 @@ public class UserService {
                 .map(userMapper::toDto);
     }
 
+    @Cacheable(value = "users", key = "#id")
     public UserResponseTo findById(Long id) {
         return userRepository.findById(id)
                 .map(userMapper::toDto)
@@ -42,15 +46,16 @@ public class UserService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public UserResponseTo update(Long id, UserRequestTo request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + id));
-
         userMapper.updateEntityFromDto(request, user);
         return userMapper.toDto(userRepository.save(user));
     }
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public void delete(Long id) {
         if (!userRepository.existsById(id)) {
             throw new NotFoundException("User not found with id: " + id);
