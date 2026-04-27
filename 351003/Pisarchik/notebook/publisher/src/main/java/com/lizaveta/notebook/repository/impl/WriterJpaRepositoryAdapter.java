@@ -72,8 +72,19 @@ public class WriterJpaRepositoryAdapter implements WriterRepository {
         return jpaRepository.existsByLogin(login);
     }
 
+    @Override
+    public Optional<Writer> findByLogin(final String login) {
+        return jpaRepository.findByLogin(login).map(this::toDomain);
+    }
+
     private Writer toDomain(final WriterEntity e) {
-        return new Writer(e.getId(), e.getLogin(), e.getPassword(), e.getFirstname(), e.getLastname());
+        return new Writer(
+                e.getId(),
+                e.getLogin(),
+                e.getPassword(),
+                e.getFirstname(),
+                e.getLastname(),
+                e.getRole());
     }
 
     private WriterEntity toEntity(final Writer w) {
@@ -83,6 +94,7 @@ public class WriterJpaRepositoryAdapter implements WriterRepository {
         e.setPassword(w.getPassword());
         e.setFirstname(w.getFirstname());
         e.setLastname(w.getLastname());
+        e.setRole(w.getRole());
         return e;
     }
 }

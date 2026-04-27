@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>78ed432f-5b54-465f-9e45-a0e6d5cb7766</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CassandraCSharpDriver" Version="3.22.0" />
+        <PackageReference Include="Confluent.Kafka" Version="2.14.0" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Discussion.Infrastructure\Discussion.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

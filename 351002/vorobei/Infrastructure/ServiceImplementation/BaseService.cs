@@ -1,10 +1,9 @@
 ﻿using AutoMapper;
-using BusinessLogic.DTO.Response;
 using BusinessLogic.Servicies;
 using DataAccess.Models;
 using BusinessLogic.Repositories;
 
-namespace BusinessLogic.Services
+namespace Infrastructure.ServiceImplementation
 {
     public class BaseService<TEntity, TEntityRequest, TEntityResponse> : IBaseService<TEntityRequest, TEntityResponse> 
                                                                                       where TEntity : BaseEntity
@@ -20,40 +19,40 @@ namespace BusinessLogic.Services
             _mapper = mapper;
         }
 
-        public List<TEntityResponse> GetAll()
+        public async virtual Task<List<TEntityResponse>> GetAllAsync()
         {
-            return _mapper.Map<List<TEntityResponse>>(_repository.GetAll());
+            return _mapper.Map<List<TEntityResponse>>(await _repository.GetAllAsync());
         }
-        public TEntityResponse? GetById(int id)
+        public async virtual Task<TEntityResponse?> GetByIdAsync(int id)
         {
-            if (_repository.Exists(id))
+            if (await _repository.ExistsAsync(id))
             {
-                return _mapper.Map<TEntityResponse>(_repository.GetById(id));
+                return _mapper.Map<TEntityResponse>(await _repository.GetByIdAsync(id));
             }
             return null;
         }
-        public bool DeleteById(int id)
+        public async virtual Task<bool> DeleteByIdAsync(int id)
         {
-            if (_repository.Exists(id))
+            if (await _repository.ExistsAsync(id))
             {
-                _repository.Delete(id);
+                await _repository.DeleteAsync(id);
                 return true;
             }
             return false;
         }
-        public virtual TEntityResponse Create(TEntityRequest entity)
+        public async virtual Task<TEntityResponse> CreateAsync(TEntityRequest entity)
         {
             TEntity creator = _mapper.Map<TEntity>(entity);
-            creator.Id = _repository.GetLastId() + 1;
-            _repository.Create(creator);
+            creator.Id = await _repository.GetLastIdAsync() + 1;
+            await _repository.CreateAsync(creator);
             return _mapper.Map<TEntityResponse>(creator);
         }
-        public virtual TEntityResponse? Update(TEntityRequest entity)
+        public async virtual Task<TEntityResponse?> UpdateAsync(TEntityRequest entity)
         {
             var creator = _mapper.Map<TEntity>(entity);
-            if (_repository.Exists(creator.Id))
+            if (await _repository.ExistsAsync(creator.Id))
             {
-                _repository.Update(creator);
+                await _repository.UpdateAsync(creator);
                 return _mapper.Map<TEntityResponse>(creator);
             }
             return null;
