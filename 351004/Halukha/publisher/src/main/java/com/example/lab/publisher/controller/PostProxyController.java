@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import com.example.lab.publisher.service.PostRedisCacheService;
+
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -12,9 +14,11 @@ import reactor.core.publisher.Mono;
 public class PostProxyController {
 
     private final WebClient webClient;
+    private final PostRedisCacheService postCache;
 
-    public PostProxyController(WebClient.Builder webClientBuilder) {
+    public PostProxyController(WebClient.Builder webClientBuilder, PostRedisCacheService postCache) {
         this.webClient = webClientBuilder.baseUrl("http://localhost:24130").build();
+        this.postCache = postCache;
     }
 
     @GetMapping
@@ -26,9 +30,18 @@ public class PostProxyController {
 
     @GetMapping("/{id}")
     public Mono<ResponseEntity<Object>> getPostById(@PathVariable Long id) {
+        Object cached = postCache.get(id);
+        if (cached != null) {
+            return Mono.just(ResponseEntity.ok(cached));
+        }
         return webClient.get()
                 .uri("/api/v1.0/posts/{id}", id)
-                .exchangeToMono(response -> response.toEntity(Object.class));
+                .exchangeToMono(response -> response.toEntity(Object.class))
+                .doOnNext(entity -> {
+                    if (entity.getStatusCode().is2xxSuccessful() && entity.getBody() != null) {
+                        postCache.put(id, entity.getBody());
+                    }
+                });
     }
 
     @PostMapping
@@ -38,6 +51,14 @@ public class PostProxyController {
                 .bodyValue(post)
                 .retrieve()
                 .toEntity(Object.class)
+                .doOnNext(entity -> {
+                    if (entity.getStatusCode().is2xxSuccessful() && entity.getBody() instanceof java.util.Map<?, ?> map) {
+                        Object idValue = map.get("id");
+                        if (idValue instanceof Number n) {
+                            postCache.put(n.longValue(), entity.getBody());
+                        }
+                    }
+                })
                 .onErrorResume(WebClientResponseException.class, e -> {
                     Object errorBody = e.getResponseBodyAs(Object.class);
                     return Mono.just(ResponseEntity
@@ -51,13 +72,23 @@ public class PostProxyController {
         return webClient.put()
                 .uri("/api/v1.0/posts/{id}", id)
                 .bodyValue(post)
-                .exchangeToMono(response -> response.toEntity(Object.class));
+                .exchangeToMono(response -> response.toEntity(Object.class))
+                .doOnNext(entity -> {
+                    if (entity.getStatusCode().is2xxSuccessful() && entity.getBody() != null) {
+                        postCache.put(id, entity.getBody());
+                    }
+                });
     }
 
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<Void>> deletePost(@PathVariable Long id) {
         return webClient.delete()
                 .uri("/api/v1.0/posts/{id}", id)
-                .exchangeToMono(response -> response.toBodilessEntity());
+                .exchangeToMono(response -> response.toBodilessEntity())
+                .doOnNext(entity -> {
+                    if (entity.getStatusCode().is2xxSuccessful()) {
+                        postCache.evict(id);
+                    }
+                });
     }
 }

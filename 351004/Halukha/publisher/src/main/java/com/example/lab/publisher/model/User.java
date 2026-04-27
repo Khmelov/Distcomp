@@ -2,12 +2,16 @@ package com.example.lab.publisher.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import com.example.lab.publisher.security.Role;
 
 @Entity
 @Table(name = "tbl_user")
@@ -31,21 +35,25 @@ public class User {
     @NotBlank
     @Size(min = 2, max = 64)
     @Column(name = "firstname")
-    private String firstName;
+    private String firstname;
 
     @NotBlank
     @Size(min = 2, max = 64)
     @Column(name = "lastname")
-    private String lastName;
+    private String lastname;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Role role = Role.CUSTOMER;
 
     public User() {
     }
 
-    public User(String login, String password, String firstName, String lastName) {
+    public User(String login, String password, String firstname, String lastname) {
         this.login = login;
         this.password = password;
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.firstname = firstname;
+        this.lastname = lastname;
     }
 
     public Long getId() {
@@ -60,12 +68,16 @@ public class User {
         return password;
     }
 
-    public String getFirstName() {
-        return firstName;
+    public String getFirstname() {
+        return firstname;
     }
 
-    public String getLastName() {
-        return lastName;
+    public String getLastname() {
+        return lastname;
+    }
+
+    public Role getRole() {
+        return role == null ? Role.CUSTOMER : role;
     }
 
     public void setId(Long id) {
@@ -80,11 +92,15 @@ public class User {
         this.password = password;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
     }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+
+    public void setRole(Role role) {
+        this.role = role == null ? Role.CUSTOMER : role;
     }
 }

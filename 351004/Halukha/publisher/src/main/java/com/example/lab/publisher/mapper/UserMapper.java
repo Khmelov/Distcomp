@@ -22,8 +22,8 @@ public interface UserMapper {
     @Mappings({
             @Mapping(target = "login", source = "dto.login"),
             @Mapping(target = "password", source = "dto.password"),
-            @Mapping(target = "firstName", source = "dto.firstName"),
-            @Mapping(target = "lastName", source = "dto.lastName"),
+            @Mapping(target = "firstname", source = "dto.firstname"),
+            @Mapping(target = "lastname", source = "dto.lastname"),
             @Mapping(target = "id", ignore = true)
     })
     User updateEntity(UserRequestTo dto, User existing);

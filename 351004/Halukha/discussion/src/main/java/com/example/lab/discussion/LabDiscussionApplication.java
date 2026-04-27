@@ -10,3 +10,6 @@ public class LabDiscussionApplication {
 		SpringApplication.run(LabDiscussionApplication.class, args);
 	}
 }
+
+// netstat -ano | findstr :<PORT>
+// taskkill /PID <PID> /F

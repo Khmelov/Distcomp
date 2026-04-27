@@ -18,22 +18,22 @@ public class UserRequestTo {
 
     @NotBlank
     @Size(min = 2, max = 64)
-    private final String firstName;
+    private final String firstname;
 
     @NotBlank
     @Size(min = 2, max = 64)
-    private final String lastName;
+    private final String lastname;
 
     @JsonCreator
     public UserRequestTo(
             @JsonProperty("login") String login,
             @JsonProperty("password") String password,
-            @JsonProperty("firstname") String firstName,
-            @JsonProperty("lastname") String lastName) {
+            @JsonProperty("firstname") String firstname,
+            @JsonProperty("lastname") String lastname) {
         this.login = login;
         this.password = password;
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.firstname = firstname;
+        this.lastname = lastname;
     }
 
     public String getLogin() {
@@ -44,11 +44,11 @@ public class UserRequestTo {
         return password;
     }
 
-    public String getFirstName() {
-        return firstName;
+    public String getFirstname() {
+        return firstname;
     }
 
-    public String getLastName() {
-        return lastName;
+    public String getLastname() {
+        return lastname;
     }
 }
