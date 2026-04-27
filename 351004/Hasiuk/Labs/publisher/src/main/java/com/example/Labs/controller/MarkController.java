@@ -1,8 +1,8 @@
 package com.example.Labs.controller;
 
-import com.example.Labs.dto.request.MessageRequestTo;
-import com.example.Labs.dto.response.MessageResponseTo;
-import com.example.Labs.service.MessageService;
+import com.example.Labs.dto.request.MarkRequestTo;
+import com.example.Labs.dto.response.MarkResponseTo;
+import com.example.Labs.service.MarkService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -11,29 +11,29 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1.0/messages")
+@RequestMapping("/api/v1.0/marks")
 @RequiredArgsConstructor
-public class MessageController {
-    private final MessageService service;
+public class MarkController {
+    private final MarkService service;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public MessageResponseTo create(@Valid @RequestBody MessageRequestTo request) {
+    public MarkResponseTo create(@Valid @RequestBody MarkRequestTo request) {
         return service.create(request);
     }
 
     @GetMapping
-    public List<MessageResponseTo> getAll(Pageable pageable) {
+    public List<MarkResponseTo> getAll(Pageable pageable) {
         return service.getAll(pageable).getContent();
     }
 
     @GetMapping("/{id}")
-    public MessageResponseTo getById(@PathVariable Long id) {
+    public MarkResponseTo getById(@PathVariable Long id) {
         return service.getById(id);
     }
 
     @PutMapping("/{id}")
-    public MessageResponseTo update(@PathVariable Long id, @Valid @RequestBody MessageRequestTo request) {
+    public MarkResponseTo update(@PathVariable Long id, @Valid @RequestBody MarkRequestTo request) {
         return service.update(id, request);
     }
 
