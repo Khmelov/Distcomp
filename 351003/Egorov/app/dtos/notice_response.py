@@ -7,5 +7,5 @@ class NoticeResponseTo(BaseModel):
     id: int
     content: str
     story_id: int
-    links: Optional[Dict[str, Any]] = None
+    links: Optional[Dict[Any, Any]] = None
 
