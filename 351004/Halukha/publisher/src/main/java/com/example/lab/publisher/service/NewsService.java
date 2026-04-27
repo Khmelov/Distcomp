@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import com.example.lab.publisher.dto.NewsRequestTo;
@@ -35,18 +39,24 @@ public class NewsService {
         this.userRepository = userRepository;
     }
 
+    @Cacheable(cacheNames = "news", key = "'all'")
     public List<NewsResponseTo> getAllNews() {
         return newsRepository.findAll().stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(cacheNames = "news", key = "#id")
     public NewsResponseTo getNewsById(Long id) {
         return newsRepository.findById(id)
                 .map(mapper::toDto)
                 .orElseThrow(() -> new EntityNotFoundException("News not found", 40401));
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "news", key = "'all'"),
+            @CacheEvict(cacheNames = "markers", key = "'all'", condition = "#request.markers != null && !#request.markers.isEmpty()")
+    })
     public NewsResponseTo createNews(NewsRequestTo request) {
         if (!userRepository.existsById(request.getUserId())) {
             throw new EntityNotFoundException("User not found", 40401);
@@ -60,6 +70,13 @@ public class NewsService {
         return mapper.toDto(saved);
     }
 
+    @Caching(put = {
+            @CachePut(cacheNames = "news", key = "#id")
+    }, evict = {
+            @CacheEvict(cacheNames = "news", key = "'all'"),
+            @CacheEvict(cacheNames = "newsUser", key = "#id"),
+            @CacheEvict(cacheNames = "markers", key = "'all'", condition = "#request.markers != null && !#request.markers.isEmpty()")
+    })
     public NewsResponseTo updateNews(Long id, NewsRequestTo request) {
         News existing = newsRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("News not found", 40401));
@@ -85,6 +102,12 @@ public class NewsService {
         }).collect(Collectors.toList());
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "news", key = "#id"),
+            @CacheEvict(cacheNames = "news", key = "'all'"),
+            @CacheEvict(cacheNames = "newsUser", key = "#id"),
+            @CacheEvict(cacheNames = "markers", key = "'all'")
+    })
     public void deleteNews(Long id) {
         if (!newsRepository.existsById(id)) {
             throw new EntityNotFoundException("News not found", 40401);
@@ -97,6 +120,7 @@ public class NewsService {
         newsRepository.deleteById(id);
     }
 
+    @Cacheable(cacheNames = "newsUser", key = "#newsId")
     public UserResponseTo getUserByNewsId(Long newsId) {
         News news = newsRepository.findById(newsId)
                 .orElseThrow(() -> new EntityNotFoundException("News not found", 40401));
