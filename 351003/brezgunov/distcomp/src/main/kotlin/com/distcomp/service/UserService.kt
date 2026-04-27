@@ -11,13 +11,15 @@ import org.springframework.cache.annotation.CachePut
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.cache.annotation.Caching
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class UserService(
     val userMapper: UserMapper,
-    val userRepository: UserRepository
+    val userRepository: UserRepository,
+    val passwordEncoder: PasswordEncoder
 ) {
     @Transactional
     @CacheEvict(value = ["users"], key = "'all'")
@@ -27,6 +29,7 @@ class UserService(
             throw DuplicateUserException("User with login already exists")
         }
         val user = userMapper.toUserEntity(userRequestTo)
+        user.password = passwordEncoder.encode(userRequestTo.password).toString()
         userRepository.save(user)
         return userMapper.toUserResponse(user)
     }
@@ -50,6 +53,7 @@ class UserService(
             throw UserNotFoundException("User not found")
         }
         val user = userMapper.toUserEntity(userRequestTo)
+        user.password = passwordEncoder.encode(userRequestTo.password).toString()
         userRepository.save(user)
         return userMapper.toUserResponse(user)
     }
