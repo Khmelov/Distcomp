@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -27,11 +28,13 @@ public class PostController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("isAnonymous() or @accessGuard.canManagePostByIssue(#dto.issueId, authentication)")
     public PostResponseTo create(@Valid @RequestBody PostRequestTo dto) {
         return service.create(dto);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("isAnonymous() or @accessGuard.canManagePostById(#id, authentication)")
     public PostResponseTo update(@PathVariable Long id, @Valid @RequestBody PostRequestTo dto) {
         dto.setId(id);
         return service.update(dto);
@@ -39,6 +42,7 @@ public class PostController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("isAnonymous() or @accessGuard.canManagePostById(#id, authentication)")
     public void delete(@PathVariable Long id) {
         service.delete(id);
     }

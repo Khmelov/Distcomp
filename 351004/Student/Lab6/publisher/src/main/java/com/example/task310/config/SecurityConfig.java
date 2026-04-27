@@ -35,7 +35,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1.0/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v2.0/login", "/api/v2.0/writers").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/v2.0/writers/**").hasRole("ADMIN")
                         .requestMatchers("/api/v2.0/**").authenticated()
                         .anyRequest().permitAll()
                 )

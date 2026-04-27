@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -32,6 +33,7 @@ public class WriterController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("isAnonymous() or @accessGuard.canManageWriter(#id, authentication)")
     public WriterResponseTo update(@PathVariable Long id, @Valid @RequestBody WriterRequestTo dto) {
         dto.setId(id);
         return service.update(dto);
@@ -39,6 +41,7 @@ public class WriterController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("isAnonymous() or @accessGuard.canManageWriter(#id, authentication)")
     public void delete(@PathVariable Long id) {
         service.delete(id);
     }
