@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="task320-001-schema" author="distcomp">
+        <sql>CREATE SCHEMA IF NOT EXISTS distcomp;</sql>
+    </changeSet>
+
+    <changeSet id="task320-002-tables" author="distcomp">
+        <createTable tableName="tbl_writer" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" primaryKeyName="pk_tbl_writer"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="tbl_news" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" primaryKeyName="pk_tbl_news"/>
+            </column>
+            <column name="writer_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableSchemaName="distcomp"
+                                 baseTableName="tbl_news"
+                                 baseColumnNames="writer_id"
+                                 constraintName="fk_tbl_news_writer"
+                                 referencedTableSchemaName="distcomp"
+                                 referencedTableName="tbl_writer"
+                                 referencedColumnNames="id"
+                                 onDelete="RESTRICT"/>
+
+        <createTable tableName="tbl_label" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" primaryKeyName="pk_tbl_label"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="tbl_news_label" schemaName="distcomp">
+            <column name="news_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="label_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey schemaName="distcomp" tableName="tbl_news_label"
+                       columnNames="news_id, label_id"
+                       constraintName="pk_tbl_news_label"/>
+
+        <addForeignKeyConstraint baseTableSchemaName="distcomp"
+                                 baseTableName="tbl_news_label"
+                                 baseColumnNames="news_id"
+                                 constraintName="fk_tbl_news_label_news"
+                                 referencedTableSchemaName="distcomp"
+                                 referencedTableName="tbl_news"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableSchemaName="distcomp"
+                                 baseTableName="tbl_news_label"
+                                 baseColumnNames="label_id"
+                                 constraintName="fk_tbl_news_label_label"
+                                 referencedTableSchemaName="distcomp"
+                                 referencedTableName="tbl_label"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <createTable tableName="tbl_note" schemaName="distcomp">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" primaryKeyName="pk_tbl_note"/>
+            </column>
+            <column name="news_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableSchemaName="distcomp"
+                                 baseTableName="tbl_note"
+                                 baseColumnNames="news_id"
+                                 constraintName="fk_tbl_note_news"
+                                 referencedTableSchemaName="distcomp"
+                                 referencedTableName="tbl_news"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>
