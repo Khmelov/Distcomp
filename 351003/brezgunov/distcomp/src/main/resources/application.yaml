@@ -36,6 +36,10 @@ spring:
         spring.json.trusted.packages: "*"
         spring.json.use.type.headers: false
         spring.json.value.default.type: com.distcomp.dto.kafka.KafkaNoticeResponse
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 kafka:
   topics:

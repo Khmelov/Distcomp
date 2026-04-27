@@ -10,6 +10,10 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.springframework.stereotype.Service
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.CachePut
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.Caching
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -22,16 +26,20 @@ class NoticeService(
 ) {
     private val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
 
+    @Cacheable(value = ["notices"], key = "#id")
     fun getById(id: Long): NoticeResponseTo {
         val response = sendAndWait(KafkaNoticeRequest(id = id.toString(), type = "GET"))
         return convertToSingleDto(response.data)
     }
 
+    @Cacheable(value = ["notices"], key = "'all'")
     fun getAll(): List<NoticeResponseTo> {
         val response = sendAndWait(KafkaNoticeRequest(id = "all", type = "GET_ALL"))
         return convertToList(response.data)
     }
 
+    @CachePut(value = ["notices"], key = "#result.id")
+    @CacheEvict(value = ["notices"], key = "'all'")
     fun createNotice(noticeRequestTo: NoticeRequestTo): NoticeResponseTo {
         if (!newsRepository.existsById(noticeRequestTo.newsId)) {
             throw NewsNotFoundException("News not found")
@@ -40,6 +48,8 @@ class NoticeService(
         return convertToSingleDto(response.data)
     }
 
+    @CachePut(value = ["notices"], key = "#noticeId")
+    @CacheEvict(value = ["notices"], key = "'all'")
     fun updateNotice(noticeId: Long, noticeRequestTo: NoticeRequestTo): NoticeResponseTo {
         if (!newsRepository.existsById(noticeRequestTo.newsId)) {
             throw NewsNotFoundException("News not found")
@@ -48,6 +58,10 @@ class NoticeService(
         return convertToSingleDto(response.data)
     }
 
+    @Caching(evict = [
+        CacheEvict(value = ["notices"], key = "#id"),
+        CacheEvict(value = ["notices"], key = "'all'")
+    ])
     fun deleteById(id: Long) {
         sendAndWait(KafkaNoticeRequest(id = id.toString(), type = "DELETE"))
     }
