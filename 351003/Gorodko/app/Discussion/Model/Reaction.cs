@@ -16,5 +16,7 @@ namespace Discussion.Model {
 
         [JsonPropertyName("created")]
         public DateTime Created { get; set; }
+        [JsonPropertyName("state")]
+        public string State { get; set; }
     }
 }

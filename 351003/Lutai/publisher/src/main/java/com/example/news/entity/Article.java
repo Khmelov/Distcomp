@@ -37,6 +37,7 @@ public class Article extends BaseEntity {
     private LocalDateTime modified;
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @Builder.Default
     @JoinTable(
             name = "tbl_article_marker",
             joinColumns = @JoinColumn(name = "article_id"),

@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from api.v1.router import api_router
 from kafka_producer import kafka_producer
 from kafka_consumer import kafka_consumer_publisher
-
+from redis_config import redis_client
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -12,11 +12,13 @@ async def lifespan(app: FastAPI):
     print("Starting Publisher service with Kafka...")
     await kafka_producer.start()
     await kafka_consumer_publisher.start()
-    print("Kafka producer and consumer started")
+    await redis_client.ping()
+    print("Kafka and Redis started")
     yield
     # Shutdown
     await kafka_producer.stop()
     await kafka_consumer_publisher.stop()
+    await redis_client.close()
     print("Publisher service stopped")
 
 app = FastAPI(lifespan=lifespan)
