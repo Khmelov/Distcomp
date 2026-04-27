@@ -11,6 +11,33 @@ spring:
     password: postgres
     driver-class-name: org.postgresql.Driver
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: message:com.example.lab.publisher.dto.KafkaMessage
+    consumer:
+      group-id: publisher-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: message:com.example.lab.publisher.dto.KafkaMessage
+    template:
+      default-topic: news-topic
+
+app:
+  jwt:
+    secret: "change-me-change-me-change-me-change-me"
+    ttlSeconds: 3600
+
   jpa:
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
