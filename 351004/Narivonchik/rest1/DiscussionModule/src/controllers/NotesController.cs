@@ -41,11 +41,18 @@ public class NotesController : ControllerBase
     public async Task<ActionResult<NoteResponseTo>> GetNoteById(long id)
     {
         var dto = new NoteRequestTo() { Id = id };
-        var post = await _service.GetNote(dto);
-        if (post == null)
-            return NotFound();
+        NoteResponseTo? note = null;
+        try
+        {
+            note = await _service.GetNote(dto);
+        }
+        catch (ArgumentException ex)
+        {
+            if (note == null)
+                return NotFound();
+        }
 
-        return Ok(post);
+        return Ok(note);
     }
 
     [HttpPut("{id:long}")]

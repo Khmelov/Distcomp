@@ -7,6 +7,7 @@ import { NoticesService } from './notices.service';
 import { PrismaService } from '../../../services/prisma.service';
 import { KafkaService } from '../../../kafka/kafka.service';
 import { NoticeRequestTo } from '../../../dto/notices/NoticeRequestTo.dto';
+import { RedisService } from '../../../redis/redis.service';
 
 // Helpers to build mock fetch responses
 const okJson = (body: unknown) =>
@@ -41,12 +42,20 @@ describe('NoticesService (proxy to discussion)', () => {
     sendAndWait: jest.fn(),
   };
 
+  const mockRedisService = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(undefined),
+    delByPattern: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NoticesService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: KafkaService, useValue: mockKafkaService },
+        { provide: RedisService, useValue: mockRedisService },
       ],
     }).compile();
 
