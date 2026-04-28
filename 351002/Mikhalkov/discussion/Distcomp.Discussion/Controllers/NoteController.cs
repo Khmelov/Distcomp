@@ -1,4 +1,4 @@
-﻿using Distcomp.Discussion.Domain.Models;
+﻿using Distcomp.Shared.Models;
 using Distcomp.Discussion.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
@@ -68,10 +68,8 @@ namespace Distcomp.Discussion.Controllers
         [HttpGet("{id:long}")]
         public IActionResult GetByIdSimple(long id)
         {
-            var note = _repository.GetAll().FirstOrDefault(n => n.Id == id);
-
+            var note = _repository.GetByIdOnly(id);
             if (note == null) return NotFound();
-
             return Ok(note);
         }
     }

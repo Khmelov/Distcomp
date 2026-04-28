@@ -113,6 +113,38 @@ namespace Infrastructure.Migrations
                     b.ToTable("tbl_news", "public");
                 });
 
+            modelBuilder.Entity("Core.Entities.Post", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("NewsId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("news_id");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NewsId");
+
+                    b.ToTable("tbl_post", "public");
+                });
+
             modelBuilder.Entity("MarkerNews", b =>
                 {
                     b.Property<long>("MarkerId")
@@ -137,6 +169,17 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Editor");
+                });
+
+            modelBuilder.Entity("Core.Entities.Post", b =>
+                {
+                    b.HasOne("Core.Entities.News", "News")
+                        .WithMany()
+                        .HasForeignKey("NewsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("News");
                 });
 
             modelBuilder.Entity("MarkerNews", b =>

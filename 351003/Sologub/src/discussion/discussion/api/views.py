@@ -47,6 +47,7 @@ class NoteViewSet(viewsets.ViewSet):
         story_id = data.get("storyId")
         content = data.get("content") or ""
         country = data.get("country", "")
+
         if story_id is None:
             return Response(
                 {"detail": "storyId is required."},
@@ -64,6 +65,7 @@ class NoteViewSet(viewsets.ViewSet):
                 {"detail": "storyId must be an integer."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
         try:
             repo = _get_repository()
             note = repo.create(story_id=story_id, content=content, country=country or "")
@@ -91,7 +93,7 @@ class NoteViewSet(viewsets.ViewSet):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         if not note:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Note not found."}, status=status.HTTP_404_NOT_FOUND)
         return Response(_note_to_json(note))
 
     def update(self, request: Request, pk=None):
@@ -126,14 +128,14 @@ class NoteViewSet(viewsets.ViewSet):
         try:
             repo = _get_repository()
             note = repo.update(story_id=story_id, note_id=note_id, content=content, country=country or "")
+            if not note:
+                return Response({"detail": "Note not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(_note_to_json(note))
         except Exception as e:
             return Response(
                 {"detail": str(e)},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
-        if not note:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        return Response(_note_to_json(note))
 
     def destroy(self, request: Request, pk=None):
         try:
@@ -158,7 +160,7 @@ class NoteViewSet(viewsets.ViewSet):
                     status=status.HTTP_503_SERVICE_UNAVAILABLE,
                 )
             if not note:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+                return Response({"detail": "Note not found."}, status=status.HTTP_404_NOT_FOUND)
             story_id = note.storyId
         else:
             try:
@@ -171,7 +173,7 @@ class NoteViewSet(viewsets.ViewSet):
         try:
             repo = _get_repository()
             if not repo.delete(story_id=story_id, note_id=note_id):
-                return Response(status=status.HTTP_404_NOT_FOUND)
+                return Response({"detail": "Note not found."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response(
                 {"detail": str(e)},
@@ -186,4 +188,5 @@ def _note_to_json(note) -> dict:
         "storyId": note.storyId,
         "content": note.content,
         "country": note.country or "",
+        "state": note.state or "PENDING",
     }
