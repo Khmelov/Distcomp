@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36327.8
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestApiTask", "RestApiTask.csproj", "{E54AF6E0-0DF9-4FC8-A5D4-EA694985B628}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "publisherApi", "publisherApi.csproj", "{E54AF6E0-0DF9-4FC8-A5D4-EA694985B628}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
