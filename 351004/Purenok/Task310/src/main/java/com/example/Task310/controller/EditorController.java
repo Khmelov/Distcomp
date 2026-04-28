@@ -5,16 +5,16 @@ import com.example.Task310.dto.EditorResponseTo;
 import com.example.Task310.service.EditorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1.0/editors")
+@RequestMapping("/editors")
 @RequiredArgsConstructor
 public class EditorController {
-
     private final EditorService service;
 
     @PostMapping
@@ -24,18 +24,18 @@ public class EditorController {
     }
 
     @GetMapping
-    public List<EditorResponseTo> getAll() {
-        return service.getAll();
+    public List<EditorResponseTo> findAll(Pageable pageable) {
+        return service.findAll(pageable);
     }
 
     @GetMapping("/{id}")
-    public EditorResponseTo getById(@PathVariable Long id) {
-        return service.getById(id);
+    public EditorResponseTo findById(@PathVariable Long id) {
+        return service.findById(id);
     }
 
-    @PutMapping("/{id}")
-    public EditorResponseTo update(@PathVariable Long id, @Valid @RequestBody EditorRequestTo request) {
-        return service.update(id, request);
+    @PutMapping
+    public EditorResponseTo update(@Valid @RequestBody EditorRequestTo request) {
+        return service.update(request);
     }
 
     @DeleteMapping("/{id}")
@@ -44,4 +44,3 @@ public class EditorController {
         service.delete(id);
     }
 }
-// НИКАКОГО КОДА НИЖЕ ЭТОЙ СКОБКИ БЫТЬ НЕ ДОЛЖНО!

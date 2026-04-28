@@ -5,14 +5,12 @@ import com.lizaveta.discussion.cassandra.NoticeByStoryKey;
 import com.lizaveta.discussion.cassandra.NoticeByStoryRow;
 import com.lizaveta.discussion.repository.NoticeByIdCassandraRepository;
 import com.lizaveta.discussion.repository.NoticeByStoryCassandraRepository;
+import com.lizaveta.notebook.model.NoticeState;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Keeps {@code tbl_notice_by_id} and {@code tbl_notice_by_story} in sync.
- */
 @Service
 public class NoticePersistenceService {
 
@@ -26,15 +24,17 @@ public class NoticePersistenceService {
         this.byStoryRepository = byStoryRepository;
     }
 
-    public void insert(final long id, final long storyId, final String content) {
+    public void insert(final long id, final long storyId, final String content, final NoticeState state) {
         NoticeByIdRow byId = new NoticeByIdRow();
         byId.setId(id);
         byId.setStoryId(storyId);
         byId.setContent(content);
+        byId.setState(state);
         byIdRepository.insert(byId);
         NoticeByStoryRow byStory = new NoticeByStoryRow();
         byStory.setKey(new NoticeByStoryKey(storyId, id));
         byStory.setContent(content);
+        byStory.setState(state);
         byStoryRepository.insert(byStory);
     }
 
@@ -43,7 +43,8 @@ public class NoticePersistenceService {
     }
 
     public List<NoticeByIdRow> findAllByIdTable() {
-        return byIdRepository.findAll();
+        List<NoticeByIdRow> res = byIdRepository.findAll();
+        return res;
     }
 
     public List<NoticeByStoryRow> findByStoryId(final long storyId) {
@@ -55,23 +56,26 @@ public class NoticePersistenceService {
         byStoryRepository.deleteById(new NoticeByStoryKey(storyId, id));
     }
 
-    public void update(final long id, final long oldStoryId, final long newStoryId, final String content) {
+    public void update(final long id, final long oldStoryId, final long newStoryId, final String content, final NoticeState state) {
         if (oldStoryId != newStoryId) {
             byStoryRepository.deleteById(new NoticeByStoryKey(oldStoryId, id));
             NoticeByStoryRow moved = new NoticeByStoryRow();
             moved.setKey(new NoticeByStoryKey(newStoryId, id));
             moved.setContent(content);
+            moved.setState(state);
             byStoryRepository.insert(moved);
         } else {
             NoticeByStoryRow same = new NoticeByStoryRow();
             same.setKey(new NoticeByStoryKey(newStoryId, id));
             same.setContent(content);
+            same.setState(state);
             byStoryRepository.insert(same);
         }
         NoticeByIdRow byId = new NoticeByIdRow();
         byId.setId(id);
         byId.setStoryId(newStoryId);
         byId.setContent(content);
+        byId.setState(state);
         byIdRepository.insert(byId);
     }
 }

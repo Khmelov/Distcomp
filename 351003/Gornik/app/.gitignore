@@ -1,0 +1,43 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+
+# === Виртуальные окружения и переменные ===
+.env
+.venv
+env/
+venv/
+ENV/
+
+# === Сборка и пакеты ===
+build/
+dist/
+wheels/
+*.egg-info/
+.eggs/
+*.egg
+
+# === Тестирование и покрытие кода ===
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# === IDE и редакторы кода ===
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Исключаем тяжелые бинарники IDE и баз данных (чтобы избежать ошибки 100MB)
+editors/
+db/
+
+# === Системные файлы ===
+.DS_Store
+Thumbs.db
+
+# === Логи и локальные базы данных ===
+*.log
+*.sqlite3

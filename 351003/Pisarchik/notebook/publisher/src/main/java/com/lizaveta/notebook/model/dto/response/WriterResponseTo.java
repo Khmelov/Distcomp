@@ -7,5 +7,6 @@ public record WriterResponseTo(
         Long id,
         String login,
         String firstname,
-        String lastname) {
+        String lastname,
+        String role) {
 }
