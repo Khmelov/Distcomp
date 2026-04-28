@@ -12,7 +12,7 @@ namespace Infrastructure.Persistence.EFCore
 
         public DbSet<Editor> Editors { get; set; }
 
-        // public DbSet<Post> Posts { get; set; }
+        public DbSet<Post> Posts { get; set; }
 
         public DbSet<News> News { get; set; }
 
@@ -22,7 +22,7 @@ namespace Infrastructure.Persistence.EFCore
         {
             modelBuilder.ApplyConfiguration(new EditorConfiguration());
             modelBuilder.ApplyConfiguration(new MarkerConfiguration());
-            //modelBuilder.ApplyConfiguration(new PostConfiguration());
+            modelBuilder.ApplyConfiguration(new PostConfiguration());
             //modelBuilder.Ignore<Post>();
             modelBuilder.ApplyConfiguration(new NewsConfiguration());
             base.OnModelCreating(modelBuilder);

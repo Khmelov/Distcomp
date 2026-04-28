@@ -13,15 +13,17 @@ namespace Infrastructure.Persistence.EFCore
 
         public override async Task<Editor> AddAsync(Editor entity, CancellationToken cancellationToken = default)
         {
-
             ArgumentNullException.ThrowIfNull(entity);
             cancellationToken.ThrowIfCancellationRequested();
 
-            var existingEntity = await _dbSet.Where(e => e.Id == entity.Id || e.Login == entity.Login).FirstOrDefaultAsync(cancellationToken);
+            // Проверяем существование редактора только по логину (уникальное поле)
+            var existingEntity = await _dbSet
+                .Where(e => e.Login == entity.Login)
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (existingEntity != null)
             {
-                throw new InvalidOperationException($"Entity with id {entity.Id} already exists");
+                throw new InvalidOperationException($"Editor with login '{entity.Login}' already exists");
             }
 
             var entry = await _dbSet.AddAsync(entity, cancellationToken);

@@ -1,4 +1,20 @@
 services:
+  cassandra:
+    image: cassandra:5
+    container_name: orsik-cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      JVM_OPTS: "-Xms256m -Xmx512m"
+      MAX_HEAP_SIZE: "512M"
+    healthcheck:
+      test: ["CMD-SHELL", "nodetool status | grep -E '^UN'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
   postgres:
     image: postgres:16-alpine
     container_name: orsik-postgres
@@ -16,6 +32,36 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
+
+  discussion:
+    build:
+      context: .
+      dockerfile: docker/discussion/Dockerfile
+    container_name: orsik-discussion
+    ports:
+      - "24130:24130"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    restart: unless-stopped
+
+  publisher:
+    build:
+      context: .
+      dockerfile: docker/publisher/Dockerfile
+    container_name: orsik-publisher
+    ports:
+      - "24110:24110"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discussion:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
