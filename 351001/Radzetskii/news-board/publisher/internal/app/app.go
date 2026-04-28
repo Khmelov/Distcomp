@@ -84,10 +84,10 @@ func Run() {
 
 	api := r.Group("/api")
 	{
-		controllers.NewUserHandler(userSvc).RegisterRoutes(api)
-		controllers.NewNewsHandler(newsSvc).RegisterRoutes(api)
-		controllers.NewMarkerHandler(markerSvc).RegisterRoutes(api)
-		controllers.NewNoticeHandler(noticeSvc).RegisterRoutes(api)
+		controllers.NewUserHandler(userSvc, cfg.JWTSecret).RegisterRoutes(api)
+		controllers.NewNewsHandler(newsSvc, cfg.JWTSecret).RegisterRoutes(api)
+		controllers.NewMarkerHandler(markerSvc, cfg.JWTSecret).RegisterRoutes(api)
+		controllers.NewNoticeHandler(noticeSvc, cfg.JWTSecret).RegisterRoutes(api)
 	}
 
 	r.NoRoute(func(c *gin.Context) {

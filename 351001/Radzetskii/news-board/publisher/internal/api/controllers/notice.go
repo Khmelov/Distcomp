@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"news-board/publisher/internal/auth"
 	"news-board/publisher/internal/dto"
 	"news-board/publisher/internal/service"
 
@@ -12,12 +13,14 @@ import (
 type NoticeHandler struct {
 	noticeService *service.NoticeService
 	validate      *validator.Validate
+	jwtSecret     string
 }
 
-func NewNoticeHandler(svc *service.NoticeService) *NoticeHandler {
+func NewNoticeHandler(svc *service.NoticeService, jwtSecret string) *NoticeHandler {
 	return &NoticeHandler{
 		noticeService: svc,
 		validate:      validator.New(),
+		jwtSecret:     jwtSecret,
 	}
 }
 
@@ -38,6 +41,26 @@ func (h *NoticeHandler) RegisterRoutes(rg *gin.RouterGroup) {
 		v1.DELETE("/notices/by-key/:country/:newsId/:id", h.Delete)
 
 		v1.GET("/notices/by-country/:country/news/:newsId", h.GetByNewsID)
+	}
+
+	v2 := rg.Group("/v2.0")
+	{
+		v2Auth := v2.Group("")
+		v2Auth.Use(auth.RequireAuth(h.jwtSecret))
+		v2Auth.POST("/notices", h.Create)
+		v2Auth.GET("/notices", h.GetAll)
+
+		v2Auth.GET("/notices/:id", h.GetByID)
+		v2Auth.PUT("/notices/:id", h.Update)
+		v2Auth.DELETE("/notices/:id", h.Delete)
+
+		v2Auth.GET("/notices/by-news/:newsId", h.GetByNewsID)
+
+		v2Auth.GET("/notices/by-key/:country/:newsId/:id", h.GetByID)
+		v2Auth.PUT("/notices/by-key/:country/:newsId/:id", h.Update)
+		v2Auth.DELETE("/notices/by-key/:country/:newsId/:id", h.Delete)
+
+		v2Auth.GET("/notices/by-country/:country/news/:newsId", h.GetByNewsID)
 	}
 }
 

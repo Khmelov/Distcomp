@@ -20,6 +20,7 @@ type Config struct {
 	KafkaBrokers      string
 	KafkaGroup        string
 	RedisAddr         string
+	JWTSecret         string
 }
 
 func Load(path string) *Config {
@@ -40,7 +41,8 @@ func Load(path string) *Config {
 		DiscussionBaseURL: getEnv("DISCUSSION_BASE_URL", "http://localhost:24130"),
 		KafkaBrokers:      getEnv("KAFKA_BROKERS", "localhost:9092"),
 		KafkaGroup:        getEnv("KAFKA_GROUP", "publisher-group"),
-		RedisAddr:         getEnv("REDIS_ADDR", "localhost:6379"), // ДОБАВЛЕНО
+		RedisAddr:         getEnv("REDIS_ADDR", "localhost:6379"),
+		JWTSecret:         getEnv("JWT_SECRET", "secret-key"),
 	}
 }
 
