@@ -41,6 +41,13 @@ public class ArticlesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPut("{id}")]
+    public async Task<ActionResult<ArticleResponseTo>> Update(long id, [FromBody] ArticleRequestTo requestDto)
+    {
+        var result = await _service.UpdateAsync(id, requestDto);
+        return Ok(result);
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(long id)
     {

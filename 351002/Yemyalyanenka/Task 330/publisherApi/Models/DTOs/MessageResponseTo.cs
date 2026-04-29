@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace RestApiTask.Models.DTOs
 {
@@ -10,5 +10,7 @@ namespace RestApiTask.Models.DTOs
         public long ArticleId { get; set; }
         [JsonPropertyName("content")]
         public string Content { get; set; } = string.Empty;
+        [JsonPropertyName("createdAt")]
+        public DateTime CreatedAt { get; set; }
     }
 }

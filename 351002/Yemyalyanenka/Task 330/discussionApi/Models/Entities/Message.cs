@@ -1,4 +1,4 @@
-﻿using Cassandra.Mapping.Attributes;
+using Cassandra.Mapping.Attributes;
 namespace RestApiTask.Models.Entities;
 
 [Table("tbl_message")]
@@ -11,9 +11,9 @@ public class Message : IHasId
     [Column("article_id")]
     public long ArticleId { get; set; }
 
-    [Column("country")] // Добавлено согласно схеме
-    public string Country { get; set; } = "USA";
-
     [Column("content")]
     public string Content { get; set; } = string.Empty;
+
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

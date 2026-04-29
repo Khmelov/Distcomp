@@ -41,6 +41,13 @@ public class WritersController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPut("{id}")]
+    public async Task<ActionResult<WriterResponseTo>> Update(long id, [FromBody] WriterRequestTo requestDto)
+    {
+        var result = await _service.UpdateAsync(id, requestDto);
+        return Ok(result);
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(long id)
     {

@@ -24,7 +24,8 @@ namespace RestApiTask.Mappings
             CreateMap<Marker, MarkerResponseTo>();
 
             // Message Mappings
-            CreateMap<MessageRequestTo, Message>();
+            CreateMap<MessageRequestTo, Message>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
             CreateMap<Message, MessageResponseTo>();
 
             CreateMap<WriterResponseTo, WriterRequestTo>();

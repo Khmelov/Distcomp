@@ -58,6 +58,7 @@ public sealed class AppDbContext : DbContext
             b.Property(x => x.Id).HasColumnName("id");
             b.Property(x => x.ArticleId).HasColumnName("article_id").IsRequired();
             b.Property(x => x.Content).HasColumnName("content").HasMaxLength(2048).IsRequired();
+            b.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
         });
     }
 }

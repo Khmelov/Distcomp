@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using RestApiTask.Data;
 using RestApiTask.Infrastructure;
 using RestApiTask.Mappings;
+using RestApiTask.Models;
 using RestApiTask.Models.Entities;
 using RestApiTask.Repositories;
 using RestApiTask.Services;
@@ -43,6 +44,8 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        builder.WebHost.UseUrls("http://localhost:24110");
+        builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("Kafka"));
         builder.Services.AddHttpClient<IMessageService, RemoteMessageService>(client =>
         {
             client.BaseAddress = new Uri("http://localhost:24130/");
@@ -77,6 +80,17 @@ public class Program
         builder.Services.AddSwaggerGen();
 
         var app = builder.Build();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.EnsureCreated();
+            db.Database.ExecuteSqlRaw(
+                "CREATE TABLE IF NOT EXISTS tbl_article_marker (" +
+                "article_id bigint NOT NULL, " +
+                "marker_id bigint NOT NULL, " +
+                "CONSTRAINT pk_tbl_article_marker PRIMARY KEY (article_id, marker_id));");
+        }
 
         app.UseMiddleware<ExceptionMiddleware>();
 

@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RestApiTask.Data;
 using RestApiTask.Infrastructure;
 using RestApiTask.Mappings;
+using RestApiTask.Models;
 using RestApiTask.Models.Entities;
 using RestApiTask.Repositories;
 using RestApiTask.Services;
@@ -57,10 +58,13 @@ public class Program
         });
 
 
+        builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("Kafka"));
         builder.Services.AddScoped<IRepository<Message>, CassandraRepository>();
         builder.Services.AddScoped<IMessageService, MessageService>();
+        builder.Services.AddHostedService<KafkaConsumerService>();
 
         var configExpression = new MapperConfigurationExpression();
+
         configExpression.AddProfile<MappingProfile>();
         var mapperConfig = new MapperConfiguration(configExpression);
         IMapper mapper = mapperConfig.CreateMapper();
@@ -77,7 +81,7 @@ public class Program
             using var session = cluster.Connect();
             session.Execute("CREATE KEYSPACE IF NOT EXISTS distcomp WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};");
             session.Execute("USE distcomp;");
-            session.Execute("CREATE TABLE IF NOT EXISTS tbl_message (id bigint PRIMARY KEY, article_id bigint, country text, content text);");
+            session.Execute("CREATE TABLE IF NOT EXISTS tbl_message (id bigint PRIMARY KEY, article_id bigint, content text, created_at timestamp);");
             session.Execute("CREATE INDEX IF NOT EXISTS ON tbl_message (article_id);");
             Console.WriteLine("CASSANDRA: Keyspace and Table checked/created successfully.");
         }
@@ -87,6 +91,17 @@ public class Program
         }
 
         var app = builder.Build();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.EnsureCreated();
+            db.Database.ExecuteSqlRaw(
+                "CREATE TABLE IF NOT EXISTS tbl_article_marker (" +
+                "article_id bigint NOT NULL, " +
+                "marker_id bigint NOT NULL, " +
+                "CONSTRAINT pk_tbl_article_marker PRIMARY KEY (article_id, marker_id));");
+        }
 
         app.UseMiddleware<ExceptionMiddleware>();
 

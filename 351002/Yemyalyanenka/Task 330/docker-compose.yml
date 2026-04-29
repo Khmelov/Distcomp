@@ -1,0 +1,119 @@
+networks:
+  kafkanet:
+    driver: bridge
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: kafkanet-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - '2181:2181'
+    networks:
+      - kafkanet
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafkanet-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    ports:
+      - '9092:9092'
+    networks:
+      - kafkanet
+
+  publisher-postgres:
+    image: postgres:16
+    container_name: publisher-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - '5434:5432'
+    volumes:
+      - publisher-postgres-data:/var/lib/postgresql/data
+    networks:
+      - kafkanet
+
+  discussion-postgres:
+    image: postgres:16
+    container_name: discussion-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - '5433:5432'
+    volumes:
+      - discussion-postgres-data:/var/lib/postgresql/data
+    networks:
+      - kafkanet
+
+  discussion-cassandra:
+    image: cassandra:4.1
+    container_name: discussion-cassandra
+    environment:
+      CASSANDRA_BROADCAST_ADDRESS: 127.0.0.1
+    ports:
+      - '9042:9042'
+    volumes:
+      - discussion-cassandra-data:/var/lib/cassandra
+    networks:
+      - kafkanet
+
+  publisher:
+    build:
+      context: ./publisherApi
+      dockerfile: Dockerfile
+    container_name: publisher-api
+    depends_on:
+      - kafka
+      - publisher-postgres
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: 'http://+:24110'
+      ConnectionStrings__Postgres: 'Host=publisher-postgres;Port=5432;Database=distcomp;Username=postgres;Password=postgres'
+      Kafka__BootstrapServers: 'kafka:29092'
+      Kafka__Topic: 'message-topic'
+    ports:
+      - '24110:24110'
+    networks:
+      - kafkanet
+
+  discussion:
+    build:
+      context: ./discussionApi
+      dockerfile: Dockerfile
+    container_name: discussion-api
+    depends_on:
+      - kafka
+      - discussion-postgres
+      - discussion-cassandra
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: 'http://+:24130'
+      ConnectionStrings__Postgres: 'Host=discussion-postgres;Port=5432;Database=distcomp;Username=postgres;Password=postgres'
+      Kafka__BootstrapServers: 'kafka:29092'
+      Kafka__Topic: 'message-topic'
+      Kafka__GroupId: 'discussion-consumer'
+    ports:
+      - '24130:24130'
+    networks:
+      - kafkanet
+
+volumes:
+  publisher-postgres-data:
+  discussion-postgres-data:
+  discussion-cassandra-data:
