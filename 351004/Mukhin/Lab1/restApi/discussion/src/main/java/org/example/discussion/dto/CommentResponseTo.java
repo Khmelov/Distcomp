@@ -7,8 +7,13 @@ public class CommentResponseTo {
     private Long id;
     private Long articleId;
     private String content;
+    private String state;
     private LocalDateTime created;
     private LocalDateTime modified;
+
+    public String getState() { return state; }
+    public void setState(String state) { this.state = state; }
+
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

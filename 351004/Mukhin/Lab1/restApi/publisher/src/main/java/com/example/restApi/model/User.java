@@ -20,6 +20,10 @@ public class User extends BaseEntity {
     @Column(name = "lastname", length = 64)
     private String lastname;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", length = 16)
+    private Role role = Role.CUSTOMER;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Article> articles = new HashSet<>();
 
@@ -57,6 +61,14 @@ public class User extends BaseEntity {
 
     public void setLastname(String lastname) {
         this.lastname = lastname;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public Set<Article> getArticles() {

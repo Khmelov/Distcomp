@@ -5,6 +5,9 @@ import com.example.restApi.dto.response.UserResponseTo;
 import com.example.restApi.exception.NotFoundException;
 import com.example.restApi.model.User;
 import com.example.restApi.repository.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +32,7 @@ public class UserService {
                 .map(this::convertToResponseDto);
     }
 
+    @Cacheable(value = "users", key = "#id")
     public UserResponseTo getById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + id));
@@ -36,6 +40,7 @@ public class UserService {
     }
 
     @Transactional
+    @CachePut(value = "users", key = "#result.id")
     public UserResponseTo create(UserRequestTo request) {
         User user = new User();
         user.setLogin(request.getLogin());
@@ -48,6 +53,7 @@ public class UserService {
     }
 
     @Transactional
+    @CachePut(value = "users", key = "#id")
     public UserResponseTo update(Long id, UserRequestTo request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + id));
@@ -63,11 +69,17 @@ public class UserService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", key = "#id")
     public void delete(Long id) {
         if (!userRepository.existsById(id)) {
             throw new NotFoundException("User not found with id: " + id);
         }
         userRepository.deleteById(id);
+    }
+
+    public User findByLogin(String login) {
+        return userRepository.findByLogin(login)
+                .orElseThrow(() -> new NotFoundException("User not found with login: " + login));
     }
 
     private UserResponseTo convertToResponseDto(User user) {
@@ -78,6 +90,9 @@ public class UserService {
         dto.setLastname(user.getLastname());
         dto.setCreated(user.getCreated());
         dto.setModified(user.getModified());
+        if (user.getRole() != null) {
+            dto.setRole(user.getRole().name());
+        }
         return dto;
     }
 }
