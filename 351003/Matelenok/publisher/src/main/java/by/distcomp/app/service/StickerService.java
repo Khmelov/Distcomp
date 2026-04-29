@@ -48,12 +48,7 @@ public class StickerService {
 
         stickerRepository.deleteById(id);
     }
-    public List<StickerResponseTo> getAllStickers() {
-        return stickerRepository.findAll()
-                .stream()
-                .map(stickerMapper::toResponse)
-                .collect(Collectors.toList());
-    }
+
     public StickerResponseTo getStickerById(Long id) {
         Sticker sticker = stickerRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Sticker not found: " + id));

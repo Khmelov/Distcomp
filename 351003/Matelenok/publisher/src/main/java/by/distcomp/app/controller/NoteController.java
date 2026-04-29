@@ -13,18 +13,23 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.data.redis.core.RedisTemplate;
 
 @RestController
 @RequestMapping("/api/v1.0/notes")
 public class NoteController {
-
+    private final RedisTemplate<String, NoteResponseTo> noteRedisTemplate;
     private final RestClient discussionClient;
 
     private final NoteKafkaProducer kafkaProducer;
 
-    public NoteController(RestClient discussionClient, NoteKafkaProducer kafkaProducer) {
+    public NoteController(RestClient discussionClient, NoteKafkaProducer kafkaProducer,
+                          RedisTemplate<String, NoteResponseTo> noteRedisTemplate) {
         this.discussionClient = discussionClient;
         this.kafkaProducer = kafkaProducer;
+        this.noteRedisTemplate = noteRedisTemplate;
     }
 
     @GetMapping
@@ -45,10 +50,19 @@ public class NoteController {
 
     @GetMapping("/{id}")
     public NoteResponseTo getNote(@PathVariable Long id) {
-        return discussionClient.get()
+        String key = "note:" + id;
+        NoteResponseTo cached = noteRedisTemplate.opsForValue().get(key);
+        if (cached != null) return cached;
+
+        NoteResponseTo note = discussionClient.get()
                 .uri("/{id}", id)
                 .retrieve()
                 .body(NoteResponseTo.class);
+
+        if (note != null) {
+            noteRedisTemplate.opsForValue().set(key, note, 10, TimeUnit.MINUTES);
+        }
+        return note;
     }
 
     @PostMapping
@@ -75,11 +89,18 @@ public class NoteController {
 
     @PutMapping("/{id}")
     public NoteResponseTo updateNote(@PathVariable Long id, @Valid @RequestBody NoteRequestTo request) {
-        return discussionClient.put()
+        NoteResponseTo updated = discussionClient.put()
                 .uri("/{id}", id)
                 .body(request)
                 .retrieve()
                 .body(NoteResponseTo.class);
+
+        if (updated != null) {
+            String key = "note:" + id;
+            noteRedisTemplate.opsForValue().set(key, updated, 10, TimeUnit.MINUTES);
+        }
+
+        return updated;
     }
 
     @DeleteMapping("/{id}")
@@ -88,6 +109,8 @@ public class NoteController {
                 .uri("/{id}", id)
                 .retrieve()
                 .toBodilessEntity();
+
+        noteRedisTemplate.delete("note:" + id);
         return ResponseEntity.noContent().build();
     }
 }

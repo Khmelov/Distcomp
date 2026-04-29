@@ -15,5 +15,8 @@ public record UserRequestTo(
         String firstname,
         @NotBlank
         @Size(min = 2, max = 64)
-        String lastname
+        String lastname,
+
+        @Size(min = 2, max = 64)
+        String role
 ) { }

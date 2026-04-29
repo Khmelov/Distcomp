@@ -7,8 +7,8 @@
 
     <changeSet id="1" author="student">
         <createTable tableName="tbl_user" schemaName="public">
-            <column name="id" type="BIGSERIAL">
-                <constraints primaryKey="true"/>
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" />
             </column>
             <column name="login" type="VARCHAR(64)">
                 <constraints nullable="false" unique="true"/>
@@ -22,12 +22,15 @@
             <column name="lastname" type="VARCHAR(64)">
                 <constraints nullable="false"/>
             </column>
+            <column name="role" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
     </changeSet>
 
     <changeSet id="2" author="student">
         <createTable tableName="tbl_article" schemaName="public">
-            <column name="id" type="BIGSERIAL">
+            <column name="id" type="BIGINT">
                 <constraints primaryKey="true"/>
             </column>
             <column name="title" type="VARCHAR(64)">
@@ -51,7 +54,7 @@
 
     <changeSet id="4" author="student">
         <createTable tableName="tbl_sticker" schemaName="public">
-            <column name="id" type="BIGSERIAL">
+            <column name="id" type="BIGINT">
                 <constraints primaryKey="true"/>
             </column>
             <column name="name" type="VARCHAR(32)">
