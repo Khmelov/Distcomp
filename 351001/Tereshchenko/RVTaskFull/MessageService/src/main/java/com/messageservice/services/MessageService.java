@@ -1,5 +1,6 @@
 package com.messageservice.services;
 
+import com.messageservice.configs.cassandraconfig.DiscussionCassandraProperties;
 import com.messageservice.configs.exceptionhandlerconfig.exceptions.MessageNotFoundException;
 import com.messageservice.configs.exceptionhandlerconfig.exceptions.TweetNotFoundException;
 import com.messageservice.configs.tweetclientconfig.TweetClient;
@@ -12,17 +13,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @RequiredArgsConstructor
 public class MessageService {
 
+    private static final int ID_SHIFT = 20;
+    private static final long SEQUENCE_MASK = (1L << ID_SHIFT) - 1;
+
     private final MessageRepository messageRepository;
     private final TweetClient tweetClient;
+    private final DiscussionCassandraProperties cassandraProperties;
+    private final AtomicLong sequence = new AtomicLong();
 
     public MessageResponseTo createMessage(MessageRequestTo request) {
         validateTweetExists(request.getTweetId());
-        Message saved = messageRepository.save(toEntity(request));
+        Message saved = messageRepository.save(toEntity(request, nextId()));
         return toDto(saved);
     }
 
@@ -48,10 +55,10 @@ public class MessageService {
     }
 
     public void deleteMessageById(Long id) {
-        if (!messageRepository.existsById(id)) {
-            throw new MessageNotFoundException("Message not found");
-        }
-        messageRepository.deleteById(id);
+        Message message = messageRepository.findMessageById(id)
+                .orElseThrow(() -> new MessageNotFoundException("Message not found"));
+
+        messageRepository.delete(message);
     }
 
     public void deleteMessageByTweetId(Long tweetId) {
@@ -59,7 +66,9 @@ public class MessageService {
     }
 
     public List<MessageResponseTo> findMessagesByTweetId(Long tweetId) {
-        return messageRepository.findAllByTweetId(tweetId);
+        return messageRepository.findAllByTweetId(tweetId).stream()
+                .map(this::toDto)
+                .toList();
     }
 
     private void validateTweetExists(Long tweetId) {
@@ -70,10 +79,13 @@ public class MessageService {
         }
     }
 
-    private Message toEntity(MessageRequestTo request) {
+    private Message toEntity(MessageRequestTo request, Long id) {
+        int bucket = resolveBucket(id);
         return Message.builder()
+                .id(id)
                 .content(request.getContent())
                 .tweetId(request.getTweetId())
+                .bucket(bucket)
                 .build();
     }
 
@@ -83,5 +95,15 @@ public class MessageService {
                 .tweetId(entity.getTweetId())
                 .content(entity.getContent())
                 .build();
+    }
+
+    private Long nextId() {
+        long timestampPart = System.currentTimeMillis() << ID_SHIFT;
+        long sequencePart = sequence.getAndIncrement() & SEQUENCE_MASK;
+        return timestampPart | sequencePart;
+    }
+
+    private int resolveBucket(Long id) {
+        return Math.floorMod(Long.hashCode(id), cassandraProperties.getBucketCount());
     }
 }

@@ -7,4 +7,6 @@ elif [ -d "/usr/local/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home" ]; then
   export JAVA_HOME="/usr/local/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
 fi
 
-exec ./mvnw spring-boot:run "$@"
+# Default: publisher (24110). Example: MODULE=discussion ./run.sh  → discussion (24130)
+MODULE="${MODULE:-publisher}"
+exec ./mvnw -pl "$MODULE" spring-boot:run "$@"

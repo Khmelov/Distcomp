@@ -1,26 +1,43 @@
-# --- Python ---
+# === Python ===
 __pycache__/
 *.py[cod]
 *$py.class
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
 
-# --- Environments & Dependencies ---
-.venv/
+# === Виртуальные окружения и переменные ===
+.env
+.venv
 env/
 venv/
 ENV/
-# uv создает эти файлы, их обычно не пушат, если не требуется иное
-.python-version
 
-# --- Environment Variables (СЕКРЕТЫ) ---
-.env
-.env.*
-!.env.example
+# === Сборка и пакеты ===
+build/
+dist/
+wheels/
+*.egg-info/
+.eggs/
+*.egg
 
-# --- IDE (PyCharm / VS Code) ---
+# === Тестирование и покрытие кода ===
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# === IDE и редакторы кода ===
 .idea/
 .vscode/
 *.swp
 *.swo
+
+# Исключаем тяжелые бинарники IDE и баз данных (чтобы избежать ошибки 100MB)
+editors/
+db/
+
+# === Системные файлы ===
+.DS_Store
+Thumbs.db
+
+# === Логи и локальные базы данных ===
+*.log
+*.sqlite3

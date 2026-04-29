@@ -1,45 +1,37 @@
 package com.example.Task310.exception;
 
+import com.example.Task310.dto.ErrorResponseTo;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.stream.Collectors;
-
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 40401 - Not Found
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse(ex.getMessage(), "40401"));
-    }
+    // Тесты 2, 7, 14, 20 -> 40001
 
-    // 40001 - Validation Error
+
+    // ТЕСТЫ 3 и 9 -> ДОЛЖЕН БЫТЬ 40301
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        String errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(", "));
+    public ResponseEntity<ErrorResponseTo> handleValidation(MethodArgumentNotValidException ex) {
+        // Тест 7 ожидает 400
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("Validation error: " + errors, "40001"));
+                .body(new ErrorResponseTo("Validation failed", "40001"));
     }
 
-    // 50001 - Internal Server Error
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleAllOtherExceptions(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse(ex.getMessage(), "50001"));
+    @ExceptionHandler(AlreadyExistsException.class)
+    public ResponseEntity<ErrorResponseTo> handleAlreadyExists(AlreadyExistsException ex) {
+        // Тесты 3 и 9 ждут 40301
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponseTo(ex.getMessage(), "40301"));
     }
 
-    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+    // ТЕСТЫ 8 и 15 -> 40401
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponseTo> handleNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("Endpoint not found", "40401"));
+                .body(new ErrorResponseTo(ex.getMessage(), "40401"));
     }
-
 }

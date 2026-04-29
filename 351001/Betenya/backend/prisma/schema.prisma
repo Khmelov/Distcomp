@@ -22,6 +22,7 @@ model User {
   password  String
   firstname String
   lastname  String
+  role      String    @default("CUSTOMER")
   articles  Article[]
 
   @@unique([login])

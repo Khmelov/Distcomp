@@ -38,6 +38,13 @@ public class CommentController {
         return commentService.updateComment(commentRequest);
     }
 
+    @PutMapping("/{id}")
+    public CommentResponseTo updateCommentWithPath(@PathVariable Long id, @Valid @RequestBody CommentRequestTo commentRequest) {
+        commentRequest.setId(id);
+        System.out.println(commentRequest.getId());
+        return commentService.updateComment(commentRequest);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteComment(@PathVariable Long id) {

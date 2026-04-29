@@ -10,8 +10,13 @@
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="16.1.0" />
         <PackageReference Include="CassandraCSharpDriver" Version="3.22.0" />
+        <PackageReference Include="Confluent.Kafka" Version="2.14.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.14" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.14" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\RedisService\RedisService.csproj" />
     </ItemGroup>
 
 </Project>
