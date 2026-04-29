@@ -9,10 +9,12 @@ import (
 )
 
 type Config struct {
-	Host     string
-	Port     int
-	Keyspace string
-	Address  string
+	Host         string
+	Port         int
+	Keyspace     string
+	Address      string
+	KafkaBrokers string
+	KafkaGroup   string
 }
 
 func Load(path string) *Config {
@@ -21,10 +23,12 @@ func Load(path string) *Config {
 	}
 
 	return &Config{
-		Host:     getEnv("CASSANDRA_HOST", "localhost"),
-		Port:     getEnvInt("CASSANDRA_PORT", 9042),
-		Keyspace: getEnv("CASSANDRA_KEYSPACE", "distcomp"),
-		Address:  getEnv("DISCUSSION_LISTEN_ADDR", ":24130"),
+		Host:         getEnv("CASSANDRA_HOST", "localhost"),
+		Port:         getEnvInt("CASSANDRA_PORT", 9042),
+		Keyspace:     getEnv("CASSANDRA_KEYSPACE", "distcomp"),
+		Address:      getEnv("DISCUSSION_LISTEN_ADDR", ":24130"),
+		KafkaBrokers: getEnv("KAFKA_BROKERS", "localhost:9092"),
+		KafkaGroup:   getEnv("KAFKA_GROUP", "discussion-group"),
 	}
 }
 
