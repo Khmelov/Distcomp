@@ -5,6 +5,7 @@ namespace BusinessLogic.DTO.Response
 {
     public class PostResponseTo : BaseEntity
     {
+
         [JsonPropertyName("storyId")]
         public int StoryId { get; set; }
 

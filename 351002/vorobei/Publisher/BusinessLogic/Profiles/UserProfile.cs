@@ -15,9 +15,6 @@ namespace BusinessLogic.Profiles
             CreateMap<MarkRequestTo, Mark>();
             CreateMap<Mark, MarkResponseTo>();
 
-            CreateMap<PostRequestTo, Post>();
-            CreateMap<Post, PostResponseTo>();
-
             CreateMap<StoryRequestTo, Story>()
                 .ForMember(dest => dest.Marks, opt => opt.Ignore());
             CreateMap<Story, StoryResponseTo>();
