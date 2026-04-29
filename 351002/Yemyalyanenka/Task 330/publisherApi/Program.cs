@@ -11,6 +11,7 @@ using RestApiTask.Models.Entities;
 using RestApiTask.Repositories;
 using RestApiTask.Services;
 using RestApiTask.Services.Interfaces;
+using StackExchange.Redis;
 
 namespace RestApiTask;
 
@@ -55,6 +56,12 @@ public class Program
         {
             options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres"));
         });
+
+        // Configure Redis
+        var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+        var redisConnection = ConnectionMultiplexer.Connect(redisConnectionString);
+        builder.Services.AddSingleton<IConnectionMultiplexer>(redisConnection);
+        builder.Services.AddSingleton<ICacheService>(sp => new RedisCacheService(redisConnection));
 
         builder.Services.AddControllers(options =>
         {

@@ -10,11 +10,15 @@ namespace RestApiTask.Services;
 public class WriterService : IWriterService
 {
     private readonly IRepository<Writer> _repo;
+    private readonly ICacheService _cache;
     private readonly IMapper _mapper;
+    private const string CacheKeyPrefix = "writer:";
+    private const string CacheKeyAll = "writers:all";
 
-    public WriterService(IRepository<Writer> repo, IMapper mapper)
+    public WriterService(IRepository<Writer> repo, ICacheService cache, IMapper mapper)
     {
         _repo = repo;
+        _cache = cache;
         _mapper = mapper;
     }
 
@@ -22,7 +26,13 @@ public class WriterService : IWriterService
     {
         if (options is null)
         {
-            return _mapper.Map<IEnumerable<WriterResponseTo>>(await _repo.GetAllAsync());
+            var cached = await _cache.GetAsync<IEnumerable<WriterResponseTo>>(CacheKeyAll);
+            if (cached != null)
+                return cached;
+
+            var data = _mapper.Map<IEnumerable<WriterResponseTo>>(await _repo.GetAllAsync());
+            await _cache.SetAsync(CacheKeyAll, data);
+            return data;
         }
 
         var page = await _repo.GetAllAsync(options);
@@ -31,15 +41,28 @@ public class WriterService : IWriterService
 
     public async Task<WriterResponseTo> GetByIdAsync(long id)
     {
+        var cacheKey = CacheKeyPrefix + id;
+        var cached = await _cache.GetAsync<WriterResponseTo>(cacheKey);
+        if (cached != null)
+            return cached;
+
         var entity = await _repo.GetByIdAsync(id) ?? throw new NotFoundException("Writer not found");
-        return _mapper.Map<WriterResponseTo>(entity);
+        var result = _mapper.Map<WriterResponseTo>(entity);
+        await _cache.SetAsync(cacheKey, result);
+        return result;
     }
 
     public async Task<WriterResponseTo> CreateAsync(WriterRequestTo request)
     {
         Validate(request);
         var entity = _mapper.Map<Writer>(request);
-        return _mapper.Map<WriterResponseTo>(await _repo.AddAsync(entity));
+        var created = await _repo.AddAsync(entity);
+        var result = _mapper.Map<WriterResponseTo>(created);
+        
+        // Invalidate all writers cache
+        await _cache.RemoveAsync(CacheKeyAll);
+        
+        return result;
     }
 
     public async Task<WriterResponseTo> UpdateAsync(long id, WriterRequestTo request)
@@ -48,12 +71,22 @@ public class WriterService : IWriterService
         Validate(request);
         _mapper.Map(request, existing);
         await _repo.UpdateAsync(existing);
-        return _mapper.Map<WriterResponseTo>(existing);
+        var result = _mapper.Map<WriterResponseTo>(existing);
+        
+        // Invalidate caches
+        await _cache.RemoveAsync(CacheKeyPrefix + id);
+        await _cache.RemoveAsync(CacheKeyAll);
+        
+        return result;
     }
 
     public async Task DeleteAsync(long id)
     {
         if (!await _repo.DeleteAsync(id)) throw new NotFoundException("Writer not found");
+        
+        // Invalidate caches
+        await _cache.RemoveAsync(CacheKeyPrefix + id);
+        await _cache.RemoveAsync(CacheKeyAll);
     }
 
     private void Validate(WriterRequestTo r)

@@ -73,6 +73,15 @@ services:
     networks:
       - kafkanet
 
+  redis:
+    image: redis:7-alpine
+    container_name: publisher-redis
+    ports:
+      - '6379:6379'
+    networks:
+      - kafkanet
+    command: redis-server --appendonly yes
+
   publisher:
     build:
       context: ./publisherApi
@@ -81,10 +90,12 @@ services:
     depends_on:
       - kafka
       - publisher-postgres
+      - redis
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: 'http://+:24110'
       ConnectionStrings__Postgres: 'Host=publisher-postgres;Port=5432;Database=distcomp;Username=postgres;Password=postgres'
+      ConnectionStrings__Redis: 'redis:6379'
       Kafka__BootstrapServers: 'kafka:29092'
       Kafka__Topic: 'message-topic'
     ports:

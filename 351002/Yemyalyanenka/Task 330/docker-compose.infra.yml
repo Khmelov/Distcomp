@@ -73,6 +73,15 @@ services:
     networks:
       - kafkanet
 
+  redis:
+    image: redis:7-alpine
+    container_name: publisher-redis
+    ports:
+      - '6379:6379'
+    networks:
+      - kafkanet
+    command: redis-server --appendonly yes
+
 volumes:
   publisher-postgres-data:
   discussion-postgres-data:

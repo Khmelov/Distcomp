@@ -14,19 +14,24 @@ namespace RestApiTask.Services
         private readonly IRepository<Article> _repo;
         private readonly IRepository<Writer> _writerRepo;
         private readonly IRepository<Marker> _markerRepo;
+        private readonly ICacheService _cache;
         private readonly AppDbContext _db;
         private readonly IMapper _mapper;
+        private const string CacheKeyPrefix = "article:";
+        private const string CacheKeyAll = "articles:all";
 
         public ArticleService(
             IRepository<Article> repo,
             IRepository<Writer> writerRepo,
             IRepository<Marker> markerRepo,
+            ICacheService cache,
             AppDbContext db,
             IMapper mapper)
         {
             _repo = repo;
             _writerRepo = writerRepo;
             _markerRepo = markerRepo;
+            _cache = cache;
             _db = db;
             _mapper = mapper;
         }
@@ -35,7 +40,13 @@ namespace RestApiTask.Services
         {
             if (options is null)
             {
-                return _mapper.Map<IEnumerable<ArticleResponseTo>>(await _repo.GetAllAsync());
+                var cached = await _cache.GetAsync<IEnumerable<ArticleResponseTo>>(CacheKeyAll);
+                if (cached != null)
+                    return cached;
+
+                var data = _mapper.Map<IEnumerable<ArticleResponseTo>>(await _repo.GetAllAsync());
+                await _cache.SetAsync(CacheKeyAll, data);
+                return data;
             }
 
             var page = await _repo.GetAllAsync(options);
@@ -44,8 +55,15 @@ namespace RestApiTask.Services
 
         public async Task<ArticleResponseTo> GetByIdAsync(long id)
         {
+            var cacheKey = CacheKeyPrefix + id;
+            var cached = await _cache.GetAsync<ArticleResponseTo>(cacheKey);
+            if (cached != null)
+                return cached;
+
             var entity = await _repo.GetByIdAsync(id) ?? throw new NotFoundException("Article not found");
-            return _mapper.Map<ArticleResponseTo>(entity);
+            var result = _mapper.Map<ArticleResponseTo>(entity);
+            await _cache.SetAsync(cacheKey, result);
+            return result;
         }
 
         public async Task<ArticleResponseTo> CreateAsync(ArticleRequestTo request)
@@ -59,7 +77,12 @@ namespace RestApiTask.Services
             entity.Created = entity.Modified = DateTime.UtcNow;
             var created = await _repo.AddAsync(entity);
             await SyncMarkersAsync(created.Id, request.Markers);
-            return _mapper.Map<ArticleResponseTo>(created);
+            var result = _mapper.Map<ArticleResponseTo>(created);
+            
+            // Invalidate articles cache
+            await _cache.RemoveAsync(CacheKeyAll);
+            
+            return result;
         }
 
         public async Task<ArticleResponseTo> UpdateAsync(long id, ArticleRequestTo request)
@@ -74,12 +97,22 @@ namespace RestApiTask.Services
             existing.Modified = DateTime.UtcNow;
             await _repo.UpdateAsync(existing);
             await SyncMarkersAsync(existing.Id, request.Markers);
-            return _mapper.Map<ArticleResponseTo>(existing);
+            var result = _mapper.Map<ArticleResponseTo>(existing);
+            
+            // Invalidate caches
+            await _cache.RemoveAsync(CacheKeyPrefix + id);
+            await _cache.RemoveAsync(CacheKeyAll);
+            
+            return result;
         }
 
         public async Task DeleteAsync(long id)
         {
             if (!await _repo.DeleteAsync(id)) throw new NotFoundException("Article not found");
+            
+            // Invalidate caches
+            await _cache.RemoveAsync(CacheKeyPrefix + id);
+            await _cache.RemoveAsync(CacheKeyAll);
         }
 
         private async Task Validate(ArticleRequestTo r)

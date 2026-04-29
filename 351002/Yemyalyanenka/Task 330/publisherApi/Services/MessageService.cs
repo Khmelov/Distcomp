@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Confluent.Kafka;
 using Microsoft.Extensions.Options;
+using RestApiTask.Infrastructure.Exceptions;
 using RestApiTask.Models;
 using RestApiTask.Models.DTOs;
 using RestApiTask.Services.Interfaces;
@@ -12,14 +13,22 @@ namespace RestApiTask.Services;
 public class RemoteMessageService : IMessageService
 {
     private readonly HttpClient _http;
+    private readonly ICacheService _cache;
     private readonly ProducerConfig _producerConfig;
     private readonly string _topic;
     private readonly ILogger<RemoteMessageService> _logger;
     private const string BasePath = "api/v1.0/messages";
+    private const string CacheKeyPrefix = "message:";
+    private const string CacheKeyAll = "messages:all";
 
-    public RemoteMessageService(HttpClient http, IOptions<KafkaSettings> options, ILogger<RemoteMessageService> logger)
+    public RemoteMessageService(
+        HttpClient http,
+        ICacheService cache,
+        IOptions<KafkaSettings> options,
+        ILogger<RemoteMessageService> logger)
     {
         _http = http;
+        _cache = cache;
         _logger = logger;
         var kafka = options.Value;
         _topic = kafka.Topic;
@@ -32,12 +41,52 @@ public class RemoteMessageService : IMessageService
         };
     }
 
-    public async Task<IEnumerable<MessageResponseTo>> GetAllAsync(QueryOptions? options = null) =>
-        await _http.GetFromJsonAsync<IEnumerable<MessageResponseTo>>(BasePath) ?? new List<MessageResponseTo>();
+    public async Task<IEnumerable<MessageResponseTo>> GetAllAsync(QueryOptions? options = null)
+    {
+        if (options is null)
+        {
+            var cached = await _cache.GetAsync<IEnumerable<MessageResponseTo>>(CacheKeyAll);
+            if (cached != null)
+            {
+                return cached;
+            }
+        }
 
-    public async Task<MessageResponseTo> GetByIdAsync(long id) =>
-        await _http.GetFromJsonAsync<MessageResponseTo>($"{BasePath}/{id}")
-        ?? throw new Exception("Not Found");
+        var response = await _http.GetAsync(BasePath);
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"Unexpected status code: {(int)response.StatusCode}");
+        }
+
+        var data = await response.Content.ReadFromJsonAsync<IEnumerable<MessageResponseTo>>() ?? new List<MessageResponseTo>();
+        if (options is null)
+        {
+            await _cache.SetAsync(CacheKeyAll, data);
+        }
+        return data;
+    }
+
+    public async Task<MessageResponseTo> GetByIdAsync(long id)
+    {
+        var cacheKey = CacheKeyPrefix + id;
+        var cached = await _cache.GetAsync<MessageResponseTo>(cacheKey);
+        if (cached != null)
+        {
+            return cached;
+        }
+
+        var response = await _http.GetAsync($"{BasePath}/{id}");
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            throw new NotFoundException("Message not found");
+        }
+
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<MessageResponseTo>()
+                     ?? throw new InvalidOperationException("Discussion API returned empty response.");
+        await _cache.SetAsync(cacheKey, result);
+        return result;
+    }
 
     public async Task<MessageResponseTo> CreateAsync(MessageRequestTo request)
     {
@@ -73,24 +122,45 @@ public class RemoteMessageService : IMessageService
             throw;
         }
 
-        return new MessageResponseTo
+        var created = new MessageResponseTo
         {
             Id = message.Id,
             ArticleId = message.ArticleId,
             Content = message.Content,
             CreatedAt = message.CreatedAt
         };
+
+        await _cache.SetAsync(CacheKeyPrefix + created.Id, created);
+        await _cache.RemoveAsync(CacheKeyAll);
+        return created;
     }
 
     public async Task<MessageResponseTo> UpdateAsync(long id, MessageRequestTo request)
     {
         var resp = await _http.PutAsJsonAsync($"{BasePath}/{id}", request);
+        if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            throw new NotFoundException("Message not found");
+        }
         resp.EnsureSuccessStatusCode();
-        return await resp.Content.ReadFromJsonAsync<MessageResponseTo>()
-               ?? throw new InvalidOperationException("Discussion API returned empty response.");
+        var updated = await resp.Content.ReadFromJsonAsync<MessageResponseTo>()
+                      ?? throw new InvalidOperationException("Discussion API returned empty response.");
+        await _cache.SetAsync(CacheKeyPrefix + id, updated);
+        await _cache.RemoveAsync(CacheKeyAll);
+        return updated;
     }
 
-    public async Task DeleteAsync(long id) => await _http.DeleteAsync($"{BasePath}/{id}");
+    public async Task DeleteAsync(long id)
+    {
+        var resp = await _http.DeleteAsync($"{BasePath}/{id}");
+        if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            throw new NotFoundException("Message not found");
+        }
+        resp.EnsureSuccessStatusCode();
+        await _cache.RemoveAsync(CacheKeyPrefix + id);
+        await _cache.RemoveAsync(CacheKeyAll);
+    }
 
     private sealed class KafkaMessage
     {

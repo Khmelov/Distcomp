@@ -10,11 +10,15 @@ namespace RestApiTask.Services
     public class MarkerService : IMarkerService
     {
         private readonly IRepository<Marker> _repo;
+        private readonly ICacheService _cache;
         private readonly IMapper _mapper;
+        private const string CacheKeyPrefix = "marker:";
+        private const string CacheKeyAll = "markers:all";
 
-        public MarkerService(IRepository<Marker> repo, IMapper mapper)
+        public MarkerService(IRepository<Marker> repo, ICacheService cache, IMapper mapper)
         {
             _repo = repo;
+            _cache = cache;
             _mapper = mapper;
         }
 
@@ -22,6 +26,10 @@ namespace RestApiTask.Services
         {
             if (options is null)
             {
+                var cached = await _cache.GetAsync<IEnumerable<MarkerResponseTo>>(CacheKeyAll);
+                if (cached != null)
+                    return cached;
+
                 var page = await _repo.GetAllAsync(new QueryOptions
                 {
                     PageNumber = 1,
@@ -29,7 +37,9 @@ namespace RestApiTask.Services
                     SortBy = "id",
                     SortOrder = "asc"
                 });
-                return _mapper.Map<IEnumerable<MarkerResponseTo>>(page.Items);
+                var data = _mapper.Map<IEnumerable<MarkerResponseTo>>(page.Items);
+                await _cache.SetAsync(CacheKeyAll, data);
+                return data;
             }
 
             var pageResult = await _repo.GetAllAsync(options);
@@ -43,10 +53,17 @@ namespace RestApiTask.Services
                 throw new ValidationException("Invalid marker ID");
             }
 
+            var cacheKey = CacheKeyPrefix + id;
+            var cached = await _cache.GetAsync<MarkerResponseTo>(cacheKey);
+            if (cached != null)
+                return cached;
+
             var entity = await _repo.GetByIdAsync(id)
                 ?? throw new NotFoundException("Marker not found");
 
-            return _mapper.Map<MarkerResponseTo>(entity);
+            var result = _mapper.Map<MarkerResponseTo>(entity);
+            await _cache.SetAsync(cacheKey, result);
+            return result;
         }
 
         public async Task<MarkerResponseTo> CreateAsync(MarkerRequestTo request)
@@ -70,6 +87,9 @@ namespace RestApiTask.Services
             var createdEntity = await _repo.AddAsync(entity);
 
             await EnsureDataConsistencyAsync();
+            
+            // Invalidate markers cache
+            await _cache.RemoveAsync(CacheKeyAll);
 
             return _mapper.Map<MarkerResponseTo>(createdEntity);
         }
@@ -103,6 +123,10 @@ namespace RestApiTask.Services
             await _repo.UpdateAsync(existing);
 
             await EnsureDataConsistencyAsync();
+            
+            // Invalidate caches
+            await _cache.RemoveAsync(CacheKeyPrefix + id);
+            await _cache.RemoveAsync(CacheKeyAll);
 
             return _mapper.Map<MarkerResponseTo>(existing);
         }
@@ -122,6 +146,10 @@ namespace RestApiTask.Services
             }
 
             await EnsureDataConsistencyAsync();
+            
+            // Invalidate caches
+            await _cache.RemoveAsync(CacheKeyPrefix + id);
+            await _cache.RemoveAsync(CacheKeyAll);
         }
         private async Task EnsureDataConsistencyAsync()
         {
