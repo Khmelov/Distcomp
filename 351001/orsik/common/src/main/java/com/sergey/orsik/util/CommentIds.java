@@ -1,4 +1,4 @@
-package com.sergey.orsik.discussion.util;
+package com.sergey.orsik.util;
 
 import java.util.concurrent.ThreadLocalRandom;
 
