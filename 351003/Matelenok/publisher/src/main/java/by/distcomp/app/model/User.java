@@ -27,7 +27,9 @@ public class User {
     @Column(length = 64, nullable = false)
     @Size(min = 2, max = 64)
     private String lastname;
-
+    @Column(length = 64, nullable = false)
+    @Size(min = 2, max = 64)
+    private String role;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Article> articles;
 
