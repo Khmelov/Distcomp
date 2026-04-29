@@ -3,42 +3,10 @@ import uuid
 import threading
 import time
 from kafka import KafkaProducer, KafkaConsumer
-from services.redis_service import get_cached, set_cached, delete_cached, invalidate_all
 
 _responses: dict = {}
 _consumer_ready = threading.Event()  # флаг готовности
 
-def send_and_wait(action: str, data: dict, tweet_id: int = None, timeout: float = 5.0):
-    if action == "GET" and "id" in data:
-        cached = get_cached(data["id"])
-        if cached:
-            print(f"Cache HIT for id={data['id']}")
-            return cached
-
-    req_id = str(uuid.uuid4())
-    data["action"] = action
-    data["request_id"] = req_id
-    key = str(tweet_id) if tweet_id else None
-    get_producer().send("InTopic", key=key, value=data)
-    get_producer().flush()
-    print(f"Sent {action}, waiting for {req_id}")
-
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        if req_id in _responses:
-            result = _responses.pop(req_id)
-            if action in ("CREATE", "UPDATE", "GET") and isinstance(result, dict) and "id" in result:
-                set_cached(result)
-            elif action == "DELETE":
-                delete_cached(data.get("id"))
-            elif action in ("GET_ALL", "CREATE", "UPDATE", "DELETE"):
-                invalidate_all()
-
-            return result
-        time.sleep(0.05)
-
-    print(f"TIMEOUT for {req_id}")
-    return {"errorMessage": "Timeout waiting for discussion", "errorCode": 50800}
 def _start_out_consumer():
     consumer = KafkaConsumer(
         "OutTopic",
@@ -58,11 +26,11 @@ def _start_out_consumer():
             _responses[req_id] = msg.value
 
 def start_consumer_thread():
-    print("Starting publisher OutTopic consumer thread...")
     t = threading.Thread(target=_start_out_consumer, daemon=True)
     t.start()
-    _consumer_ready.wait(timeout=3)
-    print(f"Consumer ready: {_consumer_ready.is_set()}")
+    # Жди пока consumer реально подключится
+    _consumer_ready.wait(timeout=10)
+    print("Consumer ready, publisher can send messages")
 
 _producer = None
 
@@ -76,3 +44,19 @@ def get_producer():
         )
     return _producer
 
+def send_and_wait(action: str, data: dict, tweet_id: int = None, timeout: float = 5.0):
+    req_id = str(uuid.uuid4())
+    data["action"] = action
+    data["request_id"] = req_id
+    key = str(tweet_id) if tweet_id else None
+    get_producer().send("InTopic", key=key, value=data)
+    get_producer().flush()
+    print(f"Sent {action}, waiting for {req_id}")
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if req_id in _responses:
+            return _responses.pop(req_id)
+        time.sleep(0.05)
+    print(f"TIMEOUT for {req_id}")
+    return {"errorMessage": "Timeout waiting for discussion", "errorCode": 50800}

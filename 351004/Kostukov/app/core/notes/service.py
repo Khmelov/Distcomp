@@ -22,8 +22,6 @@ class NoteService:
             raise AppError(status_code=400, message=f"Article with id {article_id} does not exist", suffix=21)
 
     def create_note(self, dto: NoteRequestTo) -> NoteResponseTo:
-        "self._validate_article_exists(dto.article_id)"
-
         model = Note(
             id=0,
             article_id=dto.article_id,

@@ -10,16 +10,15 @@ tweet_marker_table = Table(
     Column("marker_id", Integer, ForeignKey("tbl_marker.id", ondelete="CASCADE"), primary_key=True),
 )
 
-
 class Writer(Base):
     __tablename__ = "tbl_writer"
     id = Column(Integer, primary_key=True, index=True)
-    login = Column(String(255), unique=True, index=True, nullable=False)
-    password = Column(String(255), nullable=False)
-    firstname = Column(String(255))
-    lastname = Column(String(255))
-    role = Column(String(50), default="CUSTOMER")   # ← добавь это
+    login = Column(String(64), unique=True, index=True, nullable=False)
+    password = Column(String(128), nullable=False)
+    firstname = Column(String(64))
+    lastname = Column(String(64))
     tweets = relationship("Tweet", back_populates="writer", cascade="all, delete-orphan")
+
 class Marker(Base):
     __tablename__ = "tbl_marker"
     id = Column(Integer, primary_key=True, index=True)
