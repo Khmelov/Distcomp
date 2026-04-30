@@ -12,6 +12,7 @@ PostRepository::PostRepository()
     m_client = drogon::HttpClient::newHttpClient("http://127.0.0.1:24130");
 }
 
+
 Json::Value PostRepository::ModelToJson(const drogon_model::distcomp::TblPost& entity)
 {
     Json::Value json;
@@ -69,7 +70,7 @@ std::vector<drogon_model::distcomp::TblPost> PostRepository::JsonArrayToModelVec
     
     for (const auto& item : jsonArray)
     {
-        result.push_back(JsonToModel(item));
+        result.push_back(drogon_model::distcomp::TblPost(item));
     }
     
     std::cout << "[DEBUG] JsonArrayToModelVector: result size=" << result.size() << std::endl;

@@ -4,7 +4,9 @@
 #include <storage/database/EditorRepository.h>
 #include <storage/database/IssueRepository.h>
 #include <storage/database/LabelRepository.h>
-#include <storage/database/PostRepository.h>
+#include <storage/http/PostRepository.h>
+#include <storage/cache/LabelCache.h>
+#include <storage/cache/PostCache.h>
 
 #include <api/v1.0/controllers/IssueLabelController.h>
 #include <api/v1.0/controllers/EditorController.h>
@@ -26,13 +28,16 @@ int main()
     auto labelDAO = std::make_shared<LabelRepository>();
     auto postDAO = std::make_shared<PostRepository>();
 
+    auto labelCache = std::make_shared<LabelCache>();
+    auto postCache = std::make_shared<PostCache>();
+
     auto kafkaProducer = std::make_unique<publisher::KafkaProducer>("localhost:9092", "InTopic");
     
     auto issueLabelService = std::make_unique<IssueLabelService>(issueLabelDAO, issueDAO, labelDAO);
     auto issueService = std::make_unique<IssueService>(issueDAO, editorDAO, labelDAO, issueLabelDAO);
-    auto postService = std::make_unique<PostService>(postDAO, issueDAO, std::move(kafkaProducer));
+    auto postService = std::make_unique<PostService>(postDAO, issueDAO, std::move(kafkaProducer), postCache);
     auto editorService = std::make_unique<EditorService>(editorDAO);
-    auto labelService = std::make_unique<LabelService>(labelDAO);
+    auto labelService = std::make_unique<LabelService>(labelDAO, labelCache);
     
     auto issueLabelController = std::make_shared<IssueLabelController>(std::move(issueLabelService));
     auto editorController = std::make_shared<EditorController>(std::move(editorService));
