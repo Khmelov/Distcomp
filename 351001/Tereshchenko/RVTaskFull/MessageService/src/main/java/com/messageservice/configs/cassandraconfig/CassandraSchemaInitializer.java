@@ -1,6 +1,8 @@
 package com.messageservice.configs.cassandraconfig;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -27,7 +29,8 @@ public class CassandraSchemaInitializer implements ApplicationRunner {
                     id bigint PRIMARY KEY,
                     tweet_id bigint,
                     bucket int,
-                    content text
+                    content text,
+                    state text
                 )
                 """.formatted(keyspace));
 
@@ -37,8 +40,28 @@ public class CassandraSchemaInitializer implements ApplicationRunner {
                     bucket int,
                     id bigint,
                     content text,
+                    state text,
                     PRIMARY KEY ((tweet_id, bucket), id)
                 )
                 """.formatted(keyspace));
+
+        addColumnIfMissing(keyspace, "tbl_message", "state", "text");
+        addColumnIfMissing(keyspace, "tbl_message_by_tweet", "state", "text");
+    }
+
+    private void addColumnIfMissing(String keyspace, String table, String column, String type) {
+        Row row = session.execute(SimpleStatement.newInstance("""
+                        SELECT column_name
+                        FROM system_schema.columns
+                        WHERE keyspace_name = ? AND table_name = ? AND column_name = ?
+                        """,
+                keyspace,
+                table,
+                column
+        )).one();
+
+        if (row == null) {
+            session.execute("ALTER TABLE %s.%s ADD %s %s".formatted(keyspace, table, column, type));
+        }
     }
 }

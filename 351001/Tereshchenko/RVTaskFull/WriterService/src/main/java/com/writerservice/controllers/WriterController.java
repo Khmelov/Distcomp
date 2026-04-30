@@ -2,6 +2,7 @@ package com.writerservice.controllers;
 
 import com.writerservice.dtos.WriterRequestTo;
 import com.writerservice.dtos.WriterResponseTo;
+import com.writerservice.dtos.WriterIdentityResponseTo;
 import com.writerservice.sevices.WriterService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,11 @@ public class WriterController {
     public ResponseEntity<Void> deleteWriterById(@PathVariable Long id) {
         writerService.deleteWriter(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/internal/writers/by-login/{login}")
+    public ResponseEntity<WriterIdentityResponseTo> getWriterIdentityByLogin(@PathVariable String login) {
+        return ResponseEntity.ok(writerService.findWriterIdentityByLogin(login));
     }
 
 

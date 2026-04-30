@@ -25,6 +25,28 @@ public class ApiGatewayConfiguration {
     @Bean
     public RouteLocator gatewayConfigRoutes(RouteLocatorBuilder builder) {
         return builder.routes()
+                .route("writerServiceV2", r -> r
+                        .path("/api/v2.0/writers/**")
+                        .filters(f -> f.rewritePath("/api/v2.0/(?<segment>.*)", "/api/v1.0/${segment}"))
+                        .uri("lb://WRITERSERVICE"))
+                .route("tweetServiceV2", r -> r
+                        .path("/api/v2.0/tweets/**")
+                        .filters(f -> f.rewritePath("/api/v2.0/(?<segment>.*)", "/api/v1.0/${segment}"))
+                        .uri("lb://tweetService"))
+                .route("messageServiceV2", r -> r
+                        .path("/api/v2.0/messages/**")
+                        .and()
+                        .method(HttpMethod.GET)
+                        .filters(f -> f.rewritePath("/api/v2.0/(?<segment>.*)", "/api/v1.0/${segment}"))
+                        .uri("lb://messageService"))
+                .route("markerServiceV2", r -> r
+                        .path("/api/v2.0/markers/**")
+                        .filters(f -> f.rewritePath("/api/v2.0/(?<segment>.*)", "/api/v1.0/${segment}"))
+                        .uri("lb://markerService"))
+                .route("tweetMarkersServiceV2", r -> r
+                        .path("/api/v2.0/tweet-markers/**")
+                        .filters(f -> f.rewritePath("/api/v2.0/(?<segment>.*)", "/api/v1.0/${segment}"))
+                        .uri("lb://tweetMarkersService"))
                 .route("writerService", r -> r
                         .path("/api/v1.0/writers/**")
 //                        .filters(f -> f
@@ -53,6 +75,8 @@ public class ApiGatewayConfiguration {
                         .uri("lb://tweetService"))
                 .route("messageService", r -> r
                         .path("/api/v1.0/messages/**")
+                        .and()
+                        .method(HttpMethod.GET)
 //                        .filters(f -> f
 //                                .requestRateLimiter(config -> config
 //                                        .setRateLimiter(rateLimiter())
