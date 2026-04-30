@@ -9,6 +9,7 @@ import { PrismaService } from '../../../services/prisma.service';
 import { UserRequestTo } from '../../../dto/users/UserRequestTo.dto';
 import * as bcrypt from 'bcrypt';
 import { UserResponseTo } from '../../../dto/users/UserResponseTo.dto';
+import { RedisService } from '../../../redis/redis.service';
 
 jest.mock('bcrypt', () => ({
   genSalt: jest.fn(),
@@ -42,6 +43,13 @@ describe('UsersService', () => {
     },
   };
 
+  const mockRedisService = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(undefined),
+    delByPattern: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -49,6 +57,10 @@ describe('UsersService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
         },
       ],
     }).compile();

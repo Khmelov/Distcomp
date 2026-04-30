@@ -14,6 +14,7 @@ type Config struct {
 	CassandraPort     int
 	CassandraKeyspace string
 	JWTSecret         string
+	Brokers           []string
 }
 
 func Load() (*Config, error) {
@@ -31,6 +32,7 @@ func Load() (*Config, error) {
 		CassandraPort:     getEnvAsInt("CASSANDRA_PORT", 9042),
 		CassandraKeyspace: getEnv("CASSANDRA_KEYSPACE", "distcomp"),
 		JWTSecret:         getEnv("JWT_SECRET", "your-secret-key"),
+		Brokers:           strings.Split(getEnv("BROKERS", "localhost"), ","),
 	}, nil
 }
 

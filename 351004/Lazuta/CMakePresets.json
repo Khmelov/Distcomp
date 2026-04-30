@@ -69,20 +69,5 @@
             "displayName": "Build Release",
             "description": "Сборка Release версии"
         }
-    ],
-    "testPresets": [
-        {
-            "name": "debug-test",
-            "configurePreset": "debug",
-            "displayName": "Test Debug",
-            "description": "Запуск тестов для Debug сборки",
-            "output": {"outputOnFailure": true}
-        },
-        {
-            "name": "release-test",
-            "configurePreset": "release",
-            "displayName": "Test Release",
-            "description": "Запуск тестов для Release сборки"
-        }
     ]
 }

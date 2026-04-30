@@ -1,0 +1,162 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: distcomp-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - distcomp-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: distcomp-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - distcomp-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: distcomp-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - distcomp-net
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: distcomp-cassandra
+    ports:
+      - "9042:9042"
+    volumes:
+      - ./discussion/init.cql:/docker-entrypoint-initdb.d/init.cql
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    networks:
+      - distcomp-net
+
+  postgres:
+    image: postgres:15
+    container_name: distcomp-postgres
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./publisher/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - distcomp-net
+
+  publisher:
+    build: ./publisher
+    container_name: distcomp-publisher
+    ports:
+      - "24110:24110"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: distcomp
+      DB_USER: postgres
+      DB_PASS: postgres
+      DISCUSSION_URL: http://discussion:24130
+      KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: distcomp-dev-secret
+    networks:
+      - distcomp-net
+
+  publisher-kafka-out:
+    build: ./publisher
+    container_name: distcomp-publisher-kafka-out
+    command: ["php", "/app/bin/consume_out_topic.php"]
+    depends_on:
+      publisher:
+        condition: service_started
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    networks:
+      - distcomp-net
+
+  discussion:
+    build: ./discussion
+    container_name: distcomp-discussion
+    ports:
+      - "24130:24130"
+    volumes:
+      - discussion-notices:/var/lib/distcomp
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: 9042
+      CASSANDRA_KEYSPACE: distcomp
+      NOTICE_STORAGE_FILE: /var/lib/distcomp/notices.json
+      KAFKA_BROKERS: kafka:29092
+    networks:
+      - distcomp-net
+
+  discussion-kafka-in:
+    build: ./discussion
+    container_name: distcomp-discussion-kafka-in
+    command: ["php", "/app/bin/consume_in_topic.php"]
+    volumes:
+      - discussion-notices:/var/lib/distcomp
+    depends_on:
+      discussion:
+        condition: service_started
+      kafka:
+        condition: service_started
+    environment:
+      NOTICE_STORAGE_FILE: /var/lib/distcomp/notices.json
+      KAFKA_BROKERS: kafka:29092
+    networks:
+      - distcomp-net
+
+networks:
+  distcomp-net:
+    driver: bridge
+    name: distcomp-net
+
+volumes:
+  discussion-notices:

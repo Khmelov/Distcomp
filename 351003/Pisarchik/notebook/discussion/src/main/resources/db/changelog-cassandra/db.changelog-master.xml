@@ -25,4 +25,14 @@
             PRIMARY KEY ((story_id), id)) WITH CLUSTERING ORDER BY (id ASC);
         </sql>
     </changeSet>
+    <changeSet id="cassandra-notice-state-columns" author="discussion">
+        <sql splitStatements="false">
+            ALTER TABLE distcomp.tbl_notice_by_id ADD state text;
+        </sql>
+    </changeSet>
+    <changeSet id="cassandra-notice-by-story-state" author="discussion">
+        <sql splitStatements="false">
+            ALTER TABLE distcomp.tbl_notice_by_story ADD state text;
+        </sql>
+    </changeSet>
 </databaseChangeLog>
