@@ -7,6 +7,7 @@ class WriterRequestTo(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
     firstname: str = Field(..., min_length=2, max_length=64)
     lastname: str = Field(..., min_length=2, max_length=64)
+    role: Optional[str] = "CUSTOMER"
 
 class WriterResponseTo(BaseModel):
     id: int
@@ -44,3 +45,12 @@ class PostResponseTo(BaseModel):
     id: int
     articleId: int
     content: str
+    state: str = "PENDING"
+
+class LoginRequestTo(BaseModel):
+    login: str
+    password: str
+
+class TokenResponseTo(BaseModel):
+    access_token: str
+    type_token: str = "Bearer"

@@ -20,9 +20,9 @@ class Writer(Base):
     password = Column(String(128), nullable=False)
     firstname = Column(String(64), nullable=False)
     lastname = Column(String(64), nullable=False)
+    role = Column(String(32), default='CUSTOMER', nullable=False)
 
     articles = relationship("Article", back_populates="writer", cascade="all, delete", passive_deletes=True)
-
 
 class Label(Base):
     __tablename__ = 'tbl_label'
@@ -30,9 +30,7 @@ class Label(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(32), unique=True, nullable=False)
-
     articles = relationship("Article", secondary=article_label_association, back_populates="labels")
-
 
 class Article(Base):
     __tablename__ = 'tbl_article'
@@ -46,16 +44,4 @@ class Article(Base):
     modified = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     writer = relationship("Writer", back_populates="articles")
-    posts = relationship("Post", back_populates="article", cascade="all, delete", passive_deletes=True)
     labels = relationship("Label", secondary=article_label_association, back_populates="articles")
-
-
-class Post(Base):
-    __tablename__ = 'tbl_post'
-    __table_args__ = {'schema': 'distcomp'}
-
-    id = Column(Integer, primary_key=True, index=True)
-    article_id = Column(Integer, ForeignKey('distcomp.tbl_article.id', ondelete='CASCADE'), nullable=False)
-    content = Column(Text, nullable=False)
-
-    article = relationship("Article", back_populates="posts")
