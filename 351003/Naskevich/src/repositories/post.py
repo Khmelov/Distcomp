@@ -10,10 +10,6 @@ class AbstractPostRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_all(self) -> list[Post]:
-        raise NotImplementedError
-
-    @abstractmethod
     async def create(self, entity: Post) -> Post:
         raise NotImplementedError
 
@@ -27,4 +23,8 @@ class AbstractPostRepository(ABC):
 
     @abstractmethod
     async def get_by_tweet_id(self, tweet_id: int) -> list[Post]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_all(self) -> list[Post]:
         raise NotImplementedError

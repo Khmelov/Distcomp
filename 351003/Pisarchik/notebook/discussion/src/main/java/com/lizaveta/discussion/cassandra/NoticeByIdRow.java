@@ -1,5 +1,6 @@
 package com.lizaveta.discussion.cassandra;
 
+import com.lizaveta.notebook.model.NoticeState;
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
@@ -14,6 +15,8 @@ public class NoticeByIdRow {
     private Long storyId;
 
     private String content;
+
+    private NoticeState state;
 
     public Long getId() {
         return id;
@@ -37,5 +40,13 @@ public class NoticeByIdRow {
 
     public void setContent(final String content) {
         this.content = content;
+    }
+
+    public NoticeState getState() {
+        return state;
+    }
+
+    public void setState(final NoticeState state) {
+        this.state = state;
     }
 }

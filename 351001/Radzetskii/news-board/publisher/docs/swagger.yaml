@@ -1,0 +1,968 @@
+basePath: /api/v1.0
+definitions:
+  dto.ErrorResponse:
+    properties:
+      errorCode:
+        example: "40401"
+        type: string
+      errorMessage:
+        example: User not found
+        type: string
+    type: object
+  dto.MarkerRequestTo:
+    properties:
+      name:
+        example: urgent
+        maxLength: 32
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
+  dto.MarkerResponseTo:
+    properties:
+      id:
+        example: 1
+        type: integer
+      name:
+        example: urgent
+        type: string
+    type: object
+  dto.NewsRequestTo:
+    properties:
+      content:
+        example: Some important content here...
+        maxLength: 2048
+        minLength: 4
+        type: string
+      markers:
+        example:
+        - red
+        - green
+        - blue
+        items:
+          type: string
+        type: array
+      title:
+        example: Breaking News
+        maxLength: 64
+        minLength: 2
+        type: string
+      userId:
+        example: 1
+        minimum: 1
+        type: integer
+    required:
+    - content
+    - title
+    - userId
+    type: object
+  dto.NewsResponseTo:
+    properties:
+      content:
+        example: Some important content here...
+        type: string
+      created:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      modified:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      title:
+        example: Breaking News
+        type: string
+      userId:
+        example: 1
+        type: integer
+    type: object
+  dto.NoticeRequestTo:
+    properties:
+      content:
+        example: This is a notice.
+        maxLength: 2048
+        minLength: 2
+        type: string
+      newsId:
+        example: 1
+        minimum: 1
+        type: integer
+    required:
+    - content
+    - newsId
+    type: object
+  dto.NoticeResponseTo:
+    properties:
+      content:
+        example: This is a notice.
+        type: string
+      id:
+        example: 1
+        type: integer
+      newsId:
+        example: 1
+        type: integer
+    type: object
+  dto.UserRequestTo:
+    properties:
+      firstname:
+        example: John
+        maxLength: 64
+        minLength: 2
+        type: string
+      lastname:
+        example: Doe
+        maxLength: 64
+        minLength: 2
+        type: string
+      login:
+        example: john_doe
+        maxLength: 64
+        minLength: 2
+        type: string
+      password:
+        example: securePass123
+        maxLength: 128
+        minLength: 8
+        type: string
+    required:
+    - firstname
+    - lastname
+    - login
+    - password
+    type: object
+  dto.UserResponseTo:
+    properties:
+      firstname:
+        example: John
+        type: string
+      id:
+        example: 1
+        type: integer
+      lastname:
+        example: Doe
+        type: string
+      login:
+        example: john_doe
+        type: string
+    type: object
+host: localhost:24110
+info:
+  contact: {}
+  description: REST API для управления пользователями, новостями, маркерами и уведомлениями.
+  title: News Board API
+  version: "1.0"
+paths:
+  /markers:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 20
+        description: Лимит
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.MarkerResponseTo'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Получить все маркеры
+      tags:
+      - Markers
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные маркера
+        in: body
+        name: marker
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MarkerRequestTo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.MarkerResponseTo'
+        "400":
+          description: Неверный JSON или ошибка валидации
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Создать маркер
+      tags:
+      - Markers
+  /markers/{id}:
+    delete:
+      parameters:
+      - description: ID маркера
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Успешно удалено
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Удалить маркер
+      tags:
+      - Markers
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID маркера
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MarkerResponseTo'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Получить маркер по ID
+      tags:
+      - Markers
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID маркера
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новые данные
+        in: body
+        name: marker
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MarkerRequestTo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MarkerResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Обновить маркер
+      tags:
+      - Markers
+  /markers/by-news/{newsId}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID новости
+        in: path
+        name: newsId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.MarkerResponseTo'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Получить маркеры новости
+      tags:
+      - Markers
+  /news:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 20
+        description: Лимит
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.NewsResponseTo'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Получить все новости
+      tags:
+      - News
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные новости
+        in: body
+        name: news
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NewsRequestTo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.NewsResponseTo'
+        "400":
+          description: Неверный JSON или ошибка валидации
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Дубликат новости
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Создать новость
+      tags:
+      - News
+  /news/{id}:
+    delete:
+      parameters:
+      - description: ID новости
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Успешно удалено
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Удалить новость
+      tags:
+      - News
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID новости
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.NewsResponseTo'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Получить новость по ID
+      tags:
+      - News
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID новости
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новые данные
+        in: body
+        name: news
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NewsRequestTo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.NewsResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Обновить новость
+      tags:
+      - News
+  /news/{id}/marker:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID новости
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.MarkerResponseTo'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Получить маркеры новости
+      tags:
+      - News
+  /news/{id}/marker/{markerId}:
+    delete:
+      parameters:
+      - description: ID новости
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: ID маркера
+        in: path
+        name: markerId
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Маркер удален
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Удалить маркер из новости
+      tags:
+      - News
+    post:
+      parameters:
+      - description: ID новости
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: ID маркера
+        in: path
+        name: markerId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Маркер добавлен
+        "404":
+          description: Новость или маркер не найдены
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Добавить маркер к новости
+      tags:
+      - News
+  /news/search:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - collectionFormat: multi
+        description: ID маркеров
+        in: query
+        items:
+          type: integer
+        name: markerId
+        type: array
+      - collectionFormat: multi
+        description: Имена маркеров
+        in: query
+        items:
+          type: string
+        name: markerName
+        type: array
+      - description: Логин пользователя
+        in: query
+        name: userLogin
+        type: string
+      - description: Заголовок
+        in: query
+        name: title
+        type: string
+      - description: Содержимое
+        in: query
+        name: content
+        type: string
+      - default: 20
+        description: Лимит
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.NewsResponseTo'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Поиск новостей
+      tags:
+      - News
+  /notices:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 20
+        description: Лимит
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.NoticeResponseTo'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Получить все уведомления
+      tags:
+      - Notices
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные уведомления
+        in: body
+        name: notice
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NoticeRequestTo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.NoticeResponseTo'
+        "400":
+          description: Неверный JSON или ошибка валидации
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Новость не найдена
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Создать уведомление
+      tags:
+      - Notices
+  /notices/{id}:
+    delete:
+      parameters:
+      - description: ID уведомления
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Успешно удалено
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Удалить уведомление
+      tags:
+      - Notices
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID уведомления
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.NoticeResponseTo'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Получить уведомление по ID
+      tags:
+      - Notices
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID уведомления
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новые данные
+        in: body
+        name: notice
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NoticeRequestTo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.NoticeResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Обновить уведомление
+      tags:
+      - Notices
+  /notices/by-news/{newsId}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID новости
+        in: path
+        name: newsId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.NoticeResponseTo'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Получить уведомления новости
+      tags:
+      - Notices
+  /users:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 20
+        description: Лимит
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.UserResponseTo'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Получить всех пользователей
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserRequestTo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.UserResponseTo'
+        "400":
+          description: Неверный JSON или ошибка валидации
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Логин уже существует
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Создать пользователя
+      tags:
+      - Users
+  /users/{id}:
+    delete:
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Успешно удалено
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Удалить пользователя
+      tags:
+      - Users
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponseTo'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Получить пользователя по ID
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новые данные
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserRequestTo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponseTo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Обновить пользователя
+      tags:
+      - Users
+  /users/by-news/{newsId}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID новости
+        in: path
+        name: newsId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponseTo'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Получить пользователя по ID новости
+      tags:
+      - Users
+schemes:
+- http
+swagger: "2.0"

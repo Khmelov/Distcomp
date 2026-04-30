@@ -1,5 +1,6 @@
 package com.distcomp.dto.news
 
+import java.io.Serializable
 import java.time.LocalDateTime
 
 data class NewsResponseTo(
@@ -9,4 +10,4 @@ data class NewsResponseTo(
     val created: LocalDateTime,
     val modified: LocalDateTime,
     val userId: Long
-)
+) : Serializable

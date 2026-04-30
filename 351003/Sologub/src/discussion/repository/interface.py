@@ -3,12 +3,19 @@ from typing import Optional, List
 from dataclasses import dataclass
 
 
+class NoteState:
+    PENDING = "PENDING"
+    APPROVE = "APPROVE"
+    DECLINE = "DECLINE"
+
+
 @dataclass
 class NoteDto:
     id: int
     storyId: int
     content: str
     country: str = ""
+    state: str = NoteState.PENDING
 
 
 class NoteRepository(ABC):

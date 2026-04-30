@@ -14,5 +14,7 @@ public class Creator(
 
     public string Lastname { get; set; } = lastname;
     
+    public UserRole Role { get; set; } = UserRole.CUSTOMER;
+    
     public IEnumerable<News>? News { get; set; }
 }

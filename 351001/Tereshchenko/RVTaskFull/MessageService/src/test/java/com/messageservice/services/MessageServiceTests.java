@@ -7,7 +7,6 @@ import com.messageservice.configs.tweetclientconfig.TweetClient;
 import com.messageservice.dtos.MessageRequestTo;
 import com.messageservice.dtos.MessageResponseTo;
 import com.messageservice.models.Message;
-import com.messageservice.models.MessageState;
 import com.messageservice.repositories.MessageRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,9 +44,6 @@ class MessageServiceTests {
     @Mock
     private DiscussionCassandraProperties cassandraProperties;
 
-    @Mock
-    private MessageModerationService moderationService;
-
     @InjectMocks
     private MessageService messageService;
 
@@ -59,7 +55,6 @@ class MessageServiceTests {
 
         when(cassandraProperties.getBucketCount()).thenReturn(8);
         when(tweetClient.getTweetById(15L)).thenReturn(Map.of("id", 15L));
-        when(moderationService.moderate("content")).thenReturn(MessageState.APPROVE);
         when(messageRepository.save(any(Message.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         MessageResponseTo response = messageService.createMessage(request);
@@ -67,14 +62,12 @@ class MessageServiceTests {
         assertNotNull(response.getId());
         assertEquals(15L, response.getTweetId());
         assertEquals("content", response.getContent());
-        assertEquals(MessageState.APPROVE, response.getState());
 
         ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
         verify(messageRepository).save(captor.capture());
         Message saved = captor.getValue();
         assertEquals(15L, saved.getTweetId());
         assertEquals("content", saved.getContent());
-        assertEquals(MessageState.APPROVE, saved.getState());
         assertNotNull(saved.getBucket());
     }
 
@@ -106,11 +99,9 @@ class MessageServiceTests {
                 .tweetId(15L)
                 .bucket(3)
                 .content("old")
-                .state(MessageState.APPROVE)
                 .build();
 
         when(messageRepository.findMessageById(10L)).thenReturn(Optional.of(existing));
-        when(moderationService.moderate("updated")).thenReturn(MessageState.APPROVE);
         when(messageRepository.save(existing)).thenReturn(existing);
 
         MessageResponseTo response = messageService.updateMessageById(request, 10L);
@@ -118,7 +109,6 @@ class MessageServiceTests {
         assertEquals(10L, response.getId());
         assertEquals(15L, response.getTweetId());
         assertEquals("updated", response.getContent());
-        assertEquals(MessageState.APPROVE, response.getState());
     }
 
     @Test
@@ -136,8 +126,8 @@ class MessageServiceTests {
     @Test
     void findMessagesByTweetIdMapsRepositoryResults() {
         when(messageRepository.findAllByTweetId(15L)).thenReturn(List.of(
-                Message.builder().id(1L).tweetId(15L).bucket(0).content("one").state(MessageState.APPROVE).build(),
-                Message.builder().id(2L).tweetId(15L).bucket(1).content("two").state(MessageState.DELCINE).build()
+                Message.builder().id(1L).tweetId(15L).bucket(0).content("one").build(),
+                Message.builder().id(2L).tweetId(15L).bucket(1).content("two").build()
         ));
 
         List<MessageResponseTo> response = messageService.findMessagesByTweetId(15L);

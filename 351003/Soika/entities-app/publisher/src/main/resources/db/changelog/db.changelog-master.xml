@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="1" author="app">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="tbl_writer" schemaName="distcomp"/></not>
+        </preConditions>
+
+        <createTable tableName="tbl_writer" schemaName="distcomp">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="app">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="tbl_story" schemaName="distcomp"/></not>
+        </preConditions>
+
+        <createTable tableName="tbl_story" schemaName="distcomp">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="writer_id" type="bigint">
+                <constraints nullable="false"
+                             foreignKeyName="fk_story_writer"
+                             references="distcomp.tbl_writer(id)"/>
+            </column>
+            <column name="title" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="content" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="app">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="tbl_mark" schemaName="distcomp"/></not>
+        </preConditions>
+
+        <createTable tableName="tbl_mark" schemaName="distcomp">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5" author="app">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="tbl_story_mark" schemaName="distcomp"/></not>
+        </preConditions>
+
+        <createTable tableName="tbl_story_mark" schemaName="distcomp">
+            <column name="story_id" type="bigint">
+                <constraints nullable="false"
+                             foreignKeyName="fk_storymark_story"
+                             references="distcomp.tbl_story(id)"/>
+            </column>
+            <column name="mark_id" type="bigint">
+                <constraints nullable="false"
+                             foreignKeyName="fk_storymark_mark"
+                             references="distcomp.tbl_mark(id)"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+                tableName="tbl_story_mark"
+                schemaName="distcomp"
+                columnNames="story_id,mark_id"
+                constraintName="pk_story_mark"/>
+    </changeSet>
+
+    <changeSet id="6" author="app">
+        <addColumn tableName="tbl_writer" schemaName="distcomp">
+            <column name="role" type="varchar(16)" defaultValue="CUSTOMER">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <update tableName="tbl_writer" schemaName="distcomp">
+            <column name="password" value="$2a$10$76Yv9p89EpsjYV2XW8.zS.Yp1ZfQvD.fJ7vXfH.C7r6M7T6k1Z2Wq"/>
+            <where>login = 'isoyko19@gmail.com'</where>
+        </update>
+    </changeSet>
+
+</databaseChangeLog>

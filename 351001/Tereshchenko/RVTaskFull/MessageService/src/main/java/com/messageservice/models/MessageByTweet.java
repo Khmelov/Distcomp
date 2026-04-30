@@ -22,7 +22,4 @@ public class MessageByTweet {
     @Column("content")
     @Size(min = 2, max = 2048)
     private String content;
-
-    @Column("state")
-    private MessageState state;
 }

@@ -1,5 +1,6 @@
 package com.lizaveta.discussion.cassandra;
 
+import com.lizaveta.notebook.model.NoticeState;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
@@ -10,6 +11,8 @@ public class NoticeByStoryRow {
     private NoticeByStoryKey key;
 
     private String content;
+
+    private NoticeState state;
 
     public NoticeByStoryKey getKey() {
         return key;
@@ -25,5 +28,13 @@ public class NoticeByStoryRow {
 
     public void setContent(final String content) {
         this.content = content;
+    }
+
+    public NoticeState getState() {
+        return state;
+    }
+
+    public void setState(final NoticeState state) {
+        this.state = state;
     }
 }

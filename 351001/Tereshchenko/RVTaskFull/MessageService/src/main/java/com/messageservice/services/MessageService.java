@@ -7,7 +7,6 @@ import com.messageservice.configs.tweetclientconfig.TweetClient;
 import com.messageservice.dtos.MessageRequestTo;
 import com.messageservice.dtos.MessageResponseTo;
 import com.messageservice.models.Message;
-import com.messageservice.models.MessageState;
 import com.messageservice.repositories.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,12 +25,11 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final TweetClient tweetClient;
     private final DiscussionCassandraProperties cassandraProperties;
-    private final MessageModerationService moderationService;
     private final AtomicLong sequence = new AtomicLong();
 
     public MessageResponseTo createMessage(MessageRequestTo request) {
         validateTweetExists(request.getTweetId());
-        Message saved = messageRepository.save(toEntity(request, nextId(), moderationService.moderate(request.getContent())));
+        Message saved = messageRepository.save(toEntity(request, nextId()));
         return toDto(saved);
     }
 
@@ -52,7 +50,6 @@ public class MessageService {
                 .orElseThrow(() -> new MessageNotFoundException("Message not found"));
 
         message.setContent(request.getContent());
-        message.setState(moderationService.moderate(request.getContent()));
         Message updated = messageRepository.save(message);
         return toDto(updated);
     }
@@ -82,14 +79,13 @@ public class MessageService {
         }
     }
 
-    private Message toEntity(MessageRequestTo request, Long id, MessageState state) {
+    private Message toEntity(MessageRequestTo request, Long id) {
         int bucket = resolveBucket(id);
         return Message.builder()
                 .id(id)
                 .content(request.getContent())
                 .tweetId(request.getTweetId())
                 .bucket(bucket)
-                .state(state)
                 .build();
     }
 
@@ -98,7 +94,6 @@ public class MessageService {
                 .id(entity.getId())
                 .tweetId(entity.getTweetId())
                 .content(entity.getContent())
-                .state(entity.getState())
                 .build();
     }
 

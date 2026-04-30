@@ -6,7 +6,6 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.messageservice.configs.cassandraconfig.DiscussionCassandraProperties;
 import com.messageservice.models.Message;
-import com.messageservice.models.MessageState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -24,23 +23,21 @@ public class MessageRepository {
 
     public Message save(Message message) {
         session.execute(SimpleStatement.newInstance(
-                "INSERT INTO %s.tbl_message (id, tweet_id, bucket, content, state) VALUES (?, ?, ?, ?, ?)"
+                "INSERT INTO %s.tbl_message (id, tweet_id, bucket, content) VALUES (?, ?, ?, ?)"
                         .formatted(properties.getKeyspace()),
                 message.getId(),
                 message.getTweetId(),
                 message.getBucket(),
-                message.getContent(),
-                message.getState().name()
+                message.getContent()
         ));
 
         session.execute(SimpleStatement.newInstance(
-                "INSERT INTO %s.tbl_message_by_tweet (tweet_id, bucket, id, content, state) VALUES (?, ?, ?, ?, ?)"
+                "INSERT INTO %s.tbl_message_by_tweet (tweet_id, bucket, id, content) VALUES (?, ?, ?, ?)"
                         .formatted(properties.getKeyspace()),
                 message.getTweetId(),
                 message.getBucket(),
                 message.getId(),
-                message.getContent(),
-                message.getState().name()
+                message.getContent()
         ));
 
         return message;
@@ -48,7 +45,7 @@ public class MessageRepository {
 
     public List<Message> findAll() {
         ResultSet resultSet = session.execute(SimpleStatement.newInstance(
-                "SELECT id, tweet_id, bucket, content, state FROM %s.tbl_message"
+                "SELECT id, tweet_id, bucket, content FROM %s.tbl_message"
                         .formatted(properties.getKeyspace())
         ));
 
@@ -63,7 +60,7 @@ public class MessageRepository {
 
     public Optional<Message> findMessageById(Long id) {
         Row row = session.execute(SimpleStatement.newInstance(
-                "SELECT id, tweet_id, bucket, content, state FROM %s.tbl_message WHERE id = ?"
+                "SELECT id, tweet_id, bucket, content FROM %s.tbl_message WHERE id = ?"
                         .formatted(properties.getKeyspace()),
                 id
         )).one();
@@ -76,7 +73,7 @@ public class MessageRepository {
 
         for (int bucket = 0; bucket < properties.getBucketCount(); bucket++) {
             ResultSet resultSet = session.execute(SimpleStatement.newInstance(
-                    "SELECT tweet_id, bucket, id, content, state FROM %s.tbl_message_by_tweet WHERE tweet_id = ? AND bucket = ?"
+                    "SELECT tweet_id, bucket, id, content FROM %s.tbl_message_by_tweet WHERE tweet_id = ? AND bucket = ?"
                             .formatted(properties.getKeyspace()),
                     tweetId,
                     bucket
@@ -88,7 +85,6 @@ public class MessageRepository {
                         .tweetId(row.getLong("tweet_id"))
                         .bucket(row.getInt("bucket"))
                         .content(row.getString("content"))
-                        .state(toState(row.getString("state")))
                         .build());
             }
         }
@@ -130,11 +126,6 @@ public class MessageRepository {
                 .tweetId(row.getLong("tweet_id"))
                 .bucket(row.getInt("bucket"))
                 .content(row.getString("content"))
-                .state(toState(row.getString("state")))
                 .build();
-    }
-
-    private MessageState toState(String state) {
-        return state == null ? MessageState.APPROVE : MessageState.valueOf(state);
     }
 }
