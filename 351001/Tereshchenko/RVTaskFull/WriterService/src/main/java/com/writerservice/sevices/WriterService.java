@@ -4,9 +4,11 @@ import com.writerservice.configs.exceptionhandlerconfig.exceptions.LoginAlreadyE
 import com.writerservice.configs.exceptionhandlerconfig.exceptions.UserNotFoundException;
 import com.writerservice.configs.exceptionhandlerconfig.exceptions.WriterNotFoundException;
 import com.writerservice.configs.tweetclientconfig.TweetClient;
+import com.writerservice.dtos.WriterIdentityResponseTo;
 import com.writerservice.dtos.WriterRequestTo;
 import com.writerservice.dtos.WriterResponseTo;
 import com.writerservice.models.Writer;
+import com.writerservice.models.WriterRole;
 import com.writerservice.repositories.WriterRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,6 +45,12 @@ public class WriterService {
                 .toList();
     }
 
+    public WriterIdentityResponseTo findWriterIdentityByLogin(String login) {
+        Writer writer = writerRepository.findByLogin(login)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return toIdentityDto(writer);
+    }
+
     public WriterResponseTo updateProfile(WriterRequestTo request, Long id) {
         Writer writer = writerRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -55,6 +63,9 @@ public class WriterService {
         writer.setFirstname(request.getFirstname());
         writer.setLastname(request.getLastname());
         writer.setPassword(encoder.encode(request.getPassword()));
+        if (request.getRole() != null) {
+            writer.setRole(request.getRole());
+        }
 
         Writer saved = writerRepository.save(writer);
         return toDto(saved);
@@ -76,7 +87,12 @@ public class WriterService {
                 .password(encoder.encode(request.getPassword()))
                 .firstname(request.getFirstname())
                 .lastname(request.getLastname())
+                .role(resolveRole(request.getRole()))
                 .build();
+    }
+
+    private WriterRole resolveRole(WriterRole role) {
+        return role == null ? WriterRole.CUSTOMER : role;
     }
 
     private WriterResponseTo toDto(Writer entity) {
@@ -85,6 +101,17 @@ public class WriterService {
                 .login(entity.getLogin())
                 .firstname(entity.getFirstname())
                 .lastname(entity.getLastname())
+                .build();
+    }
+
+    private WriterIdentityResponseTo toIdentityDto(Writer entity) {
+        return WriterIdentityResponseTo.builder()
+                .id(entity.getId())
+                .login(entity.getLogin())
+                .password(entity.getPassword())
+                .firstname(entity.getFirstname())
+                .lastname(entity.getLastname())
+                .role(entity.getRole())
                 .build();
     }
 }

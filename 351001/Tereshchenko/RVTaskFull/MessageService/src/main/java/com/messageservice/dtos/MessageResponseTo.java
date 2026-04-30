@@ -1,5 +1,6 @@
 package com.messageservice.dtos;
 
+import com.messageservice.models.MessageState;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,4 +14,5 @@ public class MessageResponseTo {
 
     private String content;
 
+    private MessageState state;
 }

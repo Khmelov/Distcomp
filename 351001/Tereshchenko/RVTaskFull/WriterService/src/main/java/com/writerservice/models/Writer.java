@@ -39,4 +39,9 @@ public class Writer {
 //    @Pattern(regexp = "[A-Za-z]+")
     public String lastname;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    @Builder.Default
+    public WriterRole role = WriterRole.CUSTOMER;
+
 }

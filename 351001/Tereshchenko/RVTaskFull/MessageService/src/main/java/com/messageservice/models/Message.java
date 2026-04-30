@@ -32,4 +32,8 @@ public class Message {
     @Column("content")
     @Size(min = 2, max = 2048)
     private String content;
+
+    @NotNull
+    @Column("state")
+    private MessageState state;
 }
