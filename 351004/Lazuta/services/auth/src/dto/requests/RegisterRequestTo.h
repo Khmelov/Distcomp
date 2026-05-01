@@ -12,7 +12,7 @@ public:
     std::string password;
     std::string firstName;
     std::string lastName;
-    std::string role;
+    std::string role = "";
 
     static RegisterRequestTo fromJson(const Json::Value& json) {
         RegisterRequestTo req;

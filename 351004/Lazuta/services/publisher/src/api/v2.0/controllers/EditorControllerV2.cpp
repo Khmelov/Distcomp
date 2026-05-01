@@ -9,6 +9,7 @@ using namespace publisher::dto;
 EditorControllerV2::EditorControllerV2(std::unique_ptr<EditorService> service)
 {
     m_service = std::move(service);
+    m_client  = drogon::HttpClient::newHttpClient("http://127.0.0.1:24111");
     std::cout << "[INFO] EditorControllerV2 initialized" << std::endl;
 }
 
@@ -18,7 +19,7 @@ bool EditorControllerV2::validateJwt(const HttpRequestPtr& req, std::function<vo
     if (token.empty()) {
         auto resp = HttpResponse::newHttpResponse();
         Json::Value error;
-        error["errorCode"] = 40100;
+        error["errorCode"] = k401Unauthorized;
         error["errorMessage"] = "Missing authorization token";
         resp->setBody(Json::FastWriter().write(error));
         resp->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
@@ -44,34 +45,36 @@ bool EditorControllerV2::validateJwt(const HttpRequestPtr& req, std::function<vo
 
 void EditorControllerV2::CreateEditor(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& callback)
 {
-    std::string login, role;
-    if (!validateJwt(req, callback, login, role)) return;
-    
+    std::cout << "[INFO] CreateEditor V2: proxying registration to auth service" << std::endl;
+
     HttpResponsePtr httpResponse = HttpResponse::newHttpResponse();
-    std::cout << "[INFO] CreateEditor V2 called by: " << login << std::endl;
 
     try
-    {           
-        auto jsonFromRequest = req->getJsonObject();
-        if (!jsonFromRequest)
-        {
-            Json::Value errorResponse;
-            errorResponse["errorCode"] = 40000;
-            errorResponse["errorMessage"] = "Invalid JSON format";
-            httpResponse->setBody(Json::FastWriter().write(errorResponse));
-            httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
-            httpResponse->setStatusCode(HttpStatusCode::k400BadRequest);
-            callback(httpResponse);
-            return;
-        }
+    {
 
-        EditorResponseTo dto = m_service->Create(EditorRequestTo::fromJson(*jsonFromRequest));
-        Json::Value jsonResponse = dto.toJson();
-        
-        std::string responseBody = Json::FastWriter().write(jsonResponse);
-        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
-        httpResponse->setBody(responseBody);
-        httpResponse->setStatusCode(HttpStatusCode::k201Created);
+    auto jsonFromRequest = req->getJsonObject();
+    if (!jsonFromRequest)
+    {
+        auto resp = HttpResponse::newHttpResponse();
+        Json::Value error;
+        error["errorCode"] = 40000;
+        error["errorMessage"] = "Invalid JSON format";
+        resp->setBody(Json::FastWriter().write(error));
+        resp->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
+        resp->setStatusCode(HttpStatusCode::k400BadRequest);
+        callback(resp);
+        return;
+    }
+    
+    std::cout << "[INFO] Registration request: " << *jsonFromRequest << std::endl;
+    
+    // Proxy to auth service
+    req->setPath("/api/v2.0/editors");
+    req->addHeader("Accept", "application/json");
+    req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+    
+    auto response = m_client->sendRequest(req, 2).second;
+    callback(response);
     }
     catch(const ValidationException& e)
     {
@@ -318,9 +321,33 @@ void EditorControllerV2::UpdateEditorIdFromBody(const HttpRequestPtr& req, std::
 void EditorControllerV2::DeleteEditor(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& callback, uint64_t id)
 {
     std::string login, role;
-    if (!validateJwt(req, callback, login, role)) return;
-    
     HttpResponsePtr httpResponse = HttpResponse::newHttpResponse();
+
+
+    if (!validateJwt(req, callback, login, role))
+    {
+        LOG_DEBUG << login << " was not authorised";
+        Json::Value errorResponse;
+        errorResponse["errorCode"] = 40400;
+        errorResponse["errorMessage"] = "Editor not found";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
+        httpResponse->setStatusCode(HttpStatusCode::k401Unauthorized);
+    }
+
+
+
+    if (role != "ADMIN")
+    {
+        Json::Value errorResponse;
+        errorResponse["errorCode"] = k403Forbidden;
+        errorResponse["errorMessage"] = "This endpoint is only accaessible by admins";
+        httpResponse->setBody(Json::FastWriter().write(errorResponse));
+        httpResponse->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
+        httpResponse->setStatusCode(HttpStatusCode::k403Forbidden);
+        callback(httpResponse);
+        return;
+    }
 
     try
     {           
@@ -437,4 +464,28 @@ void EditorControllerV2::GetAllEditors(const HttpRequestPtr& req, std::function<
     }
     
     callback(httpResponse);
+}
+
+void EditorControllerV2::Login(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback)
+{
+    auto jsonFromRequest = req->getJsonObject();
+    std::cout << "[INFO] Login request: " << *jsonFromRequest << std::endl;
+
+    req->setPath("/api/v2.0/login");
+    req->addHeader("Accept", "application/json");
+    req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+    auto response = m_client->sendRequest(req, 2).second;
+    callback(response);
+}
+
+void EditorControllerV2::GetCurrentUser(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback)
+{
+    std::cout << "[INFO] GetCurrentUser request to auth service" << std::endl;
+    
+    req->setPath("/api/v2.0/editors/me");
+    req->addHeader("Accept", "application/json");
+    
+    auto response = m_client->sendRequest(req, 2).second;
+    callback(response);
 }
