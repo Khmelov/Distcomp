@@ -13,12 +13,12 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace drogon_model::distcomp;
 
-const std::string TblIssueLabel::Cols::_id = "id";
-const std::string TblIssueLabel::Cols::_issue_id = "issue_id";
-const std::string TblIssueLabel::Cols::_label_id = "label_id";
+const std::string TblIssueLabel::Cols::_id = "\"id\"";
+const std::string TblIssueLabel::Cols::_issue_id = "\"issue_id\"";
+const std::string TblIssueLabel::Cols::_label_id = "\"label_id\"";
 const std::string TblIssueLabel::primaryKeyName = "id";
 const bool TblIssueLabel::hasPrimaryKey = true;
-const std::string TblIssueLabel::tableName = "tbl_issue_label";
+const std::string TblIssueLabel::tableName = "\"tbl_issue_label\"";
 
 const std::vector<typename TblIssueLabel::MetaData> TblIssueLabel::metaData_={
 {"id","int64_t","bigint",8,1,1,1},
@@ -198,7 +198,7 @@ void TblIssueLabel::updateByJson(const Json::Value &pJson) noexcept(false)
 
 const int64_t &TblIssueLabel::getValueOfId() const noexcept
 {
-    const static int64_t defaultValue = int64_t();
+    static const int64_t defaultValue = int64_t();
     if(id_)
         return *id_;
     return defaultValue;
@@ -220,7 +220,7 @@ const typename TblIssueLabel::PrimaryKeyType & TblIssueLabel::getPrimaryKey() co
 
 const int64_t &TblIssueLabel::getValueOfIssueId() const noexcept
 {
-    const static int64_t defaultValue = int64_t();
+    static const int64_t defaultValue = int64_t();
     if(issueId_)
         return *issueId_;
     return defaultValue;
@@ -237,7 +237,7 @@ void TblIssueLabel::setIssueId(const int64_t &pIssueId) noexcept
 
 const int64_t &TblIssueLabel::getValueOfLabelId() const noexcept
 {
-    const static int64_t defaultValue = int64_t();
+    static const int64_t defaultValue = int64_t();
     if(labelId_)
         return *labelId_;
     return defaultValue;
@@ -358,6 +358,11 @@ Json::Value TblIssueLabel::toJson() const
         ret["label_id"]=Json::Value();
     }
     return ret;
+}
+
+std::string TblIssueLabel::toString() const
+{
+    return toJson().toStyledString();
 }
 
 Json::Value TblIssueLabel::toMasqueradedJson(

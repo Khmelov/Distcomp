@@ -13,6 +13,11 @@
 #include "api/v1.0/controllers/IssueController.h"
 #include "api/v1.0/controllers/LabelController.h"
 #include "api/v1.0/controllers/PostController.h"
+#include "api/v2.0/controllers/EditorControllerV2.h"
+#include "api/v2.0/controllers/IssueControllerV2.h"
+#include "api/v2.0/controllers/LabelControllerV2.h"
+#include "api/v2.0/controllers/PostControllerV2.h"
+#include "api/v2.0/controllers/IssueLabelControllerV2.h"
 
 #include <kafka/producer/KafkaProducer.h>
 #include <kafka/consumer/KafkaConsumer.h>
@@ -41,9 +46,14 @@ int main()
     
     auto issueLabelController = std::make_shared<IssueLabelController>(std::move(issueLabelService));
     auto editorController = std::make_shared<EditorController>(std::move(editorService));
+    auto editorControllerV2 = std::make_shared<EditorControllerV2>(std::make_unique<EditorService>(editorDAO));
     auto issueController = std::make_shared<IssueController>(std::move(issueService));
+    auto issueControllerV2 = std::make_shared<IssueControllerV2>(std::make_unique<IssueService>(issueDAO, editorDAO, labelDAO, issueLabelDAO));
     auto labelController = std::make_shared<LabelController>(std::move(labelService));
+    auto labelControllerV2 = std::make_shared<LabelControllerV2>(std::make_unique<LabelService>(labelDAO, labelCache));
     auto postController = std::make_shared<PostController>(std::move(postService));
+    auto postControllerV2 = std::make_shared<PostControllerV2>(std::make_unique<PostService>(postDAO, issueDAO, std::move(kafkaProducer), postCache));
+    auto issueLabelControllerV2 = std::make_shared<IssueLabelControllerV2>(std::make_unique<IssueLabelService>(issueLabelDAO, issueDAO, labelDAO));
 
     auto outConsumer = std::make_unique<publisher::KafkaConsumer>("localhost:9092", "OutTopic", "publisher-group");
     
@@ -60,9 +70,14 @@ int main()
     });
 
     drogon::app().registerController(editorController);
+    drogon::app().registerController(editorControllerV2);
     drogon::app().registerController(issueController);
+    drogon::app().registerController(issueControllerV2);
     drogon::app().registerController(labelController);
+    drogon::app().registerController(labelControllerV2);
     drogon::app().registerController(postController);
+    drogon::app().registerController(postControllerV2);
+    drogon::app().registerController(issueLabelControllerV2);
 
     drogon::app().run();
     return 0;
