@@ -65,14 +65,15 @@ EditorResponseTo AuthService::registerEditor(const RegisterRequestTo& req) {
     }
 
     auto createdId = std::get<int64_t>(result);
+    auto createdEditor = std::get<TblEditor>(repository_->GetByID(createdId));
     
-    std::cout << "[AUTH SERVICE] Registration successful for: " << req.login << " (id: " << createdId << ")" << std::endl;
+    std::cout << "[AUTH SERVICE] Registration successful for: " << req.firstName << " (id: " << createdId << ")" << std::endl;
     
     EditorResponseTo response;
-    response.id = createdId;
-    response.login = editor.getValueOfLogin();
-    response.firstName = req.firstName;
-    response.lastName = req.lastName;
+    response.id = createdEditor.getValueOfId();
+    response.login = createdEditor.getValueOfLogin();
+    response.firstName = *createdEditor.getFirstname();
+    response.lastName = *createdEditor.getLastname();
     response.role = editor.getValueOfRole();
     return response;
 }

@@ -18,8 +18,8 @@ public:
         RegisterRequestTo req;
         req.login = json["login"].asString();
         req.password = json["password"].asString();
-        req.firstName = json["firstName"].asString();
-        req.lastName = json["lastName"].asString();
+        req.firstName = json["firstname"].asString();
+        req.lastName = json["lastname"].asString();
         req.role = json["role"].asString();
         return req;
     }
@@ -28,8 +28,8 @@ public:
         Json::Value json;
         json["login"] = login;
         json["password"] = password;
-        json["firstName"] = firstName;
-        json["lastName"] = lastName;
+        json["firstname"] = firstName;
+        json["lastname"] = lastName;
         json["role"] = role;
         return json;
     }

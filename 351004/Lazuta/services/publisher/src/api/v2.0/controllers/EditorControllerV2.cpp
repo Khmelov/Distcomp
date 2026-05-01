@@ -476,6 +476,7 @@ void EditorControllerV2::Login(const HttpRequestPtr& req, std::function<void (co
     req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
     auto response = m_client->sendRequest(req, 2).second;
+    
     callback(response);
 }
 
