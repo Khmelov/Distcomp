@@ -5,16 +5,15 @@ import com.example.Task310.dto.PostResponseTo;
 import com.example.Task310.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1.0/posts") // Проверьте, что тут именно posts
+@RequestMapping("/posts")
 @RequiredArgsConstructor
 public class PostController {
-
     private final PostService service;
 
     @PostMapping
@@ -24,15 +23,16 @@ public class PostController {
     }
 
     @GetMapping
-    public List<PostResponseTo> getAll() {
-        return service.getAll();
+    public List<PostResponseTo> findAll(Pageable pageable) {
+        return service.findAll(pageable);
     }
 
     @GetMapping("/{id}")
-    public PostResponseTo getById(@PathVariable Long id) {
-        return service.getById(id);
+    public PostResponseTo findById(@PathVariable Long id) {
+        return service.findById(id);
     }
 
+    // ИСПРАВЛЕННЫЙ МЕТОД
     @PutMapping("/{id}")
     public PostResponseTo update(@PathVariable Long id, @Valid @RequestBody PostRequestTo request) {
         return service.update(id, request);

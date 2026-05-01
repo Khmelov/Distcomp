@@ -8,6 +8,7 @@ import {
 import { ArticlesService } from './articles.service';
 import { PrismaService } from '../../../services/prisma.service';
 import { ArticleRequestTo } from '../../../dto/articles/ArticleRequestTo.dto';
+import { RedisService } from '../../../redis/redis.service';
 
 describe('ArticlesService', () => {
   let service: ArticlesService;
@@ -65,6 +66,13 @@ describe('ArticlesService', () => {
     $transaction: jest.fn((callback) => callback(mockPrismaService)),
   };
 
+  const mockRedisService = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(undefined),
+    delByPattern: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -72,6 +80,10 @@ describe('ArticlesService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
         },
       ],
     }).compile();
