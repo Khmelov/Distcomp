@@ -13,13 +13,13 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace drogon_model::distcomp;
 
-const std::string Databasechangeloglock::Cols::_id = "id";
-const std::string Databasechangeloglock::Cols::_locked = "locked";
-const std::string Databasechangeloglock::Cols::_lockgranted = "lockgranted";
-const std::string Databasechangeloglock::Cols::_lockedby = "lockedby";
+const std::string Databasechangeloglock::Cols::_id = "\"id\"";
+const std::string Databasechangeloglock::Cols::_locked = "\"locked\"";
+const std::string Databasechangeloglock::Cols::_lockgranted = "\"lockgranted\"";
+const std::string Databasechangeloglock::Cols::_lockedby = "\"lockedby\"";
 const std::string Databasechangeloglock::primaryKeyName = "id";
 const bool Databasechangeloglock::hasPrimaryKey = true;
-const std::string Databasechangeloglock::tableName = "databasechangeloglock";
+const std::string Databasechangeloglock::tableName = "\"databasechangeloglock\"";
 
 const std::vector<typename Databasechangeloglock::MetaData> Databasechangeloglock::metaData_={
 {"id","int32_t","integer",4,0,1,1},
@@ -349,7 +349,7 @@ void Databasechangeloglock::updateByJson(const Json::Value &pJson) noexcept(fals
 
 const int32_t &Databasechangeloglock::getValueOfId() const noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    static const int32_t defaultValue = int32_t();
     if(id_)
         return *id_;
     return defaultValue;
@@ -371,7 +371,7 @@ const typename Databasechangeloglock::PrimaryKeyType & Databasechangeloglock::ge
 
 const bool &Databasechangeloglock::getValueOfLocked() const noexcept
 {
-    const static bool defaultValue = bool();
+    static const bool defaultValue = bool();
     if(locked_)
         return *locked_;
     return defaultValue;
@@ -388,7 +388,7 @@ void Databasechangeloglock::setLocked(const bool &pLocked) noexcept
 
 const ::trantor::Date &Databasechangeloglock::getValueOfLockgranted() const noexcept
 {
-    const static ::trantor::Date defaultValue = ::trantor::Date();
+    static const ::trantor::Date defaultValue = ::trantor::Date();
     if(lockgranted_)
         return *lockgranted_;
     return defaultValue;
@@ -410,7 +410,7 @@ void Databasechangeloglock::setLockgrantedToNull() noexcept
 
 const std::string &Databasechangeloglock::getValueOfLockedby() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(lockedby_)
         return *lockedby_;
     return defaultValue;
@@ -603,6 +603,11 @@ Json::Value Databasechangeloglock::toJson() const
         ret["lockedby"]=Json::Value();
     }
     return ret;
+}
+
+std::string Databasechangeloglock::toString() const
+{
+    return toJson().toStyledString();
 }
 
 Json::Value Databasechangeloglock::toMasqueradedJson(
@@ -912,15 +917,14 @@ bool Databasechangeloglock::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 255)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 255)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 255)";
                 return false;
             }
-
             break;
         default:
             err="Internal error in the server";

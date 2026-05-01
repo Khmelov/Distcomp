@@ -1,0 +1,31 @@
+{
+    "listeners": [
+        {
+            "address": "0.0.0.0",
+            "port": 24111,
+            "https": false
+        }
+    ],
+    "app": {
+        "threads_num": 2
+    },
+    "db_clients": [
+        {
+            "name": "default",
+            "rdbms": "postgresql",
+            "host": "127.0.0.1",
+            "port": 5432,
+            "dbname": "distcomp",
+            "user": "postgres",
+            "passwd": "postgres",
+            "is_fast": false,
+            "connection_number": 1,
+            "auto_batch": false
+        }
+    ],
+    "custom_config" :
+    {
+      "jwt_secret": "distcomp-secret-key",
+      "token_expiry_hours": 1
+    }
+}

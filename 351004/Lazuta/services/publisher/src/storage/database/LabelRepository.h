@@ -1,15 +1,7 @@
 #pragma once
-
-#include <vector>
-#include <cstdint>
-#include <variant>
-#include <drogon/orm/DbClient.h>
-#include <drogon/orm/Mapper.h>
-#include <drogon/HttpAppFramework.h>
-
 #include "IDatabaseRepository.h"
-#include <models/TblLabel.h>
-#include <exceptions/DatabaseError.h>
+#include "models/TblLabel.h"
+
 
 namespace publisher
 {
