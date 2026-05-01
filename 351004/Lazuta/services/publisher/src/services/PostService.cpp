@@ -158,6 +158,7 @@ std::vector<PostResponseTo> PostService::GetAll()
     
     if (std::holds_alternative<std::vector<TblPost>>(cacheResult))
     {
+        LOG_DEBUG << "Read all from cache";
         auto& posts = std::get<std::vector<TblPost>>(cacheResult);
         if (!posts.empty())
         {

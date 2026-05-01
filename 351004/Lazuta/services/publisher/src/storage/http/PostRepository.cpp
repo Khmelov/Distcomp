@@ -70,7 +70,7 @@ std::vector<drogon_model::distcomp::TblPost> PostRepository::JsonArrayToModelVec
     
     for (const auto& item : jsonArray)
     {
-        result.push_back(drogon_model::distcomp::TblPost(item));
+        result.push_back(JsonToModel(item));
     }
     
     std::cout << "[DEBUG] JsonArrayToModelVector: result size=" << result.size() << std::endl;
