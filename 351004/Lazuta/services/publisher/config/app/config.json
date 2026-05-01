@@ -36,5 +36,10 @@
           "number_of_connections": 1,
           "timeout": -1.0
         }
-    ]
+    ],
+    "custom_config" :
+    {
+      "jwt_secret": "distcomp-secret-key",
+      "token_expiry_hours": 1
+    }
 }

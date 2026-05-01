@@ -1,11 +1,13 @@
 #include "JwtUtils.h"
+
+#include <drogon/HttpAppFramework.h>
 #include <jwt-cpp/jwt.h>
 
 bool JwtUtils::validateToken(const std::string& token, std::string& login, std::string& role) {
     try {
         auto decoded = jwt::decode(token);
         auto verifier = jwt::verify()
-            .allow_algorithm(jwt::algorithm::hs256{"distcomp-secret-key-2024"});
+            .allow_algorithm(jwt::algorithm::hs256{drogon::app().getCustomConfig()["jwt_secret"].asString()});
         
         verifier.verify(decoded);
         

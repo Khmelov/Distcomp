@@ -7,9 +7,7 @@
         }
     ],
     "app": {
-        "threads_num": 2,
-        "jwt_secret": "distcomp-secret-key-2024",
-        "token_expiry_hours": 1
+        "threads_num": 2
     },
     "db_clients": [
         {
@@ -24,5 +22,10 @@
             "connection_number": 1,
             "auto_batch": false
         }
-    ]
+    ],
+    "custom_config" :
+    {
+      "jwt_secret": "distcomp-secret-key",
+      "token_expiry_hours": 1
+    }
 }

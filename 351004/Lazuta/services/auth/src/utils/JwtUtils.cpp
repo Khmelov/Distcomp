@@ -1,6 +1,7 @@
 #include <utils/JwtUtils.h>
 #include <drogon/HttpRequest.h>
 #include <chrono>
+#include <drogon/HttpAppFramework.h>
 #include <jwt-cpp/jwt.h>
 
 std::string JwtUtils::generateToken(const std::string& login, const std::string& role, int expiryHours) {
@@ -13,14 +14,14 @@ std::string JwtUtils::generateToken(const std::string& login, const std::string&
         .set_issued_at(now)
         .set_expires_at(expiry)
         .set_payload_claim("role", jwt::claim(role))
-        .sign(jwt::algorithm::hs256{"distcomp-secret-key-2024"});
+        .sign(jwt::algorithm::hs256{std::string(drogon::app().getCustomConfig()["jwt_secret"].asString()) });
 }
 
 bool JwtUtils::validateToken(const std::string& token, std::string& login, std::string& role) {
     try {
         auto decoded = jwt::decode(token);
         auto verifier = jwt::verify()
-            .allow_algorithm(jwt::algorithm::hs256{"distcomp-secret-key-2024"});
+            .allow_algorithm(jwt::algorithm::hs256{std::string(drogon::app().getCustomConfig()["jwt_secret"].asString()) });
         
         verifier.verify(decoded);
         
