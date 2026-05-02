@@ -1,0 +1,85 @@
+services:
+  postgresDb:
+    image: postgres:15
+    container_name: postgresDb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  cassandra:
+    image: cassandra:4
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=test-cluster
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=SimpleSnitch
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  cassandra-init:
+    image: cassandra:4
+    container_name: cassandra-init
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./init-cassandra.cql:/init.cql:ro
+    command: >
+      bash -c '
+        echo "Waiting for Cassandra to be ready...";
+        until cqlsh cassandra -e "describe keyspaces"; do sleep 5; done;
+        echo "Running init script...";
+        cqlsh cassandra -f /init.cql;
+        echo "Cassandra initialization completed."
+      '
+    networks:
+      - default
+
+  app-jpa:
+    build: .
+    container_name: app-jpa
+    ports:
+      - "24110:24110"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      postgresDb:
+        condition: service_healthy
+    restart: on-failure
+
+  app-cassandra:
+    build: .
+    container_name: app-cassandra
+    ports:
+      - "24130:24130"
+    environment:
+      SPRING_PROFILES_ACTIVE: cassandra
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      cassandra-init:
+        condition: service_completed_successfully
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  cassandra_data:

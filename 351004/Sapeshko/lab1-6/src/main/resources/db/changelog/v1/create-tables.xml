@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="create-author-table" author="distcomp">
+        <createTable tableName="tbl_author" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-tag-table" author="distcomp">
+        <createTable tableName="tbl_tag" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-news-table" author="distcomp">
+        <createTable tableName="tbl_news" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="author_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>   <!-- добавлено unique -->
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="tbl_news" baseColumnNames="author_id"
+                                 referencedTableName="tbl_author" referencedColumnNames="id"
+                                 constraintName="fk_news_author" onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="create-comment-table" author="distcomp">
+        <createTable tableName="tbl_comment" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="news_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="tbl_comment" baseColumnNames="news_id"
+                                 referencedTableName="tbl_news" referencedColumnNames="id"
+                                 constraintName="fk_comment_news" onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="create-news-tag-join-table" author="distcomp">
+        <createTable tableName="tbl_news_tag" schemaName="distcomp">
+            <column name="news_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="tbl_news_tag" columnNames="news_id, tag_id" constraintName="pk_news_tag"/>
+        <addForeignKeyConstraint baseTableName="tbl_news_tag" baseColumnNames="news_id"
+                                 referencedTableName="tbl_news" referencedColumnNames="id"
+                                 constraintName="fk_news_tag_news" onDelete="CASCADE"/>
+        <addForeignKeyConstraint baseTableName="tbl_news_tag" baseColumnNames="tag_id"
+                                 referencedTableName="tbl_tag" referencedColumnNames="id"
+                                 constraintName="fk_news_tag_tag" onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>
