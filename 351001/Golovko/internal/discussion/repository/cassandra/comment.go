@@ -35,23 +35,28 @@ func (s *CommentStorage) getNextID() (int64, error) {
 }
 
 func (s *CommentStorage) Create(ctx context.Context, comment *domain.Comment) error {
-	id, err := s.getNextID()
-	if err != nil {
-		return err
+	if comment.ID == 0 {
+		id, err := s.getNextID()
+		if err != nil {
+			return err
+		}
+		comment.ID = id
 	}
-	comment.ID = id
+	if comment.State == "" {
+		comment.State = "APPROVE"
+	}
 	return s.session.Query(
-		`INSERT INTO tbl_comment (article_id, id, content) VALUES (?, ?, ?)`,
-		comment.ArticleID, comment.ID, comment.Content,
+		`INSERT INTO tbl_comment (article_id, id, content, state) VALUES (?, ?, ?, ?)`,
+		comment.ArticleID, comment.ID, comment.Content, comment.State,
 	).WithContext(ctx).Exec()
 }
 
 func (s *CommentStorage) GetByID(ctx context.Context, id int64) (*domain.Comment, error) {
 	var c domain.Comment
 	err := s.session.Query(
-		`SELECT article_id, id, content FROM tbl_comment WHERE id = ? ALLOW FILTERING`,
+		`SELECT article_id, id, content, state FROM tbl_comment WHERE id = ? ALLOW FILTERING`,
 		id,
-	).WithContext(ctx).Scan(&c.ArticleID, &c.ID, &c.Content)
+	).WithContext(ctx).Scan(&c.ArticleID, &c.ID, &c.Content, &c.State)
 
 	if err != nil {
 		if errors.Is(err, gocql.ErrNotFound) {
@@ -64,15 +69,16 @@ func (s *CommentStorage) GetByID(ctx context.Context, id int64) (*domain.Comment
 
 func (s *CommentStorage) GetAll(ctx context.Context) ([]*domain.Comment, error) {
 	var comments []*domain.Comment
-	iter := s.session.Query(`SELECT article_id, id, content FROM tbl_comment`).WithContext(ctx).Iter()
+	iter := s.session.Query(`SELECT article_id, id, content, state FROM tbl_comment`).WithContext(ctx).Iter()
 
 	var articleID, id int64
-	var content string
-	for iter.Scan(&articleID, &id, &content) {
+	var content, state string
+	for iter.Scan(&articleID, &id, &content, &state) {
 		comments = append(comments, &domain.Comment{
 			ArticleID: articleID,
 			ID:        id,
 			Content:   content,
+			State:     state,
 		})
 	}
 
@@ -88,17 +94,22 @@ func (s *CommentStorage) Update(ctx context.Context, comment *domain.Comment) er
 		return err
 	}
 
+	state := comment.State
+	if state == "" {
+		state = old.State
+	}
+
 	if old.ArticleID != comment.ArticleID {
 		_ = s.session.Query(`DELETE FROM tbl_comment WHERE article_id = ? AND id = ?`, old.ArticleID, old.ID).WithContext(ctx).Exec()
 		return s.session.Query(
-			`INSERT INTO tbl_comment (article_id, id, content) VALUES (?, ?, ?)`,
-			comment.ArticleID, comment.ID, comment.Content,
+			`INSERT INTO tbl_comment (article_id, id, content, state) VALUES (?, ?, ?, ?)`,
+			comment.ArticleID, comment.ID, comment.Content, state,
 		).WithContext(ctx).Exec()
 	}
 
 	return s.session.Query(
-		`UPDATE tbl_comment SET content = ? WHERE article_id = ? AND id = ?`,
-		comment.Content, comment.ArticleID, comment.ID,
+		`UPDATE tbl_comment SET content = ?, state = ? WHERE article_id = ? AND id = ?`,
+		comment.Content, state, comment.ArticleID, comment.ID,
 	).WithContext(ctx).Exec()
 }
 

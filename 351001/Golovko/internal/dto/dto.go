@@ -57,4 +57,5 @@ type CommentResponseTo struct {
 	ID        int64  `json:"id"`
 	ArticleID int64  `json:"articleId"`
 	Content   string `json:"content"`
+	State     string `json:"state,omitempty"` // НОВОЕ ПОЛЕ
 }

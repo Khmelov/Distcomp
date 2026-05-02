@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -47,13 +48,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	discussionURL := os.Getenv("DISCUSSION_SERVICE_URL")
-	if discussionURL == "" {
-		discussionURL = "http://discussion_app:24130/api/v1.0/comments"
+	kafkaBrokersEnv := os.Getenv("KAFKA_BROKERS")
+	if kafkaBrokersEnv == "" {
+		kafkaBrokersEnv = "localhost:9092"
 	}
+	brokers := strings.Split(kafkaBrokersEnv, ",")
 
 	storage := postgres.NewStorage(db)
-	services := service.NewManager(storage, discussionURL)
+	services := service.NewManager(storage, brokers)
 
 	if cfg.Env == "prod" {
 		gin.SetMode(gin.ReleaseMode)

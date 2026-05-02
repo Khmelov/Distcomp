@@ -29,4 +29,5 @@ type Comment struct {
 	ID        int64
 	ArticleID int64
 	Content   string
+	State     string
 }

@@ -7,5 +7,6 @@ CREATE TABLE IF NOT EXISTS tbl_comment (
     article_id bigint,
     id bigint,
     content text,
+    state text,
     PRIMARY KEY ((article_id), id)
 );

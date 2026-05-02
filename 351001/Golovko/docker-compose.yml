@@ -33,6 +33,33 @@ services:
     volumes:
       - cassandra_data:/var/lib/cassandra
 
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.2
+    container_name: distcomp_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.2
+    container_name: distcomp_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_HOST://localhost:9092,PLAINTEXT://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    restart: unless-stopped
+
   pg_migrator:
     image: migrate/migrate
     container_name: distcomp_pg_migrator
@@ -66,10 +93,14 @@ services:
       - "24110:24110"
     env_file:
       - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
     restart: unless-stopped
     depends_on:
       pg_migrator:
         condition: service_completed_successfully
+      kafka:
+        condition: service_started
 
   discussion_app:
     build:
@@ -81,10 +112,14 @@ services:
       - "24130:24130"
     env_file:
       - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
     restart: unless-stopped
     depends_on:
       cass_migrator:
         condition: service_completed_successfully
+      kafka:
+        condition: service_started
 
 volumes:
   postgres_data:

@@ -49,12 +49,12 @@ type Manager struct {
 	Comment Comment
 }
 
-func NewManager(repo postgres.Storage, discussionServiceURL string) *Manager {
+func NewManager(repo postgres.Storage, kafkaBrokers []string) *Manager {
 	return &Manager{
 		Editor:  &editorService{repo: repo},
 		Article: &articleService{repo: repo},
 		Tag:     &tagService{repo: repo},
-		Comment: NewCommentProxy(discussionServiceURL),
+		Comment: NewCommentKafka(kafkaBrokers),
 	}
 }
 
