@@ -1,5 +1,6 @@
 package com.sergey.orsik.discussion.cassandra;
 
+import com.sergey.orsik.dto.CommentState;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,4 +27,7 @@ public class CommentByIdRow {
 
     @Column
     private Instant created;
+
+    @Column
+    private CommentState state;
 }

@@ -1,0 +1,43 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+
+server:
+  port: 24110
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # Время жизни кеша в миллисекундах (10 минут)
+      cache-null-values: false # Не кешируем null-значения
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms # Таймаут операций
+      lettuce:
+        pool:
+          max-active: 8   # Максимальное количество активных подключений
+          max-idle: 8
+          min-idle: 0
