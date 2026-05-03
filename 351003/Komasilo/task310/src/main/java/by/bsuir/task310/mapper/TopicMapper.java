@@ -23,8 +23,8 @@ public class TopicMapper {
         responseTo.setAuthorId(topic.getAuthorId());
         responseTo.setTitle(topic.getTitle());
         responseTo.setContent(topic.getContent());
-        responseTo.setCreated(topic.getCreated());
-        responseTo.setModified(topic.getModified());
+        responseTo.setCreated(topic.getCreated() == null ? null : topic.getCreated().toString());
+        responseTo.setModified(topic.getModified() == null ? null : topic.getModified().toString());
         return responseTo;
     }
 }

@@ -5,6 +5,7 @@ import by.bsuir.task310.dto.TopicResponseTo;
 import by.bsuir.task310.service.TopicService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class TopicController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TopicResponseTo create(@RequestBody TopicRequestTo requestTo) {
+    public TopicResponseTo create(@Valid @RequestBody TopicRequestTo requestTo) {
         return service.create(requestTo);
     }
 
@@ -35,7 +36,7 @@ public class TopicController {
     }
 
     @PutMapping
-    public TopicResponseTo update(@RequestBody TopicRequestTo requestTo) {
+    public TopicResponseTo update(@Valid @RequestBody TopicRequestTo requestTo) {
         return service.update(requestTo);
     }
 

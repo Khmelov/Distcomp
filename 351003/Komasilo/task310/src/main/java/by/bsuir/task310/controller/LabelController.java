@@ -5,6 +5,7 @@ import by.bsuir.task310.dto.LabelResponseTo;
 import by.bsuir.task310.service.LabelService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class LabelController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public LabelResponseTo create(@RequestBody LabelRequestTo requestTo) {
+    public LabelResponseTo create(@Valid @RequestBody LabelRequestTo requestTo) {
         return service.create(requestTo);
     }
 
@@ -35,7 +36,7 @@ public class LabelController {
     }
 
     @PutMapping
-    public LabelResponseTo update(@RequestBody LabelRequestTo requestTo) {
+    public LabelResponseTo update(@Valid @RequestBody LabelRequestTo requestTo) {
         return service.update(requestTo);
     }
 

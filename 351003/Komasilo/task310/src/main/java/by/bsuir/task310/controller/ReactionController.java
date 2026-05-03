@@ -5,6 +5,7 @@ import by.bsuir.task310.dto.ReactionResponseTo;
 import by.bsuir.task310.service.ReactionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class ReactionController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ReactionResponseTo create(@RequestBody ReactionRequestTo requestTo) {
+    public ReactionResponseTo create(@Valid @RequestBody ReactionRequestTo requestTo) {
         return service.create(requestTo);
     }
 
@@ -35,7 +36,7 @@ public class ReactionController {
     }
 
     @PutMapping
-    public ReactionResponseTo update(@RequestBody ReactionRequestTo requestTo) {
+    public ReactionResponseTo update(@Valid @RequestBody ReactionRequestTo requestTo) {
         return service.update(requestTo);
     }
 

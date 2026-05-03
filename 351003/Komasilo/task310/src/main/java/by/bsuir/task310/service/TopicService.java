@@ -8,6 +8,9 @@ import by.bsuir.task310.model.Topic;
 import by.bsuir.task310.repository.AuthorRepository;
 import by.bsuir.task310.repository.TopicRepository;
 import org.springframework.stereotype.Service;
+import by.bsuir.task310.exception.DuplicateException;
+import by.bsuir.task310.model.Label;
+import by.bsuir.task310.repository.LabelRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,23 +22,47 @@ public class TopicService {
     private final AuthorRepository authorRepository;
     private final TopicMapper mapper;
 
-    public TopicService(TopicRepository topicRepository, AuthorRepository authorRepository, TopicMapper mapper) {
+    private final LabelRepository labelRepository;
+
+    public TopicService(
+            TopicRepository topicRepository,
+            AuthorRepository authorRepository,
+            LabelRepository labelRepository,
+            TopicMapper mapper
+    ) {
         this.topicRepository = topicRepository;
         this.authorRepository = authorRepository;
+        this.labelRepository = labelRepository;
         this.mapper = mapper;
     }
 
     public TopicResponseTo create(TopicRequestTo requestTo) {
+        if (topicRepository.existsByTitle(requestTo.getTitle())) {
+            throw new DuplicateException("Topic with this title already exists");
+        }
+
         if (!authorRepository.existsById(requestTo.getAuthorId())) {
             throw new EntityNotFoundException("Author not found");
         }
 
         Topic topic = mapper.toEntity(requestTo);
-        String now = LocalDateTime.now().toString();
+        LocalDateTime now = LocalDateTime.now();
+
         topic.setCreated(now);
         topic.setModified(now);
 
-        return mapper.toResponseTo(topicRepository.save(topic));
+        Topic saved = topicRepository.save(topic);
+
+        if (requestTo.getLabels() != null) {
+            for (String labelName : requestTo.getLabels()) {
+                Label label = new Label();
+                label.setName(labelName);
+                label.setTopicId(saved.getId());
+                labelRepository.save(label);
+            }
+        }
+
+        return mapper.toResponseTo(saved);
     }
 
     public List<TopicResponseTo> getAll() {
@@ -48,6 +75,7 @@ public class TopicService {
     public TopicResponseTo getById(Long id) {
         Topic topic = topicRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Topic not found"));
+
         return mapper.toResponseTo(topic);
     }
 
@@ -60,17 +88,23 @@ public class TopicService {
             throw new EntityNotFoundException("Author not found");
         }
 
-        Topic oldTopic = topicRepository.findById(requestTo.getId()).orElseThrow();
+        Topic oldTopic = topicRepository.findById(requestTo.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Topic not found"));
+
         Topic topic = mapper.toEntity(requestTo);
         topic.setCreated(oldTopic.getCreated());
-        topic.setModified(LocalDateTime.now().toString());
+        topic.setModified(LocalDateTime.now());
 
-        return mapper.toResponseTo(topicRepository.update(topic));
+        Topic updated = topicRepository.save(topic);
+        return mapper.toResponseTo(updated);
     }
 
     public void delete(Long id) {
-        if (!topicRepository.deleteById(id)) {
+        if (!topicRepository.existsById(id)) {
             throw new EntityNotFoundException("Topic not found");
         }
+
+        labelRepository.deleteByTopicId(id);
+        topicRepository.deleteById(id);
     }
 }

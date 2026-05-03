@@ -14,12 +14,12 @@ import java.util.List;
 @Service
 public class ReactionService {
 
-    private final ReactionRepository reactionRepository;
+    private final ReactionRepository repository;
     private final TopicRepository topicRepository;
     private final ReactionMapper mapper;
 
-    public ReactionService(ReactionRepository reactionRepository, TopicRepository topicRepository, ReactionMapper mapper) {
-        this.reactionRepository = reactionRepository;
+    public ReactionService(ReactionRepository repository, TopicRepository topicRepository, ReactionMapper mapper) {
+        this.repository = repository;
         this.topicRepository = topicRepository;
         this.mapper = mapper;
     }
@@ -30,24 +30,25 @@ public class ReactionService {
         }
 
         Reaction reaction = mapper.toEntity(requestTo);
-        return mapper.toResponseTo(reactionRepository.save(reaction));
+        return mapper.toResponseTo(repository.save(reaction));
     }
 
     public List<ReactionResponseTo> getAll() {
-        return reactionRepository.findAll()
+        return repository.findAll()
                 .stream()
                 .map(mapper::toResponseTo)
                 .toList();
     }
 
     public ReactionResponseTo getById(Long id) {
-        Reaction reaction = reactionRepository.findById(id)
+        Reaction reaction = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Reaction not found"));
+
         return mapper.toResponseTo(reaction);
     }
 
     public ReactionResponseTo update(ReactionRequestTo requestTo) {
-        if (!reactionRepository.existsById(requestTo.getId())) {
+        if (!repository.existsById(requestTo.getId())) {
             throw new EntityNotFoundException("Reaction not found");
         }
 
@@ -56,12 +57,14 @@ public class ReactionService {
         }
 
         Reaction reaction = mapper.toEntity(requestTo);
-        return mapper.toResponseTo(reactionRepository.update(reaction));
+        return mapper.toResponseTo(repository.save(reaction));
     }
 
     public void delete(Long id) {
-        if (!reactionRepository.deleteById(id)) {
+        if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Reaction not found");
         }
+
+        repository.deleteById(id);
     }
 }

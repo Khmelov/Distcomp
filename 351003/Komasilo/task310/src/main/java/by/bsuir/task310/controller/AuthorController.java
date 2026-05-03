@@ -5,6 +5,7 @@ import by.bsuir.task310.dto.AuthorResponseTo;
 import by.bsuir.task310.service.AuthorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class AuthorController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public AuthorResponseTo create(@RequestBody AuthorRequestTo requestTo) {
+    public AuthorResponseTo create(@Valid @RequestBody AuthorRequestTo requestTo) {
         return service.create(requestTo);
     }
 
@@ -35,7 +36,7 @@ public class AuthorController {
     }
 
     @PutMapping
-    public AuthorResponseTo update(@RequestBody AuthorRequestTo requestTo) {
+    public AuthorResponseTo update(@Valid @RequestBody AuthorRequestTo requestTo) {
         return service.update(requestTo);
     }
 

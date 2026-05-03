@@ -23,7 +23,8 @@ public class LabelService {
 
     public LabelResponseTo create(LabelRequestTo requestTo) {
         Label label = mapper.toEntity(requestTo);
-        return mapper.toResponseTo(repository.save(label));
+        Label saved = repository.save(label);
+        return mapper.toResponseTo(saved);
     }
 
     public List<LabelResponseTo> getAll() {
@@ -45,12 +46,15 @@ public class LabelService {
         }
 
         Label label = mapper.toEntity(requestTo);
-        return mapper.toResponseTo(repository.update(label));
+        Label updated = repository.save(label);
+        return mapper.toResponseTo(updated);
     }
 
     public void delete(Long id) {
-        if (!repository.deleteById(id)) {
+        if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Label not found");
         }
+
+        repository.deleteById(id);
     }
 }

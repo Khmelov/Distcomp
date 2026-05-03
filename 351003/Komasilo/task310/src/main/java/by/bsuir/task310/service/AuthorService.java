@@ -7,6 +7,7 @@ import by.bsuir.task310.model.Author;
 import by.bsuir.task310.repository.AuthorRepository;
 import org.springframework.stereotype.Service;
 import by.bsuir.task310.exception.EntityNotFoundException;
+import by.bsuir.task310.exception.DuplicateException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +25,10 @@ public class AuthorService {
 
     // CREATE
     public AuthorResponseTo create(AuthorRequestTo requestTo) {
+        if (repository.existsByLogin(requestTo.getLogin())) {
+            throw new DuplicateException("Author with this login already exists");
+        }
+
         Author author = mapper.toEntity(requestTo);
         Author saved = repository.save(author);
         return mapper.toResponseTo(saved);
@@ -50,14 +55,15 @@ public class AuthorService {
             throw new EntityNotFoundException("Author not found");
         }
         Author author = mapper.toEntity(requestTo);
-        Author updated = repository.update(author);
+        Author updated = repository.save(author);
         return mapper.toResponseTo(updated);
     }
 
     // DELETE
     public void delete(Long id) {
-        if (!repository.deleteById(id)) {
-            throw new RuntimeException("Author not found");
+        if (!repository.existsById(id)) {
+            throw new EntityNotFoundException("Author not found");
         }
+        repository.deleteById(id);
     }
 }
