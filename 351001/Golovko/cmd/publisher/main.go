@@ -18,6 +18,7 @@ import (
 	"distcomp/internal/publisher/service"
 	v1 "distcomp/internal/publisher/transport/http/v1"
 	"distcomp/pkg/client/postgresql"
+	redisClient "distcomp/pkg/client/redis"
 	"distcomp/pkg/logger"
 
 	_ "distcomp/docs"
@@ -47,6 +48,18 @@ func main() {
 		log.Error("Failed to initialize database client", slog.Any("error", err))
 		os.Exit(1)
 	}
+	defer db.Close()
+
+	redisHost := os.Getenv("REDIS_HOST")
+	if redisHost == "" {
+		redisHost = "localhost:6379"
+	}
+	rdb, err := redisClient.NewClient(ctx, redisHost)
+	if err != nil {
+		log.Error("Failed to connect to Redis", slog.Any("error", err))
+		os.Exit(1)
+	}
+	defer rdb.Close()
 
 	kafkaBrokersEnv := os.Getenv("KAFKA_BROKERS")
 	if kafkaBrokersEnv == "" {
@@ -55,7 +68,7 @@ func main() {
 	brokers := strings.Split(kafkaBrokersEnv, ",")
 
 	storage := postgres.NewStorage(db)
-	services := service.NewManager(storage, brokers)
+	services := service.NewManager(storage, brokers, rdb)
 
 	if cfg.Env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -100,16 +113,11 @@ func main() {
 	<-quit
 
 	log.Info("shutting down server...")
-
 	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelShutdown()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Error("server forced to shutdown", slog.Any("error", err))
 	}
-	if err := db.Close(); err != nil {
-		log.Error("database connection close error", slog.Any("error", err))
-	}
-
 	log.Info("server exiting")
 }

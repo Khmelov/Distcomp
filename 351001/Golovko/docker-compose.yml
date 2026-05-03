@@ -83,6 +83,13 @@ services:
       - ./db/migrations/cassandra:/migrations
     command: /bin/bash -c "cqlsh cassandra -f /migrations/init.cql"
 
+  redis:
+    image: redis:7-alpine
+    container_name: distcomp_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   publisher_app:
     build:
       context: .
@@ -95,11 +102,14 @@ services:
       - .env
     environment:
       KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis:6379
     restart: unless-stopped
     depends_on:
       pg_migrator:
         condition: service_completed_successfully
       kafka:
+        condition: service_started
+      redis:
         condition: service_started
 
   discussion_app:

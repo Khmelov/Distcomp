@@ -27,6 +27,7 @@ func NewCommentKafka(brokers []string) Comment {
 		Addr:     kafka.TCP(brokers...),
 		Topic:    "InTopic",
 		Balancer: &kafka.Hash{},
+		BatchTimeout: 10 * time.Millisecond,
 	}
 
 	reader := kafka.NewReader(kafka.ReaderConfig{

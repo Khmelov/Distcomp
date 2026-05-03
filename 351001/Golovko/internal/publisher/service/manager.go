@@ -8,6 +8,8 @@ import (
 	"distcomp/internal/dto"
 	"distcomp/internal/publisher/repository/postgres"
 	"distcomp/internal/repository"
+
+	redis "github.com/redis/go-redis/v9"
 )
 
 type Editor interface {
@@ -49,12 +51,17 @@ type Manager struct {
 	Comment Comment
 }
 
-func NewManager(repo postgres.Storage, kafkaBrokers []string) *Manager {
+func NewManager(repo postgres.Storage, kafkaBrokers []string, rdb *redis.Client) *Manager {
+	baseEditor := &editorService{repo: repo}
+	baseArticle := &articleService{repo: repo}
+	baseTag := &tagService{repo: repo}
+	baseComment := NewCommentKafka(kafkaBrokers)
+
 	return &Manager{
-		Editor:  &editorService{repo: repo},
-		Article: &articleService{repo: repo},
-		Tag:     &tagService{repo: repo},
-		Comment: NewCommentKafka(kafkaBrokers),
+		Editor:  NewEditorCache(baseEditor, rdb),
+		Article: NewArticleCache(baseArticle, rdb),
+		Tag:     NewTagCache(baseTag, rdb),
+		Comment: NewCommentCache(baseComment, rdb),
 	}
 }
 

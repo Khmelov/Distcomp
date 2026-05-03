@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
+	"time"
 
 	"distcomp/internal/domain"
 	kafkaMsg "distcomp/internal/kafka"
@@ -26,8 +27,9 @@ func NewKafkaProcessor(brokers []string, svc *CommentService) *KafkaProcessor {
 			Topic:   "InTopic",
 		}),
 		writer: &kafka.Writer{
-			Addr:  kafka.TCP(brokers...),
-			Topic: "OutTopic",
+			Addr:         kafka.TCP(brokers...),
+			Topic:        "OutTopic",
+			BatchTimeout: 10 * time.Millisecond,
 		},
 		service: svc,
 	}
@@ -65,7 +67,7 @@ func (p *KafkaProcessor) processMessage(msg kafkaMsg.Message) {
 		if msg.Response == nil {
 			return
 		}
-		
+
 		state := "APPROVE"
 		contentLower := strings.ToLower(msg.Response.Content)
 		if strings.Contains(contentLower, "spam") || strings.Contains(contentLower, "спам") {
@@ -78,7 +80,7 @@ func (p *KafkaProcessor) processMessage(msg kafkaMsg.Message) {
 			Content:   msg.Response.Content,
 			State:     state,
 		}
-		
+
 		_ = p.service.Repo.Create(ctx, c)
 
 	case kafkaMsg.OpGet:
