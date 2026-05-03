@@ -40,10 +40,8 @@ namespace Publisher.Repositories
         // --- CREATE (Fire-and-forget по ТЗ) ---
         public async Task<ReactionResponseTo> CreateAsync(ReactionRequestTo request)
         {
-            // 1. Берем честный ID из Postgres
+         
             long realId = await GetNextIdFromPostgres();
-
-            // 2. Создаем НОВЫЙ объект ответа, в который ПИШЕМ этот ID
             var result = new ReactionResponseTo
             {
                 Id = realId, // Теперь тут 1
@@ -52,7 +50,6 @@ namespace Publisher.Repositories
                 State = "PENDING"
             };
 
-            // 3. В Кафку шлем этот же объект result (чтобы Discussion тоже получил Id=1)
             var msg = new KafkaMessage { Method = "CREATE", Payload = JsonSerializer.SerializeToElement(result) };
             await _producer.ProduceAsync(_inTopic, new Message<string, string>
             {
@@ -60,7 +57,6 @@ namespace Publisher.Repositories
                 Value = JsonSerializer.Serialize(msg)
             });
 
-            // 4. Возвращаем КЛИЕНТУ объект с Id=1
             return result;
         }
 
@@ -74,7 +70,7 @@ namespace Publisher.Repositories
         // --- GET ALL (Блокирующий) ---
         public async Task<IEnumerable<ReactionResponseTo>> GetAllAsync()
         {
-            // Отправляем запрос без конкретного ID в Payload (или передаем 0)
+           
             var results = await SendRequestAsync<List<ReactionResponseTo>>("GET_ALL", null, "all-key");
             return results ?? new List<ReactionResponseTo>();
         }
@@ -82,17 +78,17 @@ namespace Publisher.Repositories
         // --- DELETE (Блокирующий) ---
         public async Task DeleteAsync(long id)
         {
-            // Ждем подтверждения удаления (например, Discussion пришлет "true" или объект)
+            
             await SendRequestAsync<object>("DELETE", id, id.ToString());
         }
         // --- UPDATE (Блокирующий) ---
         public async Task<ReactionResponseTo?> UpdateAsync(ReactionRequestTo request)
         {
-            // Отправляем объект целиком, ждем результат обновления
+            
             return await SendRequestAsync<ReactionResponseTo>(
                 "UPDATE",
                 request,
-                request.Id.ToString() // Используем Id как ключ партиции
+                request.Id.ToString() 
             );
         }
         // --- Вспомогательный универсальный метод для Request-Response через Kafka ---
@@ -114,7 +110,7 @@ namespace Publisher.Repositories
                 Value = JsonSerializer.Serialize(msg)
             });
 
-            // Ждем 2 секунды (Таймаут по ТЗ)
+            
             if (await Task.WhenAny(waitTask, Task.Delay(2000)) == waitTask)
             {
                 var responseJson = await waitTask;

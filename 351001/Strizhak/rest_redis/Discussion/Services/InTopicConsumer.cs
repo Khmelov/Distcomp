@@ -40,9 +40,9 @@ public class InTopicConsumer : BackgroundService
         await Task.Yield();
         _consumer = new ConsumerBuilder<string, string>(_consumerConfig).Build();
         _producer = new ProducerBuilder<string, string>(_producerConfig).Build();
-        
+
         _consumer.Subscribe("InTopic");
-        _consumer.Consume(TimeSpan.FromMilliseconds(50));
+        _consumer.Consume(TimeSpan.FromMilliseconds(500));
         _logger.LogInformation("InTopicConsumer started.");
 
         while (!stoppingToken.IsCancellationRequested)
@@ -72,7 +72,7 @@ public class InTopicConsumer : BackgroundService
                             createReq.State = Moderate(createReq.Content) ? "APPROVE" : "DECLINE";
                             await _reactionService.CreateAsync(createReq);
                         }
-                        // Для CREATE ответ в OutTopic по ТЗ не нужен
+
                         continue;
 
                     case "FIND_BY_ID":
@@ -111,7 +111,7 @@ public class InTopicConsumer : BackgroundService
                 // 3. ОТПРАВКА ОТВЕТА
                 if (!string.IsNullOrEmpty(msg.CorrelationId))
                 {
-                   
+
                     var responseEnvelope = new KafkaMessage
                     {
                         CorrelationId = msg.CorrelationId,
@@ -125,7 +125,7 @@ public class InTopicConsumer : BackgroundService
 
                     await _producer.ProduceAsync("OutTopic", new Message<string, string>
                     {
-                        Key = cr.Message.Key ?? "default", 
+                        Key = cr.Message.Key ?? "default", // Используем тот же ключ, что пришел
                         Value = val
                     });
                 }

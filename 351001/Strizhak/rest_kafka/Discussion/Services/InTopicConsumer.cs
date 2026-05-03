@@ -72,7 +72,7 @@ public class InTopicConsumer : BackgroundService
                             createReq.State = Moderate(createReq.Content) ? "APPROVE" : "DECLINE";
                             await _reactionService.CreateAsync(createReq);
                         }
-                        // Для CREATE ответ в OutTopic по ТЗ не нужен
+                        
                         continue;
 
                     case "FIND_BY_ID":
@@ -111,7 +111,7 @@ public class InTopicConsumer : BackgroundService
                 // 3. ОТПРАВКА ОТВЕТА
                 if (!string.IsNullOrEmpty(msg.CorrelationId))
                 {
-                    // Даже если result == null, мы создаем конверт, чтобы Publisher получил "null" и разблокировался
+                    
                     var responseEnvelope = new KafkaMessage
                     {
                         CorrelationId = msg.CorrelationId,

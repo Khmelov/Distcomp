@@ -20,7 +20,7 @@ namespace Publisher.Services
             var config = new ConsumerConfig
             {
                 BootstrapServers = "localhost:9092",
-                GroupId = "publisher-group-v1", // Смена GroupId поможет прочитать сообщения заново
+                GroupId = "publisher-group-v1", 
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 AllowAutoCreateTopics = true
             };

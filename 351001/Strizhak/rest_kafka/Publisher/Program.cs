@@ -30,12 +30,12 @@ builder.Services.AddScoped<IService<Tag, TagRequestTo, TagResponseTo>, TagServic
 
 builder.Services.AddSingleton<KafkaResponseTracker>();
 builder.Services.AddScoped<KafkaReactionRepository>();
-// Регистрация HTTP-клиента для Discussion
-builder.Services.AddHttpClient("DiscussionClient", client =>
-{
-    client.BaseAddress = new Uri("http://localhost:24130");
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+//// Регистрация HTTP-клиента для Discussion
+//builder.Services.AddHttpClient("DiscussionClient", client =>
+//{
+//    client.BaseAddress = new Uri("http://localhost:24130");
+//    client.DefaultRequestHeaders.Add("Accept", "application/json");
+//});
 
 builder.Services.AddHostedService<OutTopicConsumer>();
 // Регистрация прокси

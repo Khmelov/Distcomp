@@ -25,6 +25,7 @@ namespace Publisher.Data
                 entity.Property(e => e.Password).HasColumnName("password");
                 entity.Property(e => e.Firstname).HasColumnName("firstname");
                 entity.Property(e => e.Lastname).HasColumnName("lastname");
+                
             });
             // Тема
             modelBuilder.Entity<Topic>(entity =>

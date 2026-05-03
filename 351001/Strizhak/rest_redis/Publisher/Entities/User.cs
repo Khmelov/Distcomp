@@ -22,6 +22,8 @@ namespace Publisher.Entities
         [Required]
         [StringLength(64, MinimumLength = 2)]
         public string Lastname { get; set; } = null!;
+        //[Required]
+        //public string Role { get; set; } = null!;
 
         // Навигационные свойства для связей
         public ICollection<Topic> Topics { get; set; } = new List<Topic>();
