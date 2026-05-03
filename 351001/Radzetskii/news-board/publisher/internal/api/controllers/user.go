@@ -1,9 +1,13 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"news-board/publisher/internal/auth"
+	"news-board/publisher/internal/domain"
 	"news-board/publisher/internal/dto"
 	"news-board/publisher/internal/service"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -12,12 +16,14 @@ import (
 type UserHandler struct {
 	userService *service.UserService
 	validate    *validator.Validate
+	jwtSecret   string
 }
 
-func NewUserHandler(svc *service.UserService) *UserHandler {
+func NewUserHandler(svc *service.UserService, jwtSecret string) *UserHandler {
 	return &UserHandler{
 		userService: svc,
 		validate:    validator.New(),
+		jwtSecret:   jwtSecret,
 	}
 }
 
@@ -31,6 +37,23 @@ func (h *UserHandler) RegisterRoutes(rg *gin.RouterGroup) {
 		v1.PUT("/users", h.UpdateWithIDFromBody)
 		v1.DELETE("/users/:id", h.Delete)
 		v1.GET("/users/by-news/:newsId", h.GetByNewsID)
+	}
+
+	v2 := rg.Group("/v2.0")
+	{
+		v2.POST("/users", h.Create)
+		v2.POST("/login", h.Login)
+		v2Auth := v2.Group("")
+		v2Auth.Use(auth.RequireAuth(h.jwtSecret))
+		{
+			v2Auth.GET("/users", h.GetAll)
+			v2Auth.GET("/users/:id", h.GetByID)
+			v2Auth.GET("/users/me", h.GetMe)
+			v2Auth.PUT("/users/:id", h.Update)
+			v2Auth.PUT("/users", h.UpdateWithIDFromBody)
+			v2Auth.DELETE("/users/:id", h.Delete)
+			v2Auth.GET("/users/by-news/:newsId", h.GetByNewsID)
+		}
 	}
 }
 
@@ -52,6 +75,18 @@ func (h *UserHandler) UpdateWithIDFromBody(c *gin.Context) {
 			"errorCode":    "40001",
 		})
 		return
+	}
+	if role, ok := auth.GetCurrentUserRole(c); ok && role != auth.RoleAdmin {
+		login, _ := auth.GetCurrentUserLogin(c)
+		userByLogin, err := h.userService.GetByLogin(c.Request.Context(), login)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		if userByLogin == nil || userByLogin.ID != req.ID {
+			c.Error(domain.ErrForbidden)
+			return
+		}
 	}
 	user, err := h.userService.Update(c.Request.Context(), req.ID, &req.UserRequestTo)
 	if err != nil {
@@ -96,6 +131,52 @@ func (h *UserHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
+func (h *UserHandler) Login(c *gin.Context) {
+	var req dto.LoginRequestTo
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errorMessage": "Invalid JSON format",
+			"errorCode":    "40000",
+		})
+		return
+	}
+	if err := h.validate.Struct(req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errorMessage": "Validation failed: " + err.Error(),
+			"errorCode":    "40001",
+		})
+		return
+	}
+	user, err := h.userService.Authenticate(c.Request.Context(), req.Login, req.Password)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	token, err := auth.GenerateToken(h.jwtSecret, user.Login, user.Role, 12*time.Hour)
+	if err != nil {
+		c.Error(fmt.Errorf("failed to generate token: %w", err))
+		return
+	}
+	c.JSON(http.StatusOK, dto.LoginResponseTo{
+		AccessToken: token,
+		TokenType:   "Bearer",
+	})
+}
+
+func (h *UserHandler) GetMe(c *gin.Context) {
+	login, ok := auth.GetCurrentUserLogin(c)
+	if !ok {
+		c.Error(domain.ErrUnauthorized)
+		return
+	}
+	user, err := h.userService.GetByLogin(c.Request.Context(), login)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, user)
+}
+
 // GetAll возвращает список пользователей
 // @Summary Получить всех пользователей
 // @Tags Users
@@ -107,6 +188,10 @@ func (h *UserHandler) Create(c *gin.Context) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /users [get]
 func (h *UserHandler) GetAll(c *gin.Context) {
+	if role, ok := auth.GetCurrentUserRole(c); ok && role != auth.RoleAdmin {
+		c.Error(domain.ErrForbidden)
+		return
+	}
 	limit, offset, ok := parsePagination(c)
 	if !ok {
 		return
@@ -138,6 +223,13 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 	if err != nil {
 		c.Error(err)
 		return
+	}
+	if role, ok := auth.GetCurrentUserRole(c); ok && role != auth.RoleAdmin {
+		login, _ := auth.GetCurrentUserLogin(c)
+		if login != user.Login {
+			c.Error(domain.ErrForbidden)
+			return
+		}
 	}
 	c.JSON(http.StatusOK, user)
 }
@@ -174,6 +266,18 @@ func (h *UserHandler) Update(c *gin.Context) {
 		})
 		return
 	}
+	if role, ok := auth.GetCurrentUserRole(c); ok && role != auth.RoleAdmin {
+		login, _ := auth.GetCurrentUserLogin(c)
+		userByLogin, err := h.userService.GetByLogin(c.Request.Context(), login)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		if userByLogin == nil || userByLogin.ID != id {
+			c.Error(domain.ErrForbidden)
+			return
+		}
+	}
 	user, err := h.userService.Update(c.Request.Context(), id, &req)
 	if err != nil {
 		c.Error(err)
@@ -194,6 +298,18 @@ func (h *UserHandler) Delete(c *gin.Context) {
 	id, ok := parseInt64Param(c, "id", "id")
 	if !ok {
 		return
+	}
+	if role, ok := auth.GetCurrentUserRole(c); ok && role != auth.RoleAdmin {
+		login, _ := auth.GetCurrentUserLogin(c)
+		userByLogin, err := h.userService.GetByLogin(c.Request.Context(), login)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		if userByLogin == nil || userByLogin.ID != id {
+			c.Error(domain.ErrForbidden)
+			return
+		}
 	}
 	err := h.userService.Delete(c.Request.Context(), id)
 	if err != nil {

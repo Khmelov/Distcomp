@@ -35,4 +35,9 @@ public class DbCreatorRepository : DbRepository<Creator>, ICreatorRepository
 
         return entry.Entity;
     }
+    
+    public async Task<Creator?> FindByLoginAsync(string login)
+    {
+        return await _dbSet.FirstOrDefaultAsync(c => c.Login == login);
+    }
 }
