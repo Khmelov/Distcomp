@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using System.Text.Json;
 using Confluent.Kafka.Admin;
+using DiscussionModule.controllers;
 
 namespace DiscussionModule.kafka;
 
@@ -84,7 +85,7 @@ public class KafkaProducer : IDisposable
             Console.WriteLine($"[Kafka] Warning: {ex.Message}");
         }
     }
-
+    
     public void Dispose()
     {
         _producer?.Dispose();
