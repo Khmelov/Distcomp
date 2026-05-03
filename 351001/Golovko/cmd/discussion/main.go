@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -24,6 +25,7 @@ func main() {
 	host := os.Getenv("CASSANDRA_HOST")
 	keyspace := os.Getenv("CASSANDRA_KEYSPACE")
 	port := os.Getenv("DISCUSSION_PORT")
+	kafkaBrokersEnv := os.Getenv("KAFKA_BROKERS")
 
 	if host == "" {
 		host = "localhost"
@@ -34,6 +36,10 @@ func main() {
 	if port == "" {
 		port = "24130"
 	}
+	if kafkaBrokersEnv == "" {
+		kafkaBrokersEnv = "localhost:9092"
+	}
+	brokers := strings.Split(kafkaBrokersEnv, ",")
 
 	session, err := cassClient.NewClient(cassClient.Config{
 		Host:     host,
@@ -46,6 +52,9 @@ func main() {
 
 	repo := cassandra.NewCommentStorage(session)
 	srv := service.NewCommentService(repo)
+
+	kafkaProcessor := service.NewKafkaProcessor(brokers, srv)
+	go kafkaProcessor.Start()
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -16,7 +17,9 @@ import (
 	"distcomp/internal/publisher/repository/postgres"
 	"distcomp/internal/publisher/service"
 	v1 "distcomp/internal/publisher/transport/http/v1"
+	v2 "distcomp/internal/publisher/transport/http/v2"
 	"distcomp/pkg/client/postgresql"
+	redisClient "distcomp/pkg/client/redis"
 	"distcomp/pkg/logger"
 
 	_ "distcomp/docs"
@@ -46,14 +49,27 @@ func main() {
 		log.Error("Failed to initialize database client", slog.Any("error", err))
 		os.Exit(1)
 	}
+	defer db.Close()
 
-	discussionURL := os.Getenv("DISCUSSION_SERVICE_URL")
-	if discussionURL == "" {
-		discussionURL = "http://discussion_app:24130/api/v1.0/comments"
+	redisHost := os.Getenv("REDIS_HOST")
+	if redisHost == "" {
+		redisHost = "localhost:6379"
 	}
+	rdb, err := redisClient.NewClient(ctx, redisHost)
+	if err != nil {
+		log.Error("Failed to connect to Redis", slog.Any("error", err))
+		os.Exit(1)
+	}
+	defer rdb.Close()
+
+	kafkaBrokersEnv := os.Getenv("KAFKA_BROKERS")
+	if kafkaBrokersEnv == "" {
+		kafkaBrokersEnv = "localhost:9092"
+	}
+	brokers := strings.Split(kafkaBrokersEnv, ",")
 
 	storage := postgres.NewStorage(db)
-	services := service.NewManager(storage, discussionURL)
+	services := service.NewManager(storage, brokers, rdb)
 
 	if cfg.Env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -70,9 +86,12 @@ func main() {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	handlers := v1.NewHandler(services)
+	handlersV1 := v1.NewHandler(services)
+	handlersV2 := v2.NewHandler(services)
+
 	api := router.Group("/api")
-	handlers.InitRoutes(api)
+	handlersV1.InitRoutes(api)
+	handlersV2.InitRoutes(api)
 
 	port := os.Getenv("PUBLISHER_PORT")
 	if port == "" {
@@ -98,16 +117,11 @@ func main() {
 	<-quit
 
 	log.Info("shutting down server...")
-
 	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelShutdown()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Error("server forced to shutdown", slog.Any("error", err))
 	}
-	if err := db.Close(); err != nil {
-		log.Error("database connection close error", slog.Any("error", err))
-	}
-
 	log.Info("server exiting")
 }

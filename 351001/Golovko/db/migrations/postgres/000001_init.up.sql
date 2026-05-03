@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS distcomp.tbl_editor (
     login VARCHAR(64) NOT NULL UNIQUE,
     password VARCHAR(128) NOT NULL,
     firstname VARCHAR(64) NOT NULL,
-    lastname VARCHAR(64) NOT NULL
+    lastname VARCHAR(64) NOT NULL,
+    role VARCHAR(32) NOT NULL DEFAULT 'CUSTOMER'
 );
 
 CREATE TABLE IF NOT EXISTS distcomp.tbl_article (
