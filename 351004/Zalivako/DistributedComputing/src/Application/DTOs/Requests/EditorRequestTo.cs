@@ -18,5 +18,7 @@ namespace Application.DTOs.Requests
         [StringLength(64, MinimumLength = 2)]
         public string? Lastname { get; set; }
 
+        [RegularExpression("^(ADMIN|CUSTOMER)$", ErrorMessage = "Role must be ADMIN or CUSTOMER")]
+        public string? Role { get; set; }
     }
 }

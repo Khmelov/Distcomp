@@ -51,8 +51,7 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
-        // Если тест шлет строку "Id_error...", возвращаем 400 (стандартный REST)
-        // Если преподаватель требует 4xx для таких случаев, 400 - это и есть 4xx.
+        
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse("Invalid ID format: " + ex.getValue(), 40001));
     }
