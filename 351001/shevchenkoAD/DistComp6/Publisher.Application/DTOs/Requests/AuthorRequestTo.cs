@@ -1,0 +1,31 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using Shared.DTOs.Abstractions;
+using Shared.Enums;
+
+namespace Publisher.Application.DTOs.Requests;
+
+public record AuthorRequestTo : BaseRequestTo
+{
+    [Required]
+    [StringLength(64, MinimumLength = 2)]
+    [JsonPropertyName("login")]
+    public string Login { get; init; } = null!;
+
+    [Required]
+    [StringLength(128, MinimumLength = 8)]
+    [JsonPropertyName("password")]
+    public string Password { get; init; } = null!;
+
+    [Required]
+    [StringLength(64, MinimumLength = 2)]
+    [JsonPropertyName("firstname")]
+    public string Firstname { get; init; } = null!;
+
+    [Required]
+    [StringLength(64, MinimumLength = 2)]
+    [JsonPropertyName("lastname")]
+    public string Lastname { get; init; } = null!;
+
+    [Required] [JsonPropertyName("role")] public UserRole Role { get; init; }
+}

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <!--
+      Partitioning: story_id (not country alone) avoids hot partitions by country.
+      tbl_notice_by_id: one partition per notice id — even spread for global id lookups and scans.
+      tbl_notice_by_story: (story_id) partition + clustering id — efficient list by story.
+    -->
+    <changeSet id="cassandra-keyspace" author="discussion">
+        <sql splitStatements="false">
+            CREATE KEYSPACE IF NOT EXISTS distcomp WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+        </sql>
+    </changeSet>
+    <changeSet id="cassandra-tbl-notice-by-id" author="discussion">
+        <sql splitStatements="false">
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_notice_by_id (id bigint PRIMARY KEY, story_id bigint, content text);
+        </sql>
+    </changeSet>
+    <changeSet id="cassandra-tbl-notice-by-story" author="discussion">
+        <sql splitStatements="false">
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_notice_by_story (story_id bigint, id bigint, content text,
+            PRIMARY KEY ((story_id), id)) WITH CLUSTERING ORDER BY (id ASC);
+        </sql>
+    </changeSet>
+    <changeSet id="cassandra-notice-state-columns" author="discussion">
+        <sql splitStatements="false">
+            ALTER TABLE distcomp.tbl_notice_by_id ADD state text;
+        </sql>
+    </changeSet>
+    <changeSet id="cassandra-notice-by-story-state" author="discussion">
+        <sql splitStatements="false">
+            ALTER TABLE distcomp.tbl_notice_by_story ADD state text;
+        </sql>
+    </changeSet>
+</databaseChangeLog>
