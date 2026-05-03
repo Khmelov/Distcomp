@@ -25,8 +25,8 @@ func NewUserRepository(db *pgxpool.Pool) *userRepo {
 func (r *userRepo) Create(ctx context.Context, user *models.User) error {
 	query, args, err := r.psql.
 		Insert("tbl_user").
-		Columns("login", "password", "firstname", "lastname").
-		Values(user.Login, user.Password, user.Firstname, user.Lastname).
+		Columns("login", "password", "firstname", "lastname", "role").
+		Values(user.Login, user.Password, user.Firstname, user.Lastname, user.Role).
 		Suffix("RETURNING id").
 		ToSql()
 	if err != nil {
@@ -37,7 +37,7 @@ func (r *userRepo) Create(ctx context.Context, user *models.User) error {
 
 func (r *userRepo) GetByID(ctx context.Context, id int64) (*models.User, error) {
 	query, args, err := r.psql.
-		Select("id", "login", "password", "firstname", "lastname").
+		Select("id", "login", "password", "firstname", "lastname", "role").
 		From("tbl_user").
 		Where(sq.Eq{"id": id}).
 		ToSql()
@@ -46,7 +46,7 @@ func (r *userRepo) GetByID(ctx context.Context, id int64) (*models.User, error) 
 	}
 	row := r.db.QueryRow(ctx, query, args...)
 	user := &models.User{}
-	err = row.Scan(&user.ID, &user.Login, &user.Password, &user.Firstname, &user.Lastname)
+	err = row.Scan(&user.ID, &user.Login, &user.Password, &user.Firstname, &user.Lastname, &user.Role)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -55,7 +55,7 @@ func (r *userRepo) GetByID(ctx context.Context, id int64) (*models.User, error) 
 
 func (r *userRepo) GetByLogin(ctx context.Context, login string) (*models.User, error) {
 	query, args, err := r.psql.
-		Select("id", "login", "password", "firstname", "lastname").
+		Select("id", "login", "password", "firstname", "lastname", "role").
 		From("tbl_user").
 		Where(sq.Eq{"login": login}).
 		ToSql()
@@ -64,7 +64,7 @@ func (r *userRepo) GetByLogin(ctx context.Context, login string) (*models.User, 
 	}
 	row := r.db.QueryRow(ctx, query, args...)
 	user := &models.User{}
-	err = row.Scan(&user.ID, &user.Login, &user.Password, &user.Firstname, &user.Lastname)
+	err = row.Scan(&user.ID, &user.Login, &user.Password, &user.Firstname, &user.Lastname, &user.Role)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -73,7 +73,7 @@ func (r *userRepo) GetByLogin(ctx context.Context, login string) (*models.User, 
 
 func (r *userRepo) GetAll(ctx context.Context, limit, offset int) ([]models.User, error) {
 	query, args, err := r.psql.
-		Select("id", "login", "password", "firstname", "lastname").
+		Select("id", "login", "password", "firstname", "lastname", "role").
 		From("tbl_user").
 		OrderBy("id").
 		Limit(uint64(limit)).
@@ -90,7 +90,7 @@ func (r *userRepo) GetAll(ctx context.Context, limit, offset int) ([]models.User
 	var users []models.User
 	for rows.Next() {
 		var u models.User
-		if err := rows.Scan(&u.ID, &u.Login, &u.Password, &u.Firstname, &u.Lastname); err != nil {
+		if err := rows.Scan(&u.ID, &u.Login, &u.Password, &u.Firstname, &u.Lastname, &u.Role); err != nil {
 			return nil, err
 		}
 		users = append(users, u)
@@ -105,6 +105,7 @@ func (r *userRepo) Update(ctx context.Context, user *models.User) (bool, error) 
 		Set("password", user.Password).
 		Set("firstname", user.Firstname).
 		Set("lastname", user.Lastname).
+		Set("role", user.Role).
 		Where(sq.Eq{"id": user.ID}).
 		ToSql()
 	if err != nil {
@@ -134,7 +135,7 @@ func (r *userRepo) Delete(ctx context.Context, id int64) (bool, error) {
 
 func (r *userRepo) GetByNewsID(ctx context.Context, newsID int64) (*models.User, error) {
 	query, args, err := r.psql.
-		Select("u.id", "u.login", "u.password", "u.firstname", "u.lastname").
+		Select("u.id", "u.login", "u.password", "u.firstname", "u.lastname", "u.role").
 		From("tbl_user u").
 		Join("tbl_news n ON n.user_id = u.id").
 		Where(sq.Eq{"n.id": newsID}).
@@ -144,7 +145,7 @@ func (r *userRepo) GetByNewsID(ctx context.Context, newsID int64) (*models.User,
 	}
 	row := r.db.QueryRow(ctx, query, args...)
 	user := &models.User{}
-	err = row.Scan(&user.ID, &user.Login, &user.Password, &user.Firstname, &user.Lastname)
+	err = row.Scan(&user.ID, &user.Login, &user.Password, &user.Firstname, &user.Lastname, &user.Role)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}

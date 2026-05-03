@@ -1,38 +1,41 @@
 ﻿using Application.DTOs.Requests;
 using Application.DTOs.Responses;
-using Application.Exceptions;
-using Application.Exceptions.Application;
-using Application.Exceptions.Persistance;
 using Application.Interfaces;
 using AutoMapper;
 using Core.Entities;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace Application.Services
 {
     public class PostService : IPostService
     {
         private readonly IMapper _mapper;
-
         private readonly IPostRepository _postRepository;
-        private readonly IKafkaProducer _kafkaProducer;   // будет добавлен позже
+        private readonly IKafkaProducer _kafkaProducer;
+        private readonly IDistributedCache _cache;
 
-        public PostService(IMapper mapper, IPostRepository postRepository, IKafkaProducer kafkaProducer)
+        private const string AllPostsCacheKey = "posts_all";
+        private static string PostByIdKey(long id) => $"post_{id}";
+
+        public PostService(IMapper mapper, IPostRepository postRepository,
+                           IKafkaProducer kafkaProducer, IDistributedCache cache)
         {
             _mapper = mapper;
             _postRepository = postRepository;
             _kafkaProducer = kafkaProducer;
+            _cache = cache;
         }
 
         public async Task<PostResponseTo> CreatePost(PostRequestTo request)
         {
             var post = _mapper.Map<Post>(request);
             post.State = PostState.PENDING;
-
             var created = await _postRepository.AddAsync(post);
             var response = _mapper.Map<PostResponseTo>(created);
 
-            // Отправка в Kafka
             await _kafkaProducer.SendPostAsync(created);
+            await InvalidateCacheAsync(created.Id);
 
             return response;
         }
@@ -40,54 +43,65 @@ namespace Application.Services
         public async Task<PostResponseTo?> UpdatePost(PostRequestTo request)
         {
             var post = _mapper.Map<Post>(request);
-            // Важно: сохранить текущий State, если он уже был изменён (например, через Kafka)
             var existing = await _postRepository.GetByIdAsync(post.Id);
             if (existing == null) return null;
-            post.State = existing.State;   // не сбрасываем статус при обновлении контента
+            post.State = existing.State;   // сохраняем текущий статус
 
             var updated = await _postRepository.UpdateAsync(post);
             if (updated == null) return null;
 
             var response = _mapper.Map<PostResponseTo>(updated);
-
-            // Отправка в Kafka при обновлении
             await _kafkaProducer.SendPostAsync(updated);
+            await InvalidateCacheAsync(updated.Id);
 
+            return response;
+        }
+
+        public async Task<IEnumerable<PostResponseTo>> GetAllPosts()
+        {
+            var cached = await _cache.GetStringAsync(AllPostsCacheKey);
+            if (!string.IsNullOrEmpty(cached))
+                return JsonSerializer.Deserialize<List<PostResponseTo>>(cached)!;
+
+            var posts = await _postRepository.GetAllAsync();
+            var result = _mapper.Map<List<PostResponseTo>>(posts);
+
+            var options = new DistributedCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+            await _cache.SetStringAsync(AllPostsCacheKey, JsonSerializer.Serialize(result), options);
+            return result;
+        }
+
+        public async Task<PostResponseTo> GetPost(PostRequestTo getPostRequestTo)
+        {
+            long id = getPostRequestTo.Id ?? 0;
+            string cacheKey = PostByIdKey(id);
+            var cached = await _cache.GetStringAsync(cacheKey);
+            if (!string.IsNullOrEmpty(cached))
+                return JsonSerializer.Deserialize<PostResponseTo>(cached)!;
+
+            var post = await _postRepository.GetByIdAsync(id);
+            if (post == null) return null;
+
+            var response = _mapper.Map<PostResponseTo>(post);
+            var options = new DistributedCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+            await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(response), options);
             return response;
         }
 
         public async Task DeletePost(PostRequestTo deletePostRequestTo)
         {
-            Post postFromDto = _mapper.Map<Post>(deletePostRequestTo);
-
-            _ = await _postRepository.DeleteAsync(postFromDto)
-                ?? throw new PostNotFoundException($"Delete post {postFromDto} was not found");
+            var post = _mapper.Map<Post>(deletePostRequestTo);
+            await _postRepository.DeleteAsync(post);
+            await InvalidateCacheAsync(post.Id);
         }
 
-        public async Task<IEnumerable<PostResponseTo>> GetAllPosts()
+        // Публичный метод, чтобы Kafka-консьюмер мог сбросить кэш
+        public async Task InvalidateCacheAsync(long postId)
         {
-            IEnumerable<Post> allPosts = await _postRepository.GetAllAsync();
-
-            var allPostsResponseTos = new List<PostResponseTo>();
-            foreach (Post post in allPosts)
-            {
-                PostResponseTo postTo = _mapper.Map<PostResponseTo>(post);
-                allPostsResponseTos.Add(postTo);
-            }
-
-            return allPostsResponseTos;
-        }
-
-        public async Task<PostResponseTo> GetPost(PostRequestTo getPostsRequestTo)
-        {
-            Post postFromDto = _mapper.Map<Post>(getPostsRequestTo);
-
-            Post demandedPost = await _postRepository.GetByIdAsync(postFromDto.Id)
-                ?? throw new PostNotFoundException($"Demanded post {postFromDto} was not found");
-
-            PostResponseTo demandedPostResponseTo = _mapper.Map<PostResponseTo>(demandedPost);
-
-            return demandedPostResponseTo;
+            await _cache.RemoveAsync(AllPostsCacheKey);
+            await _cache.RemoveAsync(PostByIdKey(postId));
         }
     }
 }

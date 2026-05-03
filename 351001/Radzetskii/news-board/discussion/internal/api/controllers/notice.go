@@ -26,14 +26,18 @@ func (h *NoticeHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	{
 		v1.POST("/notices", h.Create)
 		v1.GET("/notices", h.GetAll)
-		v1.GET("/notices/:id", h.GetByLegacyID)
-		v1.PUT("/notices/:id", h.UpdateByLegacyID)
-		v1.DELETE("/notices/:id", h.DeleteByLegacyID)
-		v1.GET("/notices/by-news/:newsId", h.GetByLegacyNewsID)
-		v1.GET("/notices/by-key/:country/:newsId/:id", h.GetByID)
-		v1.PUT("/notices/by-key/:country/:newsId/:id", h.Update)
-		v1.DELETE("/notices/by-key/:country/:newsId/:id", h.Delete)
-		v1.GET("/notices/by-country/:country/news/:newsId", h.GetByNewsID)
+
+		v1.GET("/notices/:id", h.GetByID)
+		v1.PUT("/notices/:id", h.Update)
+		v1.DELETE("/notices/:id", h.Delete)
+
+		v1.GET("/notices/by-news/:newsId", h.GetByNewsID)
+
+		v1.GET("/notices/by-key/:country/:newsId/:id", h.GetByIDFromPath)
+		v1.PUT("/notices/by-key/:country/:newsId/:id", h.UpdateFromPath)
+		v1.DELETE("/notices/by-key/:country/:newsId/:id", h.DeleteFromPath)
+
+		v1.GET("/notices/by-country/:country/news/:newsId", h.GetByNewsIDFromPath)
 	}
 }
 
@@ -61,23 +65,8 @@ func (h *NoticeHandler) GetAll(c *gin.Context) {
 	if !ok {
 		return
 	}
-	country := c.Query("country")
 
-	resp, err := h.service.GetAll(c.Request.Context(), country, limit, offset)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	c.JSON(http.StatusOK, resp)
-}
-
-func (h *NoticeHandler) GetByLegacyID(c *gin.Context) {
-	id, ok := parseInt64Param(c, "id", "id")
-	if !ok {
-		return
-	}
-
-	resp, err := h.service.GetByID(c.Request.Context(), "", 0, id)
+	resp, err := h.service.GetAll(c.Request.Context(), limit, offset)
 	if err != nil {
 		c.Error(err)
 		return
@@ -86,21 +75,12 @@ func (h *NoticeHandler) GetByLegacyID(c *gin.Context) {
 }
 
 func (h *NoticeHandler) GetByID(c *gin.Context) {
-	country := c.Param("country")
-	if country == "" {
-		respondBadRequest(c, "Invalid country format")
-		return
-	}
-	newsID, ok := parseInt64Param(c, "newsId", "news id")
-	if !ok {
-		return
-	}
 	id, ok := parseInt64Param(c, "id", "id")
 	if !ok {
 		return
 	}
 
-	resp, err := h.service.GetByID(c.Request.Context(), country, newsID, id)
+	resp, err := h.service.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.Error(err)
 		return
@@ -109,15 +89,6 @@ func (h *NoticeHandler) GetByID(c *gin.Context) {
 }
 
 func (h *NoticeHandler) Update(c *gin.Context) {
-	country := c.Param("country")
-	if country == "" {
-		respondBadRequest(c, "Invalid country format")
-		return
-	}
-	newsID, ok := parseInt64Param(c, "newsId", "news id")
-	if !ok {
-		return
-	}
 	id, ok := parseInt64Param(c, "id", "id")
 	if !ok {
 		return
@@ -128,36 +99,8 @@ func (h *NoticeHandler) Update(c *gin.Context) {
 		respondBadRequest(c, "Invalid JSON format")
 		return
 	}
-	if err := h.validate.Struct(req); err != nil {
-		respondBadRequest(c, "Validation failed: "+err.Error())
-		return
-	}
 
-	resp, err := h.service.Update(c.Request.Context(), country, newsID, id, &req)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	c.JSON(http.StatusOK, resp)
-}
-
-func (h *NoticeHandler) UpdateByLegacyID(c *gin.Context) {
-	id, ok := parseInt64Param(c, "id", "id")
-	if !ok {
-		return
-	}
-
-	var req dto.NoticeRequestTo
-	if err := c.ShouldBindJSON(&req); err != nil {
-		respondBadRequest(c, "Invalid JSON format")
-		return
-	}
-	if err := h.validate.Struct(req); err != nil {
-		respondBadRequest(c, "Validation failed: "+err.Error())
-		return
-	}
-
-	resp, err := h.service.Update(c.Request.Context(), "", 0, id, &req)
+	resp, err := h.service.Update(c.Request.Context(), id, &req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -166,34 +109,12 @@ func (h *NoticeHandler) UpdateByLegacyID(c *gin.Context) {
 }
 
 func (h *NoticeHandler) Delete(c *gin.Context) {
-	country := c.Param("country")
-	if country == "" {
-		respondBadRequest(c, "Invalid country format")
-		return
-	}
-	newsID, ok := parseInt64Param(c, "newsId", "news id")
-	if !ok {
-		return
-	}
 	id, ok := parseInt64Param(c, "id", "id")
 	if !ok {
 		return
 	}
 
-	if err := h.service.Delete(c.Request.Context(), country, newsID, id); err != nil {
-		c.Error(err)
-		return
-	}
-	c.Status(http.StatusNoContent)
-}
-
-func (h *NoticeHandler) DeleteByLegacyID(c *gin.Context) {
-	id, ok := parseInt64Param(c, "id", "id")
-	if !ok {
-		return
-	}
-
-	if err := h.service.Delete(c.Request.Context(), "", 0, id); err != nil {
+	if err := h.service.Delete(c.Request.Context(), id); err != nil {
 		c.Error(err)
 		return
 	}
@@ -201,17 +122,12 @@ func (h *NoticeHandler) DeleteByLegacyID(c *gin.Context) {
 }
 
 func (h *NoticeHandler) GetByNewsID(c *gin.Context) {
-	country := c.Param("country")
-	if country == "" {
-		respondBadRequest(c, "Invalid country format")
-		return
-	}
 	newsID, ok := parseInt64Param(c, "newsId", "news id")
 	if !ok {
 		return
 	}
 
-	resp, err := h.service.GetByNewsID(c.Request.Context(), country, newsID)
+	resp, err := h.service.GetByNewsID(c.Request.Context(), newsID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -219,13 +135,60 @@ func (h *NoticeHandler) GetByNewsID(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func (h *NoticeHandler) GetByLegacyNewsID(c *gin.Context) {
+func (h *NoticeHandler) GetByIDFromPath(c *gin.Context) {
+	id, ok := parseInt64Param(c, "id", "id")
+	if !ok {
+		return
+	}
+
+	resp, err := h.service.GetByID(c.Request.Context(), id)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h *NoticeHandler) UpdateFromPath(c *gin.Context) {
+	id, ok := parseInt64Param(c, "id", "id")
+	if !ok {
+		return
+	}
+
+	var req dto.NoticeRequestTo
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondBadRequest(c, "Invalid JSON format")
+		return
+	}
+
+	resp, err := h.service.Update(c.Request.Context(), id, &req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h *NoticeHandler) DeleteFromPath(c *gin.Context) {
+	id, ok := parseInt64Param(c, "id", "id")
+	if !ok {
+		return
+	}
+
+	if err := h.service.Delete(c.Request.Context(), id); err != nil {
+		c.Error(err)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+func (h *NoticeHandler) GetByNewsIDFromPath(c *gin.Context) {
 	newsID, ok := parseInt64Param(c, "newsId", "news id")
 	if !ok {
 		return
 	}
 
-	resp, err := h.service.GetByNewsID(c.Request.Context(), "", newsID)
+	resp, err := h.service.GetByNewsID(c.Request.Context(), newsID)
 	if err != nil {
 		c.Error(err)
 		return

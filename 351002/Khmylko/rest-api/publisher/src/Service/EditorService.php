@@ -39,6 +39,20 @@ class EditorService {
         }
         return $editors;
     }
+    public function createFromRegistrationRequest(array $data): array {
+        $normalized = [
+            'login' => (string)($data['login'] ?? ''),
+            'password' => (string)($data['password'] ?? ''),
+            'firstname' => (string)($data['firstName'] ?? $data['firstname'] ?? ''),
+            'lastname' => (string)($data['lastName'] ?? $data['lastname'] ?? ''),
+            'role' => (string)($data['role'] ?? 'CUSTOMER'),
+        ];
+        if (!in_array($normalized['role'], ['ADMIN', 'CUSTOMER'], true)) {
+            throw new ValidationException('role must be ADMIN or CUSTOMER');
+        }
+        return $this->create($normalized);
+    }
+
     public function create(array $data): array {
         if (empty($data['login']) || strlen($data['login']) < 2 || strlen($data['login']) > 64) {
             throw new ValidationException("Login must be 2-64 characters");
@@ -65,7 +79,7 @@ class EditorService {
         }
 
         // Хешируем пароль
-        $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
 
         $editor = $this->repo->create($data);
         unset($editor['password']);
@@ -78,11 +92,20 @@ class EditorService {
             throw new NotFoundException('Editor', $id);
         }
 
-        if (isset($data['login'])) $existing['login'] = $data['login'];
-        if (isset($data['firstname'])) $existing['firstname'] = $data['firstname'];
-        if (isset($data['lastname'])) $existing['lastname'] = $data['lastname'];
+        if (isset($data['login'])) {
+            $existing['login'] = $data['login'];
+        }
+        if (isset($data['firstname'])) {
+            $existing['firstname'] = $data['firstname'];
+        }
+        if (isset($data['lastname'])) {
+            $existing['lastname'] = $data['lastname'];
+        }
+        if (isset($data['role'])) {
+            $existing['role'] = $data['role'];
+        }
         if (isset($data['password'])) {
-            $existing['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+            $existing['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
         }
 
         $editor = $this->repo->update($id, $existing);
