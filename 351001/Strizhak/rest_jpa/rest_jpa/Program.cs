@@ -34,7 +34,25 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+<<<<<<< HEAD
     context.Database.Migrate(); 
+=======
+    context.Database.Migrate(); // применяем миграции, если их нет
+
+    // Проверяем, есть ли пользователь с Id = 1
+    if (!context.Users.Any(u => u.Id == 1))
+    {
+        context.Users.Add(new User
+        {
+            Id = 1,
+            Login = "veranikastryzhak@gmail.com",
+            Password = BCrypt.Net.BCrypt.HashPassword("password123"),
+            Firstname = "Veranika",
+            Lastname = "Stryzhak"
+        });
+        context.SaveChanges();
+    }
+>>>>>>> upstream/main
 }
 
 if (app.Environment.IsDevelopment())

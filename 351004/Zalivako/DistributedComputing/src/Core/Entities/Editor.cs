@@ -1,5 +1,11 @@
 ﻿namespace Core.Entities
 {
+    public static class UserRoles
+    {
+        public const string Admin = "ADMIN";
+        public const string Customer = "CUSTOMER";
+    }
+
     public class Editor(
         string login,
         string password,
@@ -13,5 +19,9 @@
         public string Firstname { get; set; } = firstname;
 
         public string Lastname { get; set; } = lastname;
+
+        public string Role { get; set; } = UserRoles.Customer;
+
+        public IEnumerable<News>? News { get; set; }
     }
 }

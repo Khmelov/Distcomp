@@ -53,7 +53,11 @@ namespace rest_api.Data
                 entity.Property(e => e.Name).HasColumnName("name");
             });
 
+<<<<<<< HEAD
             // Для промежуточной таблицы TopicTag
+=======
+            // Для промежуточной таблицы TopicTag (если нужен префикс)
+>>>>>>> upstream/main
             modelBuilder.Entity<TopicTag>().ToTable("tbl_topic_tag");
             // Связь Topic -> User
             modelBuilder.Entity<Topic>()
