@@ -11,9 +11,11 @@ import jakarta.transaction.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,10 +26,12 @@ import java.util.stream.Collectors;
 public class AuthorService {
     private final AuthorRepository authorRepository;
     private final EntityMapper mapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthorService(AuthorRepository authorRepository, EntityMapper mapper) {
+    public AuthorService(AuthorRepository authorRepository, EntityMapper mapper, PasswordEncoder passwordEncoder) {
         this.authorRepository = authorRepository;
         this.mapper = mapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     //CREATE
@@ -61,15 +65,26 @@ public class AuthorService {
                 .map(mapper::toAuthorResponse);
     }
 
+    public Author findByLogin(String login) {
+        return authorRepository.findByLogin(login)
+                .orElseThrow(() -> new NotFoundException("Author not found with login: " + login));
+    }
+
     //UPDATE
     @CacheEvict(value = "authors", key = "#id", condition = "#id != null")
     public AuthorResponseTo update(Long id, AuthorRequestTo dto) {
-        if (authorRepository.existsByLogin(dto.getLogin())) {
+        Author entity = authorRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Author not found"));
+
+        if (!entity.getLogin().equals(dto.getLogin()) && authorRepository.existsByLogin(dto.getLogin())) {
             throw new DuplicateException("Login already exists");
         }
 
-        Author entity = authorRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Author not found"));
+        if (dto.getPassword() != null && !dto.getPassword().startsWith("$2a$")) {
+            dto.setPassword(passwordEncoder.encode(dto.getPassword()));
+        } else if (dto.getPassword() == null) {
+            dto.setPassword(entity.getPassword());
+        }
 
         mapper.updateAuthor(dto, entity);
         Author updated = authorRepository.save(entity);
@@ -82,11 +97,15 @@ public class AuthorService {
             @CacheEvict(value = "allAuthors", allEntries = true)
     })
     public void delete(Long id) {
-
-        if (!authorRepository.existsById(id)) {
-            throw new NotFoundException("Author not found");
+        try {
+            authorRepository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            throw new RuntimeException("Cannot delete author because it has related issues or messages", e);
         }
+    }
 
-        authorRepository.deleteById(id);
+    public boolean isOwner(Long authorId, String currentLogin) {
+        Author author = authorRepository.findById(authorId).orElse(null);
+        return author != null && author.getLogin().equals(currentLogin);
     }
 }

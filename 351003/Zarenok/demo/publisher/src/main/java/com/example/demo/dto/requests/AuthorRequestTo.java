@@ -26,4 +26,7 @@ public class AuthorRequestTo {
     @Size(min = 2, max = 64, message = "Lastname must be between 2 and 64 characters")
     @JsonProperty("lastname")
     private String lastname;
+
+    @JsonProperty("role")
+    private String role;
 }

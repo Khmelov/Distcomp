@@ -29,6 +29,9 @@ public class Author {
     @Column(name = "lastname", length = 64, nullable = false)
     private String lastname;
 
+    @Column(nullable = false)
+    private String role;
+
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Issue> issues = new ArrayList<>();
 

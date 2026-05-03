@@ -1,4 +1,4 @@
-package com.example.demo.controllers;
+package com.example.demo.controllers.v1;
 
 import com.example.demo.dto.requests.MessageKafkaRequestTo;
 import com.example.demo.dto.requests.MessageRequestTo;
