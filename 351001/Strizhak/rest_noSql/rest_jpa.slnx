@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Discussion/Discussion.csproj" Id="c9091aee-1201-43ba-a4d6-a8ec82eefe4c" />
+  <Project Path="Publisher/Publisher.csproj" />
+  <Project Path="Shared.Dtos/Shared.Dtos.csproj" Id="92249c66-8525-4138-a5f0-509d22575cc3" />
+</Solution>
