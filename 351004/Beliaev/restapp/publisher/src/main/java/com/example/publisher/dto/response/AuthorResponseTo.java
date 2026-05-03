@@ -8,4 +8,5 @@ public class AuthorResponseTo {
     private String login;
     private String firstname;
     private String lastname;
+    private String role;
 }

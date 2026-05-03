@@ -9,6 +9,6 @@
     <include file="changeset/002-initial-schema.xml" relativeToChangelogFile="true"/>
     <include file="changeset/003-initial-data.xml" relativeToChangelogFile="true"/>
     <include file="changeset/004-add-constraints.xml" relativeToChangelogFile="true"/>
-
+    <include file="changeset/005-add-role.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
