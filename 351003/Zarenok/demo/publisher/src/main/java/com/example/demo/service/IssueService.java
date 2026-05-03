@@ -141,4 +141,11 @@ public class IssueService {
             }
         }
     }
+
+    public boolean isOwnerOfIssue(Long issueId, String currentLogin) {
+        Issue issue = repository.findById(issueId).orElse(null);
+        if (issue == null) return false;
+        Author author = issue.getAuthor();
+        return author != null && author.getLogin().equals(currentLogin);
+    }
 }

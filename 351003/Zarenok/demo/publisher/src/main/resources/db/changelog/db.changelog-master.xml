@@ -3,7 +3,7 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
 
     <changeSet id="1-create-tbl_author" author="palina">
         <createTable tableName="tbl_author" schemaName="dictcomp">
@@ -21,16 +21,13 @@
         </createTable>
     </changeSet>
 
-
     <changeSet id="2-create-tbl_issue" author="palina">
         <createTable tableName="tbl_issue" schemaName="dictcomp">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true"/>
             </column>
             <column name="author_id" type="BIGINT">
-                <constraints foreignKeyName="fk_issue_author"
-                             references="dictcomp.tbl_author(id)"
-                             nullable="false"/>
+                <constraints nullable="false" foreignKeyName="fk_issue_author" references="dictcomp.tbl_author(id)"/>
             </column>
             <column name="title" type="VARCHAR(64)">
                 <constraints nullable="false"/>
@@ -55,22 +52,29 @@
     <changeSet id="5-create-tbl_issue_mark" author="palina">
         <createTable tableName="tbl_issue_mark" schemaName="dictcomp">
             <column name="issue_id" type="BIGINT">
-                <constraints foreignKeyName="fk_issue_mark_issue"
-                             references="dictcomp.tbl_issue(id)"/>
+                <constraints foreignKeyName="fk_issue_mark_issue" references="dictcomp.tbl_issue(id)"/>
             </column>
             <column name="mark_id" type="BIGINT">
-                <constraints foreignKeyName="fk_issue_mark_mark"
-                             references="dictcomp.tbl_mark(id)"/>
+                <constraints foreignKeyName="fk_issue_mark_mark" references="dictcomp.tbl_mark(id)"/>
             </column>
         </createTable>
     </changeSet>
 
+    <changeSet id="7-add-role-column" author="palina">
+        <addColumn tableName="tbl_author" schemaName="dictcomp">
+            <column name="role" type="VARCHAR(64)"/>
+        </addColumn>
+    </changeSet>
+
+    <!--
     <changeSet id="6-init-data" author="palina">
         <insert tableName="tbl_author" schemaName="dictcomp">
             <column name="login">palina.zaranok@gmail.com</column>
-            <column name="firstname">Полина</column>
-            <column name="lastname">Заренок</column>
-            <column name="password">hashed_password</column>
+            <column name="firstname">Palina</column>
+            <column name="lastname">Zaranok</column>
+            <column name="password">hashedpassword</column>
+            <column name="role">CUSTOMER</column>
         </insert>
     </changeSet>
+-->
 </databaseChangeLog>
