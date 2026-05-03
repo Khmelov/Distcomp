@@ -5,9 +5,8 @@ namespace DataAccess.Models
 {
     public class BaseEntity
     {
-        [PartitionKey]
         [JsonPropertyName("id")]
-        [Column("id", Type = typeof(int))]
+        [Column("id")]
         public int Id { get; set; }
     }
 }

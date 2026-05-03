@@ -9,8 +9,13 @@ namespace BusinessLogic.Profiles
     {
         public PostProfile()
         {
-            CreateMap<PostRequestTo, Post>();
-            CreateMap<Post, PostResponseTo>();
+            CreateMap<PostRequestTo, PostByStory>();
+            CreateMap<PostByStory, PostResponseTo>();
+
+            CreateMap<PostRequestTo, PostById>();
+            CreateMap<PostById, PostResponseTo>();
+
+            CreateMap<PostRequestTo, PostResponseTo>();
         }
     }
 }

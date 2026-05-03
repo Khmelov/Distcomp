@@ -1,5 +1,4 @@
-﻿using BusinessLogic.DTO.Response;
-using BusinessLogic.Servicies;
+﻿using BusinessLogic.Servicies;
 using DataAccess.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,8 +6,7 @@ namespace Presentation.Controllers
 {
     [Route("api/v1.0/[controller]")]
     [ApiController]
-    public abstract class BaseController<TEntity, TRequest, TResponse> : ControllerBase
-        where TEntity : BaseEntity
+    public abstract class BaseController<TRequest, TResponse> : ControllerBase
         where TRequest : class
         where TResponse : BaseEntity
     {
@@ -25,7 +23,7 @@ namespace Presentation.Controllers
             return Ok(await _service.GetAllAsync());
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetByIdRoute")]
         public async virtual Task<ActionResult<TResponse>> GetByIdAsync(int id)
         {
             TResponse? response = await _service.GetByIdAsync(id);
@@ -39,9 +37,8 @@ namespace Presentation.Controllers
         [HttpPost]
         public async virtual Task<ActionResult<TResponse>> CreateAsync([FromBody] TRequest entity)
         {
-
-                TResponse? response = await _service.CreateAsync(entity);
-                return Created($"{response.Id}", response);
+            TResponse response = await _service.CreateAsync(entity);
+            return CreatedAtRoute("GetByIdRoute", new { id = response.Id }, response);
         }
 
         [HttpPut]
