@@ -46,17 +46,17 @@ func (s *CommentStorage) Create(ctx context.Context, comment *domain.Comment) er
 		comment.State = "APPROVE"
 	}
 	return s.session.Query(
-		`INSERT INTO tbl_comment (article_id, id, content, state) VALUES (?, ?, ?, ?)`,
-		comment.ArticleID, comment.ID, comment.Content, comment.State,
+		`INSERT INTO tbl_comment (article_id, id, editor_id, content, state) VALUES (?, ?, ?, ?, ?)`,
+		comment.ArticleID, comment.ID, comment.EditorID, comment.Content, comment.State,
 	).WithContext(ctx).Exec()
 }
 
 func (s *CommentStorage) GetByID(ctx context.Context, id int64) (*domain.Comment, error) {
 	var c domain.Comment
 	err := s.session.Query(
-		`SELECT article_id, id, content, state FROM tbl_comment WHERE id = ? ALLOW FILTERING`,
+		`SELECT article_id, id, editor_id, content, state FROM tbl_comment WHERE id = ? ALLOW FILTERING`,
 		id,
-	).WithContext(ctx).Scan(&c.ArticleID, &c.ID, &c.Content, &c.State)
+	).WithContext(ctx).Scan(&c.ArticleID, &c.ID, &c.EditorID, &c.Content, &c.State)
 
 	if err != nil {
 		if errors.Is(err, gocql.ErrNotFound) {
@@ -69,14 +69,15 @@ func (s *CommentStorage) GetByID(ctx context.Context, id int64) (*domain.Comment
 
 func (s *CommentStorage) GetAll(ctx context.Context) ([]*domain.Comment, error) {
 	var comments []*domain.Comment
-	iter := s.session.Query(`SELECT article_id, id, content, state FROM tbl_comment`).WithContext(ctx).Iter()
+	iter := s.session.Query(`SELECT article_id, id, editor_id, content, state FROM tbl_comment`).WithContext(ctx).Iter()
 
-	var articleID, id int64
+	var articleID, id, editorID int64
 	var content, state string
-	for iter.Scan(&articleID, &id, &content, &state) {
+	for iter.Scan(&articleID, &id, &editorID, &content, &state) {
 		comments = append(comments, &domain.Comment{
 			ArticleID: articleID,
 			ID:        id,
+			EditorID:  editorID,
 			Content:   content,
 			State:     state,
 		})
@@ -102,14 +103,14 @@ func (s *CommentStorage) Update(ctx context.Context, comment *domain.Comment) er
 	if old.ArticleID != comment.ArticleID {
 		_ = s.session.Query(`DELETE FROM tbl_comment WHERE article_id = ? AND id = ?`, old.ArticleID, old.ID).WithContext(ctx).Exec()
 		return s.session.Query(
-			`INSERT INTO tbl_comment (article_id, id, content, state) VALUES (?, ?, ?, ?)`,
-			comment.ArticleID, comment.ID, comment.Content, state,
+			`INSERT INTO tbl_comment (article_id, id, editor_id, content, state) VALUES (?, ?, ?, ?, ?)`,
+			comment.ArticleID, comment.ID, comment.EditorID, comment.Content, state,
 		).WithContext(ctx).Exec()
 	}
 
 	return s.session.Query(
-		`UPDATE tbl_comment SET content = ?, state = ? WHERE article_id = ? AND id = ?`,
-		comment.Content, state, comment.ArticleID, comment.ID,
+		`UPDATE tbl_comment SET content = ?, state = ?, editor_id = ? WHERE article_id = ? AND id = ?`,
+		comment.Content, state, comment.EditorID, comment.ArticleID, comment.ID,
 	).WithContext(ctx).Exec()
 }
 

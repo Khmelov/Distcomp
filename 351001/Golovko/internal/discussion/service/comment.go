@@ -17,11 +17,11 @@ func NewCommentService(repo *cassandra.CommentStorage) *CommentService {
 }
 
 func (s *CommentService) Create(ctx context.Context, req dto.CommentRequestTo) (dto.CommentResponseTo, error) {
-	c := &domain.Comment{ArticleID: req.ArticleID, Content: req.Content}
+	c := &domain.Comment{ArticleID: req.ArticleID, EditorID: req.EditorID, Content: req.Content}
 	if err := s.Repo.Create(ctx, c); err != nil {
 		return dto.CommentResponseTo{}, err
 	}
-	return dto.CommentResponseTo{ID: c.ID, ArticleID: c.ArticleID, Content: c.Content, State: c.State}, nil
+	return dto.CommentResponseTo{ID: c.ID, ArticleID: c.ArticleID, EditorID: c.EditorID, Content: c.Content, State: c.State}, nil
 }
 
 func (s *CommentService) GetByID(ctx context.Context, id int64) (dto.CommentResponseTo, error) {
@@ -29,7 +29,7 @@ func (s *CommentService) GetByID(ctx context.Context, id int64) (dto.CommentResp
 	if err != nil {
 		return dto.CommentResponseTo{}, err
 	}
-	return dto.CommentResponseTo{ID: c.ID, ArticleID: c.ArticleID, Content: c.Content, State: c.State}, nil
+	return dto.CommentResponseTo{ID: c.ID, ArticleID: c.ArticleID, EditorID: c.EditorID, Content: c.Content, State: c.State}, nil
 }
 
 func (s *CommentService) GetAll(ctx context.Context) ([]dto.CommentResponseTo, error) {
@@ -39,18 +39,18 @@ func (s *CommentService) GetAll(ctx context.Context) ([]dto.CommentResponseTo, e
 	}
 	res := make([]dto.CommentResponseTo, len(comments))
 	for i, c := range comments {
-		res[i] = dto.CommentResponseTo{ID: c.ID, ArticleID: c.ArticleID, Content: c.Content, State: c.State}
+		res[i] = dto.CommentResponseTo{ID: c.ID, ArticleID: c.ArticleID, EditorID: c.EditorID, Content: c.Content, State: c.State}
 	}
 	return res, nil
 }
 
 func (s *CommentService) Update(ctx context.Context, id int64, req dto.CommentRequestTo) (dto.CommentResponseTo, error) {
-	c := &domain.Comment{ID: id, ArticleID: req.ArticleID, Content: req.Content}
+	c := &domain.Comment{ID: id, ArticleID: req.ArticleID, EditorID: req.EditorID, Content: req.Content}
 	if err := s.Repo.Update(ctx, c); err != nil {
 		return dto.CommentResponseTo{}, err
 	}
 	cFromDB, _ := s.Repo.GetByID(ctx, id)
-	return dto.CommentResponseTo{ID: cFromDB.ID, ArticleID: cFromDB.ArticleID, Content: cFromDB.Content, State: cFromDB.State}, nil
+	return dto.CommentResponseTo{ID: cFromDB.ID, ArticleID: cFromDB.ArticleID, EditorID: cFromDB.EditorID, Content: cFromDB.Content, State: cFromDB.State}, nil
 }
 
 func (s *CommentService) Delete(ctx context.Context, id int64) error {

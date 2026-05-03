@@ -10,6 +10,7 @@ import (
 	"distcomp/internal/repository"
 
 	redis "github.com/redis/go-redis/v9"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Editor interface {
@@ -45,6 +46,7 @@ type Comment interface {
 }
 
 type Manager struct {
+	Auth    AuthService
 	Editor  Editor
 	Article Article
 	Tag     Tag
@@ -58,6 +60,7 @@ func NewManager(repo postgres.Storage, kafkaBrokers []string, rdb *redis.Client)
 	baseComment := NewCommentKafka(kafkaBrokers)
 
 	return &Manager{
+		Auth:    NewAuthService(repo),
 		Editor:  NewEditorCache(baseEditor, rdb),
 		Article: NewArticleCache(baseArticle, rdb),
 		Tag:     NewTagCache(baseTag, rdb),
@@ -68,11 +71,28 @@ func NewManager(repo postgres.Storage, kafkaBrokers []string, rdb *redis.Client)
 type editorService struct{ repo postgres.Storage }
 
 func (s *editorService) Create(ctx context.Context, req dto.EditorRequestTo) (dto.EditorResponseTo, error) {
-	e := &domain.Editor{Login: req.Login, Password: req.Password, FirstName: req.FirstName, LastName: req.LastName}
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return dto.EditorResponseTo{}, err
+	}
+
+	role := req.Role
+	if role == "" {
+		role = "CUSTOMER"
+	}
+
+	e := &domain.Editor{
+		Login:     req.Login,
+		Password:  string(hashedBytes),
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Role:      role,
+	}
+
 	if err := s.repo.CreateEditor(ctx, e); err != nil {
 		return dto.EditorResponseTo{}, err
 	}
-	return dto.EditorResponseTo{ID: e.ID, Login: e.Login, FirstName: e.FirstName, LastName: e.LastName}, nil
+	return dto.EditorResponseTo{ID: e.ID, Login: e.Login, FirstName: e.FirstName, LastName: e.LastName, Role: e.Role}, nil
 }
 func (s *editorService) GetByID(ctx context.Context, id int64) (dto.EditorResponseTo, error) {
 	e, err := s.repo.GetEditorByID(ctx, id)
@@ -93,13 +113,38 @@ func (s *editorService) GetAll(ctx context.Context, params repository.ListParams
 	return res, nil
 }
 func (s *editorService) Update(ctx context.Context, id int64, req dto.EditorRequestTo) (dto.EditorResponseTo, error) {
-	e := &domain.Editor{ID: id, Login: req.Login, Password: req.Password, FirstName: req.FirstName, LastName: req.LastName}
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return dto.EditorResponseTo{}, err
+	}
+
+	old, err := s.repo.GetEditorByID(ctx, id)
+	if err != nil {
+		return dto.EditorResponseTo{}, err
+	}
+
+	role := req.Role
+	if role == "" {
+		role = old.Role
+	}
+
+	e := &domain.Editor{
+		ID:        id,
+		Login:     req.Login,
+		Password:  string(hashedBytes),
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Role:      role,
+	}
+
 	if err := s.repo.UpdateEditor(ctx, e); err != nil {
 		return dto.EditorResponseTo{}, err
 	}
-	return dto.EditorResponseTo{ID: e.ID, Login: e.Login, FirstName: e.FirstName, LastName: e.LastName}, nil
+	return dto.EditorResponseTo{ID: e.ID, Login: e.Login, FirstName: e.FirstName, LastName: e.LastName, Role: e.Role}, nil
 }
-func (s *editorService) Delete(ctx context.Context, id int64) error { return s.repo.DeleteEditor(ctx, id) }
+func (s *editorService) Delete(ctx context.Context, id int64) error {
+	return s.repo.DeleteEditor(ctx, id)
+}
 
 type articleService struct{ repo postgres.Storage }
 
@@ -183,7 +228,9 @@ func (s *articleService) Update(ctx context.Context, id int64, req dto.ArticleRe
 	}
 	return res, nil
 }
-func (s *articleService) Delete(ctx context.Context, id int64) error { return s.repo.DeleteArticle(ctx, id) }
+func (s *articleService) Delete(ctx context.Context, id int64) error {
+	return s.repo.DeleteArticle(ctx, id)
+}
 
 type tagService struct{ repo postgres.Storage }
 

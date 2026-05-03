@@ -8,6 +8,7 @@ type Editor struct {
 	Password  string
 	FirstName string
 	LastName  string
+	Role      string
 }
 
 type Article struct {
@@ -28,6 +29,7 @@ type Tag struct {
 type Comment struct {
 	ID        int64
 	ArticleID int64
+	EditorID  int64
 	Content   string
 	State     string
 }

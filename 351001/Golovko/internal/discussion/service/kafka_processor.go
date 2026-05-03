@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"strings"
 	"time"
 
@@ -36,21 +35,16 @@ func NewKafkaProcessor(brokers []string, svc *CommentService) *KafkaProcessor {
 }
 
 func (p *KafkaProcessor) Start() {
-	log.Println("Starting Kafka Processor in discussion service...")
 	for {
 		m, err := p.reader.ReadMessage(context.Background())
 		if err != nil {
-			log.Printf("Failed to read from InTopic: %v", err)
 			continue
 		}
 
 		var msg kafkaMsg.Message
-		if err := json.Unmarshal(m.Value, &msg); err != nil {
-			log.Printf("Failed to unmarshal kafka message: %v", err)
-			continue
+		if err := json.Unmarshal(m.Value, &msg); err == nil {
+			go p.processMessage(msg)
 		}
-
-		go p.processMessage(msg)
 	}
 }
 
@@ -77,11 +71,13 @@ func (p *KafkaProcessor) processMessage(msg kafkaMsg.Message) {
 		c := &domain.Comment{
 			ID:        msg.Response.ID,
 			ArticleID: msg.Response.ArticleID,
+			EditorID:  msg.Response.EditorID,
 			Content:   msg.Response.Content,
 			State:     state,
 		}
 
 		_ = p.service.Repo.Create(ctx, c)
+		return
 
 	case kafkaMsg.OpGet:
 		res, err := p.service.GetByID(ctx, msg.CommentID)

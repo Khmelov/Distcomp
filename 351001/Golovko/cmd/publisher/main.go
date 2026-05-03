@@ -17,6 +17,7 @@ import (
 	"distcomp/internal/publisher/repository/postgres"
 	"distcomp/internal/publisher/service"
 	v1 "distcomp/internal/publisher/transport/http/v1"
+	v2 "distcomp/internal/publisher/transport/http/v2"
 	"distcomp/pkg/client/postgresql"
 	redisClient "distcomp/pkg/client/redis"
 	"distcomp/pkg/logger"
@@ -85,9 +86,12 @@ func main() {
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	handlers := v1.NewHandler(services)
+	handlersV1 := v1.NewHandler(services)
+	handlersV2 := v2.NewHandler(services)
+
 	api := router.Group("/api")
-	handlers.InitRoutes(api)
+	handlersV1.InitRoutes(api)
+	handlersV2.InitRoutes(api)
 
 	port := os.Getenv("PUBLISHER_PORT")
 	if port == "" {

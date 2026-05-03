@@ -1,5 +1,16 @@
 package dto
 
+// --- AUTH ---
+type LoginRequestTo struct {
+	Login    string `json:"login" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type LoginResponseTo struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"type_token"`
+}
+
 // --- EDITOR ---
 type EditorRequestTo struct {
 	ID        int64  `json:"id,omitempty"`
@@ -7,6 +18,7 @@ type EditorRequestTo struct {
 	Password  string `json:"password" binding:"required,min=8,max=128"`
 	FirstName string `json:"firstname" binding:"required,min=2,max=64"`
 	LastName  string `json:"lastname" binding:"required,min=2,max=64"`
+	Role      string `json:"role,omitempty"`
 }
 
 type EditorResponseTo struct {
@@ -14,6 +26,7 @@ type EditorResponseTo struct {
 	Login     string `json:"login"`
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
+	Role      string `json:"role,omitempty"`
 }
 
 // --- ARTICLE ---
@@ -22,7 +35,7 @@ type ArticleRequestTo struct {
 	EditorID int64    `json:"editorId" binding:"required"`
 	Title    string   `json:"title" binding:"required,min=2,max=64"`
 	Content  string   `json:"content" binding:"required,min=4,max=2048"`
-	Tags     []string `json:"tags,omitempty"` // <--- ИЗМЕНИЛИ ЗДЕСЬ
+	Tags     []string `json:"tags,omitempty"`
 }
 
 type ArticleResponseTo struct {
@@ -50,12 +63,14 @@ type TagResponseTo struct {
 type CommentRequestTo struct {
 	ID        int64  `json:"id,omitempty"`
 	ArticleID int64  `json:"articleId" binding:"required"`
+	EditorID  int64  `json:"editorId,omitempty"`
 	Content   string `json:"content" binding:"required,min=2,max=2048"`
 }
 
 type CommentResponseTo struct {
 	ID        int64  `json:"id"`
 	ArticleID int64  `json:"articleId"`
+	EditorID  int64  `json:"editorId,omitempty"`
 	Content   string `json:"content"`
-	State     string `json:"state,omitempty"` // НОВОЕ ПОЛЕ
+	State     string `json:"state,omitempty"`
 }
