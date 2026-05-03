@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using ServerApp.Models;
 using ServerApp.Models.Entities;
 
 namespace ServerApp.Repository;
@@ -7,6 +8,11 @@ public class InMemoryRepository<T> : IRepository<T> where T : BaseEntity
 {
     protected readonly ConcurrentDictionary<long, T> _storage = new();
     private long _currentId;
+
+    public IEnumerable<T> GetPaged(QueryParams @params)
+    {
+        throw new NotImplementedException();
+    }
 
     public IEnumerable<T> GetAll()
     {

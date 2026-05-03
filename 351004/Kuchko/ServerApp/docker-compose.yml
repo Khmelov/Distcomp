@@ -1,0 +1,12 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: ./ServerApp
+      dockerfile: Dockerfile
+    container_name: distcomp_api
+    ports:
+      - "24110:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
