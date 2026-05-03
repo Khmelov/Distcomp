@@ -3,6 +3,7 @@ package by.bsuir.task310.service;
 import by.bsuir.task310.dto.ReactionRequestTo;
 import by.bsuir.task310.dto.ReactionResponseTo;
 import by.bsuir.task310.exception.EntityNotFoundException;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -11,19 +12,39 @@ import java.util.List;
 @Service
 public class ReactionService {
 
+    private final KafkaTemplate<String, ReactionRequestTo> kafkaTemplate;
     private final WebClient webClient;
 
-    public ReactionService(WebClient webClient) {
+    public ReactionService(KafkaTemplate<String, ReactionRequestTo> kafkaTemplate, WebClient webClient) {
+        this.kafkaTemplate = kafkaTemplate;
         this.webClient = webClient;
     }
 
     public ReactionResponseTo create(ReactionRequestTo requestTo) {
-        return webClient.post()
-                .uri("/api/v1.0/reactions")
-                .bodyValue(requestTo)
-                .retrieve()
-                .bodyToMono(ReactionResponseTo.class)
-                .block();
+        kafkaTemplate.send("InTopic", requestTo);
+
+        long start = System.currentTimeMillis();
+
+        while (System.currentTimeMillis() - start < 1000) {
+            List<ReactionResponseTo> reactions = getAll();
+
+            for (int i = reactions.size() - 1; i >= 0; i--) {
+                ReactionResponseTo reaction = reactions.get(i);
+                if (reaction.getTopicId().equals(requestTo.getTopicId())
+                        && reaction.getContent().equals(requestTo.getContent())) {
+                    return reaction;
+                }
+            }
+
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        throw new RuntimeException("Kafka response timeout");
     }
 
     public List<ReactionResponseTo> getAll() {
