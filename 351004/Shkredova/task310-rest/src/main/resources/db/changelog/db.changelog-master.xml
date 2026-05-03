@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+    <include file="db/changelog/changes/add_state_column.sql"/>
+
+
+    <changeSet id="1" author="student">
+        <createTable tableName="tbl_creator">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="timestamp"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="student">
+        <createTable tableName="tbl_mark">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="student">
+        <createTable tableName="tbl_news">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="title" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="content" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="timestamp"/>
+            <column name="creator_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_news_creator" references="tbl_creator(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="4" author="student">
+        <createTable tableName="tbl_notice">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="content" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="timestamp"/>
+            <column name="news_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_notice_news" references="tbl_news(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5" author="student">
+        <createTable tableName="tbl_news_mark">
+            <column name="news_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_news_mark_news" references="tbl_news(id)"/>
+            </column>
+            <column name="mark_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_news_mark_mark" references="tbl_mark(id)"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="tbl_news_mark" columnNames="news_id,mark_id" constraintName="pk_news_mark"/>
+    </changeSet>
+
+</databaseChangeLog>

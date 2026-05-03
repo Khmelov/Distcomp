@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.newsapi.dto.request.MarkerRequestTo;
 import org.example.newsapi.dto.response.MarkerResponseTo;
 import org.example.newsapi.service.MarkerService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,17 +17,18 @@ import java.util.List;
 @RequestMapping("/api/v1.0/markers")
 @RequiredArgsConstructor
 public class MarkerController {
+
     private final MarkerService markerService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public MarkerResponseTo create(@RequestBody @Valid MarkerRequestTo request) {
+    public MarkerResponseTo create(@RequestBody @Valid MarkerRequestTo request) { // ПРОВЕРЬ @Valid
         return markerService.create(request);
     }
 
     @GetMapping
-    public List<MarkerResponseTo> getAll() {
-        return markerService.findAll();
+    public List<MarkerResponseTo> getAll(@PageableDefault(size = 50) Pageable pageable) {
+        return markerService.findAll(pageable).getContent();
     }
 
     @GetMapping("/{id}")

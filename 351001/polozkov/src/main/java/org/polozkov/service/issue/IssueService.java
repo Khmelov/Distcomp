@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.polozkov.dto.issue.IssueRequestTo;
 import org.polozkov.dto.issue.IssueResponseTo;
-import org.polozkov.entity.comment.Comment;
 import org.polozkov.entity.issue.Issue;
 import org.polozkov.entity.label.Label;
 import org.polozkov.entity.user.User;
@@ -59,8 +58,6 @@ public class IssueService {
 
         issue.setUser(user);
 
-        issue.setComments(new ArrayList<>());
-
         List<Label> labels = new ArrayList<>();
         if (issueRequest.getLabels() != null) {
             for (String labelName : issueRequest.getLabels()) {
@@ -91,8 +88,6 @@ public class IssueService {
         issue.setCreated(existingIssue.getCreated());
 
         issue.setUser(user);
-
-        issue.setComments(existingIssue.getComments());
 
         List<Label> labels = new ArrayList<>();
         if (issueRequest.getLabels() != null) {
@@ -132,15 +127,4 @@ public class IssueService {
         }
     }
 
-    public void addCommentToIssue(Long issueId, Comment comment) {
-        Issue issue = issueRepository.byId(issueId);
-        issue.getComments().add(comment);
-        issueRepository.save(issue);
-    }
-
-    public void addLabelToIssue(Long issueId, Label label) {
-        Issue issue = issueRepository.byId(issueId);
-        issue.getLabels().add(label);
-        issueRepository.save(issue);
-    }
 }

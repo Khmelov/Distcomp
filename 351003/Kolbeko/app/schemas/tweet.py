@@ -15,3 +15,4 @@ class TweetResponseTo(BaseModel):
     content: str
     created: str
     modified: str
+    model_config = {"from_attributes": True, "populate_by_name": True}
