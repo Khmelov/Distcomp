@@ -19,16 +19,17 @@ namespace Publisher.Service {
         public override async Task<EditorResponseTo> AddAsync(EditorRequestTo request) {
             _logger.LogInformation($"Creating editor with login: {request.Login}");
 
-            var existingEditor = await FindByLoginAsync(request.Login);
+            var existingEditor = await GetByLoginAsync(request.Login);
             if (existingEditor != null) {
                 throw new ForbiddenException($"Editor with login '{request.Login}' already exists");
             }
 
             var editor = _mapper.Map<Editor>(request);
+            editor.Role = request.Role == "ADMIN" ? "ADMIN" : "CUSTOMER";
             var created = await _repository.AddAsync(editor);
             var response = _mapper.Map<EditorResponseTo>(created);
 
-            _logger.LogInformation($"Created editor with ID: {response.Id}");
+            _logger.LogInformation($"Created editor with ID: {response.Id}, role: {editor.Role}");
             return response;
         }
 
@@ -42,7 +43,7 @@ namespace Publisher.Service {
             }
 
             if (existing.Login != request.Login) {
-                var editorWithSameLogin = await FindByLoginAsync(request.Login);
+                var editorWithSameLogin = await GetByLoginAsync(request.Login);
                 if (editorWithSameLogin != null && editorWithSameLogin.Id != request.Id) {
                     throw new ForbiddenException($"Editor with login '{request.Login}' already exists");
                 }
@@ -63,7 +64,7 @@ namespace Publisher.Service {
             return response;
         }
 
-        private async Task<Editor?> FindByLoginAsync(string login) {
+        public async Task<Editor?> GetByLoginAsync(string login) {
             var allEditors = await _repository.GetAllAsync();
             return allEditors.FirstOrDefault(e => e.Login == login);
         }

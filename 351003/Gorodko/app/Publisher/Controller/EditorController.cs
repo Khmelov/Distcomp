@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Publisher.Dto;
 using Publisher.Exceptions;
@@ -10,8 +11,26 @@ namespace Publisher.Controller {
         private readonly EditorService _editorService;
 
         public EditorController(EditorService editorService, ILogger<EditorController> logger)
-            : base(logger) {
+          : base(logger) {
             _editorService = editorService;
+        }
+
+        [Authorize]
+        [HttpGet("/api/v2.0/editors")]
+        public async Task<IActionResult> GetV2() => Ok(await _editorService.GetAllAsync());
+
+        [Authorize]
+        [HttpGet("/api/v2.0/editors/{id:long}", Name = "GetEditorV2")]
+        public async Task<IActionResult> GetEditorV2(long id) {
+            var res = await _editorService.GetByIdAsync(id);
+            return res == null ? NotFound() : Ok(res);
+        }
+
+        [HttpDelete("/api/v2.0/editors/{id:long}")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> DeleteV2(long id) {
+            var deleted = await _editorService.DeleteAsync(id);
+            return deleted ? NoContent() : NotFound();
         }
 
         [HttpGet]
@@ -88,9 +107,9 @@ namespace Publisher.Controller {
                 _logger.LogInformation($"Created editor with ID: {editor.Id}");
 
                 return CreatedAtAction(
-                    nameof(GetEditor),
-                    new { id = editor.Id },
-                    editor
+                  nameof(GetEditor),
+                  new { id = editor.Id },
+                  editor
                 );
             }
             catch (ValidationException ex) {
