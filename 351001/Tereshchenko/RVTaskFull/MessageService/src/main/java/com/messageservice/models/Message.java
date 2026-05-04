@@ -1,29 +1,35 @@
 package com.messageservice.models;
 
-import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.cassandra.core.cql.PrimaryKeyType;
+import org.springframework.data.cassandra.core.mapping.Column;
+import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
+import org.springframework.data.cassandra.core.mapping.Table;
 
-@Entity
-@Table(name = "tbl_message")
+@Table("tbl_message")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Message {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @PrimaryKeyColumn(name = "id", type = PrimaryKeyType.PARTITIONED)
     private Long id;
 
-    @Column(name = "tweet_id")
+    @NotNull
+    @Column("tweet_id")
     private Long tweetId;
 
-    @Column(name = "content")
+    @NotNull
+    @Column("bucket")
+    private Integer bucket;
+
+    @Column("content")
     @Size(min = 2, max = 2048)
     private String content;
-
 }

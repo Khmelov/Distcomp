@@ -6,7 +6,7 @@ from typing import Optional, List
 from cassandra.cluster import Cluster
 from cassandra.policies import DCAwareRoundRobinPolicy
 
-from .interface import NoteRepository, NoteDto
+from .interface import NoteRepository, NoteDto, NoteState
 
 
 def _generate_id() -> int:
@@ -48,6 +48,7 @@ class CassandraNoteRepository(NoteRepository):
                 id bigint,
                 content text,
                 country text,
+                state text,
                 PRIMARY KEY (story_id, id)
             )
             WITH CLUSTERING ORDER BY (id ASC)
@@ -63,22 +64,22 @@ class CassandraNoteRepository(NoteRepository):
         )
 
         self._insert_note = self._session.prepare(
-            f"INSERT INTO {self.TABLE_NOTE} (story_id, id, content, country) VALUES (?, ?, ?, ?)"
+            f"INSERT INTO {self.TABLE_NOTE} (story_id, id, content, country, state) VALUES (?, ?, ?, ?, ?)"
         )
         self._insert_by_id = self._session.prepare(
             f"INSERT INTO {self.TABLE_NOTE_BY_ID} (id, story_id) VALUES (?, ?)"
         )
         self._select_by_story = self._session.prepare(
-            f"SELECT id, story_id, content, country FROM {self.TABLE_NOTE} WHERE story_id = ?"
+            f"SELECT id, story_id, content, country, state FROM {self.TABLE_NOTE} WHERE story_id = ?"
         )
         self._select_by_id_lookup = self._session.prepare(
             f"SELECT story_id FROM {self.TABLE_NOTE_BY_ID} WHERE id = ?"
         )
         self._select_one = self._session.prepare(
-            f"SELECT id, story_id, content, country FROM {self.TABLE_NOTE} WHERE story_id = ? AND id = ?"
+            f"SELECT id, story_id, content, country, state FROM {self.TABLE_NOTE} WHERE story_id = ? AND id = ?"
         )
         self._update_note = self._session.prepare(
-            f"UPDATE {self.TABLE_NOTE} SET content = ?, country = ? WHERE story_id = ? AND id = ?"
+            f"UPDATE {self.TABLE_NOTE} SET content = ?, country = ?, state = ? WHERE story_id = ? AND id = ?"
         )
         self._delete_note = self._session.prepare(
             f"DELETE FROM {self.TABLE_NOTE} WHERE story_id = ? AND id = ?"
@@ -87,11 +88,13 @@ class CassandraNoteRepository(NoteRepository):
             f"DELETE FROM {self.TABLE_NOTE_BY_ID} WHERE id = ?"
         )
 
-    def create(self, story_id: int, content: str, country: str = "") -> NoteDto:
-        note_id = _generate_id()
-        self._session.execute(self._insert_note, (story_id, note_id, content, country or ""))
+    def create(self, story_id: int, content: str, country: str = "",
+               state: str = NoteState.PENDING, note_id: int = None) -> NoteDto:
+        if note_id is None:
+            note_id = _generate_id()
+        self._session.execute(self._insert_note, (story_id, note_id, content, country or "", state))
         self._session.execute(self._insert_by_id, (note_id, story_id))
-        return NoteDto(id=note_id, storyId=story_id, content=content, country=country or "")
+        return NoteDto(id=note_id, storyId=story_id, content=content, country=country or "", state=state)
 
     def get_by_id(self, note_id: int) -> Optional[NoteDto]:
         row = self._session.execute(self._select_by_id_lookup, (note_id,)).one()
@@ -101,25 +104,26 @@ class CassandraNoteRepository(NoteRepository):
         row = self._session.execute(self._select_one, (story_id, note_id)).one()
         if not row:
             return None
-        return NoteDto(id=row.id, storyId=row.story_id, content=row.content or "", country=row.country or "")
+        return NoteDto(id=row.id, storyId=row.story_id, content=row.content or "", country=row.country or "", state=row.state or NoteState.PENDING)
 
     def list_by_story(self, story_id: int) -> List[NoteDto]:
         rows = self._session.execute(self._select_by_story, (story_id,))
         return [
-            NoteDto(id=r.id, storyId=r.story_id, content=r.content or "", country=r.country or "")
+            NoteDto(id=r.id, storyId=r.story_id, content=r.content or "", country=r.country or "", state=r.state or NoteState.PENDING)
             for r in rows
         ]
 
     def update(
-        self, story_id: int, note_id: int, content: str, country: str = ""
+        self, story_id: int, note_id: int, content: str, country: str = "", state: str = None
     ) -> Optional[NoteDto]:
         existing = self.get_by_id(note_id)
         if not existing or existing.storyId != story_id:
             return None
+        new_state = state if state else existing.state
         self._session.execute(
-            self._update_note, (content, country or "", story_id, note_id)
+            self._update_note, (content, country or "", new_state, story_id, note_id)
         )
-        return NoteDto(id=note_id, storyId=story_id, content=content, country=country or "")
+        return NoteDto(id=note_id, storyId=story_id, content=content, country=country or "", state=new_state)
 
     def delete(self, story_id: int, note_id: int) -> bool:
         existing = self.get_by_id(note_id)
