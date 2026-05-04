@@ -7,13 +7,13 @@ from app.models.tweet_label import TweetLabel
 from app.models.label import Label
 from app.schemas.tweet import TweetRequestTo, TweetResponseTo
 from app.core.exceptions import AppException
+from app.core.redis import get_cache, set_cache, delete_cache
 
 class TweetService:
     async def create(self, session: AsyncSession, dto: TweetRequestTo) -> TweetResponseTo:
         if not await author_repo.get_by_id(session, dto.authorId):
             raise AppException(400, "Author not found", 4)
         
-        # Проверка уникальности заголовка для автора
         query = select(Tweet).where(and_(Tweet.author_id == dto.authorId, Tweet.title == dto.title))
         if (await session.execute(query)).scalar_one_or_none():
             raise AppException(403, "Tweet with this title already exists for this author", 18)
@@ -56,12 +56,21 @@ class TweetService:
         ) for t in tweets]
 
     async def get_by_id(self, session: AsyncSession, id: int):
+        cache_key = f"tweet:{id}"
+        cached = await get_cache(cache_key)
+        if cached:
+            return TweetResponseTo(**cached)
+
         res = await tweet_repo.get_by_id(session, id)
         if not res: raise AppException(404, "Tweet not found", 5)
-        return TweetResponseTo(
+        
+        resp = TweetResponseTo(
             id=res.id, authorId=res.author_id, title=res.title, 
             content=res.content, created=res.created.isoformat(), modified=res.modified.isoformat()
         )
+        
+        await set_cache(cache_key, resp.model_dump())
+        return resp
 
     async def update(self, session: AsyncSession, id: int, dto: TweetRequestTo) -> TweetResponseTo:
         if not await author_repo.get_by_id(session, dto.authorId):
@@ -75,6 +84,9 @@ class TweetService:
         }
         updated = await tweet_repo.update(session, id, data)
         if not updated: raise AppException(404, "Tweet not found", 6)
+        
+        await delete_cache(f"tweet:{id}")
+        
         return TweetResponseTo(
             id=updated.id, authorId=updated.author_id, title=updated.title, 
             content=updated.content, created=updated.created.isoformat(), modified=updated.modified.isoformat()
@@ -83,3 +95,5 @@ class TweetService:
     async def delete(self, session: AsyncSession, id: int):
         if not await tweet_repo.delete(session, id):
             raise AppException(404, "Tweet not found", 8)
+            
+        await delete_cache(f"tweet:{id}")

@@ -19,10 +19,16 @@ class BaseRepository:
         return result.scalar_one_or_none()
 
     async def create(self, session: AsyncSession, data: dict) -> T:
+        data.pop("id", None)
+        
         instance = self.model(**data)
         session.add(instance)
-        await session.commit()
-        await session.refresh(instance)
+        try:
+            await session.commit()
+            await session.refresh(instance)
+        except Exception as e:
+            await session.rollback()
+            raise e
         return instance
 
     async def update(self, session: AsyncSession, id: int, data: dict) -> Optional[T]:
