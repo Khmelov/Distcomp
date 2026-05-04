@@ -32,6 +32,7 @@ class EditorRepository(SQLAlchemyRepository, AbstractEditorRepository):
         existing.password = entity.password
         existing.firstname = entity.firstname
         existing.lastname = entity.lastname
+        existing.role = entity.role
         await self._session.flush()
         await self._session.refresh(existing)
         return existing
