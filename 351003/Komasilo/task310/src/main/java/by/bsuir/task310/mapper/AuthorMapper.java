@@ -15,6 +15,7 @@ public class AuthorMapper {
         author.setPassword(requestTo.getPassword());
         author.setFirstname(requestTo.getFirstname());
         author.setLastname(requestTo.getLastname());
+        author.setRole(requestTo.getRole() == null ? "CUSTOMER" : requestTo.getRole());
         return author;
     }
 
@@ -24,6 +25,7 @@ public class AuthorMapper {
         responseTo.setLogin(author.getLogin());
         responseTo.setFirstname(author.getFirstname());
         responseTo.setLastname(author.getLastname());
+        responseTo.setRole(author.getRole());
         return responseTo;
     }
 }

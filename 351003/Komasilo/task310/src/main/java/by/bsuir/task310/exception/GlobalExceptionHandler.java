@@ -2,28 +2,28 @@ package by.bsuir.task310.exception;
 
 import by.bsuir.task310.dto.ErrorResponseTo;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponseTo handleBadCredentials(
+            org.springframework.security.authentication.BadCredentialsException ex) {
+        return new ErrorResponseTo("Invalid credentials", "40101");
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponseTo handleNotFound(EntityNotFoundException ex) {
         return new ErrorResponseTo(ex.getMessage(), "40401");
     }
 
     @ExceptionHandler(DuplicateException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponseTo handleDuplicate(DuplicateException ex) {
-        return new ErrorResponseTo(ex.getMessage(), "40301");
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponseTo handleValidation(MethodArgumentNotValidException ex) {
-        return new ErrorResponseTo("Validation error", "40001");
+        return new ErrorResponseTo(ex.getMessage(), "40901");
     }
 
     @ExceptionHandler(Exception.class)

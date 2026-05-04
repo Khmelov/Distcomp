@@ -10,6 +10,7 @@ import by.bsuir.task310.repository.AuthorRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,10 +20,12 @@ public class AuthorService {
 
     private final AuthorRepository repository;
     private final AuthorMapper mapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthorService(AuthorRepository repository, AuthorMapper mapper) {
+    public AuthorService(AuthorRepository repository, AuthorMapper mapper, PasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.mapper = mapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @CachePut(value = "authors", key = "#result.id")
@@ -32,6 +35,8 @@ public class AuthorService {
         }
 
         Author author = mapper.toEntity(requestTo);
+        author.setPassword(passwordEncoder.encode(requestTo.getPassword()));
+
         Author saved = repository.save(author);
         return mapper.toResponseTo(saved);
     }
@@ -56,7 +61,13 @@ public class AuthorService {
             throw new EntityNotFoundException("Author not found");
         }
 
+        Author oldAuthor = repository.findById(requestTo.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Author not found"));
+
         Author author = mapper.toEntity(requestTo);
+        author.setPassword(passwordEncoder.encode(requestTo.getPassword()));
+        author.setRole(requestTo.getRole() == null ? oldAuthor.getRole() : requestTo.getRole());
+
         Author updated = repository.save(author);
         return mapper.toResponseTo(updated);
     }

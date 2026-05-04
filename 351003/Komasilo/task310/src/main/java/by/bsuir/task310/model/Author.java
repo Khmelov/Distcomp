@@ -12,7 +12,7 @@ public class Author {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 64)
+    @Column(nullable = false, length = 64, unique = true)
     private String login;
 
     @Column(nullable = false, length = 128)
@@ -23,4 +23,7 @@ public class Author {
 
     @Column(nullable = false, length = 64)
     private String lastname;
+
+    @Column(nullable = false)
+    private String role = "CUSTOMER";
 }

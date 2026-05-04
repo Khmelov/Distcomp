@@ -1,6 +1,7 @@
 package by.bsuir.task310.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -22,4 +23,6 @@ public class AuthorRequestTo {
     @NotBlank
     @Size(min = 2, max = 64)
     private String lastname;
+
+    private String role;
 }
