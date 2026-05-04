@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.Extensions.Caching.Distributed;
 using Publisher.Dto;
 using Publisher.Exceptions;
 using Publisher.Model;
@@ -6,18 +7,13 @@ using Publisher.Repository;
 
 namespace Publisher.Service {
     public class EditorService : BaseService<Editor, EditorRequestTo, EditorResponseTo> {
-        private readonly IRepository<Editor> _repository;
-        private readonly IMapper _mapper;
-        private readonly ILogger<EditorService> _logger;
-
         public EditorService(
             IRepository<Editor> repository,
             IMapper mapper,
-            ILogger<EditorService> logger)
-            : base(repository, mapper, logger) {
-            _repository = repository;
-            _mapper = mapper;
-            _logger = logger;
+            ILogger<EditorService> logger,
+            IDistributedCache cache)
+            : base(repository, mapper, logger, cache) {
+            _cacheKeyPrefix = "editor:";
         }
 
         public override async Task<EditorResponseTo> AddAsync(EditorRequestTo request) {
@@ -58,6 +54,9 @@ namespace Publisher.Service {
             existing.Lastname = request.Lastname;
 
             var updated = await _repository.UpdateAsync(existing);
+            if (updated != null) {
+                await _cache.RemoveAsync($"{_cacheKeyPrefix}{updated.Id}");
+            }
             var response = _mapper.Map<EditorResponseTo>(updated);
 
             _logger.LogInformation($"Updated editor ID: {response.Id}");

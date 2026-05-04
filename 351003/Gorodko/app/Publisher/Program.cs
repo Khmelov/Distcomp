@@ -1,8 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
-using Publisher.Exceptions;
+﻿using Microsoft.OpenApi.Models;
 using Publisher.Model;
 using Publisher.Repository;
 using Publisher.Service;
@@ -34,7 +30,6 @@ builder.Services.AddScoped<IRepository<Editor>, EditorRepository>();
 builder.Services.AddScoped<IRepository<Tweet>, TweetRepository>();
 builder.Services.AddScoped<IStickerRepository, StickerRepository>();
 builder.Services.AddScoped<IRepository<Sticker>, StickerRepository>();
-//builder.Services.AddScoped<IRepository<Reaction>, ReactionRepository>();
 
 builder.Services.AddScoped<EditorService>();
 builder.Services.AddScoped<TweetService>();
@@ -42,7 +37,11 @@ builder.Services.AddScoped<StickerService>();
 
 builder.Services.AddSingleton<KafkaService>();
 builder.Services.AddHostedService<KafkaResponseListener>();
-//builder.Services.AddScoped<ReactionService>();
+
+builder.Services.AddStackExchangeRedisCache(options => {
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "Publisher_";
+});
 
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
