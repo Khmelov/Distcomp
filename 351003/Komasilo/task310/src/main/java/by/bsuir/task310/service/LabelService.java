@@ -6,6 +6,9 @@ import by.bsuir.task310.exception.EntityNotFoundException;
 import by.bsuir.task310.mapper.LabelMapper;
 import by.bsuir.task310.model.Label;
 import by.bsuir.task310.repository.LabelRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +24,7 @@ public class LabelService {
         this.mapper = mapper;
     }
 
+    @CachePut(value = "labels", key = "#result.id")
     public LabelResponseTo create(LabelRequestTo requestTo) {
         Label label = mapper.toEntity(requestTo);
         Label saved = repository.save(label);
@@ -34,12 +38,14 @@ public class LabelService {
                 .toList();
     }
 
+    @Cacheable(value = "labels", key = "#id")
     public LabelResponseTo getById(Long id) {
         Label label = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Label not found"));
         return mapper.toResponseTo(label);
     }
 
+    @CachePut(value = "labels", key = "#requestTo.id")
     public LabelResponseTo update(LabelRequestTo requestTo) {
         if (!repository.existsById(requestTo.getId())) {
             throw new EntityNotFoundException("Label not found");
@@ -50,6 +56,7 @@ public class LabelService {
         return mapper.toResponseTo(updated);
     }
 
+    @CacheEvict(value = "labels", key = "#id")
     public void delete(Long id) {
         if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Label not found");

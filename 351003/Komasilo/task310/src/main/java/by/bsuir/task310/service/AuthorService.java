@@ -2,15 +2,17 @@ package by.bsuir.task310.service;
 
 import by.bsuir.task310.dto.AuthorRequestTo;
 import by.bsuir.task310.dto.AuthorResponseTo;
+import by.bsuir.task310.exception.DuplicateException;
+import by.bsuir.task310.exception.EntityNotFoundException;
 import by.bsuir.task310.mapper.AuthorMapper;
 import by.bsuir.task310.model.Author;
 import by.bsuir.task310.repository.AuthorRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import by.bsuir.task310.exception.EntityNotFoundException;
-import by.bsuir.task310.exception.DuplicateException;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class AuthorService {
@@ -23,7 +25,7 @@ public class AuthorService {
         this.mapper = mapper;
     }
 
-    // CREATE
+    @CachePut(value = "authors", key = "#result.id")
     public AuthorResponseTo create(AuthorRequestTo requestTo) {
         if (repository.existsByLogin(requestTo.getLogin())) {
             throw new DuplicateException("Author with this login already exists");
@@ -34,36 +36,37 @@ public class AuthorService {
         return mapper.toResponseTo(saved);
     }
 
-    // READ ALL
     public List<AuthorResponseTo> getAll() {
         return repository.findAll()
                 .stream()
                 .map(mapper::toResponseTo)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    // READ BY ID
+    @Cacheable(value = "authors", key = "#id")
     public AuthorResponseTo getById(Long id) {
         Author author = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Author not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Author not found"));
         return mapper.toResponseTo(author);
     }
 
-    // UPDATE
+    @CachePut(value = "authors", key = "#requestTo.id")
     public AuthorResponseTo update(AuthorRequestTo requestTo) {
         if (!repository.existsById(requestTo.getId())) {
             throw new EntityNotFoundException("Author not found");
         }
+
         Author author = mapper.toEntity(requestTo);
         Author updated = repository.save(author);
         return mapper.toResponseTo(updated);
     }
 
-    // DELETE
+    @CacheEvict(value = "authors", key = "#id")
     public void delete(Long id) {
         if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Author not found");
         }
+
         repository.deleteById(id);
     }
 }

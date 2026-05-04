@@ -3,6 +3,9 @@ package by.bsuir.task310.service;
 import by.bsuir.task310.dto.ReactionRequestTo;
 import by.bsuir.task310.dto.ReactionResponseTo;
 import by.bsuir.task310.exception.EntityNotFoundException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -56,6 +59,7 @@ public class ReactionService {
                 .block();
     }
 
+    @Cacheable(value = "reactions", key = "#id")
     public ReactionResponseTo getById(Long id) {
         try {
             return webClient.get()
@@ -68,6 +72,7 @@ public class ReactionService {
         }
     }
 
+    @CachePut(value = "reactions", key = "#requestTo.id")
     public ReactionResponseTo update(ReactionRequestTo requestTo) {
         return webClient.put()
                 .uri("/api/v1.0/reactions")
@@ -77,6 +82,7 @@ public class ReactionService {
                 .block();
     }
 
+    @CacheEvict(value = "reactions", key = "#id")
     public void delete(Long id) {
         webClient.delete()
                 .uri("/api/v1.0/reactions/" + id)

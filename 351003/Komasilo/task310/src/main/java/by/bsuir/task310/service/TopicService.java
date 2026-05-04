@@ -2,15 +2,18 @@ package by.bsuir.task310.service;
 
 import by.bsuir.task310.dto.TopicRequestTo;
 import by.bsuir.task310.dto.TopicResponseTo;
+import by.bsuir.task310.exception.DuplicateException;
 import by.bsuir.task310.exception.EntityNotFoundException;
 import by.bsuir.task310.mapper.TopicMapper;
+import by.bsuir.task310.model.Label;
 import by.bsuir.task310.model.Topic;
 import by.bsuir.task310.repository.AuthorRepository;
-import by.bsuir.task310.repository.TopicRepository;
-import org.springframework.stereotype.Service;
-import by.bsuir.task310.exception.DuplicateException;
-import by.bsuir.task310.model.Label;
 import by.bsuir.task310.repository.LabelRepository;
+import by.bsuir.task310.repository.TopicRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,9 +23,8 @@ public class TopicService {
 
     private final TopicRepository topicRepository;
     private final AuthorRepository authorRepository;
-    private final TopicMapper mapper;
-
     private final LabelRepository labelRepository;
+    private final TopicMapper mapper;
 
     public TopicService(
             TopicRepository topicRepository,
@@ -47,7 +49,6 @@ public class TopicService {
 
         Topic topic = mapper.toEntity(requestTo);
         LocalDateTime now = LocalDateTime.now();
-
         topic.setCreated(now);
         topic.setModified(now);
 
@@ -72,6 +73,7 @@ public class TopicService {
                 .toList();
     }
 
+    @Cacheable(value = "topics", key = "#id")
     public TopicResponseTo getById(Long id) {
         Topic topic = topicRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Topic not found"));
@@ -79,6 +81,7 @@ public class TopicService {
         return mapper.toResponseTo(topic);
     }
 
+    @CachePut(value = "topics", key = "#requestTo.id")
     public TopicResponseTo update(TopicRequestTo requestTo) {
         if (!topicRepository.existsById(requestTo.getId())) {
             throw new EntityNotFoundException("Topic not found");
@@ -99,6 +102,7 @@ public class TopicService {
         return mapper.toResponseTo(updated);
     }
 
+    @CacheEvict(value = "topics", key = "#id")
     public void delete(Long id) {
         if (!topicRepository.existsById(id)) {
             throw new EntityNotFoundException("Topic not found");
