@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ServerApp.Models;
 using ServerApp.Models.DTOs;
 using ServerApp.Models.DTOs.Requests;
 using ServerApp.Models.DTOs.Responses;
@@ -7,14 +8,13 @@ using ServerApp.Services.Interfaces;
 namespace ServerApp.Controllers;
 
 [ApiController]
-[Route("authors")] // Итоговый путь: /api/v1.0/authors
+[Route("authors")] 
 public class AuthorController(IAuthorService authorService) : ControllerBase
 {
     [HttpGet]
-    public ActionResult<IEnumerable<AuthorResponseTo>> GetAll()
-    {
-        return Ok(authorService.GetAll());
-    }
+    [HttpGet("{parameters}")]
+    public ActionResult<IEnumerable<AuthorResponseTo>> GetPaged([FromQuery] QueryParams parameters) => 
+        Ok(authorService.GetPaged(parameters));
 
     [HttpGet("{id:long}")]
     public ActionResult<AuthorResponseTo> GetById(long id)

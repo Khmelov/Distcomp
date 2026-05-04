@@ -1,4 +1,5 @@
 ﻿using Mapster;
+using ServerApp.Models;
 using ServerApp.Models.DTOs.Requests;
 using ServerApp.Models.DTOs.Responses;
 using ServerApp.Models.Entities;
@@ -11,8 +12,8 @@ public class ArticleService(
     IRepository<Article> articleRepo, 
     IRepository<Author> authorRepo) : IArticleService
 {
-    public IEnumerable<ArticleResponseTo> GetAll() => 
-        articleRepo.GetAll().Adapt<IEnumerable<ArticleResponseTo>>();
+    public IEnumerable<ArticleResponseTo> GetPaged(QueryParams parametrs) => 
+        articleRepo.GetPaged(parametrs).Adapt<IEnumerable<ArticleResponseTo>>();
 
     public ArticleResponseTo GetById(long id)
     {
@@ -25,6 +26,14 @@ public class ArticleService(
         // Валидация связи: существует ли автор?
         if (authorRepo.GetById(request.AuthorId) == null)
             throw new ArgumentException($"Author with ID {request.AuthorId} not found");
+        
+        bool titleExists = articleRepo.GetAll()
+            .Any(a => a.Title.Equals(request.Title, StringComparison.OrdinalIgnoreCase));
+        
+        if (titleExists)
+        {
+            throw new InvalidOperationException($"Login '{request.Title}' is already taken");
+        }
 
         var article = request.Adapt<Article>();
         article.Created = article.Modified = DateTime.UtcNow; // Установка меток времени

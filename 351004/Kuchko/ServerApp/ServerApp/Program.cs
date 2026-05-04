@@ -1,6 +1,7 @@
 using System.Reflection;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using ServerApp.Infrastructure;
 using ServerApp.Models.DTOs;
@@ -14,10 +15,16 @@ var builder = WebApplication.CreateBuilder(args);
 var config = TypeAdapterConfig.GlobalSettings;
 config.Scan(Assembly.GetExecutingAssembly());
 
-builder.Services.AddSingleton<IRepository<Author>, InMemoryRepository<Author>>();
-builder.Services.AddSingleton<IRepository<Article>, InMemoryRepository<Article>>();
-builder.Services.AddSingleton<IRepository<Message>, InMemoryRepository<Message>>();
-builder.Services.AddSingleton<IRepository<Sticker>, InMemoryRepository<Sticker>>();
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+
+// builder.Services.AddSingleton<IRepository<Author>, InMemoryRepository<Author>>();
+// builder.Services.AddSingleton<IRepository<Article>, InMemoryRepository<Article>>();
+// builder.Services.AddSingleton<IRepository<Message>, InMemoryRepository<Message>>();
+// builder.Services.AddSingleton<IRepository<Sticker>, InMemoryRepository<Sticker>>();
 
 builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<IArticleService, ArticleService>();
@@ -45,8 +52,6 @@ builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
-        // Просто удаляем все предопределенные сервера
-        // Браузер сам подставит текущий адрес (localhost:24110)
         document.Servers.Clear();
         return Task.CompletedTask;
     });
@@ -67,7 +72,6 @@ app.UseCors();
 
 if (app.Environment.IsDevelopment())
 {
-    // Генерирует эндпоинт с JSON описанием API (по умолчанию /openapi/v1.json)
     app.MapOpenApi();
 
     app.MapScalarApiReference(options =>
@@ -85,16 +89,31 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    var authorRepo = scope.ServiceProvider.GetRequiredService<IRepository<Author>>();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    if (!authorRepo.GetAll().Any())
-        authorRepo.Create(new Author
+    try
+    {
+        // 1. Применяет все не примененные миграции (создает таблицы tbl_...)
+        context.Database.Migrate();
+
+        // 2. Добавляет начальную запись по ТЗ, если база пустая
+        if (!context.Authors.Any())
         {
-            Login = "kuchkomaxim2527@gmail.com",
-            Password = "password123",
-            Firstname = "Максим",
-            Lastname = "Кучко"
-        });
+            context.Authors.Add(new Author
+            {
+                Login = "kuchkomaxim2527@gmail.com",
+                Password = "password123",
+                Firstname = "Максим",
+                Lastname = "Кучко"
+            });
+            context.SaveChanges();
+        }
+    }
+    catch (Exception ex)
+    {
+        // Выведет ошибку в консоль Docker, если БД недоступна
+        Console.WriteLine($"Ошибка при инициализации БД: {ex.Message}");
+    }
 }
 
 app.Run();

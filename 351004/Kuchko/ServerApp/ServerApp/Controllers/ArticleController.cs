@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ServerApp.Models;
 using ServerApp.Models.DTOs;
 using ServerApp.Models.DTOs.Requests;
 using ServerApp.Models.DTOs.Responses;
@@ -11,7 +12,9 @@ namespace ServerApp.Controllers;
 public class ArticleController(IArticleService articleService) : ControllerBase
 {
     [HttpGet]
-    public ActionResult<IEnumerable<ArticleResponseTo>> GetAll() => Ok(articleService.GetAll());
+    [HttpGet("{parameters}")]
+    public ActionResult<IEnumerable<ArticleResponseTo>> GetPaged([FromQuery] QueryParams parameters) =>
+        Ok(articleService.GetPaged(parameters));
 
     [HttpGet("{id:long}")]
     public ActionResult<ArticleResponseTo> GetById(long id) => Ok(articleService.GetById(id));

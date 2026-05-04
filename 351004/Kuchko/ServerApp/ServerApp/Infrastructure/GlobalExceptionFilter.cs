@@ -13,6 +13,7 @@ public class GlobalExceptionFilter : IExceptionFilter
         {
             KeyNotFoundException => (StatusCodes.Status404NotFound, 01),
             ArgumentException => (StatusCodes.Status400BadRequest, 01),
+            InvalidOperationException => (StatusCodes.Status403Forbidden, 01),
 
             _ => (StatusCodes.Status500InternalServerError, 01)
         };
