@@ -1,0 +1,53 @@
+# Вариант ask330: Postgres (publisher) + Cassandra (discussion).
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-distcomp-lab3
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_lab3_data:/var/lib/postgresql/data
+      - ./publisher/db/docker-init-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    restart: unless-stopped
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: cassandra-distcomp-lab3
+    ports:
+      - "9042:9042"
+    environment:
+      JVM_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - cassandra_lab3_data:/var/lib/cassandra
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: zookeeper-distcomp-lab4
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka-distcomp-lab4
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    restart: unless-stopped
+
+volumes:
+  postgres_lab3_data:
+  cassandra_lab3_data:

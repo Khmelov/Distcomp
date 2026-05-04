@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+      Инициализация Cassandra для варианта ask330.
+      Выполнение через Liquibase с драйвером Cassandra (jdbc:cassandra://...):
+        liquibase --changelog-file=db/changelog/db.changelog-master.xml update
+      На практике для локальной разработки схема создаётся при старте discussion (init_db).
+      Ниже — эквивалентные CQL-операторы.
+    -->
+    <changeSet id="ask330-cassandra-keyspace" author="voitko">
+        <sql splitStatements="false">
+            CREATE KEYSPACE IF NOT EXISTS distcomp
+            WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+        </sql>
+    </changeSet>
+
+    <changeSet id="ask330-tbl-notes-by-news" author="voitko">
+        <sql splitStatements="false">
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_notes_by_news (
+                news_id bigint,
+                id bigint,
+                content text,
+                PRIMARY KEY ((news_id), id)
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="ask330-tbl-note-by-id" author="voitko">
+        <sql splitStatements="false">
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_note_by_id (
+                id_bucket int,
+                id bigint,
+                news_id bigint,
+                content text,
+                PRIMARY KEY ((id_bucket), id)
+            );
+        </sql>
+    </changeSet>
+</databaseChangeLog>
