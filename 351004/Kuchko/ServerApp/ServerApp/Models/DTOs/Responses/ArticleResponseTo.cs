@@ -6,5 +6,7 @@ public record ArticleResponseTo(
     string Title, 
     string Content, 
     DateTime Created, 
-    DateTime Modified
+    DateTime Modified,
+    
+    ICollection<StickerResponseTo>? Stickers
 );

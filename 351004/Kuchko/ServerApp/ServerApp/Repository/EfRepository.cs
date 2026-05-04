@@ -28,7 +28,25 @@ public class EfRepository<T>(AppDbContext context) : IRepository<T> where T : Ba
         return context.Set<T>().AsNoTracking().ToList();
     }
 
-    public T? GetById(long id) => context.Set<T>().Find(id);
+    public T? GetById(long id)
+    {
+        var query = context.Set<T>().AsQueryable();
+
+        if (typeof(T) == typeof(Article))
+        {
+            query = query.Include("Stickers");
+        }
+        else if (typeof(T) == typeof(Sticker)) 
+        {
+            query = query.Include("Articles");
+        }
+        else if (typeof(T) == typeof(Author)) 
+        {
+            query = query.Include("Articles").Include("Articles.Stickers");
+        }
+        
+        return query.FirstOrDefault(e => e.Id == id);
+    }
 
     public T Create(T entity)
     {

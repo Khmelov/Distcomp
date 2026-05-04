@@ -15,10 +15,12 @@ public class MappingConfig : IRegister
 
         // 2. Маппинг для Article
         config.NewConfig<ArticleRequestTo, Article>()
+            .Ignore(dest => dest.Stickers)
             .AfterMapping(dest =>
             {
                 // При создании статьи устанавливаем даты
                 var now = DateTime.UtcNow;
+                dest.Stickers = new List<Sticker>(); 
                 dest.Created = now;
                 dest.Modified = now;
             });

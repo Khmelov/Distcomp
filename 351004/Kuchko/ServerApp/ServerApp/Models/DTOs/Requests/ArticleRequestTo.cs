@@ -10,5 +10,7 @@ public record ArticleRequestTo(
     string Title,
     [Required]
     [StringLength(2048, MinimumLength = 4)]
-    string Content
+    string Content,
+    
+    ICollection<string>? Stickers 
 );
