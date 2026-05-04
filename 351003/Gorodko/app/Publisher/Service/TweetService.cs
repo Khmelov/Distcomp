@@ -1,5 +1,6 @@
 using AutoMapper;
 using Dapper;
+using Microsoft.Extensions.Caching.Distributed;
 using Npgsql;
 using Publisher.Dto;
 using Publisher.Exceptions;
@@ -13,8 +14,6 @@ namespace Publisher.Service {
         private readonly IRepository<Tweet> _tweetRepository;
         private readonly IRepository<Editor> _editorRepository;
         private readonly IStickerRepository _stickerRepository;
-        private readonly IMapper _mapper;
-        private readonly ILogger<TweetService> _logger;
         private readonly HttpClient _discussionClient;
 
         public TweetService(
@@ -23,15 +22,15 @@ namespace Publisher.Service {
             ILogger<TweetService> logger,
             IRepository<Editor> editorRepository,
             IStickerRepository stickerRepository,
-            IHttpClientFactory httpClientFactory)
-            : base(repository, mapper, logger) {
+            IHttpClientFactory httpClientFactory,
+            IDistributedCache cache)
+            : base(repository, mapper, logger, cache) {
             _tweetRepository = repository;
             _editorRepository = editorRepository;
             _stickerRepository = stickerRepository;
-            _mapper = mapper;
-            _logger = logger;
             _discussionClient = httpClientFactory.CreateClient("DiscussionClient");
             _discussionClient.BaseAddress = new Uri("http://localhost:24130");
+            _cacheKeyPrefix = "tweet:";
         }
 
         public async Task<TweetResponseTo> CreateTweetAsync(TweetRequestTo request) {

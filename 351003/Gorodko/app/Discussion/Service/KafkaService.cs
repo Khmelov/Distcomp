@@ -52,11 +52,17 @@ namespace Discussion.Service {
                                     kafkaMsg.Data.State = kafkaMsg.Data.Content.Contains("bad")
                                         ? ReactionState.DECLINE
                                         : ReactionState.APPROVE;
+
+                                    // СОХРАНЯЕМ В БАЗУ
+                                    var createdReaction = await service.CreateAsync(kafkaMsg.Data);
+                                    // Формируем ответ для OutTopic
+                                    responsePayload = JsonSerializer.Serialize(createdReaction);
                                 }
                                 break;
                             case "GET_BY_ID":
                             case "GET_BY_ID_ONLY":
-                                var found = await service.GetByIdAsync(kafkaMsg.Data.Country, kafkaMsg.Data.TweetId, kafkaMsg.Data.Id);
+                                var results = await service.FindByIdAsync(kafkaMsg.Data.Id);
+                                var found = results.FirstOrDefault();
                                 responsePayload = found != null ? JsonSerializer.Serialize(found) : "{}";
                                 break;
                             case "GET_BY_TWEET":
@@ -74,6 +80,57 @@ namespace Discussion.Service {
                             case "DELETE":
                                 var deleted = await service.DeleteAsync(kafkaMsg.Data.Country, kafkaMsg.Data.TweetId, kafkaMsg.Data.Id);
                                 responsePayload = JsonSerializer.Serialize(new { success = deleted });
+                                break;
+
+                            case "PUT_BY_ID":
+                                // Используем настройки с CamelCase и Enum как строки/числа (по вашему конфигу)
+                                var jsonOptions = new JsonSerializerOptions {
+                                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                                };
+
+                                var putData = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(kafkaMsg.Data));
+                                long updateId = putData.GetProperty("Id").GetInt64();
+
+                                // ПАРСИМ входящий контент, чтобы достать только текст
+                                string rawJson = putData.GetProperty("Content").GetString();
+                                string actualContent = "";
+                                using (JsonDocument doc = JsonDocument.Parse(rawJson)) {
+                                    if (doc.RootElement.TryGetProperty("content", out var contentProp)) {
+                                        actualContent = contentProp.GetString();
+                                    }
+                                }
+
+                                var reactions = await service.FindByIdAsync(updateId);
+                                var foundDto = reactions.FirstOrDefault();
+
+                                if (foundDto != null) {
+                                    var updateRequest = new ReactionRequestTo {
+                                        Id = foundDto.Id,
+                                        TweetId = foundDto.TweetId,
+                                        Country = foundDto.Country,
+                                        Content = actualContent, // Теперь здесь только "updatedcontent2839"
+                                        State = actualContent.Contains("bad") ? ReactionState.DECLINE : ReactionState.APPROVE
+                                    };
+
+                                    await service.UpdateAsync(updateRequest);
+
+                                    // ВАЖНО: Сериализуем с CamelCase для теста
+                                    responsePayload = JsonSerializer.Serialize(updateRequest, jsonOptions);
+                                }
+                                else {
+                                    responsePayload = "{}";
+                                }
+                                break;
+
+                            case "DELETE_BY_ID":
+                                var delData = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(kafkaMsg.Data));
+                                long deleteId = delData.GetProperty("Id").GetInt64();
+
+                                var reactionsToDelete = await service.FindByIdAsync(deleteId);
+                                foreach (var r in reactionsToDelete) {
+                                    await service.DeleteAsync(r.Country, r.TweetId, r.Id);
+                                }
+                                responsePayload = "{\"success\": true}";
                                 break;
                         }
 

@@ -44,7 +44,7 @@ namespace Publisher.Service {
 
             await SendMessageAsync(key, data, operation, correlationId);
 
-            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(1000));
+            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(2000));
             if (completedTask == tcs.Task) {
                 return await tcs.Task;
             }
