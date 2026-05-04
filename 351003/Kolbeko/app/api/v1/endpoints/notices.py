@@ -1,9 +1,11 @@
 import os
 import time
 import uuid
+from typing import List
 
 from fastapi import APIRouter, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import get_db
 from app.schemas.notice import NoticeRequestTo, NoticeResponseTo
 from app.services.notice_service import NoticeService
@@ -11,7 +13,8 @@ from app.repository.db import tweet_repo
 from app.core.exceptions import AppException
 from app.integration.kafka_rpc import KafkaRpcClient
 from app.integration.discussion_rest import DiscussionRestClient
-from typing import List
+
+from app.core.redis import get_cache, set_cache, delete_cache
 
 router = APIRouter()
 service = NoticeService()
@@ -32,25 +35,30 @@ def _gen_notice_id() -> int:
 @router.post("", response_model=NoticeResponseTo, status_code=status.HTTP_201_CREATED)
 async def create(dto: NoticeRequestTo, session: AsyncSession = Depends(get_db)):
     if _use_db_transport():
-        return await service.create(session, dto)
-
-    if not await tweet_repo.get_by_id(session, dto.tweetId):
-        raise AppException(400, "Tweet not found", 12)
-
-    notice_id = _gen_notice_id()
-    if _use_kafka_transport():
-        resp = await kafka_rpc.call(
-            operation="CREATE",
-            data={"id": notice_id, "tweetId": dto.tweetId, "content": dto.content, "state": "PENDING"},
-            key=dto.tweetId,
-        )
+        res = await service.create(session, dto)
     else:
-        resp = await rest_client.create_notice({"id": notice_id, "tweetId": dto.tweetId, "content": dto.content})
-    if not resp.get("ok", False):
-        err = resp.get("error") or {}
-        raise AppException(int(err.get("status", 500)), str(err.get("message", "Discussion error")), 1)
-    n = resp["data"]
-    return NoticeResponseTo(id=n["id"], tweetId=n["tweetId"], content=n["content"])
+        if not await tweet_repo.get_by_id(session, dto.tweetId):
+            raise AppException(400, "Tweet not found", 12)
+
+        notice_id = _gen_notice_id()
+        if _use_kafka_transport():
+            resp = await kafka_rpc.call(
+                operation="CREATE",
+                data={"id": notice_id, "tweetId": dto.tweetId, "content": dto.content, "state": "PENDING"},
+                key=dto.tweetId,
+            )
+        else:
+            resp = await rest_client.create_notice({"id": notice_id, "tweetId": dto.tweetId, "content": dto.content})
+        
+        if not resp.get("ok", False):
+            err = resp.get("error") or {}
+            raise AppException(int(err.get("status", 500)), str(err.get("message", "Discussion error")), 1)
+        
+        n = resp["data"]
+        res = NoticeResponseTo(id=n["id"], tweetId=n["tweetId"], content=n["content"])
+
+    await set_cache(f"notice:{res.id}", res.model_dump())
+    return res
 
 @router.get("", response_model=List[NoticeResponseTo])
 async def get_all(page: int = 1, session: AsyncSession = Depends(get_db)):
@@ -61,50 +69,71 @@ async def get_all(page: int = 1, session: AsyncSession = Depends(get_db)):
         resp = await kafka_rpc.call(operation="GET_ALL", data={"page": page}, key=0)
     else:
         resp = await rest_client.get_all(page)
+    
     if not resp.get("ok", False):
         err = resp.get("error") or {}
         raise AppException(int(err.get("status", 500)), str(err.get("message", "Discussion error")), 2)
+    
     return [NoticeResponseTo(id=n["id"], tweetId=n["tweetId"], content=n["content"]) for n in resp["data"]]
 
 @router.get("/{id}", response_model=NoticeResponseTo)
 async def get_by_id(id: int, session: AsyncSession = Depends(get_db)):
-    if _use_db_transport():
-        return await service.get_by_id(session, id)
+    cache_key = f"notice:{id}"
+    cached_data = await get_cache(cache_key)
+    if cached_data:
+        return NoticeResponseTo(**cached_data)
 
-    if _use_kafka_transport():
+    if _use_db_transport():
+        res = await service.get_by_id(session, id)
+    elif _use_kafka_transport():
         resp = await kafka_rpc.call(operation="GET_BY_ID", data={"id": id}, key=id)
+        if not resp.get("ok", False):
+            err = resp.get("error") or {}
+            raise AppException(int(err.get("status", 500)), str(err.get("message", "Discussion error")), 3)
+        n = resp["data"]
+        res = NoticeResponseTo(id=n["id"], tweetId=n["tweetId"], content=n["content"])
     else:
         resp = await rest_client.get_by_id(id)
-    if not resp.get("ok", False):
-        err = resp.get("error") or {}
-        raise AppException(int(err.get("status", 500)), str(err.get("message", "Discussion error")), 3)
-    n = resp["data"]
-    return NoticeResponseTo(id=n["id"], tweetId=n["tweetId"], content=n["content"])
+        if not resp.get("ok", False):
+            err = resp.get("error") or {}
+            raise AppException(int(err.get("status", 500)), str(err.get("message", "Discussion error")), 3)
+        n = resp["data"]
+        res = NoticeResponseTo(id=n["id"], tweetId=n["tweetId"], content=n["content"])
+
+    await set_cache(cache_key, res.model_dump())
+    return res
 
 @router.put("/{id}", response_model=NoticeResponseTo)
 async def update(id: int, dto: NoticeRequestTo, session: AsyncSession = Depends(get_db)):
     if _use_db_transport():
-        return await service.update(session, id, dto)
-
-    if not await tweet_repo.get_by_id(session, dto.tweetId):
-        raise AppException(400, "Tweet not found", 14)
-
-    if _use_kafka_transport():
-        resp = await kafka_rpc.call(
-            operation="UPDATE",
-            data={"id": id, "tweetId": dto.tweetId, "content": dto.content},
-            key=dto.tweetId,
-        )
+        res = await service.update(session, id, dto)
     else:
-        resp = await rest_client.update(id, {"tweetId": dto.tweetId, "content": dto.content})
-    if not resp.get("ok", False):
-        err = resp.get("error") or {}
-        raise AppException(int(err.get("status", 500)), str(err.get("message", "Discussion error")), 4)
-    n = resp["data"]
-    return NoticeResponseTo(id=n["id"], tweetId=n["tweetId"], content=n["content"])
+        if not await tweet_repo.get_by_id(session, dto.tweetId):
+            raise AppException(400, "Tweet not found", 14)
+
+        if _use_kafka_transport():
+            resp = await kafka_rpc.call(
+                operation="UPDATE",
+                data={"id": id, "tweetId": dto.tweetId, "content": dto.content},
+                key=dto.tweetId,
+            )
+        else:
+            resp = await rest_client.update(id, {"tweetId": dto.tweetId, "content": dto.content})
+        
+        if not resp.get("ok", False):
+            err = resp.get("error") or {}
+            raise AppException(int(err.get("status", 500)), str(err.get("message", "Discussion error")), 4)
+        
+        n = resp["data"]
+        res = NoticeResponseTo(id=n["id"], tweetId=n["tweetId"], content=n["content"])
+
+    await delete_cache(f"notice:{id}")
+    return res
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete(id: int, session: AsyncSession = Depends(get_db)):
+    await delete_cache(f"notice:{id}")
+
     if _use_db_transport():
         await service.delete(session, id)
         return

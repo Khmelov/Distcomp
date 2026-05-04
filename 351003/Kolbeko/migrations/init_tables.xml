@@ -38,4 +38,9 @@
             <column name="label_id" type="BIGINT"><constraints nullable="false" foreignKeyName="fk_tl_label" references="distcomp.tbl_label(id)"/></column>
         </createTable>
     </changeSet>
+    <changeSet id="add_role_to_author" author="vladakolbeko">
+        <addColumn tableName="tbl_author" schemaName="distcomp">
+            <column name="role" type="VARCHAR(32)" defaultValue="CUSTOMER"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

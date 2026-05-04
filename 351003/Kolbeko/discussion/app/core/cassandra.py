@@ -1,4 +1,7 @@
 import os
+import time
+import logging
+
 from typing import Optional
 
 from cassandra.cluster import Cluster, Session
@@ -16,6 +19,19 @@ def cassandra_init() -> None:
     host = os.getenv("CASSANDRA_HOST", "localhost")
     port = int(os.getenv("CASSANDRA_PORT", "9042"))
     keyspace = os.getenv("CASSANDRA_KEYSPACE", "distcomp")
+
+    for i in range(10):
+        try:
+            _cluster = Cluster([host], port=port)
+            _session = _cluster.connect()
+            break
+        except Exception as e:
+            logging.error(f"Waiting for Cassandra... (attempt {i+1}): {e}")
+            time.sleep(5)
+    
+    if not _session:
+        print("Could not connect to Cassandra after 10 attempts")
+        return
 
     _cluster = Cluster([host], port=port)
     _session = _cluster.connect()
