@@ -1,5 +1,8 @@
 package com.lizaveta.notebook.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.lizaveta.notebook.cache.NotebookCacheKeys;
+import com.lizaveta.notebook.cache.PublisherRedisCache;
 import com.lizaveta.notebook.exception.ForbiddenException;
 import com.lizaveta.notebook.exception.ResourceNotFoundException;
 import com.lizaveta.notebook.exception.ValidationException;
@@ -35,16 +38,19 @@ public class StoryService {
     private final WriterRepository writerRepository;
     private final MarkerRepository markerRepository;
     private final StoryMapper mapper;
+    private final PublisherRedisCache redisCache;
 
     public StoryService(
             final StoryRepository repository,
             final WriterRepository writerRepository,
             final MarkerRepository markerRepository,
-            final StoryMapper mapper) {
+            final StoryMapper mapper,
+            final PublisherRedisCache redisCache) {
         this.repository = repository;
         this.writerRepository = writerRepository;
         this.markerRepository = markerRepository;
         this.mapper = mapper;
+        this.redisCache = redisCache;
     }
 
     public StoryResponseTo create(final StoryRequestTo request) {
@@ -59,13 +65,21 @@ public class StoryService {
                 null, request.writerId(), request.title(), request.content(),
                 now, now, resolvedMarkerIds);
         Story saved = repository.save(toSave);
-        return mapper.toResponse(saved);
+        StoryResponseTo response = mapper.toResponse(saved);
+        evictAfterStorySave(saved.getId());
+        return response;
     }
 
     public List<StoryResponseTo> findAll() {
-        return repository.findAll().stream()
-                .map(mapper::toResponse)
-                .toList();
+        String key = NotebookCacheKeys.storyAll();
+        return redisCache.get(key, new TypeReference<List<StoryResponseTo>>() {
+        }).orElseGet(() -> {
+            List<StoryResponseTo> loaded = repository.findAll().stream()
+                    .map(mapper::toResponse)
+                    .toList();
+            redisCache.put(key, loaded);
+            return loaded;
+        });
     }
 
     public PageResponseTo<StoryResponseTo> findAll(final int page, final int size, final String sortBy, final String sortOrder) {
@@ -73,18 +87,30 @@ public class StoryService {
                 ? Sort.by(Sort.Direction.fromString(sortOrder != null && sortOrder.equalsIgnoreCase("desc") ? "desc" : "asc"), sortBy)
                 : Sort.unsorted();
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), 100), sort);
-        var pageResult = repository.findAll(pageable);
-        List<StoryResponseTo> content = pageResult.getContent().stream()
-                .map(mapper::toResponse)
-                .toList();
-        return new PageResponseTo<>(content, pageResult.getTotalElements(), pageResult.getTotalPages(), pageResult.getSize(), pageResult.getNumber());
+        String key = NotebookCacheKeys.storyPage(pageable.getPageNumber(), pageable.getPageSize(), sortBy, sortOrder);
+        return redisCache.get(key, new TypeReference<PageResponseTo<StoryResponseTo>>() {
+        }).orElseGet(() -> {
+            var pageResult = repository.findAll(pageable);
+            List<StoryResponseTo> content = pageResult.getContent().stream()
+                    .map(mapper::toResponse)
+                    .toList();
+            PageResponseTo<StoryResponseTo> loaded = new PageResponseTo<>(
+                    content, pageResult.getTotalElements(), pageResult.getTotalPages(), pageResult.getSize(), pageResult.getNumber());
+            redisCache.put(key, loaded);
+            return loaded;
+        });
     }
 
     public StoryResponseTo findById(final Long id) {
         validateId(id);
-        Story entity = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(STORY_NOT_FOUND + id));
-        return mapper.toResponse(entity);
+        String key = NotebookCacheKeys.storyById(id);
+        return redisCache.get(key, StoryResponseTo.class).orElseGet(() -> {
+            Story entity = repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(STORY_NOT_FOUND + id));
+            StoryResponseTo loaded = mapper.toResponse(entity);
+            redisCache.put(key, loaded);
+            return loaded;
+        });
     }
 
     public StoryResponseTo update(final Long id, final StoryRequestTo request) {
@@ -103,7 +129,9 @@ public class StoryService {
                 .withMarkerIds(resolvedMarkerIds)
                 .withModified(LocalDateTime.now());
         repository.update(updated);
-        return mapper.toResponse(updated);
+        StoryResponseTo response = mapper.toResponse(updated);
+        evictAfterStorySave(id);
+        return response;
     }
 
     public void deleteById(final Long id) {
@@ -112,6 +140,18 @@ public class StoryService {
         if (!deleted) {
             throw new ResourceNotFoundException(STORY_NOT_FOUND + id);
         }
+        evictAfterStoryDelete(id);
+    }
+
+    private void evictAfterStorySave(final long storyId) {
+        redisCache.evictKeyPattern(NotebookCacheKeys.STORY_PREFIX + "*");
+        redisCache.evictKey(NotebookCacheKeys.markerByStory(storyId));
+        redisCache.evictKey(NotebookCacheKeys.noticeByStory(storyId));
+    }
+
+    private void evictAfterStoryDelete(final long storyId) {
+        evictAfterStorySave(storyId);
+        redisCache.evictKeyPattern(NotebookCacheKeys.NOTICE_PREFIX + "*");
     }
 
     public List<StoryResponseTo> findByMarkerIdsAndWriterLoginAndTitleAndContent(

@@ -1,5 +1,8 @@
+# .NET Build artifacts
 [Bb]in/
 [Oo]bj/
+
+# User-specific files
 .idea/
 .vs/
 *.user

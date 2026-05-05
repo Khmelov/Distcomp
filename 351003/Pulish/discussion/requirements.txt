@@ -4,3 +4,4 @@ pydantic==2.12.5
 cassandra-driver==3.29.1
 pyasyncore==1.0.3
 pydantic-settings==2.3.4
+kafka-python-ng==2.2.3
