@@ -9,6 +9,9 @@ import com.example.restApi.model.User;
 import com.example.restApi.repository.ArticleRepository;
 import com.example.restApi.repository.MarkerRepository;
 import com.example.restApi.repository.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +46,7 @@ public class ArticleService {
                 .map(this::convertToResponseDto);
     }
 
+    @Cacheable(value = "articles", key = "#id")
     public ArticleResponseTo getById(Long id) {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Article not found with id: " + id));
@@ -50,6 +54,7 @@ public class ArticleService {
     }
 
     @Transactional
+    @CachePut(value = "articles", key = "#result.id")
     public ArticleResponseTo create(ArticleRequestTo request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + request.getUserId()));
@@ -78,6 +83,7 @@ public class ArticleService {
     }
 
     @Transactional
+    @CachePut(value = "articles", key = "#id")
     public ArticleResponseTo update(Long id, ArticleRequestTo request) {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Article not found with id: " + id));
@@ -102,6 +108,7 @@ public class ArticleService {
     }
 
     @Transactional
+    @CacheEvict(value = "articles", key = "#id")
     public void delete(Long id) {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Article not found with id: " + id));

@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -40,6 +41,17 @@ public class GlobalExceptionHandler {
                 .body(Map.of(
                         "errorMessage", "Duplicate entry: " + ex.getMostSpecificCause().getMessage(),
                         "errorCode", 40301
+                ));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException ex) {
+        int httpCode = ex.getStatusCode().value();
+        int errorCode = httpCode * 100 + 1;
+        return ResponseEntity.status(ex.getStatusCode())
+                .body(Map.of(
+                        "errorMessage", ex.getReason() != null ? ex.getReason() : "Error",
+                        "errorCode", errorCode
                 ));
     }
 

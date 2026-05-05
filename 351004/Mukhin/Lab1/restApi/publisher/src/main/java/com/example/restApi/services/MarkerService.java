@@ -5,6 +5,9 @@ import com.example.restApi.dto.response.MarkerResponseTo;
 import com.example.restApi.exception.NotFoundException;
 import com.example.restApi.model.Marker;
 import com.example.restApi.repository.MarkerRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,11 +27,12 @@ public class MarkerService {
     }
 
     public Page<MarkerResponseTo> getAll(int page, int size, String sortParam) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortParam));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortParam));
         return markerRepository.findAll(pageable)
                 .map(this::convertToResponseDto);
     }
 
+    @Cacheable(value = "markers", key = "#id")
     public MarkerResponseTo getById(Long id) {
         Marker marker = markerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Marker not found with id: " + id));
@@ -36,6 +40,7 @@ public class MarkerService {
     }
 
     @Transactional
+    @CachePut(value = "markers", key = "#result.id")
     public MarkerResponseTo create(MarkerRequestTo request) {
         Marker marker = new Marker();
         marker.setName(request.getName());
@@ -45,6 +50,7 @@ public class MarkerService {
     }
 
     @Transactional
+    @CachePut(value = "markers", key = "#id")
     public MarkerResponseTo update(Long id, MarkerRequestTo request) {
         Marker marker = markerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Marker not found with id: " + id));
@@ -57,6 +63,7 @@ public class MarkerService {
     }
 
     @Transactional
+    @CacheEvict(value = "markers", key = "#id")
     public void delete(Long id) {
         if (!markerRepository.existsById(id)) {
             throw new NotFoundException("Marker not found with id: " + id);
