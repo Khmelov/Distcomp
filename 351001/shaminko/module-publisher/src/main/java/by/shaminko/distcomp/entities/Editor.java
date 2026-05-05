@@ -29,4 +29,8 @@ public class Editor {
 
     @Size(min = 2, max = 64)
     String lastname;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    UserRole role;
 }

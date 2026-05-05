@@ -22,5 +22,8 @@ public class Reaction {
 
     @Column("article_id")
     private long articleId;
+
+    @Column("creator_id")
+    private long creatorId;
     private String state;
 }

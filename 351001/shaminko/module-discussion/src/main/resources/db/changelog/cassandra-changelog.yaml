@@ -25,3 +25,13 @@ databaseChangeLog:
                   type: text
                   constraints:
                     nullable: false
+
+  - changeSet:
+      id: 022-add-creator-id-to-message-table
+      changes:
+        - addColumn:
+            tableName: tbl_message
+            columns:
+              - column:
+                  name: creator_id
+                  type: bigint

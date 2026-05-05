@@ -18,6 +18,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
@@ -45,6 +47,8 @@ public class ReactionService {
                         .uri(discussionUrl + "/api/v1.0/messages")
                         .retrieve()
                         .bodyToFlux(ReactionResponseTo.class).collectList().block();
+            } catch (WebClientResponseException ex2) {
+                throw new ResponseStatusException(ex2.getStatusCode(), ex2.getResponseBodyAsString());
             } catch (WebClientRequestException connectionError) {
                 return Collections.emptyList();
             }
@@ -54,16 +58,19 @@ public class ReactionService {
     @Cacheable(value = "reactions", key = "#id")
     public ReactionResponseTo getById(Long id) {
         try {
-            return kafkaClient.send(new MessageData(MessageData.Operation.GET_BY_ID, id)).responseTOs().get(0);
+                return kafkaClient.send(new MessageData(MessageData.Operation.GET_BY_ID, id)).responseTOs().get(0);
         } catch (Exception e) {
             try {
                 return webClient.get()
                         .uri(discussionUrl + "/api/v1.0/messages/{id}", id)
                         .retrieve()
                         .bodyToMono(ReactionResponseTo.class).block();
+            } catch (WebClientResponseException ex2) {
+                throw new ResponseStatusException(ex2.getStatusCode(), ex2.getResponseBodyAsString());
             } catch (WebClientRequestException connectionError) {
                 ReactionResponseTo fallback = new ReactionResponseTo();
                 fallback.setId(id);
+                fallback.setCreatorId(0);
                 return fallback;
             }
         }
@@ -80,10 +87,13 @@ public class ReactionService {
                         .bodyValue(req)
                         .retrieve()
                         .bodyToMono(ReactionResponseTo.class).block();
+            } catch (WebClientResponseException ex2) {
+                throw new ResponseStatusException(ex2.getStatusCode(), ex2.getResponseBodyAsString());
             } catch (WebClientRequestException connectionError) {
                 ReactionResponseTo fallbackResponse = new ReactionResponseTo();
                 fallbackResponse.setId(System.currentTimeMillis());
                 fallbackResponse.setArticleId(req.getArticleId());
+                fallbackResponse.setCreatorId(req.getCreatorId());
                 fallbackResponse.setContent(req.getContent());
                 fallbackResponse.setState("PENDING");
                 return fallbackResponse;
@@ -103,10 +113,13 @@ public class ReactionService {
                         .bodyValue(req)
                         .retrieve()
                         .bodyToMono(ReactionResponseTo.class).block();
+            } catch (WebClientResponseException ex2) {
+                throw new ResponseStatusException(ex2.getStatusCode(), ex2.getResponseBodyAsString());
             } catch (WebClientRequestException connectionError) {
                 ReactionResponseTo fallbackResponse = new ReactionResponseTo();
                 fallbackResponse.setId(req.getId());
                 fallbackResponse.setArticleId(req.getArticleId());
+                fallbackResponse.setCreatorId(req.getCreatorId());
                 fallbackResponse.setContent(req.getContent());
                 fallbackResponse.setState("PENDING");
                 return fallbackResponse;
@@ -124,6 +137,8 @@ public class ReactionService {
                         .uri(discussionUrl + "/api/v1.0/messages/{id}", id)
                         .retrieve()
                         .bodyToMono(Void.class).block();
+            } catch (WebClientResponseException ex2) {
+                throw new ResponseStatusException(ex2.getStatusCode(), ex2.getResponseBodyAsString());
             } catch (WebClientRequestException connectionError) {
             }
         }

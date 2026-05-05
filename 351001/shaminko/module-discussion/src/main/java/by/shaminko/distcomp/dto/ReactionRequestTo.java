@@ -12,6 +12,8 @@ public class ReactionRequestTo {
     @Positive
     long articleId;
 
+    long creatorId;
+
     @NotBlank
     @Size(min = 2, max = 2048)
     String content;
