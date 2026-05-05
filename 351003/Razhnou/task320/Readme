@@ -1,0 +1,4 @@
+& "D:\Postgres\bin\psql.exe" -U postgres -d distcomp
+drop schema public cascade;
+create schema public;
+\q
