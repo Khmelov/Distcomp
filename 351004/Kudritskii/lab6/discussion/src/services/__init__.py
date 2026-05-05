@@ -1,0 +1,1 @@
+from src.services.news import NewsService
