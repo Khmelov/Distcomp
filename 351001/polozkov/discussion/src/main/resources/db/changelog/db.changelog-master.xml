@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+    <changeSet id="1" author="polozkov">
+        <sql>
+            CREATE TABLE tbl_comment (
+             country text,
+             issue_id bigint,
+             id bigint,
+             author_id bigint,
+             content text,
+             created_at timestamp,
+             PRIMARY KEY ((country, issue_id), id)
+                );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
