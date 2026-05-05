@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="10-add-role-to-user" author="developer">
+        <addColumn tableName="tbl_user">
+            <column name="role" type="VARCHAR(20)" defaultValue="CUSTOMER">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <sql>UPDATE tbl_user SET role='ADMIN' WHERE login='sashabrazhalovich2005@gmail.com'</sql>
+    </changeSet>
+
+</databaseChangeLog>

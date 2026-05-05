@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"news-board/publisher/internal/auth"
 	"news-board/publisher/internal/dto"
 	"news-board/publisher/internal/service"
 
@@ -12,12 +13,14 @@ import (
 type MarkerHandler struct {
 	markerService *service.MarkerService
 	validate      *validator.Validate
+	jwtSecret     string
 }
 
-func NewMarkerHandler(svc *service.MarkerService) *MarkerHandler {
+func NewMarkerHandler(svc *service.MarkerService, jwtSecret string) *MarkerHandler {
 	return &MarkerHandler{
 		markerService: svc,
 		validate:      validator.New(),
+		jwtSecret:     jwtSecret,
 	}
 }
 
@@ -31,18 +34,29 @@ func (h *MarkerHandler) RegisterRoutes(rg *gin.RouterGroup) {
 		v1.DELETE("/markers/:id", h.Delete)
 		v1.GET("/markers/by-news/:newsId", h.GetByNewsID)
 	}
+
+	v2 := rg.Group("/v2.0")
+	{
+		v2Auth := v2.Group("")
+		v2Auth.Use(auth.RequireAuth(h.jwtSecret))
+		v2Auth.POST("/markers", h.Create)
+		v2Auth.GET("/markers", h.GetAll)
+		v2Auth.GET("/markers/:id", h.GetByID)
+		v2Auth.PUT("/markers/:id", h.Update)
+		v2Auth.DELETE("/markers/:id", h.Delete)
+		v2Auth.GET("/markers/by-news/:newsId", h.GetByNewsID)
+	}
 }
 
-// Create создает новый маркер
-// @Summary Создать маркер
-// @Tags Markers
-// @Accept json
-// @Produce json
-// @Param marker body dto.MarkerRequestTo true "Данные маркера"
-// @Success 201 {object} dto.MarkerResponseTo
-// @Failure 400 {object} dto.ErrorResponse "Неверный JSON или ошибка валидации"
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /markers [post]
+//@Summary Создать маркер
+//@Tags Markers
+//@Accept json
+//@Produce json
+//@Param marker body dto.MarkerRequestTo true "Данные маркера"
+//@Success 201 {object} dto.MarkerResponseTo
+//@Failure 400 {object} dto.ErrorResponse "Неверный JSON или ошибка валидации"
+//@Failure 500 {object} dto.ErrorResponse
+//@Router /markers [post]
 func (h *MarkerHandler) Create(c *gin.Context) {
 	var req dto.MarkerRequestTo
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -61,7 +75,7 @@ func (h *MarkerHandler) Create(c *gin.Context) {
 	}
 	resp, err := h.markerService.Create(c.Request.Context(), &req)
 	if err != nil {
-		// внутренняя ошибка — добавляем в контекст, middleware обработает
+
 		c.Error(err)
 		return
 	}

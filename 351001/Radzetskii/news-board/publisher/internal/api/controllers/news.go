@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"news-board/publisher/internal/auth"
 	"news-board/publisher/internal/dto"
 	"news-board/publisher/internal/service"
 
@@ -14,12 +15,14 @@ import (
 type NewsHandler struct {
 	newsService *service.NewsService
 	validate    *validator.Validate
+	jwtSecret   string
 }
 
-func NewNewsHandler(svc *service.NewsService) *NewsHandler {
+func NewNewsHandler(svc *service.NewsService, jwtSecret string) *NewsHandler {
 	return &NewsHandler{
 		newsService: svc,
 		validate:    validator.New(),
+		jwtSecret:   jwtSecret,
 	}
 }
 
@@ -35,6 +38,21 @@ func (h *NewsHandler) RegisterRoutes(rg *gin.RouterGroup) {
 		v1.DELETE("/news/:id/markers/:markerId", h.RemoveMarker)
 		v1.GET("/news/:id/markers", h.GetMarkers)
 		v1.GET("/news/search", h.Search)
+	}
+
+	v2 := rg.Group("/v2.0")
+	{
+		v2Auth := v2.Group("")
+		v2Auth.Use(auth.RequireAuth(h.jwtSecret))
+		v2Auth.POST("/news", h.Create)
+		v2Auth.GET("/news", h.GetAll)
+		v2Auth.GET("/news/:id", h.GetByID)
+		v2Auth.PUT("/news/:id", h.Update)
+		v2Auth.DELETE("/news/:id", h.Delete)
+		v2Auth.POST("/news/:id/markers/:markerId", h.AddMarker)
+		v2Auth.DELETE("/news/:id/markers/:markerId", h.RemoveMarker)
+		v2Auth.GET("/news/:id/markers", h.GetMarkers)
+		v2Auth.GET("/news/search", h.Search)
 	}
 }
 
