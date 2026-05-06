@@ -1,0 +1,189 @@
+databaseChangeLog:
+#  - changeSet:
+#      id: 010-create-schema
+#      author: shaminko
+#      runOnChange: true
+#      changes:
+#        - sql:
+#            dbms: postgresql
+#            sql: "CREATE SCHEMA IF NOT EXISTS distcomp;"
+#  - property:
+#      name: defaultSchemaName
+#      value: distcomp
+  - changeSet:
+      id: 011-create-user-table
+      author: shaminko
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_user
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: login
+                  type: text
+                  constraints:
+                    nullable: false
+                    unique: true
+                    checkConstraint: "char_length(login) >= 2 AND char_length(login) <= 64"
+              - column:
+                  name: password
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(password) >= 8 AND char_length(password) <= 128"
+              - column:
+                  name: firstname
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(firstname) >= 2 AND char_length(firstname) <= 64"
+              - column:
+                  name: lastname
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(lastname) >= 2 AND char_length(lastname) <= 64"
+
+  - changeSet:
+      id: 013-add-user-role
+      author: shaminko
+      changes:
+        - addColumn:
+            tableName: tbl_user
+            columns:
+              - column:
+                  name: role
+                  type: text
+                  defaultValue: "CUSTOMER"
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 012-create-tweet-table
+      author: shaminko
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_tweet
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_tweet_user
+                    references: tbl_user(id) # distcomp.tbl_user(id)
+              - column:
+                  name: title
+                  type: text
+                  constraints:
+                    nullable: false
+                    unique: true
+                    checkConstraint: "char_length(title) >= 2 AND char_length(title) <= 64"
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(content) >= 4 AND char_length(content) <= 2048"
+              - column:
+                  name: created
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: modified
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 014-create-sticker-table
+      author: shaminko
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_sticker
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: text
+                  constraints:
+                    nullable: false
+                    unique: true
+                    checkConstraint: "char_length(name) >= 2 AND char_length(name) <= 32"
+
+  - changeSet:
+      id: 015-create-tweetsticker-table
+      author: shaminko
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_tweet_sticker
+            columns:
+              - column:
+                  name: tweet_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_tweetsticker_tweet
+                    references: tbl_tweet(id) #distcomp.tbl_tweet(id)
+              - column:
+                  name: sticker_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_tweetsticker_sticker
+                    references: tbl_sticker(id) #distcomp.tbl_sticker(id)
+        - addPrimaryKey:
+            tableName: tbl_tweet_sticker
+            columnNames: tweet_id, sticker_id
+  - changeSet:
+      id: 016-insert-user
+      author: shaminko
+      changes:
+        - insert:
+            tableName: tbl_user
+            columns:
+              - column:
+                  name: login
+                  value: "amiray701@gmail.com"
+              - column:
+                  name: password
+                  value: "123456789"
+              - column:
+                  name: firstname
+                  value: "Екатерина"
+              - column:
+                  name: lastname
+                  value: "Бухвалова"
+
+  - changeSet:
+      id: 017-promote-seed-user-to-admin
+      author: shaminko
+      changes:
+        - update:
+            tableName: tbl_user
+            columns:
+              - column:
+                  name: role
+                  value: "ADMIN"
+            where: "login = 'amiray701@gmail.com'"
