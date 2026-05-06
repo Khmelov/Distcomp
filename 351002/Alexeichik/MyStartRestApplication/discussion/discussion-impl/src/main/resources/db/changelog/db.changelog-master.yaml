@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - includeAll:
+      path: 20260503/initialize_tables
+      relativeToChangelogFile: true

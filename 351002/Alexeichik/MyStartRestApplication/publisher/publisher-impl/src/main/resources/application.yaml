@@ -1,0 +1,27 @@
+spring:
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  datasource:
+    url: jdbc:postgresql://localhost:5432/distcomp
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+server:
+  address: localhost
+  port: 24110
+  api:
+    base-path:
+      v1: "/api/v1.0"
+      v2: "/api/v2.0"
+management:
+  endpoints:
+    web:
+      exposure:
+        include: mappings
+services:
+  discussion:
+    url: "http://localhost:24130/api/v1.0"
