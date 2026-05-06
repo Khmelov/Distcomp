@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"labs/publisher/internal/client/kafka"
+
 	"labs/publisher/internal/config"
 	editorctrl "labs/publisher/internal/controller/editor"
 	issuectrl "labs/publisher/internal/controller/issue"
@@ -23,6 +24,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 )
 
 type App struct {
@@ -49,10 +51,17 @@ func (a *App) Run() error {
 	}
 	log.Println("Successfully connected to the database!")
 
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     a.cfg.RedisHost + ":" + a.cfg.RedisPort,
+		Password: "",
+		DB:       0,
+	})
+
+	cacheRepos := repository.NewCache(redisClient, 3600)
 	disClient := kafka.NewKafkaDiscussionClient(a.cfg.Brokers)
 
 	repos := repository.NewCas(db, disClient)
-	services := service.New(repos)
+	services := service.New(repos, cacheRepos)
 
 	editorController := editorctrl.NewEditorController(services.EditorService())
 	issueController := issuectrl.NewIssueController(services.IssueService())
@@ -67,11 +76,31 @@ func (a *App) Run() error {
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "time": time.Now().Format(time.RFC3339)})
 	})
 
-	api := router.Group("/api/v1.0")
-	editorController.RegisterRoutes(api)
-	issueController.RegisterRoutes(api)
-	noteController.RegisterRoutes(api)
-	stickerController.RegisterRoutes(api)
+	v1 := router.Group("/api/v1.0")
+	{
+		editorController.RegisterRoutes(v1)
+		issueController.RegisterRoutes(v1)
+		noteController.RegisterRoutes(v1)
+		stickerController.RegisterRoutes(v1)
+	}
+
+	v2 := router.Group("/api/v2.0")
+	{
+		// Публичные эндпоинты внутри v2.0 (регистрация и логин)
+		// Эти методы должны быть реализованы в вашем authController
+		//v2.POST("/editors", authController.Register)
+		//v2.POST("/login", authController.Login)
+
+		// Защищенные эндпоинты v2.0
+		protected := v2.Group("/")
+		protected.Use(middleware.AuthMiddleware(a.cfg.JWTSecret))
+		{
+			editorController.RegisterRoutes(protected)
+			issueController.RegisterRoutes(protected)
+			noteController.RegisterRoutes(protected)
+			stickerController.RegisterRoutes(protected)
+		}
+	}
 
 	addr := a.cfg.ServerPort
 

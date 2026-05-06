@@ -15,11 +15,12 @@ type Service interface {
 	ListStickers(ctx context.Context, limit, offset int) ([]*stickermodel.Sticker, error)
 }
 type stickerServiceImpl struct {
-	repos repository.AppRepository
+	repos  repository.AppRepository
+	caches repository.AppCache
 }
 
-func New(repos repository.AppRepository) Service {
-	return &stickerServiceImpl{repos: repos}
+func New(repos repository.AppRepository, caches repository.AppCache) Service {
+	return &stickerServiceImpl{repos: repos, caches: caches}
 }
 
 func (s *stickerServiceImpl) CreateSticker(ctx context.Context, input *stickermodel.CreateStickerInput) (*stickermodel.Sticker, error) {
@@ -39,7 +40,22 @@ func (s *stickerServiceImpl) CreateSticker(ctx context.Context, input *stickermo
 }
 
 func (s *stickerServiceImpl) GetSticker(ctx context.Context, id int64) (*stickermodel.Sticker, error) {
-	return s.repos.StickerRepo().GetByID(ctx, id)
+	if s.caches != nil {
+		cached, err := s.caches.StickerCache().Get(ctx, id)
+		if err == nil && cached != nil {
+			return cached, nil
+		}
+	}
+
+	res, err := s.repos.StickerRepo().GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.caches != nil {
+		_ = s.caches.StickerCache().Set(ctx, res)
+	}
+	return res, nil
 }
 
 func (s *stickerServiceImpl) UpdateSticker(ctx context.Context, id int64, input *stickermodel.UpdateStickerInput) (*stickermodel.Sticker, error) {
@@ -57,10 +73,18 @@ func (s *stickerServiceImpl) UpdateSticker(ctx context.Context, id int64, input 
 		return nil, err
 	}
 
+	if s.caches != nil {
+		_ = s.caches.StickerCache().Delete(ctx, id)
+	}
+	
 	return sticker, nil
 }
 
 func (s *stickerServiceImpl) DeleteSticker(ctx context.Context, id int64) error {
+	if s.caches != nil {
+		_ = s.caches.StickerCache().Delete(ctx, id)
+	}
+
 	return s.repos.StickerRepo().Delete(ctx, id)
 }
 
