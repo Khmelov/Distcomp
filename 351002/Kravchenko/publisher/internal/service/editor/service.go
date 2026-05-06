@@ -16,11 +16,12 @@ type Service interface {
 }
 
 type editorServiceImpl struct {
-	repos repository.AppRepository
+	repos  repository.AppRepository
+	caches repository.AppCache
 }
 
-func New(repos repository.AppRepository) Service {
-	return &editorServiceImpl{repos: repos}
+func New(repos repository.AppRepository, caches repository.AppCache) Service {
+	return &editorServiceImpl{repos: repos, caches: caches}
 }
 
 func (s *editorServiceImpl) CreateEditor(ctx context.Context, input *editormodel.CreateEditorInput) (*editormodel.Editor, error) {
@@ -43,7 +44,23 @@ func (s *editorServiceImpl) CreateEditor(ctx context.Context, input *editormodel
 }
 
 func (s *editorServiceImpl) GetEditor(ctx context.Context, id int64) (*editormodel.Editor, error) {
-	return s.repos.EditorRepo().GetByID(ctx, id)
+	if s.caches != nil {
+		cached, err := s.caches.EditorCache().Get(ctx, id)
+		if err == nil && cached != nil {
+			return cached, nil
+		}
+	}
+
+	editor, err := s.repos.EditorRepo().GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.caches != nil {
+		_ = s.caches.EditorCache().Set(ctx, editor)
+	}
+
+	return editor, nil
 }
 
 func (s *editorServiceImpl) UpdateEditor(ctx context.Context, id int64, input *editormodel.UpdateEditorInput) (*editormodel.Editor, error) {
@@ -79,10 +96,18 @@ func (s *editorServiceImpl) UpdateEditor(ctx context.Context, id int64, input *e
 		return nil, err
 	}
 
+	if s.caches != nil {
+		_ = s.caches.EditorCache().Delete(ctx, id)
+	}
+
 	return editor, nil
 }
 
 func (s *editorServiceImpl) DeleteEditor(ctx context.Context, id int64) error {
+	if s.caches != nil {
+		_ = s.caches.EditorCache().Delete(ctx, id)
+	}
+	
 	return s.repos.EditorRepo().Delete(ctx, id)
 }
 

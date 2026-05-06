@@ -14,11 +14,12 @@ type Service interface {
 	ListNotes(ctx context.Context, limit, offset int) ([]*notemodel.Note, error)
 }
 type noteServiceImpl struct {
-	repos repository.AppRepository
+	repos  repository.AppRepository
+	caches repository.AppCache
 }
 
-func New(repos repository.AppRepository) Service {
-	return &noteServiceImpl{repos: repos}
+func New(repos repository.AppRepository, caches repository.AppCache) Service {
+	return &noteServiceImpl{repos: repos, caches: caches}
 }
 
 func (s *noteServiceImpl) CreateNote(ctx context.Context, input *notemodel.CreateNoteInput) (*notemodel.Note, error) {
@@ -36,7 +37,22 @@ func (s *noteServiceImpl) CreateNote(ctx context.Context, input *notemodel.Creat
 }
 
 func (s *noteServiceImpl) GetNote(ctx context.Context, id int64) (*notemodel.Note, error) {
-	return s.repos.NoteRepo().GetByID(ctx, id)
+	if s.caches != nil {
+		cached, err := s.caches.NoteCache().Get(ctx, id)
+		if err == nil && cached != nil {
+			return cached, nil
+		}
+	}
+
+	res, err := s.repos.NoteRepo().GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.caches != nil {
+		_ = s.caches.NoteCache().Set(ctx, res)
+	}
+	return res, nil
 }
 
 func (s *noteServiceImpl) UpdateNote(ctx context.Context, id int64, input *notemodel.UpdateNoteInput) (*notemodel.Note, error) {
@@ -54,11 +70,24 @@ func (s *noteServiceImpl) UpdateNote(ctx context.Context, id int64, input *notem
 		return nil, err
 	}
 
+	if s.caches != nil {
+		_ = s.caches.NoteCache().Set(ctx, note)
+	}
+
 	return note, nil
 }
 
 func (s *noteServiceImpl) DeleteNote(ctx context.Context, id int64) error {
-	return s.repos.NoteRepo().Delete(ctx, id)
+	noteData, _ := s.repos.NoteRepo().GetByID(ctx, id)
+
+	if err := s.repos.NoteRepo().Delete(ctx, id); err != nil {
+		return err
+	}
+
+	if s.caches != nil && noteData != nil {
+		_ = s.caches.NoteCache().Delete(ctx, id, noteData.IssueID)
+	}
+	return nil
 }
 
 func (s *noteServiceImpl) ListNotes(ctx context.Context, limit, offset int) ([]*notemodel.Note, error) {

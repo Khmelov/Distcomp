@@ -13,3 +13,9 @@ type Repository interface {
 	Delete(ctx context.Context, id int64) error
 	List(ctx context.Context, limit int, offset int) ([]*stickermodel.Sticker, error)
 }
+
+type Cache interface {
+	Get(ctx context.Context, id int64) (*stickermodel.Sticker, error)
+	Set(ctx context.Context, editor *stickermodel.Sticker) error
+	Delete(ctx context.Context, id int64) error
+}
