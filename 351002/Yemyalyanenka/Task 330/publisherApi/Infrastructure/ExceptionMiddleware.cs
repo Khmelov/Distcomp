@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using RestApiTask.Infrastructure.Exceptions;
 using RestApiTask.Models;
@@ -37,6 +38,10 @@ public class ExceptionMiddleware
             NotFoundException => (StatusCodes.Status404NotFound, "01", ex.Message),
             ForbiddenException => (StatusCodes.Status403Forbidden, "01", ex.Message),
             ValidationException => (StatusCodes.Status400BadRequest, "01", ex.Message),
+            UnauthorizedException => (StatusCodes.Status401Unauthorized, "01", ex.Message),
+            InvalidTokenException => (StatusCodes.Status401Unauthorized, "03", ex.Message),
+            SecurityTokenException => (StatusCodes.Status401Unauthorized, "02", "Token expired or invalid"),
+            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "01", ex.Message),
             DbUpdateException dbEx when IsUniqueViolation(dbEx) =>
                 (StatusCodes.Status403Forbidden, "01", "Entity already exists"),
             DbUpdateException dbEx when IsForeignKeyViolation(dbEx) =>
