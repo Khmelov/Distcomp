@@ -25,7 +25,6 @@ public class WriterController : ControllerBase
         return Ok(writer); 
     }
 
-
     [HttpPost]
     public IActionResult Create([FromBody] WriterRequestTo request)
     {

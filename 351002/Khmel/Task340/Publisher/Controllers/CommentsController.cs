@@ -27,9 +27,10 @@ namespace Publisher.Controllers
         }
 
         [HttpGet("{id}")]
-        public ActionResult<CommentResponseDto> GetById(long id)
+        public async Task<ActionResult<CommentResponseDto>> GetById(long id)
         {
-            var comment = KafkaConsumerService.GetComment(id);
+            // Ждём до 3 секунд для первого появления
+            var comment = await WaitForComment(id, 3000);
             if (comment == null)
                 return NotFound(new { errorMessage = "Comment not found", errorCode = 40401 });
             
@@ -42,8 +43,18 @@ namespace Publisher.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Генерация ID
             var commentId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            // Сразу добавляем в кэш PENDING запись
+            var pendingResponse = new CommentResponseDto
+            {
+                Id = commentId,
+                StoryId = request.StoryId,
+                Content = request.Content,
+                Country = request.Country,
+                State = "PENDING"
+            };
+            KafkaConsumerService.AddComment(pendingResponse);
 
             var kafkaMessage = new KafkaCommentMessage
             {
@@ -59,20 +70,9 @@ namespace Publisher.Controllers
             };
 
             await _kafkaProducer.SendAsync("InTopic", kafkaMessage);
-
             _logger.LogInformation("Comment {Id} sent to Kafka InTopic", commentId);
 
-            // Возвращаем временный ответ
-            var response = new CommentResponseDto
-            {
-                Id = commentId,
-                StoryId = request.StoryId,
-                Content = request.Content,
-                Country = request.Country,
-                State = "PENDING"
-            };
-
-            return CreatedAtAction(nameof(GetById), new { id = commentId }, response);
+            return CreatedAtAction(nameof(GetById), new { id = commentId }, pendingResponse);
         }
 
         [HttpPut("{id}")]
@@ -80,7 +80,7 @@ namespace Publisher.Controllers
             long id,
             [FromBody] CommentRequestDto request)
         {
-            var existingComment = KafkaConsumerService.GetComment(id);
+            var existingComment = await WaitForComment(id, 3000);
             if (existingComment == null)
                 return NotFound(new { errorMessage = "Comment not found", errorCode = 40401 });
 
@@ -98,14 +98,18 @@ namespace Publisher.Controllers
             };
 
             await _kafkaProducer.SendAsync("InTopic", kafkaMessage);
+            _logger.LogInformation("Comment {Id} UPDATE sent to Kafka", id);
 
-            return Ok(existingComment);
+            // Ждём обновления контента
+            var updatedComment = await WaitForUpdatedComment(id, request.Content, 3000);
+            
+            return Ok(updatedComment ?? existingComment);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(long id)
         {
-            var existingComment = KafkaConsumerService.GetComment(id);
+            var existingComment = await WaitForComment(id, 3000);
             if (existingComment == null)
                 return NotFound(new { errorMessage = "Comment not found", errorCode = 40401 });
 
@@ -120,8 +124,41 @@ namespace Publisher.Controllers
             };
 
             await _kafkaProducer.SendAsync("InTopic", kafkaMessage);
+            _logger.LogInformation("Comment {Id} DELETE sent to Kafka", id);
 
             return NoContent();
+        }
+
+        private async Task<CommentResponseDto?> WaitForComment(long id, int timeoutMs)
+        {
+            var startTime = DateTime.UtcNow;
+            
+            while ((DateTime.UtcNow - startTime).TotalMilliseconds < timeoutMs)
+            {
+                var comment = KafkaConsumerService.GetComment(id);
+                if (comment != null)
+                    return comment;
+                
+                await Task.Delay(50);
+            }
+            
+            return KafkaConsumerService.GetComment(id);
+        }
+
+        private async Task<CommentResponseDto?> WaitForUpdatedComment(long id, string expectedContent, int timeoutMs)
+        {
+            var startTime = DateTime.UtcNow;
+            
+            while ((DateTime.UtcNow - startTime).TotalMilliseconds < timeoutMs)
+            {
+                var comment = KafkaConsumerService.GetComment(id);
+                if (comment != null && comment.Content == expectedContent)
+                    return comment;
+                
+                await Task.Delay(50);
+            }
+            
+            return KafkaConsumerService.GetComment(id);
         }
     }
 }

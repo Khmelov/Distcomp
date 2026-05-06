@@ -1,11 +1,10 @@
 using System.ComponentModel.DataAnnotations;
-using Publisher.Models;
 
 namespace Publisher.DTOs
 {
     public class KafkaCommentMessage
     {
-        public string Action { get; set; } = string.Empty; // CREATE, UPDATE, DELETE
+        public string Action { get; set; } = string.Empty;
         public CommentData Data { get; set; } = new();
     }
 
@@ -17,4 +16,6 @@ namespace Publisher.DTOs
         public string Country { get; set; } = string.Empty;
         public string State { get; set; } = "PENDING";
     }
+
+    
 }
