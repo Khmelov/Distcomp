@@ -42,9 +42,10 @@ func FromDBError(err error) *AppError {
 }
 
 var (
-	ErrNotFound   = NewAppError(http.StatusNotFound, 40401, "Resource not found")
-	ErrBadRequest = NewAppError(http.StatusBadRequest, 40001, "Invalid request")
-	ErrForbidden  = NewAppError(http.StatusForbidden, 40301, "Forbidden")
-	ErrDuplicate  = NewAppError(http.StatusForbidden, 40301, "Duplicate value")
-	ErrInternal   = NewAppError(http.StatusInternalServerError, 50001, "Internal server error")
+	ErrNotFound      = NewAppError(http.StatusNotFound, 40401, "Resource not found")
+	ErrBadRequest    = NewAppError(http.StatusBadRequest, 40001, "Invalid request")
+	ErrForbidden     = NewAppError(http.StatusForbidden, 40301, "Forbidden")
+	ErrDuplicate     = NewAppError(http.StatusForbidden, 40301, "Duplicate value")
+	ErrInternal      = NewAppError(http.StatusInternalServerError, 50001, "Internal server error")
+	ErrUnauthorized  = NewAppError(http.StatusUnauthorized, 40101, "Unauthorized")
 )

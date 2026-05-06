@@ -9,6 +9,8 @@ import (
 
 	"discussion/internal/config"
 	"discussion/internal/handler"
+	kafkagateway "discussion/internal/gateway/kafka"
+	kafkahandler "discussion/internal/handler/kafka"
 	"discussion/internal/repository"
 	"discussion/internal/service"
 
@@ -38,8 +40,35 @@ func Run(ctx context.Context, logger *zap.Logger) error {
 
 	repo := repository.NewCassandraRepository(session)
 	svc := service.NewReactionService(repo)
-	h := handler.New(svc)
 
+	// Kafka topic provisioning
+	if err := kafkagateway.EnsureTopic(cfg.KafkaBroker, cfg.KafkaInTopic, 3, 1); err != nil {
+		logger.Warn("ensure InTopic failed", zap.Error(err))
+	}
+	if err := kafkagateway.EnsureTopic(cfg.KafkaBroker, cfg.KafkaOutTopic, 3, 1); err != nil {
+		logger.Warn("ensure OutTopic failed", zap.Error(err))
+	}
+
+	// Kafka producer (OutTopic)
+	partCount, err := kafkagateway.LookupPartitionCount(cfg.KafkaBroker, cfg.KafkaOutTopic)
+	if err != nil || partCount == 0 {
+		partCount = 3
+	}
+	kafkaProducer := kafkagateway.NewReactionProducer(cfg.KafkaBroker, cfg.KafkaOutTopic, partCount, logger)
+	defer kafkaProducer.Close()
+
+	// Kafka consumer (InTopic) — background goroutine
+	consumer := kafkahandler.NewReactionConsumer(
+		svc,
+		kafkaProducer,
+		cfg.KafkaBroker,
+		cfg.KafkaInTopic,
+		cfg.KafkaGroupID,
+		logger,
+	)
+	go consumer.Run(ctx)
+
+	h := handler.New(svc)
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
 
@@ -83,8 +112,19 @@ func initSchema(session *gocql.Session, keyspace string) error {
 	)).Exec(); err != nil {
 		return err
 	}
-	return session.Query(fmt.Sprintf(
-		`CREATE TABLE IF NOT EXISTS %s.tbl_reaction (id bigint PRIMARY KEY, issue_id bigint, content text)`,
-		keyspace,
+	if err := session.Query(fmt.Sprintf(
+		`CREATE TABLE IF NOT EXISTS %s.tbl_reaction (
+			id bigint PRIMARY KEY,
+			issue_id bigint,
+			content text,
+			state text
+		)`, keyspace,
+	)).Exec(); err != nil {
+		return err
+	}
+	// Add state column for existing tables (ignore AlreadyExists error)
+	_ = session.Query(fmt.Sprintf(
+		`ALTER TABLE %s.tbl_reaction ADD state text`, keyspace,
 	)).Exec()
+	return nil
 }
