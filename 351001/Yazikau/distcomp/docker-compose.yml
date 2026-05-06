@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  publisher:
+    build: .
+    restart: always
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "24110:8000"
+    environment:
+      - SERVICE_NAME=PUBLISHER
+      - CASSANDRA_HOST=cassandra
+      - REDIS_HOST=redis
+    depends_on:
+      - db_postgres
+      - cassandra
+      - redis
+
+  discussion:
+    build: .
+    restart: always
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "24130:8000"
+    environment:
+      - SERVICE_NAME=DISCUSSION
+      - CASSANDRA_HOST=cassandra
+      - REDIS_HOST=redis
+    depends_on:
+      - db_postgres
+      - cassandra
+      - redis
+
+  db_postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+
+  cassandra:
+    image: cassandra:latest
+    ports:
+      - "9042:9042"
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
