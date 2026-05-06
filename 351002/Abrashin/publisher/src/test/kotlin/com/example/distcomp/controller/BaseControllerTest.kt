@@ -44,6 +44,8 @@ abstract class BaseControllerTest {
             registry.add("spring.datasource.password", postgres::getPassword)
             registry.add("spring.liquibase.enabled") { "true" }
             registry.add("spring.liquibase.default-schema") { "distcomp" }
+            registry.add("spring.docker.compose.enabled") { "false" }
+            registry.add("spring.kafka.listener.auto-startup") { "false" }
         }
     }
 }

@@ -8,22 +8,27 @@ import com.example.distcomp.dto.response.CreatorResponseTo
 import com.example.distcomp.exception.ConflictException
 import com.example.distcomp.exception.NotFoundException
 import com.example.distcomp.mapper.CreatorMapper
+import com.example.distcomp.model.CreatorRole
 import com.example.distcomp.repository.CreatorRepository
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
 @Service
 class CreatorService(
     private val repository: CreatorRepository,
     private val mapper: CreatorMapper,
-    private val cacheSupport: CacheSupport
+    private val cacheSupport: CacheSupport,
+    private val passwordEncoder: PasswordEncoder
 ) {
     fun create(request: CreatorRequestTo): CreatorResponseTo {
         if (repository.findByLogin(request.login!!) != null) {
             throw ConflictException("Creator with login ${request.login} already exists")
         }
         val entity = mapper.toEntity(request)
+        entity.password = passwordEncoder.encode(request.password ?: throw ConflictException("Password is required"))
+        entity.role = request.role ?: CreatorRole.CUSTOMER
         val saved = repository.save(entity)
         return mapper.toResponse(saved).also { response ->
             response.id?.let { cacheSupport.put(CacheNames.CREATORS_BY_ID, it, response) }
@@ -60,9 +65,10 @@ class CreatorService(
             }
             existing.login = it
         }
-        request.password?.let { existing.password = it }
+        request.password?.let { existing.password = passwordEncoder.encode(it) }
         request.firstname?.let { existing.firstname = it }
         request.lastname?.let { existing.lastname = it }
+        request.role?.let { existing.role = it }
 
         val saved = repository.save(existing)
         return mapper.toResponse(saved).also { response ->

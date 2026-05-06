@@ -1,7 +1,10 @@
 package com.example.distcomp.data.dbo
 
+import com.example.distcomp.model.CreatorRole
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.Table
 
 @Entity
@@ -18,4 +21,8 @@ class CreatorDbo : BaseDbo() {
 
     @Column(nullable = false)
     var lastname: String = ""
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    var role: CreatorRole = CreatorRole.CUSTOMER
 }

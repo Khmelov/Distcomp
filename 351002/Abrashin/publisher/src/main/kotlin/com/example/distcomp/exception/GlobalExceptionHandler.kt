@@ -2,6 +2,8 @@ package com.example.distcomp.exception
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.core.AuthenticationException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -28,6 +30,16 @@ class GlobalExceptionHandler {
     @ExceptionHandler(BadRequestException::class)
     fun handleBadRequest(ex: BadRequestException): ResponseEntity<ErrorResponse> {
         return ResponseEntity(ErrorResponse(ex.message ?: "Bad Request", ERR_BAD_REQUEST), HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(AuthenticationException::class)
+    fun handleAuthentication(ex: AuthenticationException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity(ErrorResponse(ex.message ?: "Unauthorized", ERR_UNAUTHORIZED), HttpStatus.UNAUTHORIZED)
+    }
+
+    @ExceptionHandler(AccessDeniedException::class)
+    fun handleAccessDenied(ex: AccessDeniedException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity(ErrorResponse(ex.message ?: "Forbidden", ERR_FORBIDDEN), HttpStatus.FORBIDDEN)
     }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
@@ -76,6 +88,7 @@ class GlobalExceptionHandler {
     }
 
     companion object {
+        const val ERR_UNAUTHORIZED = 40101
         const val ERR_NOT_FOUND = 40401
         const val ERR_FORBIDDEN = 40301
         const val ERR_BAD_REQUEST = 40001
