@@ -54,6 +54,7 @@ func (a *App) Run() error {
 	defer session.Close()
 
 	log.Println("Successfully connected to Cassandra!")
+
 	repos := repository.NewCas(session)
 	services := service.New(repos)
 	controllers := controller.New(services)

@@ -5,6 +5,7 @@ go 1.25.1
 require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/joho/godotenv v1.5.1
+	github.com/lib/pq v1.11.2
 	github.com/stretchr/testify v1.11.1
 )
 
@@ -12,6 +13,9 @@ require (
 	github.com/gocql/gocql v1.7.0
 	github.com/scylladb/gocqlx/v2 v2.8.0
 	github.com/segmentio/kafka-go v0.4.50
+	github.com/bwmarrin/snowflake v0.3.0
+	github.com/gocql/gocql v1.7.0
+	github.com/scylladb/gocqlx/v2 v2.8.0
 	labs/shared v0.0.0
 )
 

@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using Additions.DAO;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArticleHouse.DAO.Models;
 
 [Table("tbl_creator")]
 [Index(nameof(Login), IsUnique = true)]
-public class CreatorModel : Model<CreatorModel>
+public class CreatorModel : LongIdModel<CreatorModel>
 {
     public CreatorModel() {}
     public string Password {get; set;} = default!;
