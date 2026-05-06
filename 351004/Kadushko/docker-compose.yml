@@ -1,9 +1,25 @@
 services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   mongodb:
     image: mongo:7
     ports:
       - "27017:27017"
     mem_limit: 512m
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.2
@@ -26,3 +42,6 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
       - "9092:9092"
+
+volumes:
+  postgres_data:
