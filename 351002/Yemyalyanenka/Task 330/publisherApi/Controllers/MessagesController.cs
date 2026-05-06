@@ -41,7 +41,7 @@ public class MessagesController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPut("{id}")] // Добавьте {id} сюда
+    [HttpPut("{id}")]
     public async Task<ActionResult<MessageResponseTo>> Update(long id, [FromBody] MessageRequestTo requestDto)
     {
         var result = await _service.UpdateAsync(id, requestDto);

@@ -23,6 +23,7 @@ public sealed class AppDbContext : DbContext
             b.Property(x => x.Password).HasColumnName("password").HasMaxLength(128).IsRequired();
             b.Property(x => x.Firstname).HasColumnName("firstname").HasMaxLength(64).IsRequired();
             b.Property(x => x.Lastname).HasColumnName("lastname").HasMaxLength(64).IsRequired();
+            b.Property(x => x.Role).HasColumnName("role").HasMaxLength(32).IsRequired();
             b.HasIndex(x => x.Login).IsUnique();
         });
 
@@ -48,6 +49,16 @@ public sealed class AppDbContext : DbContext
             b.Property(x => x.Id).HasColumnName("id");
             b.Property(x => x.Name).HasColumnName("name").HasMaxLength(32).IsRequired();
             b.HasIndex(x => x.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<Message>(b =>
+        {
+            b.ToTable("tbl_message");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).HasColumnName("id");
+            b.Property(x => x.ArticleId).HasColumnName("article_id").IsRequired();
+            b.Property(x => x.Content).HasColumnName("content").HasMaxLength(2048).IsRequired();
+            b.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
         });
     }
 }

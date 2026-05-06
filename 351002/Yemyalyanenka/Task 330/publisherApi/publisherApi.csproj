@@ -10,11 +10,14 @@
 
   <ItemGroup>
     <None Remove="Infrastructure\Exceptions\NotFoundException.cs~RF29d3d12.TMP" />
+    <None Remove="Models\Entities\Writer.cs~RFf61b410.TMP" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.26" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.14" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />

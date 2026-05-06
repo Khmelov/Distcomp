@@ -10,7 +10,9 @@ namespace RestApiTask.Mappings
         public MappingProfile()
         {
             // Writer Mappings
-            CreateMap<WriterRequestTo, Writer>();
+            CreateMap<WriterRequestTo, Writer>()
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role ?? "CUSTOMER"));
+            
             CreateMap<Writer, WriterResponseTo>();
 
             // Article Mappings
@@ -28,7 +30,9 @@ namespace RestApiTask.Mappings
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
             CreateMap<Message, MessageResponseTo>();
 
-            CreateMap<WriterResponseTo, WriterRequestTo>();
+            // Reverse Mappings for Update operations
+            CreateMap<WriterResponseTo, WriterRequestTo>()
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role));
             CreateMap<ArticleResponseTo, ArticleRequestTo>();
             CreateMap<MarkerResponseTo, MarkerRequestTo>();
             CreateMap<MessageResponseTo, MessageRequestTo>();
