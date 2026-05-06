@@ -1,6 +1,6 @@
 package by.boukhvalova.distcomp.repositories;
 
-import by.shaminko.distcomp.entities.User;
+import by.boukhvalova.distcomp.entities.User;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

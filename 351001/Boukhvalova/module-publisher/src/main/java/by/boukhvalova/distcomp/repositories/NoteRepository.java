@@ -1,6 +1,6 @@
 package by.boukhvalova.distcomp.repositories;
 
-import by.shaminko.distcomp.entities.Note;
+import by.boukhvalova.distcomp.entities.Note;
 import org.springframework.stereotype.Repository;
 
 @Repository

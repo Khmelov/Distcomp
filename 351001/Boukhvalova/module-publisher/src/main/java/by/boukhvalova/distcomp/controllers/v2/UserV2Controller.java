@@ -1,8 +1,8 @@
 package by.boukhvalova.distcomp.controllers.v2;
 
-import by.shaminko.distcomp.dto.UserRequestTo;
-import by.shaminko.distcomp.dto.UserResponseTo;
-import by.shaminko.distcomp.services.UserService;
+import by.boukhvalova.distcomp.dto.UserRequestTo;
+import by.boukhvalova.distcomp.dto.UserResponseTo;
+import by.boukhvalova.distcomp.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

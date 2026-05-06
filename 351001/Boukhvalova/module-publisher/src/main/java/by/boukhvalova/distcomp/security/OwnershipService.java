@@ -1,7 +1,7 @@
 package by.boukhvalova.distcomp.security;
 
 import by.boukhvalova.distcomp.security.user.AuthenticatedUser;
-import by.shaminko.distcomp.services.NoteService;
+import by.boukhvalova.distcomp.services.NoteService;
 import by.boukhvalova.distcomp.repositories.TweetRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;

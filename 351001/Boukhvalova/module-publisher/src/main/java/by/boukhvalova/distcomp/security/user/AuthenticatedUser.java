@@ -1,6 +1,6 @@
 package by.boukhvalova.distcomp.security.user;
 
-import by.shaminko.distcomp.entities.UserRole;
+import by.boukhvalova.distcomp.entities.UserRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

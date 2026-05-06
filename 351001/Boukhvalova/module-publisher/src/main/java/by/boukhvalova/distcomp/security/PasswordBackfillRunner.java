@@ -1,6 +1,6 @@
 package by.boukhvalova.distcomp.security;
 
-import by.shaminko.distcomp.repositories.UserRepository;
+import by.boukhvalova.distcomp.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;

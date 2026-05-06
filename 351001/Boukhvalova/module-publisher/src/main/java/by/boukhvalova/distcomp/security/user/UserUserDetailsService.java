@@ -1,6 +1,6 @@
 package by.boukhvalova.distcomp.security.user;
 
-import by.shaminko.distcomp.repositories.UserRepository;
+import by.boukhvalova.distcomp.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

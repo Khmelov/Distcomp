@@ -1,6 +1,6 @@
 package by.boukhvalova.distcomp.security.jwt;
 
-import by.shaminko.distcomp.entities.UserRole;
+import by.boukhvalova.distcomp.entities.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

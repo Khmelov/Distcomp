@@ -1,10 +1,10 @@
 package by.boukhvalova.distcomp.services;
 
-import by.shaminko.distcomp.dto.StickerMapper;
-import by.shaminko.distcomp.dto.StickerRequestTo;
-import by.shaminko.distcomp.dto.StickerResponseTo;
-import by.shaminko.distcomp.dto.*;
-import by.shaminko.distcomp.repositories.StickerRepository;
+import by.boukhvalova.distcomp.dto.StickerMapper;
+import by.boukhvalova.distcomp.dto.StickerRequestTo;
+import by.boukhvalova.distcomp.dto.StickerResponseTo;
+import by.boukhvalova.distcomp.dto.*;
+import by.boukhvalova.distcomp.repositories.StickerRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;

@@ -2,9 +2,9 @@ package by.boukhvalova.distcomp.services;
 
 import by.boukhvalova.distcomp.dto.NoteRequestTo;
 import by.boukhvalova.distcomp.dto.NoteResponseTo;
-import by.shaminko.distcomp.dto.*;
-import by.shaminko.distcomp.kafka.KafkaClient;
-import by.shaminko.distcomp.kafka.MessageData;
+import by.boukhvalova.distcomp.dto.*;
+import by.boukhvalova.distcomp.kafka.KafkaClient;
+import by.boukhvalova.distcomp.kafka.MessageData;
 import by.boukhvalova.distcomp.repositories.TweetRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
