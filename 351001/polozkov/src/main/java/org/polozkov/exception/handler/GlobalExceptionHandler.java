@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.naming.AuthenticationException;
-import java.nio.file.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,6 +63,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.FORBIDDEN.toString(),
                 LocalDateTime.now()
         );
+        log.info("403");
         return new ResponseEntity<>(errorResponseDtoOut, HttpStatus.FORBIDDEN);
     }
 
@@ -75,6 +76,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.UNAUTHORIZED.toString(),
                 LocalDateTime.now()
         );
+        log.info("401");
         return new ResponseEntity<>(errorResponseDtoOut, HttpStatus.UNAUTHORIZED);
     }
 
