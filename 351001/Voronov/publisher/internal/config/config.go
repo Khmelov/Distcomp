@@ -15,6 +15,12 @@ type Config struct {
 	PostgresDB    string `env:"POSTGRES_DB"`
 	GooseDBString string `env:"GOOSE_DBSTRING"`
 	DiscussionURL string `env:"DISCUSSION_URL"`
+	RedisAddr     string `env:"REDIS_ADDR"         env-default:"localhost:6379"`
+	KafkaBroker   string `env:"KAFKA_BROKER"       env-default:"localhost:9092"`
+	KafkaInTopic  string `env:"KAFKA_IN_TOPIC"     env-default:"reaction-in"`
+	KafkaOutTopic string `env:"KAFKA_OUT_TOPIC"    env-default:"reaction-out"`
+	KafkaGroupID  string `env:"KAFKA_GROUP_ID"     env-default:"publisher-group"`
+	JWTSecret     string `env:"JWT_SECRET"         env-default:"distcomp-jwt-secret-key"`
 }
 
 func New() (*Config, error) {

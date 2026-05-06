@@ -10,13 +10,20 @@ import (
 
 	"publisher/internal/config"
 	"publisher/internal/gateway"
+	gwcache "publisher/internal/gateway/cache"
+	kafkagateway "publisher/internal/gateway/kafka"
+	kafkahandler "publisher/internal/handler/kafka"
 	"publisher/internal/repository"
+	repocache "publisher/internal/repository/cache"
 	"publisher/internal/service"
 	"publisher/internal/transport/handler"
+	handlerv2 "publisher/internal/transport/handler/v2"
+	"publisher/internal/auth"
 	"publisher/pkg/postgres"
 
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -29,7 +36,7 @@ func Run(ctx context.Context, logger *zap.Logger) error {
 		return fmt.Errorf("validate config: %w", err)
 	}
 
-	db, err := sql.Open("postgres", cfg.GooseDBString)
+	db, err := sql.Open("pgx", cfg.GooseDBString)
 	if err != nil {
 		return fmt.Errorf("open db: %w", err)
 	}
@@ -68,21 +75,54 @@ func Run(ctx context.Context, logger *zap.Logger) error {
 		return fmt.Errorf("ping pool: %w", err)
 	}
 
-	userRepo := repository.NewUserRepository(pool)
-	issueRepo := repository.NewIssueRepository(pool)
-	labelRepo := repository.NewLabelRepository(pool)
+	rdb := redis.NewClient(&redis.Options{Addr: cfg.RedisAddr})
+	defer rdb.Close()
+
+	userRepo := repocache.NewCachedUserRepository(repository.NewUserRepository(pool), rdb)
+	issueRepo := repocache.NewCachedIssueRepository(repository.NewIssueRepository(pool), rdb)
+	labelRepo := repocache.NewCachedLabelRepository(repository.NewLabelRepository(pool), rdb)
+	reactionRepo := repository.NewReactionRepository(pool)
+
+	if err := kafkagateway.EnsureTopic(cfg.KafkaBroker, cfg.KafkaInTopic, 3, 1); err != nil {
+		logger.Warn("ensure InTopic failed", zap.Error(err))
+	}
+	if err := kafkagateway.EnsureTopic(cfg.KafkaBroker, cfg.KafkaOutTopic, 3, 1); err != nil {
+		logger.Warn("ensure OutTopic failed", zap.Error(err))
+	}
+
+	partCount, err := kafkagateway.LookupPartitionCount(cfg.KafkaBroker, cfg.KafkaInTopic)
+	if err != nil || partCount == 0 {
+		partCount = 3
+	}
+	kafkaProducer := kafkagateway.NewReactionProducer(cfg.KafkaBroker, cfg.KafkaInTopic, partCount, logger)
+	defer kafkaProducer.Close()
 
 	discussionClient := gateway.NewDiscussionClient(cfg.DiscussionURL)
+	reactionGW := gwcache.NewCachedReactionGateway(discussionClient, rdb)
 
 	mapper := service.NewMapper()
-	reactionService := service.NewReactionService(discussionClient)
+	reactionService := service.NewReactionService(reactionGW, issueRepo, kafkaProducer, logger)
 	userService := service.NewUserService(userRepo, mapper)
 	issueService := service.NewIssueService(issueRepo, userRepo, labelRepo, reactionService, mapper)
 	labelService := service.NewLabelService(labelRepo, mapper)
 
+	consumer := kafkahandler.NewReactionConsumer(
+		reactionRepo,
+		cfg.KafkaBroker,
+		cfg.KafkaOutTopic,
+		cfg.KafkaGroupID,
+		logger,
+	)
+	go consumer.Run(ctx)
+
 	h := handler.NewHandler(userService, issueService, labelService, reactionService)
 	mux := http.NewServeMux()
 	h.RegisterRoutes(mux)
+
+	jwtSvc := auth.NewJWTService(cfg.JWTSecret)
+	authSvc := auth.NewAuthService(repository.NewUserRepository(pool), jwtSvc)
+	hv2 := handlerv2.NewHandlerV2(userService, issueService, labelService, reactionService, authSvc, jwtSvc)
+	hv2.RegisterRoutes(mux)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", cfg.HTTPport),
