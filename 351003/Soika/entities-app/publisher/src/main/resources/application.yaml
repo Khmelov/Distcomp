@@ -1,0 +1,48 @@
+server:
+  port: 24110
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: publisher-reply-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        spring.json.trusted.packages: "com.example.entitiesapp.dto,com.example.entitiesapp.model,java.util,java.lang"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+      cache-null-values: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  datasource:
+    url: jdbc:postgresql://localhost:5432/distcomp?currentSchema=distcomp
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jackson:
+    deserialization:
+      fail-on-numbers-for-enums: true
+    mapper:
+      allow-coercion-of-scalars: false
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        default_schema: distcomp
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: distcomp
