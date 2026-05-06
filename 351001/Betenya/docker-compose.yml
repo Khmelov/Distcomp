@@ -139,7 +139,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:24110
+      NEXT_PUBLIC_API_URL: http://localhost:24110/api
     depends_on:
       - publisher
     restart: unless-stopped

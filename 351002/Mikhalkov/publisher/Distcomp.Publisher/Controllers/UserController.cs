@@ -2,19 +2,25 @@
 using Distcomp.Application.Interfaces;
 using Distcomp.Infrastructure.Caching;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Distcomp.WebApi.Controllers
 {
-    public class UserController : BaseController
+    [ApiController]
+    [Route("api/v1.0/users")]
+    [Route("api/v2.0/users")]
+    public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly RedisCacheService _cache; 
+        private readonly RedisCacheService _cache;
 
         public UserController(IUserService userService, RedisCacheService cache)
         {
             _userService = userService;
-            _cache = cache; 
+            _cache = cache;
         }
+
+        private bool IsV2 => Request.Path.Value?.Contains("/v2.0") ?? false;
 
         [HttpPost]
         public IActionResult Create([FromBody] UserRequestTo request)
@@ -24,14 +30,16 @@ namespace Distcomp.WebApi.Controllers
         }
 
         [HttpGet("{id:long}")]
-        public async Task<IActionResult> GetById(long id) 
+        public async Task<IActionResult> GetById(long id)
         {
+            if (IsV2 && !User.Identity!.IsAuthenticated)
+                return Unauthorized(new { errorMessage = "Unauthorized", errorCode = 40101 });
+
             string cacheKey = $"user:{id}";
 
             var cachedUser = await _cache.GetAsync(cacheKey);
             if (!string.IsNullOrEmpty(cachedUser))
             {
-                Console.WriteLine($"[Redis] User {id} found in cache");
                 return Content(cachedUser, "application/json");
             }
 
@@ -46,12 +54,21 @@ namespace Distcomp.WebApi.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
+            if (IsV2 && !User.Identity!.IsAuthenticated)
+                return Unauthorized(new { errorMessage = "Unauthorized", errorCode = 40101 });
+
             return Ok(_userService.GetAll());
         }
 
         [HttpPut("{id:long?}")]
         public async Task<IActionResult> Update(long id, [FromBody] UserRequestTo request)
         {
+            if (IsV2)
+            {
+                var accessError = CheckSelfAccess(id);
+                if (accessError != null) return accessError;
+            }
+
             await _cache.RemoveAsync($"user:{id}");
 
             var response = _userService.Update(id, request);
@@ -61,10 +78,38 @@ namespace Distcomp.WebApi.Controllers
         [HttpDelete("{id:long}")]
         public async Task<IActionResult> Delete(long id)
         {
+            if (IsV2)
+            {
+                var accessError = CheckSelfAccess(id);
+                if (accessError != null) return accessError;
+            }
+
             await _cache.RemoveAsync($"user:{id}");
 
             _userService.Delete(id);
             return NoContent();
+        }
+
+        private IActionResult? CheckSelfAccess(long userId)
+        {
+            if (!User.Identity!.IsAuthenticated)
+                return Unauthorized(new { errorMessage = "Unauthorized", errorCode = 40101 });
+
+            var role = User.FindFirst("role")?.Value;
+            var currentUserLogin = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                                 ?? User.FindFirst("sub")?.Value;
+
+            if (role == "ADMIN") return null;
+
+            var userToEdit = _userService.GetById(userId);
+            if (userToEdit == null) return NotFound();
+
+            if (userToEdit.Login != currentUserLogin)
+            {
+                return StatusCode(403, new { errorMessage = "Access denied. You can only manage your own profile.", errorCode = 40301 });
+            }
+
+            return null;
         }
     }
 }
