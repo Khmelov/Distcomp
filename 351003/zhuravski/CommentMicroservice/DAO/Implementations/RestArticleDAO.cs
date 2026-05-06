@@ -22,7 +22,10 @@ class RestArticleDAO : IArticleDAO
     public async Task<ArticleModel> AddNewAsync(ArticleModel model)
     {
         HttpResponseMessage? response = await httpClient.PostAsJsonAsync("api/v1.0/articles", model);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new DAOUpdateException();
+        }
         ArticleModel? result = await response.Content.ReadFromJsonAsync<ArticleModel>();
         if (null == result)
         {
@@ -43,20 +46,29 @@ class RestArticleDAO : IArticleDAO
 
     public async Task<ArticleModel> GetByIdAsync(long id)
     {
-        ArticleModel? response = await httpClient.GetFromJsonAsync<ArticleModel>($"api/v1.0/articles/{id}");
-        if (response == null) {
+        try {
+            ArticleModel? response = await httpClient.GetFromJsonAsync<ArticleModel>($"api/v1.0/articles/{id}");
+            if (response == null) {
+                throw new DAOObjectNotFoundException();
+            }
+            return response;
+        }
+        catch (HttpRequestException)
+        {
             throw new DAOObjectNotFoundException();
         }
-        return response;
     }
 
     public async Task<ArticleModel> UpdateAsync(ArticleModel model)
     {
         HttpResponseMessage? response = await httpClient.PutAsJsonAsync($"api/v1.0/articles/{model.Id}", model);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new DAOUpdateException();
+        }
         ArticleModel? result = await response.Content.ReadFromJsonAsync<ArticleModel>();
         if (null == result) {
-            throw new InvalidOperationException("Server returned empty response");
+            throw new DAOUpdateException("Server returned empty response");
         }
         return result;
     }

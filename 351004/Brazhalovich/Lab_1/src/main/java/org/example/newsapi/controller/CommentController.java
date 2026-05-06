@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.newsapi.dto.request.CommentRequestTo;
 import org.example.newsapi.dto.response.CommentResponseTo;
 import org.example.newsapi.service.CommentService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +17,7 @@ import java.util.List;
 @RequestMapping("/api/v1.0/comments")
 @RequiredArgsConstructor
 public class CommentController {
+
     private final CommentService commentService;
 
     @PostMapping
@@ -23,8 +27,8 @@ public class CommentController {
     }
 
     @GetMapping
-    public List<CommentResponseTo> getAll() {
-        return commentService.findAll();
+    public List<CommentResponseTo> getAll(@PageableDefault(size = 50) Pageable pageable) {
+        return commentService.findAll(pageable).getContent();
     }
 
     @GetMapping("/{id}")
@@ -42,9 +46,4 @@ public class CommentController {
     public void delete(@PathVariable Long id) {
         commentService.delete(id);
     }
-    @GetMapping("/by-news/{newsId}")
-    public List<CommentResponseTo> getByNewsId(@PathVariable Long newsId) {
-        return commentService.findByNewsId(newsId);
-    }
-
 }

@@ -27,17 +27,9 @@ public class ExcMiddleware
         try {
             await next(context);
         }
-        catch (ServiceObjectNotFoundException e)
-        {
-            await HandleException(context, e, StatusCodes.Status404NotFound);
-        }
-        catch (ServiceForbiddenOperationException e)
-        {
-            await HandleException(context, e, StatusCodes.Status403Forbidden);
-        }
         catch (ServiceException e)
         {
-            await HandleException(context, e, StatusCodes.Status400BadRequest);
+            await HandleException(context, e, e.Code);
         }
         catch (ValidationException e)
         {

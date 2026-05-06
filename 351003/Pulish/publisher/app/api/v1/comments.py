@@ -23,10 +23,9 @@ def get_comment(id: int, db: Session = Depends(get_db)):
     return CommentService(db).find_by_id(id)
 
 
-@router.put("/comments/{id}", response_model=CommentResponseTo)
-def update_comment(id: int, dto: CommentRequestTo,
+@router.put("/comments", response_model=CommentResponseTo)
+def update_comment(dto: CommentRequestTo,
                    db: Session = Depends(get_db)):
-    dto.id = id
     return CommentService(db).update(dto)
 
 

@@ -1,3 +1,5 @@
+using Additions.DAO;
+
 namespace CommentMicroservice.DAO.Models;
 
 public class ArticleModel : LongIdModel<ArticleModel>
