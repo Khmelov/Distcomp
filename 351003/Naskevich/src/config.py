@@ -56,3 +56,23 @@ class DiscussionConfig(BaseSettings, env_prefix="DISCUSSION_"):
 class KafkaConfig(BaseSettings, env_prefix="KAFKA_"):
     bootstrap_servers: str = "localhost:9092"
     post_rpc_timeout_seconds: float = 1.0
+
+
+class JwtConfig(BaseSettings, env_prefix="JWT_"):
+    secret: SecretStr = SecretStr("change-me-in-production-use-long-random-secret")
+    algorithm: str = "HS256"
+    access_token_expire_seconds: int = 3600
+
+
+class RedisConfig(BaseSettings, env_prefix="REDIS_"):
+    host: str = "127.0.0.1"
+    port: int = 6379
+    db: int = 0
+    password: SecretStr | None = None
+    default_ttl_seconds: int = 300
+
+    def url(self) -> str:
+        if self.password is not None:
+            pwd = self.password.get_secret_value()
+            return f"redis://:{pwd}@{self.host}:{self.port}/{self.db}"
+        return f"redis://{self.host}:{self.port}/{self.db}"
