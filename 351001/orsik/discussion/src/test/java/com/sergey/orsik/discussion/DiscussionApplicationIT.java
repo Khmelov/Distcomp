@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.cassandra.CassandraContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -23,6 +24,8 @@ import static org.mockito.Mockito.doNothing;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers(disabledWithoutDocker = true)
+@TestPropertySource(
+        properties = "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration")
 class DiscussionApplicationIT {
 
     @Container
@@ -61,6 +64,7 @@ class DiscussionApplicationIT {
         assertThat(created.getBody()).isNotNull();
         assertThat(created.getBody().getId()).isNotNull();
         assertThat(created.getBody().getTweetId()).isEqualTo(1001L);
+        assertThat(created.getBody().getState()).isNotNull();
 
         Long id = created.getBody().getId();
 

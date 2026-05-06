@@ -8,9 +8,10 @@ import com.sergey.orsik.discussion.client.PublisherTweetClient;
 import com.sergey.orsik.discussion.exception.EntityNotFoundException;
 import com.sergey.orsik.discussion.repository.CommentByIdRepository;
 import com.sergey.orsik.discussion.repository.CommentByTweetRepository;
-import com.sergey.orsik.discussion.util.CommentIds;
+import com.sergey.orsik.dto.CommentState;
 import com.sergey.orsik.dto.request.CommentRequestTo;
 import com.sergey.orsik.dto.response.CommentResponseTo;
+import com.sergey.orsik.util.CommentIds;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.cassandra.core.CassandraTemplate;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class CommentDiscussionService {
     private final CommentByIdRepository commentByIdRepository;
     private final CommentByTweetRepository commentByTweetRepository;
     private final PublisherTweetClient publisherTweetClient;
+    private final CommentModerationService moderationService;
     private final CassandraTemplate cassandraTemplate;
     private final String cassandraKeyspace;
 
@@ -34,11 +36,13 @@ public class CommentDiscussionService {
             CommentByIdRepository commentByIdRepository,
             CommentByTweetRepository commentByTweetRepository,
             PublisherTweetClient publisherTweetClient,
+            CommentModerationService moderationService,
             CassandraTemplate cassandraTemplate,
             @Value("${spring.cassandra.keyspace-name:distcomp}") String cassandraKeyspace) {
         this.commentByIdRepository = commentByIdRepository;
         this.commentByTweetRepository = commentByTweetRepository;
         this.publisherTweetClient = publisherTweetClient;
+        this.moderationService = moderationService;
         this.cassandraTemplate = cassandraTemplate;
         this.cassandraKeyspace = cassandraKeyspace;
     }
@@ -80,10 +84,29 @@ public class CommentDiscussionService {
         publisherTweetClient.requireTweetExists(request.getTweetId());
         long id = nextUniqueId();
         Instant created = request.getCreated() != null ? request.getCreated() : Instant.now();
-        CommentByIdRow byId = new CommentByIdRow(id, request.getTweetId(), request.getContent(), created);
+        CommentState state = moderationService.moderate(request.getContent());
+        return persistNew(id, request.getTweetId(), request.getContent(), created, state);
+    }
+
+    /**
+     * Persists a comment created asynchronously from the publisher (id assigned upstream). Idempotent if id already exists.
+     */
+    public CommentResponseTo createFromKafkaAssignedId(long id, CommentRequestTo request) {
+        publisherTweetClient.requireTweetExists(request.getTweetId());
+        if (commentByIdRepository.existsById(id)) {
+            return fromIdRow(commentByIdRepository.findById(id).orElseThrow());
+        }
+        Instant created = request.getCreated() != null ? request.getCreated() : Instant.now();
+        CommentState state = moderationService.moderate(request.getContent());
+        return persistNew(id, request.getTweetId(), request.getContent(), created, state);
+    }
+
+    private CommentResponseTo persistNew(long id, long tweetId, String content, Instant created, CommentState state) {
+        CommentByIdRow byId = new CommentByIdRow(id, tweetId, content, created, state);
         CommentByTweetRow byTweet = new CommentByTweetRow(
-                new CommentByTweetKey(request.getTweetId(), created, id),
-                request.getContent());
+                new CommentByTweetKey(tweetId, created, id),
+                content,
+                state);
         commentByIdRepository.save(byId);
         commentByTweetRepository.save(byTweet);
         return fromIdRow(byId);
@@ -98,10 +121,12 @@ public class CommentDiscussionService {
         commentByTweetRepository.deleteById(oldTweetKey);
 
         Instant created = request.getCreated() != null ? request.getCreated() : existing.getCreated();
-        CommentByIdRow updated = new CommentByIdRow(id, request.getTweetId(), request.getContent(), created);
+        CommentState state = moderationService.moderate(request.getContent());
+        CommentByIdRow updated = new CommentByIdRow(id, request.getTweetId(), request.getContent(), created, state);
         CommentByTweetRow newTweetRow = new CommentByTweetRow(
                 new CommentByTweetKey(request.getTweetId(), created, id),
-                request.getContent());
+                request.getContent(),
+                state);
         commentByIdRepository.save(updated);
         commentByTweetRepository.save(newTweetRow);
         return fromIdRow(updated);
@@ -139,12 +164,16 @@ public class CommentDiscussionService {
     }
 
     private CommentResponseTo fromIdRow(CommentByIdRow r) {
-        return new CommentResponseTo(r.getId(), r.getTweetId(), r.getContent(), r.getCreated());
+        return new CommentResponseTo(r.getId(), r.getTweetId(), r.getContent(), r.getCreated(), effectiveState(r.getState()));
     }
 
     private CommentResponseTo fromTweetRow(CommentByTweetRow r) {
         CommentByTweetKey k = r.getKey();
-        return new CommentResponseTo(k.getId(), k.getTweetId(), r.getContent(), k.getCreated());
+        return new CommentResponseTo(k.getId(), k.getTweetId(), r.getContent(), k.getCreated(), effectiveState(r.getState()));
+    }
+
+    private static CommentState effectiveState(CommentState s) {
+        return s != null ? s : CommentState.APPROVE;
     }
 
     private Comparator<CommentResponseTo> comparator(String sortBy, String sortDir) {
@@ -153,6 +182,7 @@ public class CommentDiscussionService {
             case "tweetId" -> Comparator.comparing(CommentResponseTo::getTweetId, Comparator.nullsLast(Long::compareTo));
             case "content" -> Comparator.comparing(CommentResponseTo::getContent, Comparator.nullsLast(String::compareToIgnoreCase));
             case "created" -> Comparator.comparing(CommentResponseTo::getCreated, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "state" -> Comparator.comparing(CommentResponseTo::getState, Comparator.nullsLast(Enum::compareTo));
             default -> Comparator.comparing(CommentResponseTo::getId, Comparator.nullsLast(Long::compareTo));
         };
         if ("desc".equalsIgnoreCase(sortDir)) {

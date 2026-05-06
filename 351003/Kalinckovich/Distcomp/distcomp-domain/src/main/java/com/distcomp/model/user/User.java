@@ -29,4 +29,7 @@ public class User {
 
     @Size(min = 8, max = 128)
     private String password;
+
+    @Column("role")
+    private UserRole role;
 }
