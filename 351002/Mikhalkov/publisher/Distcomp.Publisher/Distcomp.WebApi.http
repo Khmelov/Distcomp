@@ -1,0 +1,6 @@
+@Distcomp.WebApi_HostAddress = http://localhost:5107
+
+GET {{Distcomp.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

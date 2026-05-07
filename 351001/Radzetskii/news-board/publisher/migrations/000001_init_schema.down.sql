@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS tbl_news_marker;
+DROP TABLE IF EXISTS tbl_notice;
+DROP TABLE IF EXISTS tbl_news;
+DROP TABLE IF EXISTS tbl_marker;
+DROP TABLE IF EXISTS tbl_user;

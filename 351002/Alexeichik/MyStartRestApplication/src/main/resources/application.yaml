@@ -1,0 +1,23 @@
+spring:
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  datasource:
+    url: jdbc:postgresql://localhost:5432/MyStartRestApplication
+    username: lexya
+    password: lexya
+server:
+  address: localhost
+  port: 24110
+  api:
+    base-path:
+      v1: "/api/v1.0"
+      v2: "/api/v2.0"
+management:
+  endpoints:
+    web:
+      exposure:
+        include: mappings

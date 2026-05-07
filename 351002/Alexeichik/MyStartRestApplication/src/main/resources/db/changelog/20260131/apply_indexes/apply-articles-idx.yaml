@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: apply-articles-indexes
+      author: YanaAliakseichyk
+      changes:
+        - createIndex:
+            tableName: articles
+            columns:
+              - column:
+                  name: user_id
+            indexName: art_user_idx
+        - createIndex:
+            tableName: articles
+            columns:
+              - column:
+                  name: created
+            indexName: art_created_idx
+        - createIndex:
+            tableName: articles
+            columns:
+              - column:
+                  name: modified
+            indexName: art_modified_idx
+
+            

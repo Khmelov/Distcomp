@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: apply-notices-indexes
+      author: YanaAliakseichyk
+      changes:
+        - createIndex:
+            tableName: notices
+            columns:
+              - column:
+                  name: article_id
+            indexName: not_art_idx

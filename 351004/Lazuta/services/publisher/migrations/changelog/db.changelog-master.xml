@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Изменение 1: Создание таблицы редакторов -->
+    <changeSet id="1" author="developer">
+        <createTable tableName="tbl_editor">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <sql>
+            ALTER TABLE tbl_editor 
+            ADD CONSTRAINT chk_editor_login_length 
+            CHECK (LENGTH(login) BETWEEN 2 AND 64);
+            
+            ALTER TABLE tbl_editor 
+            ADD CONSTRAINT chk_editor_password_length 
+            CHECK (LENGTH(password) BETWEEN 8 AND 128);
+            
+            ALTER TABLE tbl_editor 
+            ADD CONSTRAINT chk_editor_firstname_length 
+            CHECK (LENGTH(firstname) BETWEEN 2 AND 64);
+            
+            ALTER TABLE tbl_editor 
+            ADD CONSTRAINT chk_editor_lastname_length 
+            CHECK (LENGTH(lastname) BETWEEN 2 AND 64);
+        </sql>
+
+        <sql>
+            COMMENT ON TABLE tbl_editor IS 'Редакторы/пользователи системы';
+            COMMENT ON COLUMN tbl_editor.id IS 'Уникальный идентификатор';
+            COMMENT ON COLUMN tbl_editor.login IS 'Логин пользователя (2-64 символа)';
+            COMMENT ON COLUMN tbl_editor.password IS 'Пароль (8-128 символов)';
+            COMMENT ON COLUMN tbl_editor.firstname IS 'Имя (2-64 символа)';
+            COMMENT ON COLUMN tbl_editor.lastname IS 'Фамилия (2-64 символа)';
+        </sql>
+    </changeSet>
+
+    <!-- Изменение 2: Создание таблицы меток -->
+    <changeSet id="2" author="developer">
+        <createTable tableName="tbl_label">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+
+        <sql>
+            ALTER TABLE tbl_label 
+            ADD CONSTRAINT chk_label_name_length 
+            CHECK (LENGTH(name) BETWEEN 2 AND 32);
+            
+            COMMENT ON TABLE tbl_label IS 'Метки для категоризации задач';
+            COMMENT ON COLUMN tbl_label.id IS 'Уникальный идентификатор метки';
+            COMMENT ON COLUMN tbl_label.name IS 'Название метки (2-32 символа)';
+        </sql>
+    </changeSet>
+
+    <!-- Изменение 3: Создание таблицы задач -->
+    <changeSet id="3" author="developer">
+        <createTable tableName="tbl_issue">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="editor_id" type="BIGINT">
+                <constraints nullable="false" 
+                           foreignKeyName="fk_issue_editor"
+                           references="tbl_editor(id)"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_issue_editor_id" tableName="tbl_issue">
+            <column name="editor_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_issue_created" tableName="tbl_issue">
+            <column name="created"/>
+        </createIndex>
+
+        <sql>
+            ALTER TABLE tbl_issue 
+            ADD CONSTRAINT chk_issue_title_length 
+            CHECK (LENGTH(title) BETWEEN 2 AND 64);
+            
+            ALTER TABLE tbl_issue 
+            ADD CONSTRAINT chk_issue_content_length 
+            CHECK (LENGTH(content) BETWEEN 4 AND 2048);
+            
+            ALTER TABLE tbl_issue 
+            ADD CONSTRAINT chk_issue_dates 
+            CHECK (modified >= created);
+            
+            COMMENT ON TABLE tbl_issue IS 'Задачи/посты системы';
+            COMMENT ON COLUMN tbl_issue.id IS 'Уникальный идентификатор задачи';
+            COMMENT ON COLUMN tbl_issue.editor_id IS 'ID автора задачи';
+            COMMENT ON COLUMN tbl_issue.title IS 'Заголовок задачи (2-64 символа)';
+            COMMENT ON COLUMN tbl_issue.content IS 'Содержание задачи (4-2048 символов)';
+            COMMENT ON COLUMN tbl_issue.created IS 'Дата и время создания';
+            COMMENT ON COLUMN tbl_issue.modified IS 'Дата и время последнего изменения';
+        </sql>
+    </changeSet>
+
+    <!-- Изменение 4: Создание функции для триггера -->
+    <!-- Изменение 4: Создание функции для триггера -->
+    <changeSet id="4" author="developer">
+        <sql endDelimiter="&#x000A;--;;">
+    CREATE OR REPLACE FUNCTION update_modified_column()
+    RETURNS TRIGGER AS $function_body$
+    BEGIN
+        NEW.modified = CURRENT_TIMESTAMP;
+        RETURN NEW;
+    END;
+    $function_body$ LANGUAGE plpgsql;
+    --;;
+        </sql>
+        <rollback>
+            <sql>
+                DROP FUNCTION IF EXISTS update_modified_column() CASCADE;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Изменение 5: Создание триггера на tbl_issue -->
+    <changeSet id="5" author="developer">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="tbl_issue"/>
+        </preConditions>
+        <sql>
+            DROP TRIGGER IF EXISTS trigger_update_issue_modified ON tbl_issue;
+            
+            CREATE TRIGGER trigger_update_issue_modified
+                BEFORE UPDATE ON tbl_issue
+                FOR EACH ROW
+                EXECUTE FUNCTION update_modified_column();
+        </sql>
+        <rollback>
+            <sql>
+                DROP TRIGGER IF EXISTS trigger_update_issue_modified ON tbl_issue;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Изменение 6: Создание таблицы постов (комментариев) -->
+    <changeSet id="6" author="developer">
+        <createTable tableName="tbl_post">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="issue_id" type="BIGINT">
+                <constraints nullable="false"
+                           foreignKeyName="fk_post_issue"
+                           references="tbl_issue(id)"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_post_issue_id" tableName="tbl_post">
+            <column name="issue_id"/>
+        </createIndex>
+
+        <sql>
+            ALTER TABLE tbl_post 
+            ADD CONSTRAINT chk_post_content_length 
+            CHECK (LENGTH(content) BETWEEN 2 AND 2048);
+            
+            COMMENT ON TABLE tbl_post IS 'Комментарии к задачам';
+            COMMENT ON COLUMN tbl_post.id IS 'Уникальный идентификатор комментария';
+            COMMENT ON COLUMN tbl_post.issue_id IS 'ID задачи, к которой относится комментарий';
+            COMMENT ON COLUMN tbl_post.content IS 'Текст комментария (2-2048 символов)';
+        </sql>
+    </changeSet>
+
+    <!-- Изменение 7: Создание связующей таблицы для задачи-метки -->
+    <changeSet id="7" author="developer">
+        <createTable tableName="tbl_issue_label">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="issue_id" type="BIGINT">
+                <constraints nullable="false"
+                           foreignKeyName="fk_issuelabel_issue"
+                           references="tbl_issue(id)"/>
+            </column>
+            <column name="label_id" type="BIGINT">
+                <constraints nullable="false"
+                           foreignKeyName="fk_issuelabel_label"
+                           references="tbl_label(id)"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint 
+            constraintName="uq_issue_label"
+            tableName="tbl_issue_label"
+            columnNames="issue_id, label_id"/>
+
+        <createIndex indexName="idx_issuelabel_issue_id" tableName="tbl_issue_label">
+            <column name="issue_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_issuelabel_label_id" tableName="tbl_issue_label">
+            <column name="label_id"/>
+        </createIndex>
+
+        <sql>
+            COMMENT ON TABLE tbl_issue_label IS 'Связь задач с метками';
+            COMMENT ON COLUMN tbl_issue_label.id IS 'Уникальный идентификатор связи';
+            COMMENT ON COLUMN tbl_issue_label.issue_id IS 'ID задачи';
+            COMMENT ON COLUMN tbl_issue_label.label_id IS 'ID метки';
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

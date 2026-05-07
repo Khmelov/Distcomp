@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: apply-users-indexes
+      author: YanaAliakseichyk
+      changes:
+        - createIndex:
+            tableName: users
+            columns:
+              - column:
+                  name: firstname
+              - column:
+                  name: lastname
+            indexName: firstn_lastn_idx
+        - createIndex:
+            tableName: users
+            columns:
+              - column:
+                  name: lastname
+            indexName: lastn_idx

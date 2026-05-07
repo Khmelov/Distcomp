@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-articles-table
+      author: Yana Aliakseichyk
+      changes:
+        - createSequence:
+            sequenceName: articles_seq
+        - createTable:
+            tableName: articles
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  defaultValueComputed: "nextval('articles_seq')"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: text
+                  constraints:
+                    unique: true
+                    nullable: false
+                    checkConstraint: "char_length(title) >= 2 AND 
+                                      char_length(title) <= 64"
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(content) >= 4 AND 
+                                      char_length(content) <= 2048"
+              - column:
+                  name: created
+                  type: timestamptz
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: modified
+                  type: timestamptz
+                  constraints:
+                    nullable: true
+
+        - sql:
+            sql: |
+              CREATE OR REPLACE FUNCTION update_date_modified()
+              RETURNS TRIGGER AS $$
+              BEGIN
+                NEW.modified = CURRENT_TIMESTAMP;
+                RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+            splitStatements: false
+
+        - sql:
+            sql: |
+                CREATE OR REPLACE TRIGGER trg_update_date_modified
+                BEFORE UPDATE ON articles
+                FOR EACH ROW
+                EXECUTE FUNCTION update_date_modified()
