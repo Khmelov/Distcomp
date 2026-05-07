@@ -23,4 +23,6 @@ public class UserRequestTo {
     @NotBlank
     @Size(min = 2, max = 64)
     String lastname;
+
+    String role;
 }

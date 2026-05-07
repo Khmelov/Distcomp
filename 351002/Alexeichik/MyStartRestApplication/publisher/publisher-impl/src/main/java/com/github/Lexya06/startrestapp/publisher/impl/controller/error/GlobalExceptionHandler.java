@@ -9,6 +9,9 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -118,6 +121,40 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             @NonNull DataIntegrityViolationException ex
     ){
         return buildCustomResponseEntityError(ErrorDescription.CONSTRAINT_VIOLATION, ex.getMessage());
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    public ResponseEntity<Object> handleDataAccess(
+            @NonNull org.springframework.dao.DataAccessException ex
+    ){
+        return buildCustomResponseEntityError(ErrorDescription.INTERNAL_SERVER_ERROR, "Database error: " + ex.getMessage());
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<Object> handleAccessDenied(
+            @NonNull org.springframework.security.access.AccessDeniedException ex
+    )
+    {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            return buildCustomResponseEntityError(ErrorDescription.UNAUTHORIZED, "Access Denied: Unauthorized");
+        }
+        return buildCustomResponseEntityError(ErrorDescription.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<Object> handleAuthenticationException(
+            @NonNull org.springframework.security.core.AuthenticationException ex
+    )
+    {
+        return buildCustomResponseEntityError(ErrorDescription.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleAll(
+            @NonNull Exception ex
+    ){
+        return buildCustomResponseEntityError(ErrorDescription.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 
 

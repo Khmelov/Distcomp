@@ -12,6 +12,10 @@ import com.github.Lexya06.startrestapp.publisher.impl.service.mapper.realization
 import com.querydsl.core.types.Predicate;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -20,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@CacheConfig(cacheNames = "labels")
 public class LabelService extends BaseEntityService<Label, LabelRequestTo, LabelResponseTo> {
     private final LabelRepository labelRepository;
     private final LabelMapper labelMapper;
@@ -63,5 +68,27 @@ public class LabelService extends BaseEntityService<Label, LabelRequestTo, Label
         return labelSet;
     }
 
+    @Override
+    @Cacheable(key = "#id")
+    public LabelResponseTo getEntityById(Long id) {
+        return super.getEntityById(id);
+    }
 
+    @Override
+    @CachePut(key = "#result.id")
+    public LabelResponseTo createEntity(LabelRequestTo requestDTO) {
+        return super.createEntity(requestDTO);
+    }
+
+    @Override
+    @CachePut(key = "#id")
+    public LabelResponseTo updateEntity(Long id, LabelRequestTo requestDTO) {
+        return super.updateEntity(id, requestDTO);
+    }
+
+    @Override
+    @CacheEvict(key = "#id")
+    public void deleteEntityById(Long id) {
+        super.deleteEntityById(id);
+    }
 }

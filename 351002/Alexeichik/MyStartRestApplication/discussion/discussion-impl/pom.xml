@@ -20,6 +20,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.github.Lexya06.startrestapp.Discussion.api</groupId>
             <artifactId>discussion-api</artifactId>
             <version>1.0-SNAPSHOT</version>

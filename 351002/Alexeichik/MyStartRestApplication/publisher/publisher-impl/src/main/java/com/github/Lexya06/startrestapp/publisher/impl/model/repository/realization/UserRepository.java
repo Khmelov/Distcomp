@@ -4,7 +4,9 @@ import com.github.Lexya06.startrestapp.publisher.impl.model.entity.realization.U
 import com.github.Lexya06.startrestapp.publisher.impl.model.repository.impl.MyCrudRepositoryImpl;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface UserRepository extends MyCrudRepositoryImpl<User> {
-
+    Optional<User> findByLogin(String login);
 }

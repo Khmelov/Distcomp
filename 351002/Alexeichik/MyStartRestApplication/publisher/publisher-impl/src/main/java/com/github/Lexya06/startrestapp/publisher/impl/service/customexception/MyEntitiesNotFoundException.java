@@ -15,8 +15,9 @@ public class MyEntitiesNotFoundException extends RuntimeException {
     @Getter
     final String message;
     public MyEntitiesNotFoundException(Collection<Long> ids, Class<?> entityClass) {
-        this.message = String.format("Entities of type %s with ids [%s] not found", entityClass.getSimpleName(), ids.stream().map(String::valueOf).collect(Collectors.joining(", ")));
+        super(String.format("Entities of type %s with ids [%s] not found", entityClass.getSimpleName(), ids.stream().map(String::valueOf).collect(Collectors.joining(", "))));
         this.ids = ids;
         this.entityClass = entityClass;
+        this.message = getMessage();
     }
 }

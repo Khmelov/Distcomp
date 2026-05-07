@@ -15,8 +15,9 @@ public class MyEntityNotFoundException extends RuntimeException {
     final String message;
 
     public MyEntityNotFoundException(Long id, Class<?> entityClass) {
+        super("Entity " + entityClass.getSimpleName().toLowerCase(Locale.ENGLISH) + " with id= " + id + " not found");
         this.id = id;
         this.entityClass = entityClass;
-        this.message = "Entity " + entityClass.getSimpleName().toLowerCase(Locale.ENGLISH) + " with id= " + id + " not found";
+        this.message = getMessage();
     }
 }

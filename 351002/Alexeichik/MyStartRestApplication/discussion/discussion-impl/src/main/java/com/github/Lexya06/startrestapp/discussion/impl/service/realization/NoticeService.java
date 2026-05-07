@@ -3,6 +3,7 @@ package com.github.Lexya06.startrestapp.discussion.impl.service.realization;
 import com.github.Lexya06.startrestapp.discussion.api.dto.notice.NoticeKeyDto;
 import com.github.Lexya06.startrestapp.discussion.api.dto.notice.NoticeRequestTo;
 import com.github.Lexya06.startrestapp.discussion.api.dto.notice.NoticeResponseTo;
+import com.github.Lexya06.startrestapp.discussion.api.dto.notice.NoticeState;
 import com.github.Lexya06.startrestapp.discussion.api.searchcriteria.implementation.NoticeSearchCriteria;
 import com.github.Lexya06.startrestapp.discussion.impl.model.entity.realization.Notice;
 import com.github.Lexya06.startrestapp.discussion.impl.model.entity.realization.NoticeKey;
@@ -19,6 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class NoticeService extends BaseEntityService<Notice, NoticeKey, NoticeKeyDto, NoticeRequestTo, NoticeResponseTo, NoticeSearchCriteria> {
@@ -66,8 +70,37 @@ public class NoticeService extends BaseEntityService<Notice, NoticeKey, NoticeKe
 
     @Override
     public NoticeResponseTo createEntity(NoticeRequestTo requestDTO) {
-        Notice entity = noticeMapper.createEntityFromRequest(requestDTO);
-        entity.getId().setId(TSID.Factory.getTsid().toLong());
+        throw new UnsupportedOperationException("Creation of notices is now handled by the Publisher service via Kafka.");
+    }
+
+    public NoticeResponseTo createFromKafka(NoticeRequestTo requestDTO, Long id) {
+        Notice notice = noticeMapper.createEntityFromRequest(requestDTO);
+        notice.getId().setId(id);
+
+        // Модерация теперь внутри сервиса
+        notice.setState(moderate(requestDTO.getContent()));
+
+        notice = noticeRepository.save(notice);
+        return noticeMapper.createResponseFromEntity(notice);
+    }
+
+    public NoticeResponseTo updateFromKafka(NoticeRequestTo requestDTO, Long id, NoticeKeyDto keyDto) {
+        Notice entity;
+
+        if (keyDto != null) {
+            NoticeKey dbKey = noticeKeyMapper.createKeyFromDto(keyDto);
+            entity = noticeRepository.findById(dbKey)
+                    .orElseThrow(() -> new MyEntityNotFoundException(keyDto.toString(), getEntityClass()));
+        } else {
+            entity = noticeRepository.findByIdId(id)
+                    .orElseThrow(() -> new MyEntityNotFoundException(id.toString(), getEntityClass()));
+        }
+
+        noticeMapper.updateEntityFromRequest(requestDTO, entity);
+
+        // Модерация теперь внутри сервиса
+        entity.setState(moderate(requestDTO.getContent()));
+
         entity = noticeRepository.save(entity);
         return noticeMapper.createResponseFromEntity(entity);
     }
@@ -82,11 +115,41 @@ public class NoticeService extends BaseEntityService<Notice, NoticeKey, NoticeKe
         return getMapper().createResponseFromEntity(entity);
     }
 
+
+
+    @Override
+    protected void preUpdate(Notice entity, NoticeRequestTo requestDTO) {
+        entity.setState(moderate(requestDTO.getContent()));
+    }
+
+    @Override
+    public NoticeResponseTo updateEntity(NoticeKeyDto apiKey, NoticeRequestTo requestDTO) {
+        return super.updateEntity(apiKey, requestDTO);
+    }
+
+
     public NoticeResponseTo updateEntityByIdId(Long id, NoticeRequestTo requestDTO) {
         Notice entity = noticeRepository.findByIdId(id).orElseThrow(()->new MyEntityNotFoundException(id.toString(), getEntityClass()));
         getMapper().updateEntityFromRequest(requestDTO, entity);
-        entity = getRepository().save(entity);
+        
+        // Re-moderate on update
+        entity.setState(moderate(requestDTO.getContent()));
+        
+        entity = noticeRepository.save(entity);
         return getMapper().createResponseFromEntity(entity);
+    }
+
+    private NoticeState moderate(String content) {
+        if (content == null) return NoticeState.APPROVE;
+        // Logic duplicated from listener for service-level consistency
+        List<String> stopWords = Arrays.asList("badword", "spam", "offensive");
+        String lowerContent = content.toLowerCase();
+        for (String stopWord : stopWords) {
+            if (lowerContent.contains(stopWord)) {
+                return NoticeState.DECLINE;
+            }
+        }
+        return NoticeState.APPROVE;
     }
 
 

@@ -1,6 +1,7 @@
 package com.github.Lexya06.startrestapp.publisher.impl.model.entity.realization;
 
 import com.github.Lexya06.startrestapp.publisher.impl.model.entity.abstraction.BaseEntity;
+import com.github.Lexya06.startrestapp.publisher.impl.model.entity.realization.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,6 +30,10 @@ public class User extends BaseEntity {
 
     @Column (length = 64, nullable = false)
     private String lastname;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole role;
 
     @OneToMany(mappedBy = "user", orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private Set<Article> articles = new HashSet<>();

@@ -15,12 +15,17 @@ import com.github.Lexya06.startrestapp.publisher.impl.service.mapper.realization
 import com.querydsl.core.types.Predicate;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Service
+@CacheConfig(cacheNames = "articles")
 public class ArticleService extends BaseEntityService<Article, ArticleRequestTo, ArticleResponseTo> {
     final ArticleRepository articleRepository;
     final UserService userService;
@@ -48,17 +53,10 @@ public class ArticleService extends BaseEntityService<Article, ArticleRequestTo,
 
 
     @Override
-    @Transactional
-    public ArticleResponseTo createEntity(ArticleRequestTo request) {
-
+    protected void preCreate(Article article, ArticleRequestTo request) {
         User u = userService.getEntityReferenceWithCheckExistingId(request.getUserId());
-        Article article = articleMapper.createEntityFromRequest(request);
         article.setUser(u);
-
         article.setLabels(labelService.saveUnexistingLabelsByName(request.getLabels()));
-
-        article = articleRepository.save(article);
-        return articleMapper.createResponseFromEntity(article);
     }
 
     public Long countArticles(Label label){
@@ -69,6 +67,7 @@ public class ArticleService extends BaseEntityService<Article, ArticleRequestTo,
 
     @Override
     @Transactional
+    @CacheEvict(key = "#id")
     public void deleteEntityById(Long id) {
         Article article = articleRepository.findById(id).orElseThrow(()-> new MyEntityNotFoundException(id, Article.class));
         Set<Label> labels = new HashSet<>(article.getLabels());
@@ -79,5 +78,17 @@ public class ArticleService extends BaseEntityService<Article, ArticleRequestTo,
             }
         }
         articleRepository.delete(article);
+    }
+
+    @Override
+    @Cacheable(key = "#id")
+    public ArticleResponseTo getEntityById(Long id) {
+        return super.getEntityById(id);
+    }
+
+    @Override
+    @CachePut(key = "#id")
+    public ArticleResponseTo updateEntity(Long id, ArticleRequestTo requestDTO) {
+        return super.updateEntity(id, requestDTO);
     }
 }

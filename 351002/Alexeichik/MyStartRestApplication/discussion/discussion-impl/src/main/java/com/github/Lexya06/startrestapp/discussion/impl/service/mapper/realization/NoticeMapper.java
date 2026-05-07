@@ -17,6 +17,7 @@ public interface NoticeMapper extends GenericMapperImpl<Notice, NoticeKey, Notic
     @Mapping(target = "articleId", source = "id.articleId")
     @Mapping(target = "id", source = "id.id")
     @Mapping(target = "content", source = "content")
+    @Mapping(target = "state", source = "state")
     NoticeResponseTo createResponseFromEntity(Notice entity);
 
     @Override

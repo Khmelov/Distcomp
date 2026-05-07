@@ -8,8 +8,19 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Value
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ArticleResponseTo {
     Long id;
     Long userId;
@@ -17,5 +28,6 @@ public class ArticleResponseTo {
     String content;
     OffsetDateTime created;
     OffsetDateTime modified;
+    @Builder.Default
     List<LabelResponseTo> labels = new ArrayList<>();
 }

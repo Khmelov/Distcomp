@@ -124,6 +124,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return buildCustomResponseEntityError(ErrorDescription.CONSTRAINT_VIOLATION, ex.getMessage());
     }
 
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    public ResponseEntity<Object> handleDataAccess(
+            @NonNull org.springframework.dao.DataAccessException ex
+    ){
+        return buildCustomResponseEntityError(ErrorDescription.INTERNAL_SERVER_ERROR, "Database error: " + ex.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleAll(
+            @NonNull Exception ex
+    ){
+        return buildCustomResponseEntityError(ErrorDescription.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
 
 
 }

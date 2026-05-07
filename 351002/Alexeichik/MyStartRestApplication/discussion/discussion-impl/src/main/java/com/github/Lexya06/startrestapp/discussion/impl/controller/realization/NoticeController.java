@@ -30,6 +30,11 @@ public class NoticeController extends BaseController<Notice, NoticeKey, NoticeKe
         return noticeService;
     }
 
+    @Override
+    public ResponseEntity<NoticeResponseTo> createEntity(@Valid @RequestBody NoticeRequestTo requestDTO) {
+        throw new UnsupportedOperationException("Creation of notices is now handled by the Publisher service via Kafka.");
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<NoticeResponseTo> getByIdId(@PathVariable Long id){
         return ResponseEntity.ok(noticeService.getEntityByIdId(id));
