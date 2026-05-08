@@ -1,6 +1,6 @@
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.4.4
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -9,7 +9,7 @@ services:
       - "2181:2181"
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.4
     container_name: kafka
     depends_on:
       - zookeeper
@@ -69,8 +69,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      kafka:
-        condition: service_started
 
   discussion:
     build: ./discussion
@@ -84,5 +82,3 @@ services:
     depends_on:
       cassandra:
         condition: service_healthy
-      kafka:
-        condition: service_started

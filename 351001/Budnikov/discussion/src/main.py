@@ -10,7 +10,7 @@ from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 
 from src.schemas import PostRequestTo, PostResponseTo
 
-KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
 
 
 def moderate_post(content: str) -> str:
@@ -31,8 +31,19 @@ async def kafka_background_task(app: FastAPI):
     )
     producer = AIOKafkaProducer(bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS)
 
-    await consumer.start()
-    await producer.start()
+    retries = 10
+    for i in range(retries):
+        try:
+            await consumer.start()
+            await producer.start()
+            print("Discussion: Successfully connected to Kafka!")
+            break
+        except Exception as e:
+            print(f"Waiting for Kafka to be ready... ({i + 1}/{retries})")
+            await asyncio.sleep(5)
+    else:
+        print("Discussion: Failed to connect to Kafka.")
+        return
 
     session = app.state.cassandra_session
 
@@ -53,14 +64,12 @@ async def kafka_background_task(app: FastAPI):
                     content = post_data["content"]
 
                     state = moderate_post(content)
-
                     query = "INSERT INTO tbl_post (issue_id, id, country, content, state) VALUES (%s, %s, %s, %s, %s)"
                     session.execute(query, (issue_id, post_id, "RU", content, state))
-
                     continue
 
                 elif action == "GET_ALL":
-                    issue_id = data.get("issue_id")
+                    issue_id = data.get("data", {}).get("issue_id")
                     if issue_id:
                         rows = session.execute("SELECT id, issue_id, content, state FROM tbl_post WHERE issue_id=%s",
                                                (issue_id,))
@@ -70,7 +79,7 @@ async def kafka_background_task(app: FastAPI):
                                      in rows]
 
                 elif action == "GET_ONE":
-                    post_id = data.get("id")
+                    post_id = data.get("data", {}).get("id")
                     row = session.execute(
                         "SELECT id, issue_id, content, state FROM tbl_post WHERE id=%s ALLOW FILTERING",
                         (post_id,)).one()
@@ -81,7 +90,7 @@ async def kafka_background_task(app: FastAPI):
                         error_data = {"status_code": 404, "detail": "Post not found"}
 
                 elif action == "UPDATE":
-                    post_id = data.get("id")
+                    post_id = data.get("data", {}).get("id")
                     content = data["data"]["content"]
                     row = session.execute("SELECT issue_id FROM tbl_post WHERE id=%s ALLOW FILTERING", (post_id,)).one()
                     if row:
@@ -93,7 +102,7 @@ async def kafka_background_task(app: FastAPI):
                         error_data = {"status_code": 404, "detail": "Post not found"}
 
                 elif action == "DELETE":
-                    post_id = data.get("id")
+                    post_id = data.get("data", {}).get("id")
                     row = session.execute("SELECT issue_id FROM tbl_post WHERE id=%s ALLOW FILTERING", (post_id,)).one()
                     if row:
                         session.execute("DELETE FROM tbl_post WHERE issue_id=%s AND id=%s", (row.issue_id, post_id))
@@ -148,10 +157,7 @@ async def lifespan(app: FastAPI):
                     """)
 
     app.state.cassandra_session = session
-
-    # Запуск фонового процесса Kafka
     task = asyncio.create_task(kafka_background_task(app))
-
     yield
     task.cancel()
     cluster.shutdown()
@@ -166,7 +172,6 @@ def create_post(post_in: PostRequestTo, request: Request):
     post_id = int(time.time() * 1000)
     country = "RU"
     state = moderate_post(post_in.content)
-
     query = "INSERT INTO tbl_post (issue_id, id, country, content, state) VALUES (%s, %s, %s, %s, %s)"
     session.execute(query, (post_in.issue_id, post_id, country, post_in.content, state))
     return PostResponseTo(id=post_id, content=post_in.content, issue_id=post_in.issue_id, state=state)
@@ -198,7 +203,6 @@ def update_post(id: int, post_in: PostRequestTo, request: Request):
     row = session.execute("SELECT issue_id FROM tbl_post WHERE id=%s ALLOW FILTERING", (id,)).one()
     if not row:
         raise HTTPException(status_code=404, detail="Post not found")
-
     new_state = moderate_post(post_in.content)
     session.execute("UPDATE tbl_post SET content=%s, state=%s WHERE issue_id=%s AND id=%s",
                     (post_in.content, new_state, row.issue_id, id))

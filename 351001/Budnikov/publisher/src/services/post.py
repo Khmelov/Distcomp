@@ -3,14 +3,13 @@ import json
 import uuid
 import time
 import asyncio
-from fastapi.encoders import jsonable_encoder
 from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 
 from src.schemas.dto import PostRequestTo, PostResponseTo
 from src.core.exceptions import BaseAppException
 from src.models import Issue
 
-KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
 
 kafka_producer = None
 kafka_consumer = None
@@ -27,17 +26,35 @@ async def init_kafka():
         auto_offset_reset="earliest"
     )
 
-    await kafka_producer.start()
-    await kafka_consumer.start()
+    # Повторные попытки подключения к Kafka
+    retries = 10
+    for i in range(retries):
+        try:
+            await kafka_producer.start()
+            await kafka_consumer.start()
+            print("Publisher: Successfully connected to Kafka!")
+            break
+        except Exception as e:
+            print(f"Waiting for Kafka to be ready... ({i + 1}/{retries})")
+            await asyncio.sleep(5)
+    else:
+        print("Publisher: Failed to connect to Kafka.")
+        return
 
     asyncio.create_task(consume_kafka_responses())
 
 
 async def stop_kafka():
     if kafka_producer:
-        await kafka_producer.stop()
+        try:
+            await kafka_producer.stop()
+        except Exception:
+            pass
     if kafka_consumer:
-        await kafka_consumer.stop()
+        try:
+            await kafka_consumer.stop()
+        except Exception:
+            pass
 
 
 async def consume_kafka_responses():
@@ -66,7 +83,6 @@ class PostService:
         }
 
         key = str(issue_id).encode('utf-8') if issue_id else None
-
         await kafka_producer.send_and_wait("InTopic", json.dumps(payload).encode('utf-8'), key=key)
 
         try:
@@ -80,8 +96,9 @@ class PostService:
         finally:
             response_futures.pop(req_id, None)
 
-    async def get_all(self) -> list[PostResponseTo]:
-        result = await self._send_and_wait("GET_ALL", {})
+    async def get_all(self, issue_id: int = None) -> list[PostResponseTo]:
+        data = {"issue_id": issue_id} if issue_id else {}
+        result = await self._send_and_wait("GET_ALL", data)
         return [PostResponseTo(**p) for p in result] if result else []
 
     async def get_by_id(self, obj_id: int) -> PostResponseTo:
