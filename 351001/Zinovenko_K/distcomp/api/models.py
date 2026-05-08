@@ -1,9 +1,16 @@
 from django.core.validators import MinLengthValidator
 from django.db import models
 
+
 class Editor(models.Model):
+    ROLE_CHOICES = [
+        ('ADMIN', 'Admin'),
+        ('CUSTOMER', 'Customer'),
+    ]
+
     class Meta:
         db_table = 'tbl_editor'
+
     id = models.BigAutoField(
         primary_key=True,
         unique=True
@@ -24,6 +31,11 @@ class Editor(models.Model):
     lastname = models.CharField(
         max_length=64,
         validators=[MinLengthValidator(2)]
+    )
+    role = models.CharField(
+        max_length=10,
+        choices=ROLE_CHOICES,
+        default='CUSTOMER'
     )
 
     def __str__(self):
