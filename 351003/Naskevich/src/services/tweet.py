@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 
+from src.cache import keys as cache_keys
+from src.cache.redis_cache import RedisCache
 from src.database.uow import UnitOfWork
 from src.dto.tweet import TweetRequestTo, TweetResponseTo
 from src.exceptions import EntityAlreadyExistsException, EntityNotFoundException
@@ -18,11 +20,21 @@ class TweetService:
         editor_repository: AbstractEditorRepository,
         marker_repository: AbstractMarkerRepository,
         uow: UnitOfWork,
+        cache: RedisCache,
+        cache_ttl_seconds: int,
     ) -> None:
         self._repo = repository
         self._editor_repo = editor_repository
         self._marker_repo = marker_repository
         self._uow = uow
+        self._cache = cache
+        self._ttl = cache_ttl_seconds
+
+    async def _invalidate_tweets(self, tweet_id: int | None = None) -> None:
+        keys = [cache_keys.tweets_all()]
+        if tweet_id is not None:
+            keys.append(cache_keys.tweet(tweet_id))
+        await self._cache.delete(*keys)
 
     async def _resolve_markers(self, marker_names: list[str]) -> list:
         markers = []
@@ -46,14 +58,30 @@ class TweetService:
         )
 
     async def get_by_id(self, tweet_id: int) -> TweetResponseTo:
+        ck = cache_keys.tweet(tweet_id)
+        cached = await self._cache.get_json(ck)
+        if cached is not None:
+            return TweetResponseTo.model_validate(cached)
         tweet = await self._repo.get_by_id(tweet_id)
         if tweet is None:
             raise EntityNotFoundException("Tweet", tweet_id)
-        return self._to_response(tweet)
+        dto = self._to_response(tweet)
+        await self._cache.set_json(ck, dto.model_dump(mode="json"), ttl_seconds=self._ttl)
+        return dto
 
     async def get_all(self) -> list[TweetResponseTo]:
+        ck = cache_keys.tweets_all()
+        cached = await self._cache.get_json(ck)
+        if cached is not None:
+            return [TweetResponseTo.model_validate(x) for x in cached]
         tweets = await self._repo.get_all()
-        return [self._to_response(t) for t in tweets]
+        out = [self._to_response(t) for t in tweets]
+        await self._cache.set_json(
+            ck,
+            [t.model_dump(mode="json") for t in out],
+            ttl_seconds=self._ttl,
+        )
+        return out
 
     async def create(self, data: TweetRequestTo) -> TweetResponseTo:
         editor = await self._editor_repo.get_by_id(data.editor_id)
@@ -73,7 +101,14 @@ class TweetService:
         tweet.markers = await self._resolve_markers(data.markers)
         created = await self._repo.create(tweet)
         await self._uow.commit()
-        return self._to_response(created)
+        dto = self._to_response(created)
+        await self._invalidate_tweets()
+        await self._cache.set_json(
+            cache_keys.tweet(dto.id),
+            dto.model_dump(mode="json"),
+            ttl_seconds=self._ttl,
+        )
+        return dto
 
     async def update(self, tweet_id: int, data: TweetRequestTo) -> TweetResponseTo:
         editor = await self._editor_repo.get_by_id(data.editor_id)
@@ -95,10 +130,18 @@ class TweetService:
         if updated is None:
             raise EntityNotFoundException("Tweet", tweet_id)
         await self._uow.commit()
-        return self._to_response(updated)
+        dto = self._to_response(updated)
+        await self._invalidate_tweets(tweet_id)
+        await self._cache.set_json(
+            cache_keys.tweet(tweet_id),
+            dto.model_dump(mode="json"),
+            ttl_seconds=self._ttl,
+        )
+        return dto
 
     async def delete(self, tweet_id: int) -> None:
         deleted = await self._repo.delete(tweet_id)
         if not deleted:
             raise EntityNotFoundException("Tweet", tweet_id)
         await self._uow.commit()
+        await self._invalidate_tweets(tweet_id)

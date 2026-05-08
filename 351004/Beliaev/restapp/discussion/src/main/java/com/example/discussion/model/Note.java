@@ -15,4 +15,6 @@ public class Note {
     private Long articleId;
 
     private String content;
+
+    private String state; // PENDING, APPROVE, DECLINE
 }

@@ -27,7 +27,6 @@ class KafkaConsumerPublisher:
 
     async def consume(self):
         async for msg in self.consumer:
-            # Обновляем статус заметки в памяти (если нужно)
             note_data = msg.value
             await self.note_state_service.update_note_state(
                 note_data.get('issueId'),

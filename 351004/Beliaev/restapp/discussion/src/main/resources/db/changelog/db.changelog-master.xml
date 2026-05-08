@@ -20,4 +20,6 @@
             CREATE INDEX IF NOT EXISTS idx_note_article_id ON tbl_note (article_id);
         </sql>
     </changeSet>
+
+    <include file="003-add-state.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

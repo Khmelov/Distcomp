@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: distcomp_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: distcomp_cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=distcomp_cluster
+
+  liquibase:
+    image: liquibase/liquibase:4.24.0
+    depends_on:
+      - postgres
+    volumes:
+      - ./liquibase:/liquibase/changelog
+    command: >
+      --url=jdbc:postgresql://postgres:5432/distcomp
+      --username=postgres
+      --password=postgres
+      --changeLogFile=db.changelog-master.xml
+      update
+
+  discussion:
+    build:
+      context: ./discussion
+    container_name: distcomp_discussion
+    ports:
+      - "24130:24130"
+    depends_on:
+      - cassandra
+    environment:
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
+
+volumes:
+  pgdata:

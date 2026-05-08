@@ -1,89 +1,109 @@
 ﻿using Application.DTOs.Requests;
 using Application.DTOs.Responses;
-using Application.Exceptions;
 using Application.Exceptions.Application;
 using Application.Exceptions.Persistance;
 using Application.Interfaces;
 using AutoMapper;
 using Core.Entities;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace Application.Services
 {
     public class NewsService : INewsService
     {
         private readonly IMapper _mapper;
-
         private readonly INewsRepository _newsRepository;
         private readonly IMarkerRepository _markerRepository;
+        private readonly IDistributedCache _cache;
 
-        public NewsService(IMapper mapper, INewsRepository repository, IMarkerRepository markerRepository)
+        private const string AllNewsCacheKey = "news_all";
+        private static string NewsByIdKey(long id) => $"news_{id}";
+
+        public NewsService(IMapper mapper, INewsRepository newsRepository,
+                           IMarkerRepository markerRepository, IDistributedCache cache)
         {
             _mapper = mapper;
-            _newsRepository = repository;
+            _newsRepository = newsRepository;
             _markerRepository = markerRepository;
+            _cache = cache;
         }
 
         public async Task<NewsResponseTo> CreateNews(NewsRequestTo createNewsRequestTo)
         {
-            News newsFromDto = _mapper.Map<News>(createNewsRequestTo);
-
+            News news = _mapper.Map<News>(createNewsRequestTo);
             try
             {
-                News createdNews = await _newsRepository.AddAsync(newsFromDto);
-                NewsResponseTo dtoFromCreatedNews = _mapper.Map<NewsResponseTo>(createdNews);
-                return dtoFromCreatedNews;
+                News created = await _newsRepository.AddAsync(news);
+                NewsResponseTo response = _mapper.Map<NewsResponseTo>(created);
+                await InvalidateCacheAsync(created.Id);
+                return response;
             }
             catch (InvalidOperationException ex)
             {
                 throw new NewsAlreadyExistsException(ex.Message, ex);
             }
-            catch (ForeignKeyViolationException ex)
+            catch (ForeignKeyViolationException ex) 
             {
                 throw new NewsReferenceException(ex.Message, ex);
             }
         }
 
-        public async Task DeleteNews(NewsRequestTo deleteNewsRequestTo)
-        {
-            News newsFromDto = _mapper.Map<News>(deleteNewsRequestTo);
-            _ = await _newsRepository.DeleteAsync(newsFromDto) ?? throw new NewNotFoundException($"Deleted news {newsFromDto} was not found");
-            await _markerRepository.DeleteMarkersWithoutNews();
-        }
-
         public async Task<IEnumerable<NewsResponseTo>> GetAllNews()
         {
-            IEnumerable<News> allNews = await _newsRepository.GetAllAsync();
-            
-            var allNewsResponseTos = new List<NewsResponseTo>();
-            foreach (News news in allNews)
-            {
-                NewsResponseTo newsTo = _mapper.Map<NewsResponseTo>(news);
-                allNewsResponseTos.Add(newsTo);
-            }
+            var cached = await _cache.GetStringAsync(AllNewsCacheKey);
+            if (!string.IsNullOrEmpty(cached))
+                return JsonSerializer.Deserialize<List<NewsResponseTo>>(cached)!;
 
-            return allNewsResponseTos;
+            IEnumerable<News> newsList = await _newsRepository.GetAllAsync();
+            var result = _mapper.Map<List<NewsResponseTo>>(newsList);
+
+            var options = new DistributedCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+            await _cache.SetStringAsync(AllNewsCacheKey, JsonSerializer.Serialize(result), options);
+            return result;
         }
 
         public async Task<NewsResponseTo> GetNews(NewsRequestTo getNewsRequestTo)
         {
-            News newsFromDto = _mapper.Map<News>(getNewsRequestTo);
+            long id = getNewsRequestTo.Id ?? 0;
+            string cacheKey = NewsByIdKey(id);
+            var cached = await _cache.GetStringAsync(cacheKey);
+            if (!string.IsNullOrEmpty(cached))
+                return JsonSerializer.Deserialize<NewsResponseTo>(cached);
 
-            News demandedNews = await _newsRepository.GetByIdAsync(newsFromDto.Id) ?? throw new NewNotFoundException($"Demanded news {newsFromDto} was not found");
+            News news = await _newsRepository.GetByIdAsync(id)
+                ?? throw new NewNotFoundException($"News {id} not found");
+            NewsResponseTo response = _mapper.Map<NewsResponseTo>(news);
 
-            NewsResponseTo demandedNewsResponseTo = _mapper.Map<NewsResponseTo>(demandedNews);
-
-            return demandedNewsResponseTo;
+            var options = new DistributedCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+            await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(response), options);
+            return response;
         }
 
         public async Task<NewsResponseTo> UpdateNews(NewsRequestTo updateNewsRequestTo)
         {
-            News newsFromDto = _mapper.Map<News>(updateNewsRequestTo);
+            News news = _mapper.Map<News>(updateNewsRequestTo);
+            News? updated = await _newsRepository.UpdateAsync(news)
+                ?? throw new NewNotFoundException($"News not found for update");
+            NewsResponseTo response = _mapper.Map<NewsResponseTo>(updated);
+            await InvalidateCacheAsync(updated.Id);
+            return response;
+        }
 
-            News? updateNews = await _newsRepository.UpdateAsync(newsFromDto) ?? throw new NewNotFoundException($"Update news {newsFromDto} was not found");
+        public async Task DeleteNews(NewsRequestTo deleteNewsRequestTo)
+        {
+            News news = _mapper.Map<News>(deleteNewsRequestTo);
+            await _newsRepository.DeleteAsync(news);
+            await _markerRepository.DeleteMarkersWithoutNews();
+            await InvalidateCacheAsync(news.Id);
+        }
 
-            NewsResponseTo updateNewsResponseTo = _mapper.Map<NewsResponseTo>(updateNews);
-
-            return updateNewsResponseTo;
+        private async Task InvalidateCacheAsync(long newsId)
+        {
+            await _cache.RemoveAsync(AllNewsCacheKey);
+            await _cache.RemoveAsync(NewsByIdKey(newsId));
         }
     }
 }

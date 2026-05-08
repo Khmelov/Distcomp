@@ -8,7 +8,7 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface EditorMapper {
-    Editor toEntity(EditorRequestTo dto);
-    EditorResponseTo toDto(Editor entity);
-    void updateEntityFromDto(EditorRequestTo dto, @MappingTarget Editor entity);
+    EditorResponseTo toResponse(Editor editor);
+    Editor toEntity(EditorRequestTo request);
+    void updateEntity(EditorRequestTo request, @MappingTarget Editor editor);
 }

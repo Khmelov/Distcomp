@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="cassandra-004-state-by-id" author="orsik">
+        <sql splitStatements="false">
+            ALTER TABLE distcomp.tbl_comment_by_id ADD state text;
+        </sql>
+    </changeSet>
+
+    <changeSet id="cassandra-005-state-by-tweet" author="orsik">
+        <sql splitStatements="false">
+            ALTER TABLE distcomp.tbl_comment_by_tweet ADD state text;
+        </sql>
+    </changeSet>
+</databaseChangeLog>

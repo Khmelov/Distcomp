@@ -13,11 +13,11 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace drogon_model::distcomp;
 
-const std::string TblLabel::Cols::_id = "id";
-const std::string TblLabel::Cols::_name = "name";
+const std::string TblLabel::Cols::_id = "\"id\"";
+const std::string TblLabel::Cols::_name = "\"name\"";
 const std::string TblLabel::primaryKeyName = "id";
 const bool TblLabel::hasPrimaryKey = true;
-const std::string TblLabel::tableName = "tbl_label";
+const std::string TblLabel::tableName = "\"tbl_label\"";
 
 const std::vector<typename TblLabel::MetaData> TblLabel::metaData_={
 {"id","int64_t","bigint",8,1,1,1},
@@ -155,7 +155,7 @@ void TblLabel::updateByJson(const Json::Value &pJson) noexcept(false)
 
 const int64_t &TblLabel::getValueOfId() const noexcept
 {
-    const static int64_t defaultValue = int64_t();
+    static const int64_t defaultValue = int64_t();
     if(id_)
         return *id_;
     return defaultValue;
@@ -177,7 +177,7 @@ const typename TblLabel::PrimaryKeyType & TblLabel::getPrimaryKey() const
 
 const std::string &TblLabel::getValueOfName() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(name_)
         return *name_;
     return defaultValue;
@@ -268,6 +268,11 @@ Json::Value TblLabel::toJson() const
         ret["name"]=Json::Value();
     }
     return ret;
+}
+
+std::string TblLabel::toString() const
+{
+    return toJson().toStyledString();
 }
 
 Json::Value TblLabel::toMasqueradedJson(
@@ -466,15 +471,14 @@ bool TblLabel::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 32)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 32)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 32)";
                 return false;
             }
-
             break;
         default:
             err="Internal error in the server";

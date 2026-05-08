@@ -28,24 +28,8 @@ CREATE TABLE IF NOT EXISTS distcomp.tbl_story (
 );
 
 --changeset notebook:000-5
-CREATE TABLE IF NOT EXISTS distcomp.tbl_notice (
-    id BIGSERIAL PRIMARY KEY,
-    story_id BIGINT NOT NULL REFERENCES distcomp.tbl_story(id),
-    content VARCHAR(2048) NOT NULL
-);
-
---changeset notebook:000-6
 CREATE TABLE IF NOT EXISTS distcomp.tbl_story_marker (
     story_id BIGINT NOT NULL REFERENCES distcomp.tbl_story(id),
     marker_id BIGINT NOT NULL REFERENCES distcomp.tbl_marker(id),
     PRIMARY KEY (story_id, marker_id)
 );
-
---changeset notebook:000-7 runInTransaction:false
-ALTER DATABASE distcomp SET search_path TO distcomp, public;
-
---changeset notebook:000-8
-ALTER TABLE distcomp.tbl_writer ADD CONSTRAINT uk_tbl_writer_login UNIQUE (login);
-
---changeset notebook:000-9
-ALTER TABLE distcomp.tbl_story ADD CONSTRAINT uk_tbl_story_writer_title UNIQUE (writer_id, title);

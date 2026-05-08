@@ -1,0 +1,24 @@
+server:
+  port: 24130
+
+spring:
+  application:
+    name: discussion
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: discussion-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.value.default.type: "com.example.discussion.dto.NoteMessage"
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+logging:
+  level:
+    com.example.discussion: DEBUG

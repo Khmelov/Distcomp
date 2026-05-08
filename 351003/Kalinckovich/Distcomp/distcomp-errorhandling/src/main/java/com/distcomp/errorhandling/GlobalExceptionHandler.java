@@ -1,6 +1,7 @@
 package com.distcomp.errorhandling;
 
 import com.distcomp.errorhandling.exceptions.BusinessValidationException;
+import com.distcomp.errorhandling.exceptions.NoteNotFoundException;
 import com.distcomp.errorhandling.model.ErrorResponse;
 import com.distcomp.errorhandling.model.ValidationError;
 import jakarta.persistence.EntityNotFoundException;
@@ -48,6 +49,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessValidationException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(final @NonNull BusinessValidationException ex) {
         return buildResponse(HttpStatus.FORBIDDEN, "Business Validation Error", ex.getErrors());
+    }
+
+    @ExceptionHandler(NoteNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoteNotFoundException(final @NonNull NoteNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, "Note Not Found", ex.getErrors());
     }
 
     private ResponseEntity<ErrorResponse> buildResponse(final @NonNull HttpStatus status,

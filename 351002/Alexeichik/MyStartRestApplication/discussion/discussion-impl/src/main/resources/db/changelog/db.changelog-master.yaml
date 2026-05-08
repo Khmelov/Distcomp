@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - includeAll:
+      path: 20260503/initialize_tables
+      relativeToChangelogFile: true
+  - includeAll:
+      path: 20260506/add_column
+      relativeToChangelogFile: true
+  - includeAll:
+      path: 20260507/add_index
+      relativeToChangelogFile: true

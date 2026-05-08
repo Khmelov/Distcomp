@@ -1,4 +1,22 @@
-
+kafka:
+  topics:
+    auto-create: true
+    default-config:
+      partitions: 3
+      replication-factor: 1
+    mapping:
+      IN_TOPIC:
+        name: InTopic
+        partitions: 3
+        replication-factor: 1
+        configs:
+          retention.ms: 604800000
+      OUT_TOPIC:
+        name: OutTopic
+        partitions: 3
+        replication-factor: 1
+        configs:
+          retention.ms: 604800000
 
 cassandra:
   contact-points: localhost
@@ -9,13 +27,21 @@ cassandra:
   password: distcomp
 
 spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: note-service-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    producer:
+      acks: all
+      retries: 3
   autoconfigure:
     exclude: org.springframework.boot.r2dbc.autoconfigure.R2dbcAutoConfiguration
   data:
     r2dbc:
       repositories:
         enabled: false
-
   cassandra:
     contact-points: ${cassandra.contact-points}
     port: ${cassandra.port}
@@ -23,5 +49,6 @@ spring:
     local-datacenter: ${cassandra.local-datacenter}
     username: ${cassandra.username}
     password: ${cassandra.password}
+
 server:
   port: 24130
