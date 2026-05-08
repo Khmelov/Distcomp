@@ -37,7 +37,8 @@ class PostResponseTo(BaseModel):
     id: int
     content: str
     issue_id: int = Field(alias="issueId")
-
+    state: str = "PENDING"
+    
 
 class IssueRequestTo(BaseModel):
     title: str = Field(min_length=2, max_length=64)

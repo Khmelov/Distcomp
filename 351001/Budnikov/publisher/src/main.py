@@ -9,15 +9,18 @@ from tortoise.contrib.fastapi import register_tortoise
 from src.api.v1.router import api_router
 from src.core.exceptions import BaseAppException
 from src.config import TORTOISE_CONFIG
+from src.services.post import init_kafka, stop_kafka  # Импорт функций Kafka
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # await AsyncORM.create_tables() # Uncomment to use instead of migrations
 
+    await init_kafka()
+
     yield
 
-    # actions after
+    await stop_kafka()
 
 
 def create_fastapi_app():
@@ -58,16 +61,3 @@ async def app_exception_handler(request: Request, exc: BaseAppException):
             "errorMessage": exc.error_message,
         },
     )
-
-
-# @app.exception_handler(IntegrityError)
-# async def integrity_error_handler(request: Request, exc: IntegrityError):
-#     logging.error(f"Integrity Error: {str(exc)}")
-#
-#     return JSONResponse(
-#         status_code=403,
-#         content={
-#             "errorCode": "40301",
-#             "errorMessage": f"Resource already exists: {str(exc)}",
-#         },
-#     )
