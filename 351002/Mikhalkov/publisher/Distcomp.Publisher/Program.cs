@@ -2,13 +2,17 @@ using Distcomp.Application.Interfaces;
 using Distcomp.Application.Mapping;
 using Distcomp.Application.Services;
 using Distcomp.Domain.Models;
+using Distcomp.Infrastructure.Caching;
 using Distcomp.Infrastructure.Data;
 using Distcomp.Infrastructure.Messaging;
 using Distcomp.Infrastructure.Repositories;
-using Distcomp.Infrastructure.Caching;
+using Distcomp.Shared.Models;
 using Distcomp.WebApi.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +30,9 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Conn
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
@@ -45,6 +51,8 @@ builder.Services.AddSingleton<KafkaProducerService>();
 builder.Services.AddSingleton<KafkaRequestReplyService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<KafkaRequestReplyService>());
 builder.Services.AddSingleton<RedisCacheService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddHttpClient("DiscussionClient", client =>
 {
@@ -60,6 +68,23 @@ builder.Services.AddScoped<INoteService, NoteRemoteService>(sp =>
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -69,6 +94,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ExceptionMiddleware>();
+
+app.UseAuthentication(); 
+app.UseAuthorization();  
 
 using (var scope = app.Services.CreateScope())
 {
@@ -85,7 +113,8 @@ using (var scope = app.Services.CreateScope())
             Login = "dipperpryes@mail.ru",
             FirstName = "Александр",
             LastName = "Михальков",
-            Password = "password123"
+            Password = BCrypt.Net.BCrypt.HashPassword("password123"),
+            Role = UserRole.ADMIN
         });
     }
 }

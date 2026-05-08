@@ -1,13 +1,15 @@
--- CREATE SCHEMA IF NOT EXISTS distcomp;
--- SET search_path TO distcomp;
 
 CREATE TABLE IF NOT EXISTS tbl_user (
     id BIGSERIAL PRIMARY KEY,
     login TEXT NOT NULL CHECK (LENGTH(login) BETWEEN 2 AND 64),
     password TEXT NOT NULL CHECK (LENGTH(password) BETWEEN 8 AND 128),
     firstname TEXT NOT NULL CHECK (LENGTH(firstname) BETWEEN 2 AND 64),
-    lastname TEXT NOT NULL CHECK (LENGTH(lastname) BETWEEN 2 AND 64)
+    lastname TEXT NOT NULL CHECK (LENGTH(lastname) BETWEEN 2 AND 64),
+    role TEXT NOT NULL DEFAULT 'CUSTOMER' CHECK (role IN ('ADMIN', 'CUSTOMER'))
 );
+
+ALTER TABLE tbl_user
+    ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'CUSTOMER' CHECK (role IN ('ADMIN', 'CUSTOMER'));
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_login ON tbl_user (login);
 
@@ -20,7 +22,7 @@ CREATE TABLE IF NOT EXISTS tbl_news (
     modified TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_news_user_title_content ON tbl_news (user_id, title, content);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_news_title ON tbl_news (title);
 
 CREATE TABLE IF NOT EXISTS tbl_marker (
     id BIGSERIAL PRIMARY KEY,

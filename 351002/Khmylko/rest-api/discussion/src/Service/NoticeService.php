@@ -48,7 +48,10 @@ class NoticeService {
             }
         }
 
-        return $this->repository->update($id, $data);
+        $payload = $data;
+        unset($payload['state']);
+
+        return $this->repository->update($id, $payload);
     }
 
     public function delete(string $id): void {

@@ -16,5 +16,6 @@
 
         public string Lastname { get; set; } = lastName;
 
+        public string Role { get; set; } = string.Empty;
     }
 }

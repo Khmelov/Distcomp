@@ -4,6 +4,8 @@ using DiscussionModule.mappers;
 using DiscussionModule.persistence;
 using DiscussionModule.persistence.repositories;
 using DiscussionModule.services;
+using RedisService.interfaces;  
+using RedisService.services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,13 +58,16 @@ if (kafkaEnabled)
         provider.GetRequiredService<KafkaConsumer>());
 }
 
+// REDIS CONFICURATION
+builder.Services.AddSingleton<IRedisCacheService, RedisCacheService>();
+
 var app = builder.Build();
 
 if (kafkaEnabled)
 {
     using var scope = app.Services.CreateScope();
     var producer = scope.ServiceProvider.GetRequiredService<KafkaProducer>();
-
+    
     await producer.EnsureTopicsExistAsync(
         builder.Configuration["Kafka:InTopic"],
         builder.Configuration["Kafka:OutTopic"]

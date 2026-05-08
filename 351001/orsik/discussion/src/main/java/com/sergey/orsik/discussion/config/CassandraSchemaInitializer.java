@@ -44,18 +44,22 @@ public class CassandraSchemaInitializer implements ApplicationRunner {
                         id bigint PRIMARY KEY,
                         tweet_id bigint,
                         content text,
-                        created timestamp
+                        created timestamp,
+                        state text
                     )
                     """.formatted(keyspaceName));
+            addColumnIfMissing(session, keyspaceName, "tbl_comment_by_id", "state", "text");
             session.execute("""
                     CREATE TABLE IF NOT EXISTS %s.tbl_comment_by_tweet (
                         tweet_id bigint,
                         created timestamp,
                         id bigint,
                         content text,
+                        state text,
                         PRIMARY KEY ((tweet_id), created, id)
                     ) WITH CLUSTERING ORDER BY (created DESC, id DESC)
                     """.formatted(keyspaceName));
+            addColumnIfMissing(session, keyspaceName, "tbl_comment_by_tweet", "state", "text");
             log.info("Ensured Cassandra schema exists for keyspace '{}'", keyspaceName);
         }
     }
@@ -66,5 +70,19 @@ public class CassandraSchemaInitializer implements ApplicationRunner {
             builder.addContactPoint(new InetSocketAddress(contactPoint.trim(), port));
         }
         return builder.build();
+    }
+
+    private static void addColumnIfMissing(CqlSession session, String keyspace, String table, String column, String cqlType) {
+        try {
+            session.execute("ALTER TABLE %s.%s ADD %s %s".formatted(keyspace, table, column, cqlType));
+        } catch (Exception e) {
+            if (e.getMessage() != null && e.getMessage().contains("conflicts with an existing column")) {
+                return;
+            }
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("already exists")) {
+                return;
+            }
+            log.debug("ALTER {}.{} add {} skipped: {}", keyspace, table, column, e.getMessage());
+        }
     }
 }
