@@ -8,6 +8,9 @@ import com.sergey.orsik.mapper.LabelMapper;
 import com.sergey.orsik.repository.LabelRepository;
 import com.sergey.orsik.service.LabelService;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -30,6 +33,9 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
+    @Cacheable(
+            value = "labels:list",
+            key = "T(java.util.Objects).hash(#page, #size, #sortBy, #sortDir, #name)")
     public List<LabelResponseTo> findAll(int page, int size, String sortBy, String sortDir, String name) {
         Pageable pageable = PageRequest.of(page, size, buildSort(sortBy, sortDir));
         Specification<Label> spec = (root, query, cb) -> cb.conjunction();
@@ -43,6 +49,7 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
+    @Cacheable(value = "labels", key = "#id")
     public LabelResponseTo findById(Long id) {
         Label entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Label", id));
@@ -50,6 +57,7 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
+    @CacheEvict(value = "labels:list", allEntries = true)
     public LabelResponseTo create(LabelRequestTo request) {
         Label entity = mapper.toEntity(request);
         entity.setId(null);
@@ -58,6 +66,11 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                @CacheEvict(value = "labels", key = "#id"),
+                @CacheEvict(value = "labels:list", allEntries = true)
+            })
     public LabelResponseTo update(Long id, LabelRequestTo request) {
         if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Label", id);
@@ -69,6 +82,11 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                @CacheEvict(value = "labels", key = "#id"),
+                @CacheEvict(value = "labels:list", allEntries = true)
+            })
     public void deleteById(Long id) {
         if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Label", id);

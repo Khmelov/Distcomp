@@ -11,6 +11,9 @@ import com.sergey.orsik.repository.LabelRepository;
 import com.sergey.orsik.repository.TweetRepository;
 import com.sergey.orsik.client.DiscussionCommentsClient;
 import com.sergey.orsik.service.TweetService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +60,9 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(
+            value = "tweets:list",
+            key = "T(java.util.Objects).hash(#page, #size, #sortBy, #sortDir, #creatorId, #title)")
     public List<TweetResponseTo> findAll(int page, int size, String sortBy, String sortDir, Long creatorId, String title) {
         Pageable pageable = PageRequest.of(page, size, buildSort(sortBy, sortDir));
         Specification<Tweet> spec = (root, query, cb) -> cb.conjunction();
@@ -74,6 +80,7 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "tweets", key = "#id")
     public TweetResponseTo findById(Long id) {
         Tweet entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Tweet", id));
@@ -82,6 +89,7 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "tweets:list", allEntries = true)
     public TweetResponseTo create(TweetRequestTo request) {
         log.info("Processing tweet create in service: creatorId={}, title='{}', content='{}'",
                 request.getCreatorId(), request.getTitle(), request.getContent());
@@ -101,6 +109,11 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     @Transactional
+    @Caching(
+            evict = {
+                @CacheEvict(value = "tweets", key = "#id"),
+                @CacheEvict(value = "tweets:list", allEntries = true)
+            })
     public TweetResponseTo update(Long id, TweetRequestTo request) {
         if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Tweet", id);
@@ -121,6 +134,12 @@ public class TweetServiceImpl implements TweetService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                @CacheEvict(value = "tweets", key = "#id"),
+                @CacheEvict(value = "tweets:list", allEntries = true),
+                @CacheEvict(value = "comments:list", allEntries = true)
+            })
     public void deleteById(Long id) {
         if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Tweet", id);
