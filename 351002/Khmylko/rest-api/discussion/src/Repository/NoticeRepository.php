@@ -8,8 +8,12 @@ class NoticeRepository {
     private int $nextId = 1;
     private string $storageFile;
 
+    public const STATE_PENDING = 'PENDING';
+    public const STATE_APPROVE = 'APPROVE';
+    public const STATE_DECLINE = 'DECLINE';
+
     public function __construct() {
-        $this->storageFile = '/tmp/notices.json';
+        $this->storageFile = getenv('NOTICE_STORAGE_FILE') ?: '/tmp/notices.json';
         $this->load();
     }
 
@@ -18,7 +22,7 @@ class NoticeRepository {
             $data = json_decode(file_get_contents($this->storageFile), true);
             if ($data) {
                 $this->storage = $data['storage'] ?? [];
-                $this->nextId = $data['nextId'] ?? 1;
+                $this->nextId = (int)($data['nextId'] ?? 1);
             }
         }
     }
@@ -26,20 +30,30 @@ class NoticeRepository {
     private function save(): void {
         file_put_contents($this->storageFile, json_encode([
             'storage' => $this->storage,
-            'nextId' => $this->nextId
-        ]));
+            'nextId' => $this->nextId,
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    private function normalize(array $notice): array {
+        $notice['id'] = (int)$notice['id'];
+        $notice['tweetId'] = (int)$notice['tweetId'];
+        if (!isset($notice['state'])) {
+            $notice['state'] = self::STATE_PENDING;
+        }
+        return $notice;
     }
 
     public function create(array $data): array {
         $id = $this->nextId++;
         $notice = [
-            'id' => $id,  // int
+            'id' => $id,
             'tweetId' => (int)$data['tweet_id'],
-            'content' => $data['content']
+            'content' => $data['content'],
+            'state' => $data['state'] ?? self::STATE_PENDING,
         ];
         $this->storage[$id] = $notice;
         $this->save();
-        return $notice;
+        return $this->normalize($notice);
     }
 
     public function findById(string $id): ?array {
@@ -47,21 +61,13 @@ class NoticeRepository {
         if (!isset($this->storage[$idInt])) {
             return null;
         }
-        $notice = $this->storage[$idInt];
-        // Приводим к int
-        $notice['id'] = (int)$notice['id'];
-        $notice['tweetId'] = (int)$notice['tweetId'];
-        return $notice;
+        return $this->normalize($this->storage[$idInt]);
     }
 
     public function findAll(): array {
         $result = [];
         foreach ($this->storage as $notice) {
-            $result[] = [
-                'id' => (int)$notice['id'],
-                'tweetId' => (int)$notice['tweetId'],
-                'content' => $notice['content']
-            ];
+            $result[] = $this->normalize($notice);
         }
         return $result;
     }
@@ -74,11 +80,20 @@ class NoticeRepository {
         if (isset($data['content'])) {
             $this->storage[$idInt]['content'] = $data['content'];
         }
+        if (isset($data['state'])) {
+            $this->storage[$idInt]['state'] = $data['state'];
+        }
         $this->save();
-        $notice = $this->storage[$idInt];
-        $notice['id'] = (int)$notice['id'];
-        $notice['tweetId'] = (int)$notice['tweetId'];
-        return $notice;
+        return $this->normalize($this->storage[$idInt]);
+    }
+
+    public function updateState(int $id, string $state): array {
+        if (!isset($this->storage[$id])) {
+            throw new ApiException(404, 40401, "Notice not found");
+        }
+        $this->storage[$id]['state'] = $state;
+        $this->save();
+        return $this->normalize($this->storage[$id]);
     }
 
     public function delete(string $id): void {

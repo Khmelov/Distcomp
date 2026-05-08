@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using Application.Interfaces;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Infrastructure.Kafka
 {
@@ -16,7 +17,9 @@ namespace Infrastructure.Kafka
         private readonly ILogger<KafkaPostConsumer> _logger;
         private readonly string _outTopic;
 
-        public KafkaPostConsumer(IConfiguration configuration, IServiceScopeFactory serviceScopeFactory, ILogger<KafkaPostConsumer> logger)
+        public KafkaPostConsumer(IConfiguration configuration,
+                                 IServiceScopeFactory serviceScopeFactory,
+                                 ILogger<KafkaPostConsumer> logger)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
@@ -28,7 +31,6 @@ namespace Infrastructure.Kafka
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 EnableAutoCommit = true
             };
-
             _consumer = new ConsumerBuilder<string, string>(config).Build();
             _outTopic = configuration["Kafka:OutTopic"] ?? "OutTopic";
         }
@@ -36,7 +38,6 @@ namespace Infrastructure.Kafka
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _consumer.Subscribe(_outTopic);
-
             return Task.Run(async () =>
             {
                 while (!stoppingToken.IsCancellationRequested)
@@ -46,10 +47,7 @@ namespace Infrastructure.Kafka
                         var consumeResult = _consumer.Consume(stoppingToken);
                         await ProcessMessageAsync(consumeResult.Message.Value, stoppingToken);
                     }
-                    catch (OperationCanceledException)
-                    {
-                        break;
-                    }
+                    catch (OperationCanceledException) { break; }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Error consuming Kafka message");
@@ -67,17 +65,19 @@ namespace Infrastructure.Kafka
 
                 using var scope = _serviceScopeFactory.CreateScope();
                 var postRepo = scope.ServiceProvider.GetRequiredService<IPostRepository>();
+                var cache = scope.ServiceProvider.GetRequiredService<IDistributedCache>();
 
                 var post = await postRepo.GetByIdAsync(statusUpdate.PostId, cancellationToken);
                 if (post != null)
                 {
                     post.State = Enum.Parse<PostState>(statusUpdate.NewState);
                     await postRepo.UpdateAsync(post, cancellationToken);
+
+                    // Инвалидация кэша для этого поста и общего списка
+                    await cache.RemoveAsync("posts_all");
+                    await cache.RemoveAsync($"post_{post.Id}");
+
                     _logger.LogInformation("Updated post {PostId} state to {State}", post.Id, post.State);
-                }
-                else
-                {
-                    _logger.LogWarning("Post with Id {PostId} not found in publisher DB", statusUpdate.PostId);
                 }
             }
             catch (Exception ex)

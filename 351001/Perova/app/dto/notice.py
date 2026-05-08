@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from app.models.notice_state import NoticeState
+
 
 class NoticeRequestTo(BaseModel):
     id: int | None = None
@@ -11,3 +13,4 @@ class NoticeResponseTo(BaseModel):
     id: int
     issueId: int
     content: str
+    state: NoticeState

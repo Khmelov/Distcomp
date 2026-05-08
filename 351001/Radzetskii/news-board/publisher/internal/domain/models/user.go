@@ -8,6 +8,7 @@ type User struct {
 	Password  string
 	Firstname string
 	Lastname  string
+	Role      string
 }
 
 type UserRepository interface {

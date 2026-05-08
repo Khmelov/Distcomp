@@ -11,9 +11,10 @@ USE distcomp;
 -- ВНИМАНИЕ! Правильный ключ партиционирования - tweet_id
 -- Это обеспечивает равномерное распределение данных по нодам
 CREATE TABLE IF NOT EXISTS tbl_notice (
-                                          id UUID,
-                                          tweet_id UUID,
+                                          tweet_id BIGINT,
+                                          id BIGINT,
                                           content TEXT,
+                                          state TEXT,
                                           created TIMESTAMP,
                                           modified TIMESTAMP,
                                           PRIMARY KEY ((tweet_id), id)

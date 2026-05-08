@@ -1,0 +1,91 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: distcomp_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d distcomp"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: distcomp_cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: "DistCompCluster"
+    ports:
+      - "9042:9042"
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+
+  pg_migrator:
+    image: migrate/migrate
+    container_name: distcomp_pg_migrator
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./db/migrations/postgres:/migrations
+    command: 
+      - -path=/migrations
+      - -database=postgres://postgres:postgres@db:5432/distcomp?sslmode=disable
+      - up
+
+  cass_migrator:
+    image: cassandra:4.1
+    container_name: distcomp_cass_migrator
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./db/migrations/cassandra:/migrations
+    command: /bin/bash -c "cqlsh cassandra -f /migrations/init.cql"
+
+  publisher_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: publisher
+    container_name: distcomp_publisher
+    ports:
+      - "24110:24110"
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      pg_migrator:
+        condition: service_completed_successfully
+
+  discussion_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: discussion
+    container_name: distcomp_discussion
+    ports:
+      - "24130:24130"
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      cass_migrator:
+        condition: service_completed_successfully
+
+volumes:
+  postgres_data:
+  cassandra_data:
