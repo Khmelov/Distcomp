@@ -50,9 +50,6 @@ public class NoticeController {
         return noticeService.findAll(page, size, sortBy, sortOrder);
     }
 
-    /**
-     * Internal listing by story for the publisher module (not exposed on port 24110).
-     */
     @GetMapping("/by-story/{storyId}")
     public List<NoticeResponseTo> findByStoryId(@PathVariable final Long storyId) {
         return noticeService.findByStoryId(storyId);

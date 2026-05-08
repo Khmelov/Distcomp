@@ -88,7 +88,7 @@ public class UserValidator extends BaseValidator<UserCreateRequest, UserUpdateRe
 
     private Mono<ValidationResult> checkForLoginChanges(final String login, Mono<ValidationResult> result, final Long id) {
         if (login != null && !login.isBlank()) {
-            result = result.flatMap(r -> checkLoginUnique(login, id)
+            result = result.flatMap((ValidationResult r) -> checkLoginUnique(login, id)
                     .map(r::merge));
         }
         return result;

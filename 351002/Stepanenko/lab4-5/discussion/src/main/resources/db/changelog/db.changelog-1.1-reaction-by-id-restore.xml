@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+    <changeSet id="cassandra-20260406-1-reaction-by-id-restore" author="student">
+        <comment>Create reaction lookup table for environments where early schema was already applied</comment>
+        <sql>
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_reaction_by_id (
+                id bigint PRIMARY KEY,
+                tweet_id bigint,
+                content text
+            );
+        </sql>
+    </changeSet>
+</databaseChangeLog>

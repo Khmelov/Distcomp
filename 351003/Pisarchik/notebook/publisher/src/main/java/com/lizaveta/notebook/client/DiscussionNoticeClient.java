@@ -6,9 +6,6 @@ import com.lizaveta.notebook.model.dto.response.PageResponseTo;
 
 import java.util.List;
 
-/**
- * HTTP client to the discussion module (Cassandra-backed notices).
- */
 public interface DiscussionNoticeClient {
 
     NoticeResponseTo create(NoticeRequestTo request);

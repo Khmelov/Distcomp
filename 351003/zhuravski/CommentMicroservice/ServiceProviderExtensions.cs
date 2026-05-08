@@ -2,9 +2,9 @@ using CommentMicroservice.Service.Interfaces;
 using CommentMicroservice.Service.Implementations;
 using CommentMicroservice.DAO.Implementations;
 using CommentMicroservice.DAO.Interfaces;
-using Additions.Service.EventService.Interfaces;
-using Additions.Service.EventService.Implementations;
 using CommentMicroservice.Service.Implementations.EventHandlers;
+using Additions.Messaging.Implementations;
+using Additions.Messaging.Interfaces;
 
 namespace CommentMicroservice;
 
@@ -27,9 +27,9 @@ static internal class ServiceProviderExtensions
         collection.AddSingleton<IEventHandler, UpdateCommentHandler>();
         collection.AddSingleton<IEventHandler, ArticleDeletedHandler>();
 
-        collection.AddSingleton<IEventOrchestratorService, EventOrchestratorService>();
-        collection.AddSingleton<IEventProducerService, KafkaProducerService>();
-        collection.AddHostedService<KafkaConsumerService>();
+        collection.AddSingleton<IEventOrchestrator, EventOrchestrator>();
+        collection.AddSingleton<IEventProducer, KafkaProducer>();
+        collection.AddHostedService<KafkaConsumer>();
         return collection;
     }
 }

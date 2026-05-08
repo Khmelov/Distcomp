@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-notice-table
+      author: Yana Aliakseichyk
+      changes:
+        - createSequence:
+            sequenceName: notices_seq
+        - createTable:
+            tableName: tbl_notice
+            columns:
+              - column:
+                  name: country
+                  type: text
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: article_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false

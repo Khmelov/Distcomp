@@ -13,15 +13,15 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace drogon_model::distcomp;
 
-const std::string TblIssue::Cols::_id = "id";
-const std::string TblIssue::Cols::_editor_id = "editor_id";
-const std::string TblIssue::Cols::_title = "title";
-const std::string TblIssue::Cols::_content = "content";
-const std::string TblIssue::Cols::_created = "created";
-const std::string TblIssue::Cols::_modified = "modified";
+const std::string TblIssue::Cols::_id = "\"id\"";
+const std::string TblIssue::Cols::_editor_id = "\"editor_id\"";
+const std::string TblIssue::Cols::_title = "\"title\"";
+const std::string TblIssue::Cols::_content = "\"content\"";
+const std::string TblIssue::Cols::_created = "\"created\"";
+const std::string TblIssue::Cols::_modified = "\"modified\"";
 const std::string TblIssue::primaryKeyName = "id";
 const bool TblIssue::hasPrimaryKey = true;
-const std::string TblIssue::tableName = "tbl_issue";
+const std::string TblIssue::tableName = "\"tbl_issue\"";
 
 const std::vector<typename TblIssue::MetaData> TblIssue::metaData_={
 {"id","int64_t","bigint",8,1,1,1},
@@ -543,7 +543,7 @@ void TblIssue::updateByJson(const Json::Value &pJson) noexcept(false)
 
 const int64_t &TblIssue::getValueOfId() const noexcept
 {
-    const static int64_t defaultValue = int64_t();
+    static const int64_t defaultValue = int64_t();
     if(id_)
         return *id_;
     return defaultValue;
@@ -565,7 +565,7 @@ const typename TblIssue::PrimaryKeyType & TblIssue::getPrimaryKey() const
 
 const int64_t &TblIssue::getValueOfEditorId() const noexcept
 {
-    const static int64_t defaultValue = int64_t();
+    static const int64_t defaultValue = int64_t();
     if(editorId_)
         return *editorId_;
     return defaultValue;
@@ -582,7 +582,7 @@ void TblIssue::setEditorId(const int64_t &pEditorId) noexcept
 
 const std::string &TblIssue::getValueOfTitle() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(title_)
         return *title_;
     return defaultValue;
@@ -604,7 +604,7 @@ void TblIssue::setTitle(std::string &&pTitle) noexcept
 
 const std::string &TblIssue::getValueOfContent() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(content_)
         return *content_;
     return defaultValue;
@@ -626,7 +626,7 @@ void TblIssue::setContent(std::string &&pContent) noexcept
 
 const ::trantor::Date &TblIssue::getValueOfCreated() const noexcept
 {
-    const static ::trantor::Date defaultValue = ::trantor::Date();
+    static const ::trantor::Date defaultValue = ::trantor::Date();
     if(created_)
         return *created_;
     return defaultValue;
@@ -643,7 +643,7 @@ void TblIssue::setCreated(const ::trantor::Date &pCreated) noexcept
 
 const ::trantor::Date &TblIssue::getValueOfModified() const noexcept
 {
-    const static ::trantor::Date defaultValue = ::trantor::Date();
+    static const ::trantor::Date defaultValue = ::trantor::Date();
     if(modified_)
         return *modified_;
     return defaultValue;
@@ -869,6 +869,11 @@ Json::Value TblIssue::toJson() const
         ret["modified"]=Json::Value();
     }
     return ret;
+}
+
+std::string TblIssue::toString() const
+{
+    return toJson().toStyledString();
 }
 
 Json::Value TblIssue::toMasqueradedJson(
@@ -1267,15 +1272,14 @@ bool TblIssue::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 64)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 64)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 64)";
                 return false;
             }
-
             break;
         case 3:
             if(pJson.isNull())
@@ -1288,15 +1292,14 @@ bool TblIssue::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 2048)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 2048)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 2048)";
                 return false;
             }
-
             break;
         case 4:
             if(pJson.isNull())

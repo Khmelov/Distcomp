@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - includeAll:
+      path: 20260322/initialize_tables
+      relativeToChangelogFile: true
+  - includeAll:
+      path: 20260322/apply_indexes
+      relativeToChangelogFile: true
+  - includeAll:
+      path: 20260506/create_sequence
+      relativeToChangelogFile: true
+  - includeAll:
+      path: 20260322/apply_foreign_keys
+      relativeToChangelogFile: true
+  - includeAll:
+      path: 20260507/add_security_fields
+      relativeToChangelogFile: true

@@ -1,0 +1,32 @@
+server:
+  port: 24130
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: discussion-main-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        spring.json.trusted.packages: "com.example.entitiesapp.dto,com.example.entitiesapp.model,java.util,java.lang"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  cassandra:
+    contact-points: 127.0.0.1
+    port: 9042
+    local-datacenter: datacenter1
+    keyspace-name: distcomp
+    schema-action: none
+    connection:
+      connect-timeout: 5s
+      init-query-timeout: 5s
+    request:
+      timeout: 5s
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    url: jdbc:cassandra://127.0.0.1:9042/distcomp

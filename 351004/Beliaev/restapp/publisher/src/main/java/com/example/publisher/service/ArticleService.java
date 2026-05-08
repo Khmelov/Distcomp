@@ -11,6 +11,10 @@ import com.example.publisher.repository.ArticleRepository;
 import com.example.publisher.repository.AuthorRepository;
 import com.example.publisher.repository.StickerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,42 +33,40 @@ public class ArticleService {
     private final ArticleMapper mapper;
 
     @Transactional
+    @Caching(
+            put = @CachePut(value = "article", key = "#result.id"),
+            evict = @CacheEvict(value = "articles_list", allEntries = true)
+    )
     public ArticleResponseTo create(ArticleRequestTo request) {
         Article article = mapper.toEntity(request);
-
-        // Связываем автора
         Author author = authorRepository.findById(request.getAuthorId())
                 .orElseThrow(() -> new EntityNotFoundException("Author not found with id: " + request.getAuthorId()));
         article.setAuthor(author);
-
-        // Связываем стикеры
         if (request.getStickers() != null && !request.getStickers().isEmpty()) {
             List<Sticker> stickerEntities = request.getStickers().stream()
                     .map(name -> stickerRepository.findByName(name)
                             .orElseGet(() -> {
-                                // Если стикера нет - создаем новый
                                 Sticker newSticker = new Sticker();
                                 newSticker.setName(name);
                                 return stickerRepository.save(newSticker);
                             }))
                     .collect(Collectors.toList());
-
             article.setStickers(stickerEntities);
         }
-
         article.setCreated(LocalDateTime.now());
         article.setModified(LocalDateTime.now());
-
         Article saved = articleRepository.save(article);
         return mapper.toResponse(saved);
     }
 
+    @Cacheable(value = "articles_list")
     public List<ArticleResponseTo> getAll() {
         return articleRepository.findAll().stream()
                 .map(mapper::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "article", key = "#id")
     public ArticleResponseTo getById(Long id) {
         return articleRepository.findById(id)
                 .map(mapper::toResponse)
@@ -72,49 +74,46 @@ public class ArticleService {
     }
 
     @Transactional
+    @Caching(
+            put = @CachePut(value = "article", key = "#id"),
+            evict = @CacheEvict(value = "articles_list", allEntries = true)
+    )
     public ArticleResponseTo update(Long id, ArticleRequestTo request) {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Article not found with id: " + id));
-
         mapper.updateEntityFromDto(request, article);
-
         if (!article.getAuthor().getId().equals(request.getAuthorId())) {
             Author author = authorRepository.findById(request.getAuthorId())
                     .orElseThrow(() -> new EntityNotFoundException("Author not found with id: " + request.getAuthorId()));
             article.setAuthor(author);
         }
-
-        // Update stickers
         if (request.getStickers() != null) {
             List<Sticker> stickerEntities = request.getStickers().stream()
                     .map(name -> stickerRepository.findByName(name)
                             .orElseGet(() -> {
-                                // Если стикера с таким именем нет — создаем и сохраняем
                                 Sticker newSticker = new Sticker();
                                 newSticker.setName(name);
                                 return stickerRepository.save(newSticker);
                             }))
                     .collect(Collectors.toList());
-
-            // Заменяем список стикеров статьи на новый
             article.setStickers(stickerEntities);
         }
-
         article.setModified(LocalDateTime.now());
         Article saved = articleRepository.save(article);
         return mapper.toResponse(saved);
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "article", key = "#id"),
+            @CacheEvict(value = "articles_list", allEntries = true)
+    })
     public void delete(Long id) {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Article not found with id: " + id));
-
         List<Sticker> stickersToDelete = new ArrayList<>(article.getStickers());
-
         articleRepository.delete(article);
         articleRepository.flush();
-
         if (!stickersToDelete.isEmpty()) {
             stickerRepository.deleteAll(stickersToDelete);
             stickerRepository.flush();

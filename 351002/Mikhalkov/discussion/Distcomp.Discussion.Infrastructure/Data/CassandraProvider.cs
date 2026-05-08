@@ -29,6 +29,7 @@ namespace Distcomp.Discussion.Infrastructure.Data
                     issue_id bigint,
                     id bigint,
                     content text,
+                    state text, 
                     PRIMARY KEY ((country), issue_id, id)
                 );");
         }

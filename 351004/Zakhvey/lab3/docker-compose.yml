@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  cassandra:
+    image: cassandra:4.1
+    container_name: distcomp_cassandra_lab3
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=distcomp_cluster
+
+  discussion:
+    build:
+      context: ./discussion
+    container_name: distcomp_discussion_lab3
+    ports:
+      - "24130:24130"
+    depends_on:
+      - cassandra
+    environment:
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042

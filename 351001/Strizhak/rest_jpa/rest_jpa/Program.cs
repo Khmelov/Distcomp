@@ -34,6 +34,9 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+<<<<<<< HEAD
+    context.Database.Migrate(); 
+=======
     context.Database.Migrate(); // применяем миграции, если их нет
 
     // Проверяем, есть ли пользователь с Id = 1
@@ -49,6 +52,7 @@ using (var scope = app.Services.CreateScope())
         });
         context.SaveChanges();
     }
+>>>>>>> upstream/main
 }
 
 if (app.Environment.IsDevelopment())

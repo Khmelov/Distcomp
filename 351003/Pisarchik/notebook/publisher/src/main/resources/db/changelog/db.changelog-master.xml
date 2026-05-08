@@ -6,5 +6,5 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
     <include file="db/changelog/changes/000-ensure-schema-and-tables.sql"/>
     <include file="db/changelog/changes/001-seed-test-data.sql"/>
-    <include file="db/changelog/changes/002-drop-notice-from-postgres.sql"/>
+    <include file="db/changelog/changes/002-writer-role-and-unique-login.sql"/>
 </databaseChangeLog>

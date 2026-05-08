@@ -10,5 +10,7 @@
         public long NewsId { get; set; } = newsId;
 
         public string Content {  get; set; } = content;
+
+        public string State { get; set; } = "PENDING";
     }
 }

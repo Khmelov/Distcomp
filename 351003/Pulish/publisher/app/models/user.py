@@ -15,6 +15,7 @@ class User(Base):
     password: Mapped[str] = mapped_column(String)
     firstname: Mapped[str] = mapped_column(String)
     lastname: Mapped[str] = mapped_column(String)
+    role: Mapped[str] = mapped_column(String, default="CUSTOMER")
 
     topics: Mapped[List["Topic"]] = relationship(
         back_populates="user", cascade="all, delete-orphan")

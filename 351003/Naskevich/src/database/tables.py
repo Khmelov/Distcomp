@@ -11,7 +11,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import registry, relationship
 
+from sqlalchemy import Enum as SqlEnum
+
 from src.models.editor import Editor
+from src.models.user_role import UserRole
 from src.models.marker import Marker
 from src.models.tweet import Tweet
 
@@ -23,9 +26,20 @@ editors_table = Table(
     metadata,
     Column("id", BigInteger, primary_key=True, autoincrement=True),
     Column("login", String(64), nullable=False, unique=True),
-    Column("password", String(128), nullable=False),
+    Column("password", String(255), nullable=False),
     Column("firstname", String(64), nullable=False),
     Column("lastname", String(64), nullable=False),
+    Column(
+        "role",
+        SqlEnum(
+            UserRole,
+            values_callable=lambda m: [i.value for i in m],
+            native_enum=False,
+            length=16,
+        ),
+        nullable=False,
+        server_default=UserRole.CUSTOMER.value,
+    ),
 )
 
 tweet_markers_table = Table(

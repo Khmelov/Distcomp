@@ -1,0 +1,13 @@
+{
+  "name": "discussion",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "kafkajs": "^2.2.4",
+    "cassandra-driver": "^4.7.2",
+    "uuid": "^9.0.0"
+  }
+}

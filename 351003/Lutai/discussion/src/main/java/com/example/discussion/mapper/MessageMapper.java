@@ -17,8 +17,10 @@ public interface MessageMapper {
 
     @Mapping(target = "key.id", ignore = true)
     @Mapping(target = "key.articleId", source = "articleId")
-    @Mapping(target = "content", source = "content")
+    @Mapping(target = "content", source = "content", ignore = true)
+    @Mapping(target = "state", ignore = true)
     Message toEntity(MessageRequestTo request);
+
 
     List<MessageResponseTo> toResponseList(List<Message> messages);
 }
