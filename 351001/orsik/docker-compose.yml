@@ -34,6 +34,18 @@ services:
       retries: 10
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: orsik-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
     container_name: orsik-zookeeper
@@ -94,6 +106,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       discussion:
         condition: service_healthy

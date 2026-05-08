@@ -12,9 +12,6 @@ import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
-/**
- * REST-based implementation (not registered as a Spring bean; {@link CommentServiceKafkaImpl} is {@code @Primary}).
- */
 public class CommentServiceRemoteImpl implements CommentService {
 
     private static final String COMMENTS_PATH = "/api/v1.0/comments";

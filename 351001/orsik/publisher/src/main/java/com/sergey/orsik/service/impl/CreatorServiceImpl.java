@@ -9,6 +9,9 @@ import com.sergey.orsik.mapper.CreatorMapper;
 import com.sergey.orsik.repository.CreatorRepository;
 import com.sergey.orsik.service.CreatorService;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -31,6 +34,9 @@ public class CreatorServiceImpl implements CreatorService {
     }
 
     @Override
+    @Cacheable(
+            value = "creators:list",
+            key = "T(java.util.Objects).hash(#page, #size, #sortBy, #sortDir, #search)")
     public List<CreatorResponseTo> findAll(int page, int size, String sortBy, String sortDir, String search) {
         Pageable pageable = PageRequest.of(page, size, buildSort(sortBy, sortDir));
         Specification<Creator> spec = (root, query, cb) -> cb.conjunction();
@@ -48,6 +54,7 @@ public class CreatorServiceImpl implements CreatorService {
     }
 
     @Override
+    @Cacheable(value = "creators", key = "#id")
     public CreatorResponseTo findById(Long id) {
         Creator entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Creator", id));
@@ -55,6 +62,7 @@ public class CreatorServiceImpl implements CreatorService {
     }
 
     @Override
+    @CacheEvict(value = "creators:list", allEntries = true)
     public CreatorResponseTo create(CreatorRequestTo request) {
         if (repository.existsByLogin(request.getLogin())) {
             throw new ConflictException("Creator with login '%s' already exists".formatted(request.getLogin()));
@@ -66,6 +74,11 @@ public class CreatorServiceImpl implements CreatorService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                @CacheEvict(value = "creators", key = "#id"),
+                @CacheEvict(value = "creators:list", allEntries = true)
+            })
     public CreatorResponseTo update(Long id, CreatorRequestTo request) {
         if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Creator", id);
@@ -80,6 +93,11 @@ public class CreatorServiceImpl implements CreatorService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                @CacheEvict(value = "creators", key = "#id"),
+                @CacheEvict(value = "creators:list", allEntries = true)
+            })
     public void deleteById(Long id) {
         if (!repository.existsById(id)) {
             throw new EntityNotFoundException("Creator", id);
