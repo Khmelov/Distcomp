@@ -3,6 +3,7 @@ package com.sergey.orsik.service.impl;
 import com.sergey.orsik.dto.request.CreatorRequestTo;
 import com.sergey.orsik.dto.response.CreatorResponseTo;
 import com.sergey.orsik.entity.Creator;
+import com.sergey.orsik.entity.CreatorRole;
 import com.sergey.orsik.exception.ConflictException;
 import com.sergey.orsik.exception.EntityNotFoundException;
 import com.sergey.orsik.mapper.CreatorMapper;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -27,10 +29,12 @@ public class CreatorServiceImpl implements CreatorService {
 
     private final CreatorRepository repository;
     private final CreatorMapper mapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public CreatorServiceImpl(CreatorRepository repository, CreatorMapper mapper) {
+    public CreatorServiceImpl(CreatorRepository repository, CreatorMapper mapper, PasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.mapper = mapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -69,6 +73,10 @@ public class CreatorServiceImpl implements CreatorService {
         }
         Creator entity = mapper.toEntity(request);
         entity.setId(null);
+        entity.setPassword(passwordEncoder.encode(request.getPassword()));
+        if (entity.getRole() == null) {
+            entity.setRole(CreatorRole.CUSTOMER);
+        }
         Creator saved = repository.save(entity);
         return mapper.toResponse(saved);
     }
@@ -88,6 +96,10 @@ public class CreatorServiceImpl implements CreatorService {
         }
         Creator entity = mapper.toEntity(request);
         entity.setId(id);
+        entity.setPassword(passwordEncoder.encode(request.getPassword()));
+        if (entity.getRole() == null) {
+            entity.setRole(CreatorRole.CUSTOMER);
+        }
         Creator saved = repository.save(entity);
         return mapper.toResponse(saved);
     }

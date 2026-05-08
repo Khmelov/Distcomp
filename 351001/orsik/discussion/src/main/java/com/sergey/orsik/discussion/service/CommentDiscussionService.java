@@ -85,7 +85,7 @@ public class CommentDiscussionService {
         long id = nextUniqueId();
         Instant created = request.getCreated() != null ? request.getCreated() : Instant.now();
         CommentState state = moderationService.moderate(request.getContent());
-        return persistNew(id, request.getTweetId(), request.getContent(), created, state);
+        return persistNew(id, request.getTweetId(), request.getCreatorId(), request.getContent(), created, state);
     }
 
     /**
@@ -98,13 +98,14 @@ public class CommentDiscussionService {
         }
         Instant created = request.getCreated() != null ? request.getCreated() : Instant.now();
         CommentState state = moderationService.moderate(request.getContent());
-        return persistNew(id, request.getTweetId(), request.getContent(), created, state);
+        return persistNew(id, request.getTweetId(), request.getCreatorId(), request.getContent(), created, state);
     }
 
-    private CommentResponseTo persistNew(long id, long tweetId, String content, Instant created, CommentState state) {
-        CommentByIdRow byId = new CommentByIdRow(id, tweetId, content, created, state);
+    private CommentResponseTo persistNew(long id, long tweetId, long creatorId, String content, Instant created, CommentState state) {
+        CommentByIdRow byId = new CommentByIdRow(id, tweetId, creatorId, content, created, state);
         CommentByTweetRow byTweet = new CommentByTweetRow(
                 new CommentByTweetKey(tweetId, created, id),
+                creatorId,
                 content,
                 state);
         commentByIdRepository.save(byId);
@@ -122,9 +123,10 @@ public class CommentDiscussionService {
 
         Instant created = request.getCreated() != null ? request.getCreated() : existing.getCreated();
         CommentState state = moderationService.moderate(request.getContent());
-        CommentByIdRow updated = new CommentByIdRow(id, request.getTweetId(), request.getContent(), created, state);
+        CommentByIdRow updated = new CommentByIdRow(id, request.getTweetId(), request.getCreatorId(), request.getContent(), created, state);
         CommentByTweetRow newTweetRow = new CommentByTweetRow(
                 new CommentByTweetKey(request.getTweetId(), created, id),
+                request.getCreatorId(),
                 request.getContent(),
                 state);
         commentByIdRepository.save(updated);
@@ -164,12 +166,12 @@ public class CommentDiscussionService {
     }
 
     private CommentResponseTo fromIdRow(CommentByIdRow r) {
-        return new CommentResponseTo(r.getId(), r.getTweetId(), r.getContent(), r.getCreated(), effectiveState(r.getState()));
+        return new CommentResponseTo(r.getId(), r.getTweetId(), r.getCreatorId(), r.getContent(), r.getCreated(), effectiveState(r.getState()));
     }
 
     private CommentResponseTo fromTweetRow(CommentByTweetRow r) {
         CommentByTweetKey k = r.getKey();
-        return new CommentResponseTo(k.getId(), k.getTweetId(), r.getContent(), k.getCreated(), effectiveState(r.getState()));
+        return new CommentResponseTo(k.getId(), k.getTweetId(), r.getCreatorId(), r.getContent(), k.getCreated(), effectiveState(r.getState()));
     }
 
     private static CommentState effectiveState(CommentState s) {

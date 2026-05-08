@@ -94,7 +94,7 @@ public class CommentServiceKafkaImpl implements CommentService {
         long id = CommentIds.newId();
         Instant created = request.getCreated() != null ? request.getCreated() : Instant.now();
 
-        CommentRequestTo body = new CommentRequestTo(id, request.getTweetId(), request.getContent(), created);
+        CommentRequestTo body = new CommentRequestTo(id, request.getTweetId(), request.getCreatorId(), request.getContent(), created);
 
         CommentTransportRequest transport = new CommentTransportRequest();
         transport.setOperation(CommentTransportOperation.CREATE_ASYNC);
@@ -102,7 +102,7 @@ public class CommentServiceKafkaImpl implements CommentService {
 
         kafkaTemplate.send(inTopic, String.valueOf(request.getTweetId()), transport);
 
-        return new CommentResponseTo(id, request.getTweetId(), request.getContent(), created, CommentState.PENDING);
+        return new CommentResponseTo(id, request.getTweetId(), request.getCreatorId(), request.getContent(), created, CommentState.PENDING);
     }
 
     @Override

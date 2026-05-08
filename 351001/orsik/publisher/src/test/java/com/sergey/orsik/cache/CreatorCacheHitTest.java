@@ -4,6 +4,7 @@ import com.sergey.orsik.config.RedisCacheConfig;
 import com.sergey.orsik.dto.request.CreatorRequestTo;
 import com.sergey.orsik.dto.response.CreatorResponseTo;
 import com.sergey.orsik.entity.Creator;
+import com.sergey.orsik.entity.CreatorRole;
 import com.sergey.orsik.mapper.CreatorMapper;
 import com.sergey.orsik.repository.CreatorRepository;
 import com.sergey.orsik.service.CreatorService;
@@ -19,6 +20,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -39,6 +41,13 @@ class CreatorCacheHitTest {
         @Bean
         CreatorRepository creatorRepository() {
             return Mockito.mock(CreatorRepository.class);
+        }
+
+        @Bean
+        PasswordEncoder passwordEncoder() {
+            PasswordEncoder encoder = Mockito.mock(PasswordEncoder.class);
+            when(encoder.encode(any())).thenAnswer(inv -> inv.getArgument(0));
+            return encoder;
         }
     }
 
@@ -64,7 +73,7 @@ class CreatorCacheHitTest {
 
     @Test
     void findByIdSecondCallUsesCache() {
-        Creator entity = new Creator(1L, "u@x.com", "p", "John", "Doe");
+        Creator entity = new Creator(1L, "u@x.com", "p", "John", "Doe", CreatorRole.CUSTOMER);
         when(creatorRepository.findById(1L)).thenReturn(Optional.of(entity));
 
         assertEquals(1L, service.findById(1L).getId());
@@ -75,8 +84,8 @@ class CreatorCacheHitTest {
 
     @Test
     void updateEvictsByIdCache() {
-        Creator entity = new Creator(1L, "u@x.com", "p", "John", "Doe");
-        Creator updated = new Creator(1L, "u@x.com", "p2", "Jane", "Doe");
+        Creator entity = new Creator(1L, "u@x.com", "p", "John", "Doe", CreatorRole.CUSTOMER);
+        Creator updated = new Creator(1L, "u@x.com", "p2", "Jane", "Doe", CreatorRole.CUSTOMER);
         when(creatorRepository.findById(1L))
                 .thenReturn(Optional.of(entity))
                 .thenReturn(Optional.of(updated));
@@ -86,7 +95,7 @@ class CreatorCacheHitTest {
 
         service.findById(1L);
 
-        CreatorRequestTo req = new CreatorRequestTo(1L, "u@x.com", "p2", "Jane", "Doe");
+        CreatorRequestTo req = new CreatorRequestTo(1L, "u@x.com", "p2", "Jane", "Doe", CreatorRole.CUSTOMER);
         service.update(1L, req);
 
         CreatorResponseTo third = service.findById(1L);

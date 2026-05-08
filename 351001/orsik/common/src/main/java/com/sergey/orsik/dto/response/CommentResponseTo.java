@@ -14,6 +14,7 @@ public class CommentResponseTo {
 
     private Long id;
     private Long tweetId;
+    private Long creatorId;
     private String content;
     private Instant created;
     private CommentState state;

@@ -43,23 +43,27 @@ public class CassandraSchemaInitializer implements ApplicationRunner {
                     CREATE TABLE IF NOT EXISTS %s.tbl_comment_by_id (
                         id bigint PRIMARY KEY,
                         tweet_id bigint,
+                        creator_id bigint,
                         content text,
                         created timestamp,
                         state text
                     )
                     """.formatted(keyspaceName));
             addColumnIfMissing(session, keyspaceName, "tbl_comment_by_id", "state", "text");
+            addColumnIfMissing(session, keyspaceName, "tbl_comment_by_id", "creator_id", "bigint");
             session.execute("""
                     CREATE TABLE IF NOT EXISTS %s.tbl_comment_by_tweet (
                         tweet_id bigint,
                         created timestamp,
                         id bigint,
+                        creator_id bigint,
                         content text,
                         state text,
                         PRIMARY KEY ((tweet_id), created, id)
                     ) WITH CLUSTERING ORDER BY (created DESC, id DESC)
                     """.formatted(keyspaceName));
             addColumnIfMissing(session, keyspaceName, "tbl_comment_by_tweet", "state", "text");
+            addColumnIfMissing(session, keyspaceName, "tbl_comment_by_tweet", "creator_id", "bigint");
             log.info("Ensured Cassandra schema exists for keyspace '{}'", keyspaceName);
         }
     }

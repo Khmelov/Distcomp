@@ -54,7 +54,7 @@ class DiscussionApplicationIT {
     void commentLifecycleAgainstCassandra() {
         doNothing().when(publisherTweetClient).requireTweetExists(anyLong());
 
-        CommentRequestTo createReq = new CommentRequestTo(null, 1001L, "integration comment", null);
+        CommentRequestTo createReq = new CommentRequestTo(null, 1001L, 1L, "integration comment", null);
         ResponseEntity<CommentResponseTo> created = restTemplate.postForEntity(
                 "/api/v1.0/comments",
                 new HttpEntity<>(createReq),

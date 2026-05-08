@@ -19,6 +19,9 @@ public class CommentRequestTo {
     @NotNull(message = "tweetId must not be null")
     private Long tweetId;
 
+    @NotNull(message = "creatorId must not be null")
+    private Long creatorId;
+
     @NotBlank(message = "content must not be blank")
     @Size(min = 2, max = 2048)
     private String content;
