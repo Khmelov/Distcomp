@@ -2,11 +2,21 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class LoginRequestTo(BaseModel):
+    login: str
+    password: str
+
+class TokenResponseTo(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
 class EditorRequestTo(BaseModel):
     login: str = Field(min_length=2, max_length=64)
     password: str = Field(min_length=8, max_length=128)
     firstname: str = Field(min_length=2, max_length=64)
     lastname: str = Field(min_length=2, max_length=64)
+    role: str = "CUSTOMER"
 
 
 class EditorResponseTo(BaseModel):
@@ -15,6 +25,7 @@ class EditorResponseTo(BaseModel):
     login: str
     firstname: str
     lastname: str
+    role: str = "CUSTOMER"
 
 
 class LabelRequestTo(BaseModel):
@@ -38,7 +49,7 @@ class PostResponseTo(BaseModel):
     content: str
     issue_id: int = Field(alias="issueId")
     state: str = "PENDING"
-    
+
 
 class IssueRequestTo(BaseModel):
     title: str = Field(min_length=2, max_length=64)

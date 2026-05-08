@@ -7,6 +7,7 @@ class Editor(models.Model):
     password = fields.CharField(max_length=128)
     firstname = fields.CharField(max_length=64)
     lastname = fields.CharField(max_length=64)
+    role = fields.CharField(max_length=32, default="CUSTOMER")
 
     issues: fields.ReverseRelation["Issue"]
 

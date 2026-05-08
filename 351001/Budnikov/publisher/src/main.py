@@ -7,22 +7,17 @@ from fastapi.responses import JSONResponse
 from tortoise.contrib.fastapi import register_tortoise
 
 from src.api.v1.router import api_router
+from src.api.v2.router import api_router_v2 # Подключаем роутер V2
 from src.core.exceptions import BaseAppException
 from src.config import TORTOISE_CONFIG
-from src.services.post import init_kafka, stop_kafka
-
 from src.services.post import init_kafka, stop_kafka
 from src.core.cache import close_redis
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # await AsyncORM.create_tables() # Uncomment to use instead of migrations
-
     await init_kafka()
-
     yield
-
     await stop_kafka()
     await close_redis()
 
@@ -31,6 +26,7 @@ def create_fastapi_app():
     app = FastAPI(lifespan=lifespan, redirect_slashes=False)
 
     app.include_router(api_router, prefix="/api")
+    app.include_router(api_router_v2, prefix="/api") # Регистрируем V2
 
     register_tortoise(
         app,
