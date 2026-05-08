@@ -48,10 +48,11 @@ class CommentServiceKafkaImplIT {
             return id.equals(2L) ? Optional.of(tweet) : Optional.empty();
         });
 
-        CommentResponseTo created = commentService.create(new CommentRequestTo(null, 2L, "hello", null));
+        CommentResponseTo created = commentService.create(new CommentRequestTo(null, 2L, 1L, "hello", null));
 
         assertThat(created.getId()).isNotNull();
         assertThat(created.getTweetId()).isEqualTo(2L);
+        assertThat(created.getCreatorId()).isEqualTo(1L);
         assertThat(created.getState()).isEqualTo(CommentState.PENDING);
     }
 

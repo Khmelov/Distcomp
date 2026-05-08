@@ -17,6 +17,9 @@ public class CommentByTweetRow {
     @PrimaryKey
     private CommentByTweetKey key;
 
+    @Column("creator_id")
+    private Long creatorId;
+
     @Column
     private String content;
 

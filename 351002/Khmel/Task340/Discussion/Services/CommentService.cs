@@ -32,7 +32,6 @@ namespace Discussion.Services
         {
             var comment = await _repository.GetByIdAsync(id);
             if (comment == null)
-                //throw new KeyNotFoundException($"Comment with id={id} not found");
                 return null!; 
             return ToResponse(comment);
         }
@@ -45,7 +44,10 @@ namespace Discussion.Services
             {
                 Id = request.Id,
                 StoryId = request.StoryId,
-                Content = request.Content
+                Content = request.Content,
+                State = "PENDING",
+                Country = "",
+                Created = DateTimeOffset.UtcNow
             };
 
             var created = await _repository.CreateAsync(comment);
@@ -56,14 +58,27 @@ namespace Discussion.Services
         {
             ValidateContent(request.Content);
             
-            var comment = new Comment
+            var existing = await _repository.GetByIdAsync(id);
+            if (existing == null)
             {
-                Id = id,
-                StoryId = request.StoryId,
-                Content = request.Content
-            };
+                var comment = new Comment
+                {
+                    Id = id,
+                    StoryId = request.StoryId,
+                    Content = request.Content,
+                    State = "PENDING",
+                    Country = "",
+                    Created = DateTimeOffset.UtcNow
+                };
+                await _repository.CreateAsync(comment);
+                return ToResponse(comment);
+            }
 
-            var updated = await _repository.UpdateAsync(comment);
+            existing.Content = request.Content;
+            if (request.StoryId > 0)
+                existing.StoryId = request.StoryId;
+
+            var updated = await _repository.UpdateAsync(existing);
             return ToResponse(updated);
         }
 

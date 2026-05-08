@@ -66,6 +66,9 @@ services:
     container_name: discussion-cassandra
     environment:
       CASSANDRA_BROADCAST_ADDRESS: 127.0.0.1
+      CASSANDRA_COMMITLOG_DIRECTORY: /var/lib/cassandra/commitlog
+      CASSANDRA_DATA_FILE_DIRECTORIES: /var/lib/cassandra/data
+      CASSANDRA_SAVED_CACHES_DIRECTORY: /var/lib/cassandra/saved_caches
     ports:
       - '9042:9042'
     volumes:

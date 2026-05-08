@@ -7,4 +7,6 @@
 
     <include file="db/changelog/changes/001-create-core-tables.xml"/>
     <include file="db/changelog/changes/002-drop-tbl-comment.xml"/>
+    <include file="db/changelog/changes/003-seed-orsik-creator.xml"/>
+    <include file="db/changelog/changes/004-security-role-password.xml"/>
 </databaseChangeLog>

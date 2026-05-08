@@ -12,6 +12,9 @@ import com.sergey.orsik.repository.TweetRepository;
 import com.sergey.orsik.service.CommentService;
 import com.sergey.orsik.util.CommentIds;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -48,6 +51,9 @@ public class CommentServiceKafkaImpl implements CommentService {
     }
 
     @Override
+    @Cacheable(
+            value = "comments:list",
+            key = "T(java.util.Objects).hash(#page, #size, #sortBy, #sortDir, #tweetId, #content)")
     public List<CommentResponseTo> findAll(int page, int size, String sortBy, String sortDir, Long tweetId, String content) {
         String correlationId = UUID.randomUUID().toString();
         CommentTransportRequest request = new CommentTransportRequest();
@@ -66,6 +72,7 @@ public class CommentServiceKafkaImpl implements CommentService {
     }
 
     @Override
+    @Cacheable(value = "comments", key = "#id")
     public CommentResponseTo findById(Long id) {
         String correlationId = UUID.randomUUID().toString();
         CommentTransportRequest request = new CommentTransportRequest();
@@ -79,6 +86,7 @@ public class CommentServiceKafkaImpl implements CommentService {
     }
 
     @Override
+    @CacheEvict(value = "comments:list", allEntries = true)
     public CommentResponseTo create(CommentRequestTo request) {
         tweetRepository.findById(request.getTweetId())
                 .orElseThrow(() -> new EntityNotFoundException("Tweet", request.getTweetId()));
@@ -86,7 +94,7 @@ public class CommentServiceKafkaImpl implements CommentService {
         long id = CommentIds.newId();
         Instant created = request.getCreated() != null ? request.getCreated() : Instant.now();
 
-        CommentRequestTo body = new CommentRequestTo(id, request.getTweetId(), request.getContent(), created);
+        CommentRequestTo body = new CommentRequestTo(id, request.getTweetId(), request.getCreatorId(), request.getContent(), created);
 
         CommentTransportRequest transport = new CommentTransportRequest();
         transport.setOperation(CommentTransportOperation.CREATE_ASYNC);
@@ -94,10 +102,15 @@ public class CommentServiceKafkaImpl implements CommentService {
 
         kafkaTemplate.send(inTopic, String.valueOf(request.getTweetId()), transport);
 
-        return new CommentResponseTo(id, request.getTweetId(), request.getContent(), created, CommentState.PENDING);
+        return new CommentResponseTo(id, request.getTweetId(), request.getCreatorId(), request.getContent(), created, CommentState.PENDING);
     }
 
     @Override
+    @Caching(
+            evict = {
+                @CacheEvict(value = "comments", key = "#id"),
+                @CacheEvict(value = "comments:list", allEntries = true)
+            })
     public CommentResponseTo update(Long id, CommentRequestTo request) {
         String correlationId = UUID.randomUUID().toString();
         CommentTransportRequest transport = new CommentTransportRequest();
@@ -112,6 +125,11 @@ public class CommentServiceKafkaImpl implements CommentService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                @CacheEvict(value = "comments", key = "#id"),
+                @CacheEvict(value = "comments:list", allEntries = true)
+            })
     public void deleteById(Long id) {
         String correlationId = UUID.randomUUID().toString();
         CommentTransportRequest transport = new CommentTransportRequest();

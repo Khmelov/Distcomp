@@ -36,3 +36,7 @@ type LabelRepository interface {
 	AddLabelToIssue(ctx context.Context, issueID, labelID int64) error
 	RemoveLabelFromIssue(ctx context.Context, issueID, labelID int64) error
 }
+
+type ReactionRepository interface {
+	UpdateState(ctx context.Context, id int64, state model.ReactionState) error
+}

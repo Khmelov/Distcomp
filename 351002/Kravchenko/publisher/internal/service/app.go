@@ -15,12 +15,12 @@ type AppService interface {
 	StickerService() sticker.Service
 }
 
-func New(repos repository.AppRepository) AppService {
+func New(repos repository.AppRepository, caches repository.AppCache) AppService {
 	return &appService{
-		editorService:  editor.New(repos),
-		issueService:   issue.New(repos),
-		noteService:    note.New(repos),
-		stickerService: sticker.New(repos),
+		editorService:  editor.New(repos, caches),
+		issueService:   issue.New(repos, caches),
+		noteService:    note.New(repos, caches),
+		stickerService: sticker.New(repos, caches),
 	}
 }
 

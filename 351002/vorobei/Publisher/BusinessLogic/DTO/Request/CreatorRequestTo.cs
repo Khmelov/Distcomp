@@ -16,5 +16,7 @@ namespace BusinessLogic.DTO.Request
 
         [StringLength(64, MinimumLength = 2, ErrorMessage = "LastName should be from 2 to 64 symbols")]
         public string LastName { get; set; } = string.Empty;
+
+        public string Role { get; set; } = "CUSTOMER";
     }
 }

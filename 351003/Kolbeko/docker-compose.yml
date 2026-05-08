@@ -35,3 +35,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
       - "9092:9092"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"

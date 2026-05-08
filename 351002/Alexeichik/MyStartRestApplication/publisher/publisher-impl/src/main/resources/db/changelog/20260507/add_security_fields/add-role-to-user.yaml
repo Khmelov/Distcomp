@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-role-to-user
+      author: gemini-cli
+      changes:
+        - addColumn:
+            tableName: tbl_user
+            columns:
+              - column:
+                  name: role
+                  type: text
+                  defaultValue: CUSTOMER
+                  constraints:
+                    nullable: false

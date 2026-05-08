@@ -11,5 +11,7 @@ namespace BusinessLogic.DTO.Response
 
         [JsonPropertyName("content")]
         public string Content { get; set; } = string.Empty;
+
+        public PostState State { get; set; } = PostState.PENDING;
     }
 }

@@ -137,5 +137,33 @@
                 onDelete="CASCADE"/>
     </changeSet>
 
+    <!-- Add role column to tbl_writer for authentication and authorization -->
+    <changeSet id="070-add-role-column-to-tbl-writer" author="restapitask">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="tbl_writer" columnName="role"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="tbl_writer">
+            <column name="role" type="varchar(32)" defaultValue="CUSTOMER">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- Add created_at column to tbl_message for message creation timestamp -->
+    <changeSet id="080-add-created-at-column-to-tbl-message" author="restapitask">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="tbl_message" columnName="created_at"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="tbl_message">
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
 

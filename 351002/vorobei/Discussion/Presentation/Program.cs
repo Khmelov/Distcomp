@@ -1,27 +1,40 @@
 using AutoMapper;
 using BusinessLogic.DTO.Request;
 using BusinessLogic.DTO.Response;
+using BusinessLogic.Profiles;
 using BusinessLogic.Repository;
 using BusinessLogic.Servicies;
 using Cassandra;
 using Infrastructure.RepositoryImplementation;
 using Infrastructure.ServiceImplementation;
-using BusinessLogic.Profiles;
+using Infrastructure.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var cluster = Cluster.Builder()
-    .AddContactPoints("localhost")
-    .WithPort(9042)
-    .Build();
+var cassandraSettings = builder.Configuration.GetSection("Cassandra");
+var contactPoints = cassandraSettings.GetSection("ContactPoints").Get<string[]>() ?? new[] { "localhost" };
+var cassandraPort = cassandraSettings.GetValue<int>("Port", 9042);
+var keyspace = cassandraSettings.GetValue<string>("Keyspace", "distcomp");
 
-var session = cluster.Connect(); 
-await CassandraInitializer.InitializeAsync(session, "distcomp");
+Cassandra.ISession session;
+try
+{
+    var cluster = Cluster.Builder()
+        .AddContactPoints(contactPoints)
+        .WithPort(cassandraPort)
+        .Build();
 
-builder.Services.AddSingleton(session);
+    session = cluster.Connect();
+    await CassandraInitializer.InitializeAsync(session, keyspace);
+    builder.Services.AddSingleton(session);
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"CRITICAL ERROR: Could not connect to Cassandra: {ex.Message}");
+    throw;
+}
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(CassandraRepository<>));
-
 builder.Services.AddScoped<IBaseService<PostRequestTo, PostResponseTo>, PostService>();
 
 builder.Services.AddSingleton(provider =>
@@ -37,8 +50,9 @@ builder.Services.AddSingleton(provider =>
     return config.CreateMapper();
 });
 
-builder.Services.AddControllers();
+builder.Services.AddHostedService<ModerationWorker>();
 
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

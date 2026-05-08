@@ -14,7 +14,8 @@ databaseChangeLog:
                   id bigint PRIMARY KEY,
                   tweet_id bigint,
                   bucket int,
-                  content text
+                  content text,
+                  state text
               );
 
               CREATE TABLE IF NOT EXISTS distcomp.tbl_message_by_tweet (
@@ -22,5 +23,6 @@ databaseChangeLog:
                   bucket int,
                   id bigint,
                   content text,
+                  state text,
                   PRIMARY KEY ((tweet_id, bucket), id)
               );

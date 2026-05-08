@@ -17,7 +17,8 @@ public class CreatorMapper {
                 request.getLogin(),
                 request.getPassword(),
                 request.getFirstname(),
-                request.getLastname()
+                request.getLastname(),
+                request.getRole()
         );
     }
 
@@ -29,7 +30,8 @@ public class CreatorMapper {
                 entity.getId(),
                 entity.getLogin(),
                 entity.getFirstname(),
-                entity.getLastname()
+                entity.getLastname(),
+                entity.getRole()
         );
     }
 }

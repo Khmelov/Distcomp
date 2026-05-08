@@ -49,7 +49,7 @@ class CommentControllerTest {
     @Test
     void getCommentsDelegatesToService() throws Exception {
         when(commentDiscussionService.findAll(0, 20, "id", "asc", 5L, null))
-                .thenReturn(List.of(new CommentResponseTo(1L, 5L, "c", Instant.now(), CommentState.APPROVE)));
+                .thenReturn(List.of(new CommentResponseTo(1L, 5L, 1L, "c", Instant.now(), CommentState.APPROVE)));
 
         mockMvc.perform(get("/api/v1.0/comments").param("tweetId", "5"))
                 .andExpect(status().isOk())
@@ -61,9 +61,9 @@ class CommentControllerTest {
 
     @Test
     void postCommentReturnsCreated() throws Exception {
-        CommentRequestTo req = new CommentRequestTo(null, 2L, "ab", null);
+        CommentRequestTo req = new CommentRequestTo(null, 2L, 1L, "ab", null);
         when(commentDiscussionService.create(any())).thenReturn(
-                new CommentResponseTo(9L, 2L, "ab", Instant.parse("2024-01-01T00:00:00Z"), CommentState.APPROVE));
+                new CommentResponseTo(9L, 2L, 1L, "ab", Instant.parse("2024-01-01T00:00:00Z"), CommentState.APPROVE));
 
         mockMvc.perform(post("/api/v1.0/comments")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -81,9 +81,9 @@ class CommentControllerTest {
 
     @Test
     void putWithPathDelegates() throws Exception {
-        CommentRequestTo req = new CommentRequestTo(null, 2L, "updated", null);
+        CommentRequestTo req = new CommentRequestTo(null, 2L, 1L, "updated", null);
         when(commentDiscussionService.update(eq(3L), any())).thenReturn(
-                new CommentResponseTo(3L, 2L, "updated", Instant.now(), CommentState.APPROVE));
+                new CommentResponseTo(3L, 2L, 1L, "updated", Instant.now(), CommentState.APPROVE));
 
         mockMvc.perform(put("/api/v1.0/comments/3")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -52,6 +52,11 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("password");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("role");
+
                     b.HasKey("Id");
 
                     b.ToTable("tbl_creator", (string)null);

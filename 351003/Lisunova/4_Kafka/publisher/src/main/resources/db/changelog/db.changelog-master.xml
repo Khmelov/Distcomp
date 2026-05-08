@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- 0. Создание схемы -->
+    <changeSet id="0-create-schema" author="marynia">
+        <sql>CREATE SCHEMA IF NOT EXISTS distcomp;</sql>
+    </changeSet>
+
+    <!-- 1. tbl_user с проверкой существования -->
+    <changeSet id="1-create-user" author="marynia">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="distcomp" tableName="tbl_user"/>
+            </not>
+        </preConditions>
+        <createTable tableName="tbl_user" schemaName="distcomp">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- 2. tbl_mark с проверкой существования -->
+    <changeSet id="2-create-mark" author="marynia">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="distcomp" tableName="tbl_mark"/>
+            </not>
+        </preConditions>
+        <createTable tableName="tbl_mark" schemaName="distcomp">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- 3. tbl_topic с проверкой существования -->
+    <changeSet id="3-create-topic" author="marynia">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="distcomp" tableName="tbl_topic"/>
+            </not>
+        </preConditions>
+        <createTable tableName="tbl_topic" schemaName="distcomp">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_topic"
+                baseColumnNames="user_id"
+                baseTableSchemaName="distcomp"
+                referencedTableName="tbl_user"
+                referencedColumnNames="id"
+                referencedTableSchemaName="distcomp"
+                constraintName="fk_topic_user"
+                onFail="MARK_RAN"/>
+    </changeSet>
+
+    <!-- 4. tbl_post с проверкой существования -->
+    <changeSet id="4-create-post" author="marynia">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="distcomp" tableName="tbl_post"/>
+            </not>
+        </preConditions>
+        <createTable tableName="tbl_post" schemaName="distcomp">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="topic_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_post"
+                baseColumnNames="topic_id"
+                baseTableSchemaName="distcomp"
+                referencedTableName="tbl_topic"
+                referencedColumnNames="id"
+                referencedTableSchemaName="distcomp"
+                constraintName="fk_post_topic"
+                onFail="MARK_RAN"/>
+    </changeSet>
+
+    <!-- 5. tbl_topic_mark с проверкой существования -->
+    <changeSet id="5-create-topic-mark" author="marynia">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists schemaName="distcomp" tableName="tbl_topic_mark"/>
+            </not>
+        </preConditions>
+        <createTable tableName="tbl_topic_mark" schemaName="distcomp">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="topic_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mark_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_topic_mark"
+                baseColumnNames="topic_id"
+                baseTableSchemaName="distcomp"
+                referencedTableName="tbl_topic"
+                referencedColumnNames="id"
+                referencedTableSchemaName="distcomp"
+                constraintName="fk_topic_mark_topic"
+                onFail="MARK_RAN"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_topic_mark"
+                baseColumnNames="mark_id"
+                baseTableSchemaName="distcomp"
+                referencedTableName="tbl_mark"
+                referencedColumnNames="id"
+                referencedTableSchemaName="distcomp"
+                constraintName="fk_topic_mark_mark"
+                onFail="MARK_RAN"/>
+    </changeSet>
+</databaseChangeLog>

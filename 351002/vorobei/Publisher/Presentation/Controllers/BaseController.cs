@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Controllers
 {
-    [Route("api/v1.0/[controller]")]
     [ApiController]
     public abstract class BaseController<TEntity, TRequest, TResponse> : ControllerBase
         where TEntity : BaseEntity

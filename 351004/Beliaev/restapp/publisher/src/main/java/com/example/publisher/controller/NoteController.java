@@ -1,11 +1,12 @@
 package com.example.publisher.controller;
 
-import com.example.publisher.client.NoteClient;
 import com.example.publisher.dto.request.NoteRequestTo;
 import com.example.publisher.dto.response.NoteResponseTo;
+import com.example.publisher.service.NoteClientService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,32 +16,33 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NoteController {
 
-    private final NoteClient noteClient; // Изменено с NoteService на NoteClient
+    // Внедряем сервис, который теперь управляет кэшем и Kafka
+    private final NoteClientService service;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public NoteResponseTo create(@Valid @RequestBody NoteRequestTo request) {
-        return noteClient.create(request);
+    public ResponseEntity<NoteResponseTo> create(@Valid @RequestBody NoteRequestTo request) {
+        NoteResponseTo response = service.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
     public List<NoteResponseTo> getAll() {
-        return noteClient.getAll();
+        return service.getAll();
     }
 
     @GetMapping("/{id}")
     public NoteResponseTo getById(@PathVariable Long id) {
-        return noteClient.getById(id);
+        return service.getById(id);
     }
 
     @PutMapping("/{id}")
     public NoteResponseTo update(@PathVariable Long id, @Valid @RequestBody NoteRequestTo request) {
-        return noteClient.update(id, request);
+        return service.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        noteClient.delete(id);
+        service.delete(id);
     }
 }
