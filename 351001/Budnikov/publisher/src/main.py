@@ -9,7 +9,10 @@ from tortoise.contrib.fastapi import register_tortoise
 from src.api.v1.router import api_router
 from src.core.exceptions import BaseAppException
 from src.config import TORTOISE_CONFIG
-from src.services.post import init_kafka, stop_kafka  # Импорт функций Kafka
+from src.services.post import init_kafka, stop_kafka
+
+from src.services.post import init_kafka, stop_kafka
+from src.core.cache import close_redis
 
 
 @asynccontextmanager
@@ -21,6 +24,7 @@ async def lifespan(app: FastAPI):
     yield
 
     await stop_kafka()
+    await close_redis()
 
 
 def create_fastapi_app():

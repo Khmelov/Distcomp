@@ -11,6 +11,10 @@ dependencies = [
     "httpx>=0.28.1",
     "tortoise-orm>=1.1.0",
     "uvicorn>=0.44.0",
+    "redis>=5.0.3",
+    "PyJWT>=2.8.0",
+    "passlib[bcrypt]>=1.7.4",
+
 ]
 
 [tool.ruff]
