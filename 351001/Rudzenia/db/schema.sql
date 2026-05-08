@@ -4,6 +4,7 @@ CREATE TABLE "author" (
     "Password" varchar(128) NOT NULL,
     "FirstName" varchar(64) NOT NULL,
     "LastName" varchar(64) NOT NULL,
+    "Role" varchar(16) NOT NULL DEFAULT 'CUSTOMER',
     CONSTRAINT "PK_author" PRIMARY KEY ("Id")
 );
 

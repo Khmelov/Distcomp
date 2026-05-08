@@ -8,9 +8,9 @@ namespace RW.Discussion.Controllers;
 [Route("api/v1.0/notes")]
 public class NotesController : ControllerBase
 {
-    private readonly INoteService _noteService;
+    private readonly CassandraNoteService _noteService;
 
-    public NotesController(INoteService noteService)
+    public NotesController(CassandraNoteService noteService)
     {
         _noteService = noteService;
     }

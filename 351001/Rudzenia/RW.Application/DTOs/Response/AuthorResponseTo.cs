@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using RW.Domain.Entities;
 
 namespace RW.Application.DTOs.Response;
 
@@ -18,4 +19,8 @@ public class AuthorResponseTo
 
     [JsonPropertyName("lastname")]
     public string LastName { get; set; } = string.Empty;
+
+    [JsonPropertyName("role")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public Role Role { get; set; } = Role.CUSTOMER;
 }
