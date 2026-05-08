@@ -1,68 +1,68 @@
-using ArticleHouse.DAO;
+using Additions.Cache.Interfaces;
+using Additions.Service;
+using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.DTOs;
-using ArticleHouse.Service.Exceptions;
 using ArticleHouse.Service.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace ArticleHouse.Service.Implementations;
 
-public class CreatorService : Service, ICreatorService
+public class CreatorService : BasicService, ICreatorService
 {
-    private readonly ApplicationContext db;
+    private readonly ICreatorDAO dao;
+    private readonly IDistributedCache cache;
+    private readonly ILogger<CreatorService> logger;
 
-    public CreatorService(ApplicationContext db)
+    public CreatorService(ICreatorDAO dao, IDistributedCache cache, ILogger<CreatorService> logger)
     {
-        this.db = db;
+        this.dao = dao;
+        this.cache = cache;
+        this.logger = logger;
     }
+
     public async Task<CreatorResponseDTO[]> GetAllCreatorsAsync()
     {
-        CreatorModel[] models = await db.Creators.ToArrayAsync();
-        return [.. models.Select(MakeResponseFromModel)];
+        CreatorModel[] daoModels = await InvokeDAOMethod(() => dao.GetAllAsync());
+        return [.. daoModels.Select(MakeResponseFromModel)];
     }
 
     public async Task<CreatorResponseDTO> CreateCreatorAsync(CreatorRequestDTO dto)
     {
         CreatorModel model = MakeModelFromRequest(dto);
-        await db.Creators.AddAsync(model);
-        await InvokeDAOMethod(() => db.SaveChangesAsync());
-        return MakeResponseFromModel(model);
+        CreatorModel result = await InvokeDAOMethod(() => dao.AddNewAsync(model));
+        return MakeResponseFromModel(result);
     }
 
     public async Task DeleteCreatorAsync(long id)
     {
-        CreatorModel? model = await db.Creators.FirstOrDefaultAsync(o => o.Id == id);
-        if (null == model)
-        {
-            throw new ServiceObjectNotFoundException();
-        }
-        db.Creators.Remove(model);
-        await InvokeDAOMethod(() => db.SaveChangesAsync());
+        await InvokeDAOMethod(() => dao.DeleteAsync(id));
+        await cache.RemoveAsync($"creator:{id}");
     }
 
     public async Task<CreatorResponseDTO> GetCreatorByIdAsync(long id)
     {
-        CreatorModel? model = await db.Creators.FirstOrDefaultAsync(o => o.Id == id);
-        if (null == model)
-        {
-            throw new ServiceObjectNotFoundException();
-        }
-        return MakeResponseFromModel(model);
+        var key = $"creator:{id}";
+        
+        return await cache.GetOrSetAsync(
+            key,
+            async () =>
+            {
+                CreatorModel model = await InvokeDAOMethod(() => dao.GetByIdAsync(id));
+                return MakeResponseFromModel(model);
+            },
+            TimeSpan.FromMinutes(10)
+        );
     }
 
     public async Task<CreatorResponseDTO> UpdateCreatorByIdAsync(long creatorId, CreatorRequestDTO dto)
     {
-        if (null == dto.Id)
-        {
-            throw new ServiceException();
-        }
-        CreatorModel? model = await db.Creators.FirstOrDefaultAsync(o => o.Id == dto.Id);
-        if (null == model) {
-            throw new ServiceObjectNotFoundException();
-        }
-        ShapeModelFromRequest(ref model, dto);
-        await InvokeDAOMethod(() => db.SaveChangesAsync());
-        return MakeResponseFromModel(model);
+        CreatorModel origin = await InvokeLowerMethod(() => dao.GetByIdAsync(creatorId));
+        CreatorModel model = MakeModelFromRequest(dto);
+        model.Id = creatorId;
+        model.Role = origin.Role;
+        CreatorModel result = await InvokeLowerMethod(() => dao.UpdateAsync(model));
+        await cache.RemoveAsync($"creator:{creatorId}");
+        return MakeResponseFromModel(result);
     }
 
     private static CreatorModel MakeModelFromRequest(CreatorRequestDTO dto)
@@ -79,6 +79,7 @@ public class CreatorService : Service, ICreatorService
         model.LastName = dto.LastName;
         model.Login = dto.Login;
         model.Password = dto.Password;
+        model.Role = CreatorModel.CUSTOMER_ROLE;
     }
 
     private static CreatorResponseDTO MakeResponseFromModel(CreatorModel model)
@@ -89,7 +90,7 @@ public class CreatorService : Service, ICreatorService
             FirstName = model.FirstName,
             LastName = model.LastName,
             Login = model.Login,
-            Password = model.Password
+            Role = model.Role
         };
     }
 }

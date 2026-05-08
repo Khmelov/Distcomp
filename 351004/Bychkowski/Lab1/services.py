@@ -1,201 +1,238 @@
-from datetime import datetime, timezone
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from models import Writer, Article, Label, Post
-from schemas import (
-    WriterRequestTo, WriterResponseTo,
-    ArticleRequestTo, ArticleResponseTo,
-    LabelRequestTo, LabelResponseTo,
-    PostRequestTo, PostResponseTo
-)
-from repositories import writer_repo, article_repo, label_repo, post_repo
+from schemas import *
+from repositories import PostgresRepository
 from exceptions import AppError
 
 
-# --- Writer Service ---
-class WriterService:
-    @staticmethod
-    def create(dto: WriterRequestTo) -> WriterResponseTo:
-        for w in writer_repo.find_all():
-            if w.login == dto.login:
-                raise AppError(400, 40002, "Writer with this login already exists")
+class BaseService:
+    def __init__(self, db: Session):
+        self.db = db
 
-        entity = Writer(id=None, **dto.model_dump())
-        saved = writer_repo.save(entity)
-        return WriterResponseTo(**saved.__dict__)
 
-    @staticmethod
-    def get_all() -> list[WriterResponseTo]:
-        return [WriterResponseTo(**w.__dict__) for w in writer_repo.find_all()]
+class WriterService(BaseService):
+    def __init__(self, db: Session):
+        super().__init__(db)
+        self.repo = PostgresRepository(Writer, db)
 
-    @staticmethod
-    def get_by_id(id: int) -> WriterResponseTo:
-        entity = writer_repo.find_by_id(id)
+    def create(self, dto: WriterRequestTo) -> WriterResponseTo:
+        try:
+            entity = Writer(
+                login=dto.login,
+                password=dto.password,
+                firstname=dto.firstname,
+                lastname=dto.lastname
+            )
+            saved = self.repo.save(entity)
+            return WriterResponseTo(id=saved.id, login=saved.login, firstname=saved.firstname, lastname=saved.lastname)
+        except IntegrityError:
+            self.db.rollback()
+            raise AppError(403, 40301, "Writer with this login already exists")
+
+    def get_all(self) -> list[WriterResponseTo]:
+        return [WriterResponseTo(id=w.id, login=w.login, firstname=w.firstname, lastname=w.lastname) for w in
+                self.repo.find_all()]
+
+    def get_by_id(self, id: int) -> WriterResponseTo:
+        entity = self.repo.find_by_id(id)
         if not entity:
             raise AppError(404, 40401, f"Writer with id {id} not found")
-        return WriterResponseTo(**entity.__dict__)
+        return WriterResponseTo(id=entity.id, login=entity.login, firstname=entity.firstname, lastname=entity.lastname)
 
-    @staticmethod
-    def update(id: int, dto: WriterRequestTo) -> WriterResponseTo:
-        existing = writer_repo.find_by_id(id)
-        if not existing:
+    def update(self, id: int, dto: WriterRequestTo) -> WriterResponseTo:
+        entity = self.repo.find_by_id(id)
+        if not entity:
             raise AppError(404, 40401, f"Writer with id {id} not found")
 
-        # Обновляем поля
-        existing.login = dto.login
-        existing.password = dto.password
-        existing.firstname = dto.firstname
-        existing.lastname = dto.lastname
+        entity.login = dto.login
+        entity.password = dto.password
+        entity.firstname = dto.firstname
+        entity.lastname = dto.lastname
 
-        updated = writer_repo.update(id, existing)
-        return WriterResponseTo(**updated.__dict__)
+        try:
+            updated = self.repo.update(entity)
+            return WriterResponseTo(id=updated.id, login=updated.login, firstname=updated.firstname,
+                                    lastname=updated.lastname)
+        except IntegrityError:
+            self.db.rollback()
+            raise AppError(403, 40301, "Writer with this login already exists")
 
-    @staticmethod
-    def delete(id: int):
-        if not writer_repo.delete(id):
+    def delete(self, id: int):
+        if not self.repo.delete(id):
             raise AppError(404, 40401, f"Writer with id {id} not found")
 
 
-# --- Article Service ---
-class ArticleService:
-    @staticmethod
-    def create(dto: ArticleRequestTo) -> ArticleResponseTo:
-        # Проверка существования Writer
-        if not writer_repo.find_by_id(dto.writerId):
+class LabelService(BaseService):
+    def __init__(self, db: Session):
+        super().__init__(db)
+        self.repo = PostgresRepository(Label, db)
+
+    def create(self, dto: LabelRequestTo) -> LabelResponseTo:
+        try:
+            entity = Label(name=dto.name)
+            saved = self.repo.save(entity)
+            return LabelResponseTo(id=saved.id, name=saved.name)
+        except IntegrityError:
+            self.db.rollback()
+            raise AppError(403, 40302, "Label with this name already exists")
+
+    def get_all(self) -> list[LabelResponseTo]:
+        return [LabelResponseTo(id=l.id, name=l.name) for l in self.repo.find_all()]
+
+    def get_by_id(self, id: int) -> LabelResponseTo:
+        entity = self.repo.find_by_id(id)
+        if not entity:
+            raise AppError(404, 40403, f"Label with id {id} not found")
+        return LabelResponseTo(id=entity.id, name=entity.name)
+
+    def update(self, id: int, dto: LabelRequestTo) -> LabelResponseTo:
+        entity = self.repo.find_by_id(id)
+        if not entity:
+            raise AppError(404, 40403, f"Label with id {id} not found")
+        entity.name = dto.name
+        try:
+            updated = self.repo.update(entity)
+            return LabelResponseTo(id=updated.id, name=updated.name)
+        except IntegrityError:
+            self.db.rollback()
+            raise AppError(403, 40302, "Label with this name already exists")
+
+    def delete(self, id: int):
+        if not self.repo.delete(id):
+            raise AppError(404, 40403, f"Label with id {id} not found")
+
+
+class ArticleService(BaseService):
+    def __init__(self, db: Session):
+        super().__init__(db)
+        self.repo = PostgresRepository(Article, db)
+        self.writer_repo = PostgresRepository(Writer, db)
+        self.label_repo = PostgresRepository(Label, db)
+
+    def create(self, dto: ArticleRequestTo) -> ArticleResponseTo:
+        if not self.writer_repo.find_by_id(dto.writerId):
             raise AppError(400, 40003, f"Writer with id {dto.writerId} does not exist")
 
-        now = datetime.now(timezone.utc)
-        entity = Article(
-            id=None,
-            writer_id=dto.writerId,
-            title=dto.title,
-            content=dto.content,
-            created=now,
-            modified=now
-        )
-        saved = article_repo.save(entity)
-        return ArticleService._map_to_dto(saved)
+        labels = []
+        if dto.labelIds:
+            for label_id in dto.labelIds:
+                label_entity = self.label_repo.find_by_id(label_id)
+                if not label_entity:
+                    raise AppError(400, 40005, f"Label with id {label_id} not found")
+                labels.append(label_entity)
 
-    @staticmethod
-    def get_all() -> list[ArticleResponseTo]:
-        return [ArticleService._map_to_dto(a) for a in article_repo.find_all()]
+        try:
+            entity = Article(
+                writer_id=dto.writerId,
+                title=dto.title,
+                content=dto.content
+            )
+            entity.labels = labels
 
-    @staticmethod
-    def get_by_id(id: int) -> ArticleResponseTo:
-        entity = article_repo.find_by_id(id)
+            saved = self.repo.save(entity)
+            return self._map_to_dto(saved)
+        except IntegrityError:
+            self.db.rollback()
+            raise AppError(403, 40303, "Article with this title already exists")
+
+    def get_all(self) -> list[ArticleResponseTo]:
+        return [self._map_to_dto(a) for a in self.repo.find_all()]
+
+    def get_by_id(self, id: int) -> ArticleResponseTo:
+        entity = self.repo.find_by_id(id)
         if not entity:
             raise AppError(404, 40402, f"Article with id {id} not found")
-        return ArticleService._map_to_dto(entity)
+        return self._map_to_dto(entity)
 
-    @staticmethod
-    def update(id: int, dto: ArticleRequestTo) -> ArticleResponseTo:
-        existing = article_repo.find_by_id(id)
-        if not existing:
+    def update(self, id: int, dto: ArticleRequestTo) -> ArticleResponseTo:
+        entity = self.repo.find_by_id(id)
+        if not entity:
             raise AppError(404, 40402, f"Article with id {id} not found")
 
-        if not writer_repo.find_by_id(dto.writerId):
+        if not self.writer_repo.find_by_id(dto.writerId):
             raise AppError(400, 40003, f"Writer with id {dto.writerId} does not exist")
 
-        existing.writer_id = dto.writerId
-        existing.title = dto.title
-        existing.content = dto.content
-        existing.modified = datetime.now(timezone.utc)
+        entity.writer_id = dto.writerId
+        entity.title = dto.title
+        entity.content = dto.content
 
-        updated = article_repo.update(id, existing)
-        return ArticleService._map_to_dto(updated)
+        if dto.labelIds is not None:
+            new_labels = []
+            for label_id in dto.labelIds:
+                l = self.label_repo.find_by_id(label_id)
+                if not l:
+                    raise AppError(400, 40005, f"Label with id {label_id} not found")
+                new_labels.append(l)
+            entity.labels = new_labels
 
-    @staticmethod
-    def delete(id: int):
-        if not article_repo.delete(id):
+        try:
+            updated = self.repo.update(entity)
+            return self._map_to_dto(updated)
+        except IntegrityError:
+            self.db.rollback()
+            raise AppError(403, 40303, "Article with this title already exists")
+
+    def delete(self, id: int):
+        if not self.repo.delete(id):
             raise AppError(404, 40402, f"Article with id {id} not found")
 
-    @staticmethod
-    def _map_to_dto(entity: Article) -> ArticleResponseTo:
+    def _map_to_dto(self, entity: Article) -> ArticleResponseTo:
+        current_labels = entity.labels if entity.labels else []
+        label_dtos = [LabelResponseTo(id=l.id, name=l.name) for l in current_labels]
+
         return ArticleResponseTo(
             id=entity.id,
             writerId=entity.writer_id,
             title=entity.title,
             content=entity.content,
             created=entity.created,
-            modified=entity.modified
+            modified=entity.modified,
+            labels=label_dtos
         )
 
 
-# --- Label Service ---
-class LabelService:
-    @staticmethod
-    def create(dto: LabelRequestTo) -> LabelResponseTo:
-        entity = Label(id=None, name=dto.name)
-        saved = label_repo.save(entity)
-        return LabelResponseTo(**saved.__dict__)
+class PostService(BaseService):
+    def __init__(self, db: Session):
+        super().__init__(db)
+        self.repo = PostgresRepository(Post, db)
+        self.article_repo = PostgresRepository(Article, db)
 
-    @staticmethod
-    def get_all() -> list[LabelResponseTo]:
-        return [LabelResponseTo(**l.__dict__) for l in label_repo.find_all()]
-
-    @staticmethod
-    def get_by_id(id: int) -> LabelResponseTo:
-        entity = label_repo.find_by_id(id)
-        if not entity:
-            raise AppError(404, 40403, f"Label with id {id} not found")
-        return LabelResponseTo(**entity.__dict__)
-
-    @staticmethod
-    def update(id: int, dto: LabelRequestTo) -> LabelResponseTo:
-        existing = label_repo.find_by_id(id)
-        if not existing:
-            raise AppError(404, 40403, f"Label with id {id} not found")
-        existing.name = dto.name
-        updated = label_repo.update(id, existing)
-        return LabelResponseTo(**updated.__dict__)
-
-    @staticmethod
-    def delete(id: int):
-        if not label_repo.delete(id):
-            raise AppError(404, 40403, f"Label with id {id} not found")
-
-
-# --- Post Service ---
-class PostService:
-    @staticmethod
-    def create(dto: PostRequestTo) -> PostResponseTo:
-        if not article_repo.find_by_id(dto.articleId):
+    def create(self, dto: PostRequestTo) -> PostResponseTo:
+        if not self.article_repo.find_by_id(dto.articleId):
             raise AppError(400, 40004, f"Article with id {dto.articleId} does not exist")
 
-        entity = Post(id=None, article_id=dto.articleId, content=dto.content)
-        saved = post_repo.save(entity)
-        return PostService._map_to_dto(saved)
+        entity = Post(article_id=dto.articleId, content=dto.content)
+        saved = self.repo.save(entity)
+        return self._map_to_dto(saved)
 
-    @staticmethod
-    def get_all() -> list[PostResponseTo]:
-        return [PostService._map_to_dto(p) for p in post_repo.find_all()]
+    def get_all(self) -> list[PostResponseTo]:
+        return [self._map_to_dto(p) for p in self.repo.find_all()]
 
-    @staticmethod
-    def get_by_id(id: int) -> PostResponseTo:
-        entity = post_repo.find_by_id(id)
+    def get_by_id(self, id: int) -> PostResponseTo:
+        entity = self.repo.find_by_id(id)
         if not entity:
             raise AppError(404, 40404, f"Post with id {id} not found")
-        return PostService._map_to_dto(entity)
+        return self._map_to_dto(entity)
 
-    @staticmethod
-    def update(id: int, dto: PostRequestTo) -> PostResponseTo:
-        existing = post_repo.find_by_id(id)
-        if not existing:
+    def update(self, id: int, dto: PostRequestTo) -> PostResponseTo:
+        entity = self.repo.find_by_id(id)
+        if not entity:
             raise AppError(404, 40404, f"Post with id {id} not found")
 
-        if not article_repo.find_by_id(dto.articleId):
+        if not self.article_repo.find_by_id(dto.articleId):
             raise AppError(400, 40004, f"Article with id {dto.articleId} does not exist")
 
-        existing.article_id = dto.articleId
-        existing.content = dto.content
-        updated = post_repo.update(id, existing)
-        return PostService._map_to_dto(updated)
+        entity.article_id = dto.articleId
+        entity.content = dto.content
+        updated = self.repo.update(entity)
+        return self._map_to_dto(updated)
 
-    @staticmethod
-    def delete(id: int):
-        if not post_repo.delete(id):
+    def delete(self, id: int):
+        if not self.repo.delete(id):
             raise AppError(404, 40404, f"Post with id {id} not found")
 
-    @staticmethod
-    def _map_to_dto(entity: Post) -> PostResponseTo:
+    def _map_to_dto(self, entity: Post) -> PostResponseTo:
         return PostResponseTo(
             id=entity.id,
             articleId=entity.article_id,

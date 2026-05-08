@@ -43,7 +43,6 @@ class AuthorRepo(BaseRepository):
     def __init__(self): super().__init__(models.Author)
 class IssueRepo(BaseRepository):
     def __init__(self): super().__init__(models.Issue)
-class NoteRepo(BaseRepository):
-    def __init__(self): super().__init__(models.Note)
+
 class StickerRepo(BaseRepository):
     def __init__(self): super().__init__(models.Sticker)

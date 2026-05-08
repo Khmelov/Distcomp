@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 021-create-message-table
+      changes:
+        - createTable:
+            tableName: tbl_message
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: article_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: state
+                  type: text
+                  constraints:
+                    nullable: false

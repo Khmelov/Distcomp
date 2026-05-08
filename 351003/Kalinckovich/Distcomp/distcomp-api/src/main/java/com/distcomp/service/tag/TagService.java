@@ -1,16 +1,15 @@
 package com.distcomp.service.tag;
 
-import com.distcomp.data.repository.tag.TagReactiveRepository;
+import com.distcomp.data.r2dbc.repository.tag.TagReactiveRepository;
 import com.distcomp.dto.tag.TagCreateRequest;
 import com.distcomp.dto.tag.TagPatchRequest;
 import com.distcomp.dto.tag.TagResponseDto;
 import com.distcomp.dto.tag.TagUpdateRequest;
 import com.distcomp.mapper.tag.TagMapper;
 import com.distcomp.model.tag.Tag;
-import com.distcomp.validator.model.ValidationArgs;
-import com.distcomp.validator.tag.TagValidator;
+import com.distcomp.validation.model.ValidationArgs;
+import com.distcomp.validation.tag.TagValidator;
 import lombok.RequiredArgsConstructor;
-import org.reactivestreams.Publisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;

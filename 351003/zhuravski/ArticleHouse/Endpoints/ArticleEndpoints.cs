@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using ArticleHouse.Additions;
+using Additions;
 using ArticleHouse.Service.DTOs;
 using ArticleHouse.Service.Interfaces;
 

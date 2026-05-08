@@ -1,8 +1,7 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Optional, List
 from datetime import datetime
 
-# --- Writer DTOs ---
 class WriterRequestTo(BaseModel):
     login: str = Field(..., min_length=2, max_length=64)
     password: str = Field(..., min_length=8, max_length=128)
@@ -15,11 +14,18 @@ class WriterResponseTo(BaseModel):
     firstname: str
     lastname: str
 
-# --- Article DTOs ---
+class LabelRequestTo(BaseModel):
+    name: str = Field(..., min_length=2, max_length=32)
+
+class LabelResponseTo(BaseModel):
+    id: int
+    name: str
+
 class ArticleRequestTo(BaseModel):
     writerId: int
     title: str = Field(..., min_length=2, max_length=64)
     content: str = Field(..., min_length=4, max_length=2048)
+    labelIds: List[int] = Field(default_factory=list)
 
 class ArticleResponseTo(BaseModel):
     id: int
@@ -28,16 +34,8 @@ class ArticleResponseTo(BaseModel):
     content: str
     created: datetime
     modified: datetime
+    labels: List[LabelResponseTo] = Field(default_factory=list)
 
-# --- Label DTOs ---
-class LabelRequestTo(BaseModel):
-    name: str = Field(..., min_length=2, max_length=32)
-
-class LabelResponseTo(BaseModel):
-    id: int
-    name: str
-
-# --- Post DTOs ---
 class PostRequestTo(BaseModel):
     articleId: int
     content: str = Field(..., min_length=2, max_length=2048)

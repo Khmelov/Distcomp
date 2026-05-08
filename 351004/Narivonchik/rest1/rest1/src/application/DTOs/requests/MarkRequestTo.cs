@@ -8,6 +8,4 @@ public class MarkRequestTo
 
     [StringLength(32, MinimumLength = 2)]
     public string? Name { get; set; }
-    
-    public long[] NewsIds { get; set; }
 }

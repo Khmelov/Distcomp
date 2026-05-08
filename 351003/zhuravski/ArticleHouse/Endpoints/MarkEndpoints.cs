@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using ArticleHouse.Additions;
 using ArticleHouse.Service.DTOs;
 using ArticleHouse.Service.Interfaces;
+using Additions;
 
 namespace ArticleHouse.Endpoints;
 

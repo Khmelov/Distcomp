@@ -1,8 +1,8 @@
-package com.example.restapp.controller;
+package com.example.discussion.controller;
 
-import com.example.restapp.dto.request.StickerRequestTo;
-import com.example.restapp.dto.response.StickerResponseTo;
-import com.example.restapp.service.StickerService;
+import com.example.discussion.dto.request.StickerRequestTo;
+import com.example.discussion.dto.response.StickerResponseTo;
+import com.example.discussion.service.StickerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

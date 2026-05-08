@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="cassandra-001-keyspace" author="orsik">
+        <sql splitStatements="false">
+            CREATE KEYSPACE IF NOT EXISTS distcomp
+            WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+        </sql>
+    </changeSet>
+
+    <changeSet id="cassandra-002-tbl-comment-by-id" author="orsik">
+        <sql splitStatements="false">
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_comment_by_id (
+                id bigint PRIMARY KEY,
+                tweet_id bigint,
+                content text,
+                created timestamp
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="cassandra-003-tbl-comment-by-tweet" author="orsik">
+        <sql splitStatements="false">
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_comment_by_tweet (
+                tweet_id bigint,
+                created timestamp,
+                id bigint,
+                content text,
+                PRIMARY KEY ((tweet_id), created, id)
+            ) WITH CLUSTERING ORDER BY (created DESC, id DESC);
+        </sql>
+    </changeSet>
+</databaseChangeLog>

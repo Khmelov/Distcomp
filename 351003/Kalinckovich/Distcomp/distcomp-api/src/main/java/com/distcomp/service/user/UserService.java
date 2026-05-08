@@ -1,18 +1,17 @@
 package com.distcomp.service.user;
 
-import com.distcomp.data.repository.user.UserReactiveRepository;
+import com.distcomp.data.r2dbc.repository.user.UserReactiveRepository;
 import com.distcomp.dto.user.UserCreateRequest;
 import com.distcomp.dto.user.UserPatchRequest;
 import com.distcomp.dto.user.UserResponseDto;
 import com.distcomp.dto.user.UserUpdateRequest;
 import com.distcomp.mapper.user.UserMapper;
 import com.distcomp.model.user.User;
-import com.distcomp.validator.model.ValidationArgs;
-import com.distcomp.validator.user.UserValidator;
+import com.distcomp.validation.model.ValidationArgs;
+import com.distcomp.validation.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -24,7 +23,7 @@ public class UserService {
     private final UserReactiveRepository userRepository;
     private final UserValidator userValidator;
     private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
     public Mono<UserResponseDto> create(final UserCreateRequest request) {
         return userValidator.validateCreate(request, ValidationArgs.empty())

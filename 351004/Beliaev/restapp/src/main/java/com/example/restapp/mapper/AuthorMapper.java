@@ -1,8 +1,8 @@
-package com.example.restapp.mapper;
+package com.example.discussion.mapper;
 
-import com.example.restapp.dto.request.AuthorRequestTo;
-import com.example.restapp.dto.response.AuthorResponseTo;
-import com.example.restapp.model.Author;
+import com.example.discussion.dto.request.AuthorRequestTo;
+import com.example.discussion.dto.response.AuthorResponseTo;
+import com.example.discussion.model.Author;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

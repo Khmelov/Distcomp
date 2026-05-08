@@ -1,6 +1,6 @@
-package com.example.restapp.repository;
+package com.example.discussion.repository;
 
-import com.example.restapp.model.Sticker;
+import com.example.discussion.model.Sticker;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

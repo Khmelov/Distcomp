@@ -9,6 +9,4 @@ public interface IMarkService
     Task DeleteMarkAsync(long id);
     Task<MarkResponseDTO> GetMarkByIdAsync(long id);
     Task<MarkResponseDTO> UpdateMarkByIdAsync(long id, MarkRequestDTO dto);
-    Task<long[]> ReserveMarkIdsByNamesAsync(string[] names);
-    Task ReleaseLeftMarksByIdsAsync(long[] ids);
 }

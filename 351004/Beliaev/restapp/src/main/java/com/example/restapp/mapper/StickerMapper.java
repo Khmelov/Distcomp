@@ -1,8 +1,8 @@
-package com.example.restapp.mapper;
+package com.example.discussion.mapper;
 
-import com.example.restapp.dto.request.StickerRequestTo;
-import com.example.restapp.dto.response.StickerResponseTo;
-import com.example.restapp.model.Sticker;
+import com.example.discussion.dto.request.StickerRequestTo;
+import com.example.discussion.dto.response.StickerResponseTo;
+import com.example.discussion.model.Sticker;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

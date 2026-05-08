@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using RestApiTask.Models.DTOs;
+using RestApiTask.Repositories;
 using RestApiTask.Services.Interfaces;
 using AutoMapper;
 
@@ -19,7 +20,8 @@ public class ArticlesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ArticleResponseTo>>> GetAll() => Ok(await _service.GetAllAsync());
+    public async Task<ActionResult<IEnumerable<ArticleResponseTo>>> GetAll([FromQuery] QueryOptions? options) =>
+        Ok(await _service.GetAllAsync(options));
 
     [HttpGet("{id}")]
     public async Task<ActionResult<ArticleResponseTo>> GetById(long id) => Ok(await _service.GetByIdAsync(id));
@@ -28,7 +30,7 @@ public class ArticlesController : ControllerBase
     public async Task<ActionResult<ArticleResponseTo>> Create([FromBody] ArticleRequestTo request)
     {
         var result = await _service.CreateAsync(request);
-        return StatusCode(201, result);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpPut]

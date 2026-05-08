@@ -37,6 +37,14 @@ public class NewsController : ControllerBase
                 createdNews
             );
         }
+        catch (NewsAlreadyExistsException)
+        {
+            return StatusCode(403);
+        }
+        catch (NewsReferenceException)
+        {
+            return StatusCode(404);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating news");

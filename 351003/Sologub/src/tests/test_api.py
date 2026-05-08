@@ -87,20 +87,32 @@ class TestStoryCRUD:
 @pytest.mark.django_db
 class TestNoteCRUD:
     @pytest.fixture
-    def writer(self, api_client):
-        res = api_client.post("/api/v1.0/writers",
-                              {"login": "note_w", "password": "password123", "firstname": "A", "lastname": "B"})
-        return res.data
+    def story(self, api_client):
+        w = api_client.post(
+            "/api/v1.0/writers",
+            {"login": "note_w", "password": "password123", "firstname": "A", "lastname": "B"},
+        )
+        s = api_client.post(
+            "/api/v1.0/stories",
+            {"writerId": w.data["id"], "title": "Note Story", "content": "Content here"},
+        )
+        return s.data
 
-    def test_note_lifecycle(self, api_client, writer):
+    def test_note_lifecycle(self, api_client, story):
         url = "/api/v1.0/notes"
-        data = {"writerId": writer['id'], "content": "Secret note"}
-        res = api_client.post(url, data, format='json')
-        note_id = res.data['id']
+        data = {"storyId": story["id"], "content": "Secret note"}
+        res = api_client.post(url, data, format="json")
+        note_id = res.data["id"]
         assert res.status_code == status.HTTP_201_CREATED
+        assert res.data["storyId"] == story["id"]
+        assert res.data["content"] == "Secret note"
 
-        res = api_client.put(f"{url}/{note_id}", {"writerId": writer['id'], "content": "Updated note"}, format='json')
-        assert res.data['content'] == "Updated note"
+        res = api_client.put(
+            f"{url}/{note_id}",
+            {"storyId": story["id"], "content": "Updated note"},
+            format="json",
+        )
+        assert res.data["content"] == "Updated note"
 
         res = api_client.delete(f"{url}/{note_id}")
         assert res.status_code == status.HTTP_204_NO_CONTENT

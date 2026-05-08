@@ -2,7 +2,8 @@
 
 namespace Application.Interfaces
 {
-    public interface IMarkerRepository: IRepository<Marker>
+    public interface IMarkerRepository : IRepository<Marker>
     {
+        Task DeleteMarkersWithoutNews();
     }
 }

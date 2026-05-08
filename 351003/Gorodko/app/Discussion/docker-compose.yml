@@ -1,0 +1,30 @@
+services:
+  cassandra:
+    image: cassandra:4.1
+    container_name: tweet_app_cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=discussion_cluster
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_RACK=rack1
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  cassandra-init:
+    image: cassandra:4.1
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./init-cassandra.cql:/init.cql
+    command: /bin/bash -c "cqlsh cassandra 9042 -f /init.cql"
+    restart: on-failure
+
+volumes:
+  cassandra_data:

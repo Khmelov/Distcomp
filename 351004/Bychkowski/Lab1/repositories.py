@@ -1,39 +1,35 @@
-from typing import TypeVar, Generic, Dict, List, Optional
-from models import Writer, Article, Label, Post
+from typing import TypeVar, Generic, Type, Optional, List
+from sqlalchemy.orm import Session
+from database import Base
 
-T = TypeVar('T')
+T = TypeVar('T', bound=Base)
 
-class InMemoryRepository(Generic[T]):
-    def __init__(self):
-        self._storage: Dict[int, T] = {}
-        self._id_counter = 1
+class PostgresRepository(Generic[T]):
+    def __init__(self, model: Type[T], db: Session):
+        self.model = model
+        self.db = db
 
-    def save(self, entity) -> T:
-        if not hasattr(entity, 'id') or entity.id is None:
-            entity.id = self._id_counter
-            self._id_counter += 1
-        self._storage[entity.id] = entity
+    def save(self, entity: T) -> T:
+        self.db.add(entity)
+        self.db.commit()
+        self.db.refresh(entity)
         return entity
 
     def find_by_id(self, id: int) -> Optional[T]:
-        return self._storage.get(id)
+        return self.db.query(self.model).filter(self.model.id == id).first()
 
     def find_all(self) -> List[T]:
-        return list(self._storage.values())
+        return self.db.query(self.model).all()
 
-    def update(self, id: int, entity) -> Optional[T]:
-        if id in self._storage:
-            self._storage[id] = entity
-            return entity
-        return None
+    def update(self, entity: T) -> T:
+        self.db.commit()
+        self.db.refresh(entity)
+        return entity
 
     def delete(self, id: int) -> bool:
-        if id in self._storage:
-            del self._storage[id]
+        entity = self.find_by_id(id)
+        if entity:
+            self.db.delete(entity)
+            self.db.commit()
             return True
         return False
-
-writer_repo = InMemoryRepository[Writer]()
-article_repo = InMemoryRepository[Article]()
-label_repo = InMemoryRepository[Label]()
-post_repo = InMemoryRepository[Post]()

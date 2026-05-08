@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Exclude } from 'class-transformer';
 
 export class ArticleResponseTo {
   @ApiProperty({ example: 1, description: 'Article ID' })

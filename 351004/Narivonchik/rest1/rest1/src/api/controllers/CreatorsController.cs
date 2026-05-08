@@ -39,6 +39,11 @@ namespace rest1.api.controllers;
                     createdCreator
                 );
             }
+            catch (CreatorAlreadyExistsException ex)
+            {
+                _logger.LogError(ex, "Creator already exists");
+                return StatusCode(403);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating creator");

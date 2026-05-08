@@ -1,4 +1,4 @@
-package com.example.restapp.exception;
+package com.example.discussion.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
