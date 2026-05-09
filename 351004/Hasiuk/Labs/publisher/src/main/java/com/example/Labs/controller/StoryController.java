@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1.0/stories")
@@ -30,6 +31,16 @@ public class StoryController {
     @GetMapping("/{id}")
     public StoryResponseTo getById(@PathVariable Long id) {
         return service.getById(id);
+    }
+
+    @PutMapping
+    public StoryResponseTo updateFromBody(@RequestBody Map<String, Object> body) {
+        Long id = Long.valueOf(body.get("id").toString());
+        StoryRequestTo request = new StoryRequestTo();
+        request.setEditorId(Long.valueOf(body.get("editorId").toString()));
+        request.setTitle(body.get("title").toString());
+        request.setContent(body.get("content").toString());
+        return service.update(id, request);
     }
 
     @PutMapping("/{id}")

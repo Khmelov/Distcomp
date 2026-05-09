@@ -7,6 +7,9 @@ import com.example.Labs.exception.ResourceNotFoundException;
 import com.example.Labs.mapper.EditorMapper;
 import com.example.Labs.repository.EditorRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,11 +31,13 @@ public class EditorService {
         return repository.findAll(pageable).map(mapper::toDto);
     }
 
+    @Cacheable(value = "editors", key = "#id") // Проверить в кеше "editors" по id
     @Transactional(readOnly = true)
     public EditorResponseTo getById(Long id) {
         return mapper.toDto(repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found")));
     }
 
+    @CachePut(value = "editors", key = "#id") // Обновить данные в кеше
     @Transactional
     public EditorResponseTo update(Long id, EditorRequestTo request) {
         Editor entity = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found"));
@@ -40,6 +45,7 @@ public class EditorService {
         return mapper.toDto(repository.save(entity));
     }
 
+    @CacheEvict(value = "editors", key = "#id") // Удалить из кеша при удалении из БД
     @Transactional
     public void delete(Long id) {
         if (!repository.existsById(id)) throw new ResourceNotFoundException("Not found");

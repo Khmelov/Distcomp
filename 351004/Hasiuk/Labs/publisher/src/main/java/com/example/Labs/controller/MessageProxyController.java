@@ -55,9 +55,10 @@ public class MessageProxyController {
         return kafkaClient.sendAndReceive("UPDATE", id, request);
     }
 
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        kafkaClient.sendAndReceive("DELETE", id, null);
+        kafkaClient.deleteViaKafka(id); // Вызываем метод с аннотацией @CacheEvict
         return ResponseEntity.noContent().build();
     }
 
