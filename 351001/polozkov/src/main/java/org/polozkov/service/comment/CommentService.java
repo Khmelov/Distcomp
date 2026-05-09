@@ -2,88 +2,113 @@ package org.polozkov.service.comment;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.polozkov.dto.comment.CommentDiscussionRequest;
 import org.polozkov.dto.comment.CommentRequestTo;
 import org.polozkov.dto.comment.CommentResponseTo;
-import org.polozkov.entity.comment.Comment;
 import org.polozkov.entity.issue.Issue;
-import org.polozkov.exception.NotFoundException;
-import org.polozkov.mapper.comment.CommentMapper;
-import org.polozkov.repository.comment.CommentRepository;
+import org.polozkov.exception.InternalServerErrorException;
+import org.polozkov.other.enums.RequestMethod;
+import org.polozkov.other.record.CommentUploadRecord;
 import org.polozkov.service.issue.IssueService;
+import org.polozkov.service.kafka.KafkaService;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-
+import java.util.UUID;
 @Service
-@Validated
 @RequiredArgsConstructor
 public class CommentService {
 
-    private final CommentRepository commentRepository;
-    private final IssueService issueService;
-    private final CommentMapper commentMapper;
+    private final KafkaService kafkaService;
 
     public List<CommentResponseTo> getAllComments() {
-        return commentRepository.findAll().stream()
-                .map(commentMapper::commentToResponseDto)
-                .toList();
+        CommentUploadRecord record = new CommentUploadRecord(
+                UUID.randomUUID(),
+                RequestMethod.GET,
+                null // Для getAll данные не нужны
+        );
+        return kafkaService.sendAndReceive(record);
     }
 
     public CommentResponseTo getComment(Long id) {
-        Comment comment = commentRepository.byId(id);
-        return commentMapper.commentToResponseDto(comment);
-    }
+        // Создаем DTO для поиска, в котором заполнен только id
+        CommentDiscussionRequest cdr = new CommentDiscussionRequest();
+        cdr.setId(id);
 
-    public Comment getCommentById(Long id) {
-        return commentRepository.byId(id);
-    }
+        CommentUploadRecord record = new CommentUploadRecord(
+                UUID.randomUUID(),
+                RequestMethod.GET,
+                cdr
+        );
 
-    public CommentResponseTo createComment(@Valid CommentRequestTo commentRequest) {
-        Issue issue = issueService.getIssueById(commentRequest.getIssueId());
+        List<CommentResponseTo> results = kafkaService.sendAndReceive(record);
 
-        Comment comment = commentMapper.requestDtoToComment(commentRequest);
-
-        comment.setIssue(issue);
-
-
-        Comment savedComment = commentRepository.save(comment);
-
-        issueService.addCommentToIssue(issue.getId(), savedComment);
-
-        return commentMapper.commentToResponseDto(savedComment);
+        if (results == null || results.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return results.get(0); // Берем первый и единственный элемент
     }
 
     public CommentResponseTo updateComment(@Valid CommentRequestTo commentRequest) {
-        Comment existingComment = commentRepository.byId(commentRequest.getId());
+        System.out.println("put zapros");
+        CommentDiscussionRequest cdr = new CommentDiscussionRequest(commentRequest);
 
-        Issue issue;
-        if (!existingComment.getIssue().getId().equals(commentRequest.getIssueId())) {
-            issue = issueService.getIssueById(commentRequest.getIssueId());
-        } else {
-            issue = existingComment.getIssue();
+        if (cdr.getCountry() == null) {
+            cdr.setCountry("BY");
         }
 
-        Comment comment = getCommentById(commentRequest.getId());
-        comment = commentMapper.updateComment(comment, commentRequest);
+        CommentUploadRecord record = new CommentUploadRecord(
+                UUID.randomUUID(),
+                RequestMethod.PUT,
+                cdr
+        );
 
-        Comment updatedComment = commentRepository.save(comment);
+        List<CommentResponseTo> results = kafkaService.sendAndReceive(record);
 
-        if (!existingComment.getIssue().getId().equals(commentRequest.getIssueId())) {
-            existingComment.getIssue().getComments().removeIf(c -> c.getId().equals(commentRequest.getId()));
-
-            issueService.addCommentToIssue(issue.getId(), updatedComment);
+        if (results == null || results.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Не удалось обновить комментарий");
         }
 
-        return commentMapper.commentToResponseDto(updatedComment);
+        return results.get(0);
+    }
+
+    public CommentResponseTo createComment(CommentRequestTo request) {
+        UUID requestId = UUID.randomUUID();
+        CommentDiscussionRequest cdr = new CommentDiscussionRequest(request);
+        cdr.setCountry("BY");
+
+        CommentUploadRecord record = new CommentUploadRecord(
+                requestId,
+                RequestMethod.POST,
+                cdr
+        );
+
+        List<CommentResponseTo> results = kafkaService.sendAndReceive(record);
+
+        if (results == null || results.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Не удалось создать комментарий");
+        }
+
+        return results.get(0);
     }
 
     public void deleteComment(Long id) {
-        Comment comment = commentRepository.byId(id);
+        CommentDiscussionRequest cdr = new CommentDiscussionRequest();
+        cdr.setId(id);
 
-        comment.getIssue().getComments().removeIf(c -> c.getId().equals(id));
+        CommentUploadRecord record = new CommentUploadRecord(
+                UUID.randomUUID(),
+                RequestMethod.DELETE,
+                cdr
+        );
 
-        commentRepository.deleteById(id);
+        kafkaService.sendAndReceive(record);
     }
-
 }

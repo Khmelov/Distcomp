@@ -42,3 +42,46 @@ Content-Type: application/json
     "firstname": "firstname9175",
     "lastname": "lastname4219"
 }
+###
+
+POST {{API_HostAddress}}/api/v1.0/editors
+Content-Type: application/json
+{
+    "login": "editor5607",
+    "password": "asdfghj7957",
+    "firstname": "firstname582",
+    "lastname": "lastname2997"
+}
+
+###
+POST {{API_HostAddress}}/api/v1.0/editors
+Content-Type: application/json
+{
+    "login": "editor5607",
+    "password": "asdfghj7957",
+    "firstname": "firstname582",
+    "lastname": "lastname2997"
+}
+
+###
+POST {{API_HostAddress}}/api/v1.0/news
+Content-Type: application/json
+{
+    "editorId": 58,
+    "title": "title7419",
+    "content": "content2027"
+}
+
+###
+POST {{API_HostAddress}}/api/v1.0/news
+Content-Type: application/json
+{
+    "editorId": 127,
+    "title": "title7832",
+    "content": "content731",
+    "markers": [
+        "red118",
+        "green118",
+        "blue118"
+    ]
+}

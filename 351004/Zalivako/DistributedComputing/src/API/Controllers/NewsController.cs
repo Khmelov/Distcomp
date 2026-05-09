@@ -2,7 +2,7 @@
 using Application.DTOs.Requests;
 using Application.DTOs.Responses;
 using Application.Interfaces;
-using Application.Exceptions;
+using Application.Exceptions.Application;
 
 namespace API.Controllers
 {
@@ -36,6 +36,14 @@ namespace API.Controllers
                     new { id = createdNews.Id },
                     createdNews
                 );
+            }
+            catch (NewsAlreadyExistsException)
+            {
+                return StatusCode(403);
+            }
+            catch (NewsReferenceException)
+            {
+                return StatusCode(404);
             }
             catch (Exception ex)
             {

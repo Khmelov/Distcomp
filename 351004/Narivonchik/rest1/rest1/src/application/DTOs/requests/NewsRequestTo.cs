@@ -14,5 +14,5 @@ public class NewsRequestTo
     [StringLength(2048, MinimumLength = 4)]
     public string Content { get; set; } = string.Empty;
     
-    public long[] MarkIds { get; set; }
+    public List<string> Marks { get; set; } = [];
 }

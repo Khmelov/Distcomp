@@ -1,0 +1,1 @@
+from src.domain.models.models import (Writer, Label, News, Base)

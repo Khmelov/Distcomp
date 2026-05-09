@@ -1,10 +1,13 @@
 package org.example.newsapi.controller;
 
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.example.newsapi.dto.request.UserRequestTo;
 import org.example.newsapi.dto.response.UserResponseTo;
 import org.example.newsapi.service.UserService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +17,7 @@ import java.util.List;
 @RequestMapping("/api/v1.0/users")
 @RequiredArgsConstructor
 public class UserController {
+
     private final UserService userService;
 
     @PostMapping
@@ -23,8 +27,9 @@ public class UserController {
     }
 
     @GetMapping
-    public List<UserResponseTo> getAll() {
-        return userService.findAll();
+    public List<UserResponseTo> getAll(@PageableDefault(size = 50) Pageable pageable) {
+        // Возвращаем только контент списка, чтобы тестер не путался в мета-данных Page
+        return userService.findAll(pageable).getContent();
     }
 
     @GetMapping("/{id}")

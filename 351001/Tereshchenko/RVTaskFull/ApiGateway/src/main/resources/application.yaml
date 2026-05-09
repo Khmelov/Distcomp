@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: ApiGateway
+  kafka:
+    bootstrap-servers: localhost:9092
+
+app:
+  kafka:
+    in-topic: InTopic
+    out-topic: OutTopic
+    publisher-group: publisher-group
+    request-timeout-ms: 750
+  cache:
+    enabled: true
+    ttl-seconds: 60
+    key-prefix: "rv:publisher:cache:"
+  security:
+    jwt:
+      secret: "rv-task-security-local-secret-change-me-please"
+      expiration-seconds: 3600
+    services:
+      writer-url: "http://localhost:24111"
+      tweet-url: "http://localhost:24112"
+      message-url: "http://localhost:24130"
+
+server:
+  port: 24110
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: busrefresh
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+resilience4j:
+  circuitbreaker:
+    instances:
+      ecomBreaker:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+        automatic-transition-from-open-to-half-open-enabled: true
+        sliding-window-type: count_based
+
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8888/eureka

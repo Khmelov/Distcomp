@@ -1,0 +1,22 @@
+{
+  "name": "task350-final-complete-solution",
+  "version": "3.0.0",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "redis": "^4.6.7",
+    "pg": "^8.11.3",
+    "kafkajs": "^2.2.4",
+    "cassandra-driver": "^4.7.2",
+    "winston": "^3.13.0",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "supertest": "^7.0.0"
+  }
+}

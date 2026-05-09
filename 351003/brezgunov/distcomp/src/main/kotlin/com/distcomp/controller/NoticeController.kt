@@ -1,45 +1,42 @@
 package com.distcomp.controller
 
 import com.distcomp.dto.notice.NoticeRequestTo
-import com.distcomp.dto.notice.NoticeResponseTo
 import com.distcomp.service.NoticeService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/{version}/notices")
 class NoticeController(
     private val noticeService: NoticeService
 ) {
-    @PostMapping(version = "1.0")
-    @ResponseStatus(HttpStatus.CREATED)
-    fun createNotice(@Valid @RequestBody noticeRequestTo: NoticeRequestTo): NoticeResponseTo {
-        return noticeService.createNotice(noticeRequestTo)
-    }
-
     @GetMapping("{id}")
-    fun readNoticeById(@PathVariable("id") id: Long): NoticeResponseTo {
-        return noticeService.readNoticeById(id)
-    }
+    fun getById(@PathVariable("id") id: Long) = noticeService.getById(id)
 
     @GetMapping
-    fun findAll(): List<NoticeResponseTo> {
-        return noticeService.readAll()
-    }
+    fun getAll() = noticeService.getAll()
 
-    @PutMapping(path = ["/{id}", ""], version = "1.0")
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    fun post(@RequestBody request: NoticeRequestTo) = noticeService.createNotice(request)
+
+    @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     fun updateNotice(
-        @Valid @RequestBody noticeRequestTo: NoticeRequestTo,
-        @PathVariable("id") id: Long?
-    ): NoticeResponseTo {
-        return noticeService.updateNotice(noticeRequestTo, id)
-    }
+        @PathVariable("id") noticeId: Long,
+        @Valid @RequestBody noticeRequestTo: NoticeRequestTo
+    ) = noticeService.updateNotice(noticeId, noticeRequestTo)
 
-    @DeleteMapping(path = ["/{id}"], version = "1.0")
+    @DeleteMapping("{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteNotice(@PathVariable("id") id: Long) {
-        noticeService.removeNoticeById(id)
-    }
+    fun removeById(@PathVariable id: Long) = noticeService.deleteById(id)
 }

@@ -1,0 +1,45 @@
+{
+    "listeners": [
+        {
+            "address": "0.0.0.0",
+            "port": 24110,
+            "https": false
+        }
+    ],
+    "app": {
+        "threads_num": 2,
+        "document_root": "/home/dmitry/Distcomp/351004/Lazuta/http",
+        "implicit_page": "index.html"
+    },
+    "db_clients": [
+        {
+            "name": "default",
+            "rdbms": "postgresql",
+            "host": "127.0.0.1",
+            "port": 5432,
+            "dbname": "distcomp",
+            "user": "postgres",
+            "passwd": "postgres",
+            "is_fast": false,
+            "connection_number": 1,
+            "auto_batch": false        
+        }
+    ],
+    "redis_clients": [
+        {
+
+          "host": "127.0.0.1",
+          "port": 6379,
+          "passwd": "",
+          "db": 0,
+          "is_fast": false,
+          "number_of_connections": 1,
+          "timeout": -1.0
+        }
+    ],
+    "custom_config" :
+    {
+      "jwt_secret": "distcomp-secret-key",
+      "token_expiry_hours": 1
+    }
+}

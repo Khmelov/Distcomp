@@ -13,5 +13,12 @@ class User(
     var firstname: String,
     var lastname: String,
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL])
-    var news: MutableList<News>? = null
+    var news: MutableList<News>? = null,
+
+    @Enumerated(EnumType.STRING)
+    var role: Role = Role.CUSTOMER
 )
+
+enum class Role {
+    ADMIN, CUSTOMER
+}

@@ -1,6 +1,6 @@
-package com.example.restapp.repository;
+package com.example.discussion.repository;
 
-import com.example.restapp.model.BaseEntity;
+import com.example.discussion.model.BaseEntity;
 
 import java.util.ArrayList;
 import java.util.List;

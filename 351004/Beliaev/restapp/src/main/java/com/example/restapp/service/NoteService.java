@@ -1,13 +1,13 @@
-package com.example.restapp.service;
+package com.example.discussion.service;
 
-import com.example.restapp.dto.request.NoteRequestTo;
-import com.example.restapp.dto.response.NoteResponseTo;
-import com.example.restapp.exception.EntityNotFoundException;
-import com.example.restapp.mapper.NoteMapper;
-import com.example.restapp.model.Article;
-import com.example.restapp.model.Note;
-import com.example.restapp.repository.ArticleRepository;
-import com.example.restapp.repository.NoteRepository;
+import com.example.discussion.dto.request.NoteRequestTo;
+import com.example.discussion.dto.response.NoteResponseTo;
+import com.example.discussion.exception.EntityNotFoundException;
+import com.example.discussion.mapper.NoteMapper;
+import com.example.discussion.model.Article;
+import com.example.discussion.model.Note;
+import com.example.discussion.repository.ArticleRepository;
+import com.example.discussion.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

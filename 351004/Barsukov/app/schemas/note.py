@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Literal
 
 class NoteRequestTo(BaseModel):
     id: Optional[int] = None
@@ -10,3 +10,4 @@ class NoteResponseTo(BaseModel):
     id: int
     issueId: int
     content: str
+    state: str

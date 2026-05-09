@@ -1,5 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsString, MaxLength, Min, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ArticleRequestTo {
@@ -39,4 +47,14 @@ export class ArticleRequestTo {
     message: 'The content must be no more than 64 characters long',
   })
   content: string;
+
+  @ApiPropertyOptional({
+    example: ['red89', 'green89', 'blue89'],
+    description: 'Article stickers',
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray({ message: 'Stickers must be an array' })
+  @IsString({ each: true, message: 'Each sticker must be a string' })
+  stickers?: string[];
 }
