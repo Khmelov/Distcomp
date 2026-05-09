@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - changeSet:
+      id: 021-create-note-table
+      changes:
+        - createTable:
+            tableName: tbl_note
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: tweet_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: country
+                  type: text
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 022-add-user-id-to-note-table
+      changes:
+        - addColumn:
+            tableName: tbl_note
+            columns:
+              - column:
+                  name: user_id
+                  type: bigint

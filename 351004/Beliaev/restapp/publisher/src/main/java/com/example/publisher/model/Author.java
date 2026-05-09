@@ -32,4 +32,8 @@ public class Author {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private List<Article> articles = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
+    private Role role = Role.CUSTOMER;
 }

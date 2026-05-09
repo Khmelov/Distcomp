@@ -49,7 +49,8 @@ namespace Infrastructure.ServiceImplementation
         public virtual async Task<PostResponseTo> CreateAsync(PostRequestTo entity)
         {
             var post = _mapper.Map<Post>(entity);
-            post.Id = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            post.Id = entity.Id;
+            Console.WriteLine($"[Discussion Service] Saving Post to DB. ID: {post.Id}, Content: {post.Content}");
             await _postRepository.CreateAsync(post);
             return _mapper.Map<PostResponseTo>(post);
         }

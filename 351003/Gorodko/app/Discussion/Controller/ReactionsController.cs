@@ -1,10 +1,7 @@
 using Discussion.DTO;
 using Discussion.Exceptions;
-using Discussion.Model;
 using Discussion.Service;
 using Microsoft.AspNetCore.Mvc;
-using System.Text;
-using System.Text.Json;
 
 namespace Discussion.Controllers {
     [ApiController]

@@ -10,3 +10,5 @@ class Author(Base):
     password = Column(String(128), nullable=False)
     firstname = Column(String(64), nullable=False)
     lastname = Column(String(64), nullable=False)
+    
+    role = Column(String(32), default="CUSTOMER", nullable=True)

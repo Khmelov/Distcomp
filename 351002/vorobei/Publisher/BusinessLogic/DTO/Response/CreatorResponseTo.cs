@@ -17,5 +17,8 @@ namespace BusinessLogic.DTO.Response
 
         [JsonPropertyName("lastname")]
         public string LastName { get; set; } = string.Empty;
+
+        [JsonPropertyName("role")]
+        public string Role { get; set; } = string.Empty;
     }
 }

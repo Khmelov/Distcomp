@@ -13,12 +13,12 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace drogon_model::distcomp;
 
-const std::string TblPost::Cols::_id = "id";
-const std::string TblPost::Cols::_issue_id = "issue_id";
-const std::string TblPost::Cols::_content = "content";
+const std::string TblPost::Cols::_id = "\"id\"";
+const std::string TblPost::Cols::_issue_id = "\"issue_id\"";
+const std::string TblPost::Cols::_content = "\"content\"";
 const std::string TblPost::primaryKeyName = "id";
 const bool TblPost::hasPrimaryKey = true;
-const std::string TblPost::tableName = "tbl_post";
+const std::string TblPost::tableName = "\"tbl_post\"";
 
 const std::vector<typename TblPost::MetaData> TblPost::metaData_={
 {"id","int64_t","bigint",8,1,1,1},
@@ -198,7 +198,7 @@ void TblPost::updateByJson(const Json::Value &pJson) noexcept(false)
 
 const int64_t &TblPost::getValueOfId() const noexcept
 {
-    const static int64_t defaultValue = int64_t();
+    static const int64_t defaultValue = int64_t();
     if(id_)
         return *id_;
     return defaultValue;
@@ -220,7 +220,7 @@ const typename TblPost::PrimaryKeyType & TblPost::getPrimaryKey() const
 
 const int64_t &TblPost::getValueOfIssueId() const noexcept
 {
-    const static int64_t defaultValue = int64_t();
+    static const int64_t defaultValue = int64_t();
     if(issueId_)
         return *issueId_;
     return defaultValue;
@@ -237,7 +237,7 @@ void TblPost::setIssueId(const int64_t &pIssueId) noexcept
 
 const std::string &TblPost::getValueOfContent() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(content_)
         return *content_;
     return defaultValue;
@@ -363,6 +363,11 @@ Json::Value TblPost::toJson() const
         ret["content"]=Json::Value();
     }
     return ret;
+}
+
+std::string TblPost::toString() const
+{
+    return toJson().toStyledString();
 }
 
 Json::Value TblPost::toMasqueradedJson(
@@ -625,15 +630,14 @@ bool TblPost::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 2048)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 2048)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 2048)";
                 return false;
             }
-
             break;
         default:
             err="Internal error in the server";

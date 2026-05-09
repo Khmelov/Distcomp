@@ -22,6 +22,9 @@ public class CommentByIdRow {
     @Column("tweet_id")
     private Long tweetId;
 
+    @Column("creator_id")
+    private Long creatorId;
+
     @Column
     private String content;
 

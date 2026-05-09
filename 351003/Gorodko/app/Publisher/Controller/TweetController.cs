@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Publisher.Dto;
 using Publisher.Exceptions;
@@ -10,8 +11,34 @@ namespace Publisher.Controller {
         private readonly TweetService _tweetService;
 
         public TweetController(TweetService tweetService, ILogger<TweetController> logger)
-            : base(logger) {
+          : base(logger) {
             _tweetService = tweetService;
+        }
+
+        [Authorize]
+        [HttpPost("/api/v2.0/tweets")]
+        public async Task<IActionResult> CreateV2([FromBody] TweetRequestTo request) {
+            if (!User.IsInRole("ADMIN")) {
+                var currentEditorId = long.Parse(User.FindFirst("editorId")?.Value ?? "0");
+                if (request.EditorId != currentEditorId)
+                    return BadRequest(new { errorMessage = "You can only create tweets for yourself", errorCode = 40301 });
+            }
+            return Ok(await _tweetService.CreateTweetAsync(request));
+        }
+
+        [Authorize]
+        [HttpDelete("/api/v2.0/tweets/{id:long}")]
+        public async Task<IActionResult> DeleteV2(long id) {
+            var tweet = await _tweetService.GetByIdAsync(id);
+            if (tweet == null) return NotFound();
+
+            if (!User.IsInRole("ADMIN")) {
+                var currentEditorId = long.Parse(User.FindFirst("editorId")?.Value ?? "0");
+                if (tweet.EditorId != currentEditorId) return Forbid();
+            }
+
+            await _tweetService.DeleteAsync(id);
+            return NoContent();
         }
 
         [HttpGet]

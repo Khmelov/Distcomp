@@ -27,7 +27,7 @@ namespace Discussion.Controllers
             var result = await _service.GetByIdAsync(id);
             if (result == null)
                 return NotFound();
-            return Ok(await _service.GetByIdAsync(id));
+            return Ok(result);
         }
 
         [HttpPost]
@@ -37,10 +37,10 @@ namespace Discussion.Controllers
             return StatusCode(201, result);
         }
 
-        [HttpPut]
-        public async Task<ActionResult<CommentResponseTo>> Update([FromBody] CommentRequestTo request)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<CommentResponseTo>> Update(long id, [FromBody] CommentRequestTo request)
         {
-            var result = await _service.UpdateAsync(request.Id, request);
+            var result = await _service.UpdateAsync(id, request);
             return Ok(result);
         }
 

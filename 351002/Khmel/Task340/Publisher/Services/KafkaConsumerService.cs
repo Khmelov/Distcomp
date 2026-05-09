@@ -10,8 +10,8 @@ namespace Publisher.Services
         private readonly IConsumer<string, string> _consumer;
         private readonly string _topic;
 
-        // In-memory storage для демонстрации (в реальном проекте - база данных)
         private static readonly Dictionary<long, CommentResponseDto> _commentCache = new();
+        private static readonly object _lock = new();
 
         public KafkaConsumerService(IConfiguration configuration, ILogger<KafkaConsumerService> logger)
         {
@@ -48,7 +48,6 @@ namespace Publisher.Services
                             
                             if (message?.Data != null)
                             {
-                                // Обновляем локальный кэш с новым статусом
                                 var response = new CommentResponseDto
                                 {
                                     Id = message.Data.Id,
@@ -58,7 +57,10 @@ namespace Publisher.Services
                                     State = message.Data.State
                                 };
 
-                                _commentCache[response.Id] = response;
+                                lock (_lock)
+                                {
+                                    _commentCache[response.Id] = response;
+                                }
 
                                 _logger.LogInformation(
                                     "Received comment {Id} with state {State} from OutTopic",
@@ -82,14 +84,28 @@ namespace Publisher.Services
             }
         }
 
+        public static void AddComment(CommentResponseDto comment)
+        {
+            lock (_lock)
+            {
+                _commentCache[comment.Id] = comment;
+            }
+        }
+
         public static CommentResponseDto? GetComment(long id)
         {
-            return _commentCache.TryGetValue(id, out var comment) ? comment : null;
+            lock (_lock)
+            {
+                return _commentCache.TryGetValue(id, out var comment) ? comment : null;
+            }
         }
 
         public static IEnumerable<CommentResponseDto> GetAllComments()
         {
-            return _commentCache.Values;
+            lock (_lock)
+            {
+                return _commentCache.Values.ToList();
+            }
         }
 
         public override void Dispose()

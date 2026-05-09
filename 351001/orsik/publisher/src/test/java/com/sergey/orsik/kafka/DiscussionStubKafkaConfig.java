@@ -126,7 +126,7 @@ public class DiscussionStubKafkaConfig {
                                         null,
                                         null,
                                         new CommentResponseTo(
-                                                id, 2L, "stub-body", Instant.parse("2020-01-01T00:00:00Z"), CommentState.APPROVE),
+                                                id, 2L, 1L, "stub-body", Instant.parse("2020-01-01T00:00:00Z"), CommentState.APPROVE),
                                         null));
                     }
                 }
@@ -141,7 +141,7 @@ public class DiscussionStubKafkaConfig {
                                 null,
                                 null,
                                 List.of(new CommentResponseTo(
-                                        1L, 9L, "a", Instant.parse("2020-01-01T00:00:00Z"), CommentState.APPROVE))));
+                                        1L, 9L, 1L, "a", Instant.parse("2020-01-01T00:00:00Z"), CommentState.APPROVE))));
                 case UPDATE -> {
                     if (request.getBody() != null && request.getCommentId() != null) {
                         replyKafkaTemplate.send(
@@ -156,6 +156,7 @@ public class DiscussionStubKafkaConfig {
                                         new CommentResponseTo(
                                                 request.getCommentId(),
                                                 request.getBody().getTweetId(),
+                                                request.getBody().getCreatorId(),
                                                 request.getBody().getContent(),
                                                 Instant.now(),
                                                 CommentState.APPROVE),

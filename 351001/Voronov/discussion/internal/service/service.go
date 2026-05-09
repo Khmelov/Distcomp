@@ -2,11 +2,15 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	apperrors "discussion/internal/errors"
 	"discussion/internal/model"
 	"discussion/internal/repository"
 )
+
+// stopWords is the hardcoded list used for automatic moderation.
+var stopWords = []string{"badword", "offensive", "spam", "hate", "abuse"}
 
 type ReactionService interface {
 	FindByID(ctx context.Context, id int64) (*model.Reaction, error)
@@ -15,6 +19,7 @@ type ReactionService interface {
 	Create(ctx context.Context, r *model.Reaction) (*model.Reaction, error)
 	Update(ctx context.Context, id int64, r *model.Reaction) (*model.Reaction, error)
 	Delete(ctx context.Context, id int64) error
+	Moderate(ctx context.Context, r *model.Reaction) (*model.Reaction, error)
 }
 
 type reactionService struct {
@@ -44,6 +49,9 @@ func (s *reactionService) Create(ctx context.Context, r *model.Reaction) (*model
 	if len(r.Content) < 2 || len(r.Content) > 2048 {
 		return nil, apperrors.ErrBadRequest
 	}
+	if r.State == "" {
+		r.State = model.ReactionStatePending
+	}
 	return s.repo.Create(ctx, r)
 }
 
@@ -59,4 +67,18 @@ func (s *reactionService) Update(ctx context.Context, id int64, r *model.Reactio
 
 func (s *reactionService) Delete(ctx context.Context, id int64) error {
 	return s.repo.Delete(ctx, id)
+}
+
+// Moderate runs stop-word moderation and persists the result.
+// Sets state to APPROVE or DECLINE based on content.
+func (s *reactionService) Moderate(ctx context.Context, r *model.Reaction) (*model.Reaction, error) {
+	lower := strings.ToLower(r.Content)
+	for _, word := range stopWords {
+		if strings.Contains(lower, strings.ToLower(word)) {
+			r.State = model.ReactionStateDecline
+			return s.repo.Create(ctx, r)
+		}
+	}
+	r.State = model.ReactionStateApprove
+	return s.repo.Create(ctx, r)
 }

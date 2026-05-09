@@ -7,6 +7,7 @@ import lombok.Data;
 public class ReactionResponseTo {
     long id;
     long articleId;
+    long creatorId;
     @Size(min = 2, max = 2048)
     String content;
     String state;

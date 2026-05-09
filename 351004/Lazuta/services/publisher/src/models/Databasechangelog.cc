@@ -13,23 +13,23 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace drogon_model::distcomp;
 
-const std::string Databasechangelog::Cols::_id = "id";
-const std::string Databasechangelog::Cols::_author = "author";
-const std::string Databasechangelog::Cols::_filename = "filename";
-const std::string Databasechangelog::Cols::_dateexecuted = "dateexecuted";
-const std::string Databasechangelog::Cols::_orderexecuted = "orderexecuted";
-const std::string Databasechangelog::Cols::_exectype = "exectype";
-const std::string Databasechangelog::Cols::_md5sum = "md5sum";
-const std::string Databasechangelog::Cols::_description = "description";
-const std::string Databasechangelog::Cols::_comments = "comments";
-const std::string Databasechangelog::Cols::_tag = "tag";
-const std::string Databasechangelog::Cols::_liquibase = "liquibase";
-const std::string Databasechangelog::Cols::_contexts = "contexts";
-const std::string Databasechangelog::Cols::_labels = "labels";
-const std::string Databasechangelog::Cols::_deployment_id = "deployment_id";
+const std::string Databasechangelog::Cols::_id = "\"id\"";
+const std::string Databasechangelog::Cols::_author = "\"author\"";
+const std::string Databasechangelog::Cols::_filename = "\"filename\"";
+const std::string Databasechangelog::Cols::_dateexecuted = "\"dateexecuted\"";
+const std::string Databasechangelog::Cols::_orderexecuted = "\"orderexecuted\"";
+const std::string Databasechangelog::Cols::_exectype = "\"exectype\"";
+const std::string Databasechangelog::Cols::_md5sum = "\"md5sum\"";
+const std::string Databasechangelog::Cols::_description = "\"description\"";
+const std::string Databasechangelog::Cols::_comments = "\"comments\"";
+const std::string Databasechangelog::Cols::_tag = "\"tag\"";
+const std::string Databasechangelog::Cols::_liquibase = "\"liquibase\"";
+const std::string Databasechangelog::Cols::_contexts = "\"contexts\"";
+const std::string Databasechangelog::Cols::_labels = "\"labels\"";
+const std::string Databasechangelog::Cols::_deployment_id = "\"deployment_id\"";
 const std::string Databasechangelog::primaryKeyName = "";
 const bool Databasechangelog::hasPrimaryKey = false;
-const std::string Databasechangelog::tableName = "databasechangelog";
+const std::string Databasechangelog::tableName = "\"databasechangelog\"";
 
 const std::vector<typename Databasechangelog::MetaData> Databasechangelog::metaData_={
 {"id","std::string","character varying",255,0,0,1},
@@ -781,7 +781,7 @@ void Databasechangelog::updateByJson(const Json::Value &pJson) noexcept(false)
 
 const std::string &Databasechangelog::getValueOfId() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(id_)
         return *id_;
     return defaultValue;
@@ -803,7 +803,7 @@ void Databasechangelog::setId(std::string &&pId) noexcept
 
 const std::string &Databasechangelog::getValueOfAuthor() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(author_)
         return *author_;
     return defaultValue;
@@ -825,7 +825,7 @@ void Databasechangelog::setAuthor(std::string &&pAuthor) noexcept
 
 const std::string &Databasechangelog::getValueOfFilename() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(filename_)
         return *filename_;
     return defaultValue;
@@ -847,7 +847,7 @@ void Databasechangelog::setFilename(std::string &&pFilename) noexcept
 
 const ::trantor::Date &Databasechangelog::getValueOfDateexecuted() const noexcept
 {
-    const static ::trantor::Date defaultValue = ::trantor::Date();
+    static const ::trantor::Date defaultValue = ::trantor::Date();
     if(dateexecuted_)
         return *dateexecuted_;
     return defaultValue;
@@ -864,7 +864,7 @@ void Databasechangelog::setDateexecuted(const ::trantor::Date &pDateexecuted) no
 
 const int32_t &Databasechangelog::getValueOfOrderexecuted() const noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    static const int32_t defaultValue = int32_t();
     if(orderexecuted_)
         return *orderexecuted_;
     return defaultValue;
@@ -881,7 +881,7 @@ void Databasechangelog::setOrderexecuted(const int32_t &pOrderexecuted) noexcept
 
 const std::string &Databasechangelog::getValueOfExectype() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(exectype_)
         return *exectype_;
     return defaultValue;
@@ -903,7 +903,7 @@ void Databasechangelog::setExectype(std::string &&pExectype) noexcept
 
 const std::string &Databasechangelog::getValueOfMd5sum() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(md5sum_)
         return *md5sum_;
     return defaultValue;
@@ -930,7 +930,7 @@ void Databasechangelog::setMd5sumToNull() noexcept
 
 const std::string &Databasechangelog::getValueOfDescription() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(description_)
         return *description_;
     return defaultValue;
@@ -957,7 +957,7 @@ void Databasechangelog::setDescriptionToNull() noexcept
 
 const std::string &Databasechangelog::getValueOfComments() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(comments_)
         return *comments_;
     return defaultValue;
@@ -984,7 +984,7 @@ void Databasechangelog::setCommentsToNull() noexcept
 
 const std::string &Databasechangelog::getValueOfTag() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(tag_)
         return *tag_;
     return defaultValue;
@@ -1011,7 +1011,7 @@ void Databasechangelog::setTagToNull() noexcept
 
 const std::string &Databasechangelog::getValueOfLiquibase() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(liquibase_)
         return *liquibase_;
     return defaultValue;
@@ -1038,7 +1038,7 @@ void Databasechangelog::setLiquibaseToNull() noexcept
 
 const std::string &Databasechangelog::getValueOfContexts() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(contexts_)
         return *contexts_;
     return defaultValue;
@@ -1065,7 +1065,7 @@ void Databasechangelog::setContextsToNull() noexcept
 
 const std::string &Databasechangelog::getValueOfLabels() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(labels_)
         return *labels_;
     return defaultValue;
@@ -1092,7 +1092,7 @@ void Databasechangelog::setLabelsToNull() noexcept
 
 const std::string &Databasechangelog::getValueOfDeploymentId() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(deploymentId_)
         return *deploymentId_;
     return defaultValue;
@@ -1635,6 +1635,11 @@ Json::Value Databasechangelog::toJson() const
         ret["deployment_id"]=Json::Value();
     }
     return ret;
+}
+
+std::string Databasechangelog::toString() const
+{
+    return toJson().toStyledString();
 }
 
 Json::Value Databasechangelog::toMasqueradedJson(
@@ -2360,15 +2365,14 @@ bool Databasechangelog::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 255)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 255)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 255)";
                 return false;
             }
-
             break;
         case 1:
             if(pJson.isNull())
@@ -2381,15 +2385,14 @@ bool Databasechangelog::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 255)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 255)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 255)";
                 return false;
             }
-
             break;
         case 2:
             if(pJson.isNull())
@@ -2402,15 +2405,14 @@ bool Databasechangelog::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 255)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 255)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 255)";
                 return false;
             }
-
             break;
         case 3:
             if(pJson.isNull())
@@ -2447,15 +2449,14 @@ bool Databasechangelog::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 10)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 10)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 10)";
                 return false;
             }
-
             break;
         case 6:
             if(pJson.isNull())
@@ -2467,15 +2468,14 @@ bool Databasechangelog::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 35)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 35)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 35)";
                 return false;
             }
-
             break;
         case 7:
             if(pJson.isNull())
@@ -2487,15 +2487,14 @@ bool Databasechangelog::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 255)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 255)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 255)";
                 return false;
             }
-
             break;
         case 8:
             if(pJson.isNull())
@@ -2507,15 +2506,14 @@ bool Databasechangelog::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 255)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 255)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 255)";
                 return false;
             }
-
             break;
         case 9:
             if(pJson.isNull())
@@ -2527,15 +2525,14 @@ bool Databasechangelog::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 255)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 255)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 255)";
                 return false;
             }
-
             break;
         case 10:
             if(pJson.isNull())
@@ -2547,15 +2544,14 @@ bool Databasechangelog::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 20)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 20)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 20)";
                 return false;
             }
-
             break;
         case 11:
             if(pJson.isNull())
@@ -2567,15 +2563,14 @@ bool Databasechangelog::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 255)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 255)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 255)";
                 return false;
             }
-
             break;
         case 12:
             if(pJson.isNull())
@@ -2587,15 +2582,14 @@ bool Databasechangelog::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 255)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 255)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 255)";
                 return false;
             }
-
             break;
         case 13:
             if(pJson.isNull())
@@ -2607,15 +2601,14 @@ bool Databasechangelog::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 10)
+            if(pJson.isString() && std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>{}
+                .from_bytes(pJson.asCString()).size() > 10)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
                     " field (the maximum value is 10)";
                 return false;
             }
-
             break;
         default:
             err="Internal error in the server";

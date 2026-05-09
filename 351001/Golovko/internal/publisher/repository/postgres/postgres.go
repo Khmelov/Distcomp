@@ -21,6 +21,7 @@ type store struct {
 type Storage interface {
 	CreateEditor(ctx context.Context, editor *domain.Editor) error
 	GetEditorByID(ctx context.Context, id int64) (*domain.Editor, error)
+	GetEditorByLogin(ctx context.Context, login string) (*domain.Editor, error) // НОВЫЙ МЕТОД
 	GetAllEditors(ctx context.Context, params repository.ListParams) ([]*domain.Editor, error)
 	UpdateEditor(ctx context.Context, editor *domain.Editor) error
 	DeleteEditor(ctx context.Context, id int64) error
@@ -69,14 +70,24 @@ func (s *store) cleanOrphanedTags(ctx context.Context) {
 // --- EDITOR ---
 
 func (s *store) CreateEditor(ctx context.Context, editor *domain.Editor) error {
-	query := `INSERT INTO distcomp.tbl_editor (login, password, firstname, lastname) VALUES ($1, $2, $3, $4) RETURNING id`
-	return s.db.QueryRowContext(ctx, query, editor.Login, editor.Password, editor.FirstName, editor.LastName).Scan(&editor.ID)
+	query := `INSERT INTO distcomp.tbl_editor (login, password, firstname, lastname, role) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	return s.db.QueryRowContext(ctx, query, editor.Login, editor.Password, editor.FirstName, editor.LastName, editor.Role).Scan(&editor.ID)
 }
 
 func (s *store) GetEditorByID(ctx context.Context, id int64) (*domain.Editor, error) {
-	query := `SELECT id, login, password, firstname, lastname FROM distcomp.tbl_editor WHERE id = $1`
+	query := `SELECT id, login, password, firstname, lastname, role FROM distcomp.tbl_editor WHERE id = $1`
 	var e domain.Editor
-	err := s.db.QueryRowContext(ctx, query, id).Scan(&e.ID, &e.Login, &e.Password, &e.FirstName, &e.LastName)
+	err := s.db.QueryRowContext(ctx, query, id).Scan(&e.ID, &e.Login, &e.Password, &e.FirstName, &e.LastName, &e.Role)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return &e, err
+}
+
+func (s *store) GetEditorByLogin(ctx context.Context, login string) (*domain.Editor, error) {
+	query := `SELECT id, login, password, firstname, lastname, role FROM distcomp.tbl_editor WHERE login = $1`
+	var e domain.Editor
+	err := s.db.QueryRowContext(ctx, query, login).Scan(&e.ID, &e.Login, &e.Password, &e.FirstName, &e.LastName, &e.Role)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -84,7 +95,7 @@ func (s *store) GetEditorByID(ctx context.Context, id int64) (*domain.Editor, er
 }
 
 func (s *store) GetAllEditors(ctx context.Context, params repository.ListParams) ([]*domain.Editor, error) {
-	query := applyPagination(`SELECT id, login, password, firstname, lastname FROM distcomp.tbl_editor`, params)
+	query := applyPagination(`SELECT id, login, password, firstname, lastname, role FROM distcomp.tbl_editor`, params)
 	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -94,7 +105,7 @@ func (s *store) GetAllEditors(ctx context.Context, params repository.ListParams)
 	var editors []*domain.Editor
 	for rows.Next() {
 		var e domain.Editor
-		if err := rows.Scan(&e.ID, &e.Login, &e.Password, &e.FirstName, &e.LastName); err != nil {
+		if err := rows.Scan(&e.ID, &e.Login, &e.Password, &e.FirstName, &e.LastName, &e.Role); err != nil {
 			return nil, err
 		}
 		editors = append(editors, &e)
@@ -103,8 +114,8 @@ func (s *store) GetAllEditors(ctx context.Context, params repository.ListParams)
 }
 
 func (s *store) UpdateEditor(ctx context.Context, editor *domain.Editor) error {
-	query := `UPDATE distcomp.tbl_editor SET login = $1, password = $2, firstname = $3, lastname = $4 WHERE id = $5`
-	res, err := s.db.ExecContext(ctx, query, editor.Login, editor.Password, editor.FirstName, editor.LastName, editor.ID)
+	query := `UPDATE distcomp.tbl_editor SET login = $1, password = $2, firstname = $3, lastname = $4, role = $5 WHERE id = $6`
+	res, err := s.db.ExecContext(ctx, query, editor.Login, editor.Password, editor.FirstName, editor.LastName, editor.Role, editor.ID)
 	if err != nil {
 		return err
 	}
