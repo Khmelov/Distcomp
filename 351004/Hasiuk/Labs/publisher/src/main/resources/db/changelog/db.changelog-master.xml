@@ -9,5 +9,6 @@
     <include file="db/changelog/changesets/01-create-tables.xml"/>
     <include file="db/changelog/changesets/02-insert-initial-data.xml"/>
     <include file="db/changelog/changesets/03-add-constraints.xml"/>
+    <include file="db/changelog/changesets/04-add-role-to-editor.xml"/>
 
 </databaseChangeLog>

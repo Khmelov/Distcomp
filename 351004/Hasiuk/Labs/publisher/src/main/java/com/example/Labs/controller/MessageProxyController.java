@@ -1,22 +1,19 @@
 package com.example.Labs.controller;
-
 import com.example.Labs.client.MessageKafkaClient;
-import com.example.Labs.repository.StoryRepository;
 import com.example.Labs.dto.request.MessageRequestTo;
 import com.example.Labs.dto.response.MessageResponseTo;
-import com.example.Labs.dto.response.ErrorResponse;
-import com.example.Labs.exception.ResourceNotFoundException;
+import com.example.Labs.entity.Story;
+import com.example.Labs.repository.StoryRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import java.util.List;
-import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1.0/messages")
+@RequestMapping({"/api/v1.0/messages", "/api/v2.0/messages"})
 @RequiredArgsConstructor
 public class MessageProxyController {
     private final MessageKafkaClient kafkaClient;
@@ -25,8 +22,9 @@ public class MessageProxyController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public MessageResponseTo create(@Valid @RequestBody MessageRequestTo request) {
-        if (!storyRepository.existsById(request.getStoryId())) {
-            throw new IllegalArgumentException("Story not found");
+        if (isV2()) {
+            Story story = storyRepository.findById(request.getStoryId()).orElseThrow();
+            checkStoryOwnership(story);
         }
         return kafkaClient.sendAndReceive("CREATE", null, request);
     }
@@ -38,45 +36,43 @@ public class MessageProxyController {
 
     @GetMapping("/{id}")
     public MessageResponseTo getById(@PathVariable Long id) {
-        return kafkaClient.sendAndReceive("GET_BY_ID", id, null);
-    }
-
-    @PutMapping
-    public MessageResponseTo updateFromBody(@RequestBody Map<String, Object> body) {
-        Long id = Long.valueOf(body.get("id").toString());
-        MessageRequestTo req = new MessageRequestTo();
-        req.setStoryId(Long.valueOf(body.get("storyId").toString()));
-        req.setContent(body.get("content").toString());
-        return kafkaClient.sendAndReceive("UPDATE", id, req);
+        // Используем кешируемый метод — сначала проверяем Redis, потом Kafka
+        return kafkaClient.getByIdCached(id);
     }
 
     @PutMapping("/{id}")
     public MessageResponseTo update(@PathVariable Long id, @Valid @RequestBody MessageRequestTo request) {
-        return kafkaClient.sendAndReceive("UPDATE", id, request);
+        if (isV2()) {
+            MessageResponseTo existing = kafkaClient.getByIdCached(id);
+            Story story = storyRepository.findById(existing.getStoryId()).orElseThrow();
+            checkStoryOwnership(story);
+        }
+        // CacheEvict + Kafka update
+        return kafkaClient.updateViaKafka(id, request);
     }
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        kafkaClient.deleteViaKafka(id); // Вызываем метод с аннотацией @CacheEvict
+        if (isV2()) {
+            MessageResponseTo existing = kafkaClient.getByIdCached(id);
+            Story story = storyRepository.findById(existing.getStoryId()).orElseThrow();
+            checkStoryOwnership(story);
+        }
+        kafkaClient.deleteViaKafka(id);
         return ResponseEntity.noContent().build();
     }
 
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("40001", "Invalid format"));
+    private boolean isV2() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && !auth.getPrincipal().equals("anonymousUser");
     }
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("40401", ex.getMessage()));
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleError(Exception ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("40001", ex.getMessage()));
+    private void checkStoryOwnership(Story story) {
+        String currentLogin = SecurityContextHolder.getContext().getAuthentication().getName();
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!isAdmin && !story.getEditor().getLogin().equals(currentLogin)) {
+            throw new RuntimeException("403 Forbidden");
+        }
     }
 }

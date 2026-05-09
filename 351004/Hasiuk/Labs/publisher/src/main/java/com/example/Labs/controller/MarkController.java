@@ -1,5 +1,4 @@
 package com.example.Labs.controller;
-
 import com.example.Labs.dto.request.MarkRequestTo;
 import com.example.Labs.dto.response.MarkResponseTo;
 import com.example.Labs.service.MarkService;
@@ -11,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1.0/marks")
+@RequestMapping({"/api/v1.0/marks", "/api/v2.0/marks"})
 @RequiredArgsConstructor
 public class MarkController {
     private final MarkService service;
