@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d distcomp"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  cassandra:
+    image: cassandra:4.1
+    ports:
+      - "9042:9042"
+    environment:
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "nodetool status | grep -E '^UN'"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+
+  discussion:
+    build: ./discussion
+    environment:
+      CASSANDRA_HOSTS: cassandra
+      CASSANDRA_PORT: "9042"
+      MESSAGE_DEFAULT_COUNTRY: BY
+    ports:
+      - "24130:24130"
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:24130/api/v1.0/health', timeout=5).read()",
+        ]
+      interval: 5s
+      timeout: 8s
+      retries: 24
+      start_period: 30s
+
+  publisher:
+    build: ./publisher
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/distcomp
+      DISCUSSION_BASE_URL: http://discussion:24130
+    ports:
+      - "24110:24110"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discussion:
+        condition: service_healthy

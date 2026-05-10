@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra
+    ports:
+      - "9042:9042" # CQL порт
+      - "7000:7000" # Интерфейс для нод
+      - "7199:7199" # JMX порт
+      - "9160:9160" # Thrift порт (устаревший)
+    environment:
+      - CASSANDRA_CLUSTER_NAME=MyCluster
+      - CASSANDRA_NUM_TOKENS=256
+      - CASSANDRA_DC=datacenter1
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    restart: always
+
+volumes:
+  cassandra_data:

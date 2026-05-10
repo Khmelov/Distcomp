@@ -1,0 +1,18 @@
+# По образцу https://github.com/Khmelov/Distcomp/tree/main/351004/Egorov/lab2
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-distcomp
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/docker-init-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

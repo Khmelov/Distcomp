@@ -2,9 +2,8 @@ package com.example.news.service;
 
 import com.example.common.dto.MarkerRequestTo;
 import com.example.common.dto.MarkerResponseTo;
+import com.example.common.exception.*;
 import com.example.news.entity.Marker;
-import com.example.news.exception.EntityNotFoundException;
-import com.example.news.exception.LoginAlreadyExistsException;
 import com.example.news.mapper.MarkerMapper;
 import com.example.news.repository.MarkerRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,13 +34,13 @@ public class MarkerService {
     public MarkerResponseTo findById(Long id) {
         return markerRepository.findById(id)
                 .map(markerMapper::toResponse)
-                .orElseThrow(() -> new EntityNotFoundException("Marker not found", "40403"));
+                .orElseThrow(() -> new EntityNotFoundException("Marker not found with id: " + id, "40302"));
     }
 
     @Transactional
     public MarkerResponseTo update(Long id, MarkerRequestTo request) {
         Marker existingMarker = markerRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Marker not found", "40403"));
+                .orElseThrow(() -> new EntityNotFoundException("Marker not found with id: " + id, "40302"));
 
         existingMarker.setName(request.name());
 
@@ -51,7 +50,7 @@ public class MarkerService {
     @Transactional
     public void delete(Long id) {
         if (!markerRepository.existsById(id)) {
-            throw new EntityNotFoundException("Marker not found", "40403");
+            throw new EntityNotFoundException("Marker not found with id: " + id, "40302");
         }
         markerRepository.deleteById(id);
     }
@@ -59,7 +58,7 @@ public class MarkerService {
     @Transactional
     public MarkerResponseTo create(MarkerRequestTo request) {
         if (markerRepository.existsByName(request.name())) {
-            throw new LoginAlreadyExistsException("Marker exists");
+            throw new ForbiddenException("Marker exists");
         }
 
         Marker marker = markerMapper.toEntity(request);

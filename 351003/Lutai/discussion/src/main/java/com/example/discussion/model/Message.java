@@ -1,5 +1,6 @@
 package com.example.discussion.model;
 
+import com.example.common.dto.model.enums.MessageState;
 import lombok.*;
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
@@ -20,4 +21,8 @@ public class Message {
 
     @Column("content")
     private String content;
+
+    @Column("state")
+    private MessageState state;
+
 }

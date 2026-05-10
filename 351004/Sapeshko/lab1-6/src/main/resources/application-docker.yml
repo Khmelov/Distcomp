@@ -1,0 +1,32 @@
+server:
+  port: 24110
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgresDb:5432/distcomp
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: distcomp
+    show-sql: true
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: distcomp
+    enabled: true
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.cassandra.CassandraDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveDataAutoConfiguration
+  app:
+    sync:
+      cassandra-url: http://app-cassandra:24130
+  jwt:
+    secret: mysupersecretkeywhichisatleast256bitslong!
+    expiration: 3600000

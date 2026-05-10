@@ -6,6 +6,7 @@ import {
 import { StickersService } from './stickers.service';
 import { PrismaService } from '../../../services/prisma.service';
 import { StickerRequestTo } from '../../../dto/stickers/StickerRequestTo.dto';
+import { RedisService } from '../../../redis/redis.service';
 
 describe('StickersService', () => {
   let service: StickersService;
@@ -29,6 +30,13 @@ describe('StickersService', () => {
     },
   };
 
+  const mockRedisService = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(undefined),
+    delByPattern: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -36,6 +44,10 @@ describe('StickersService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
         },
       ],
     }).compile();

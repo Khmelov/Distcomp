@@ -6,11 +6,11 @@ import jakarta.validation.constraints.Size;
 
 public record
 NoteRequestTo(
-
         Long id,
         @NotNull
         Long articleId,
         @NotBlank
         @Size(min = 4, max = 2048)
-        String content
+        String content,
+        NoteState state
 ){ }

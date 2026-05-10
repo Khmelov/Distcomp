@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # PostgreSQL для Publisher (Writer, Story, Label)
+  postgres:
+    image: postgres:15
+    container_name: distcomp-postgres
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Cassandra для Discussion (Comment)
+  cassandra:
+    image: cassandra:4.1
+    container_name: distcomp-cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=distcomp
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # Инициализация ключевого пространства Cassandra
+  cassandra-init:
+    image: cassandra:4.1
+    container_name: distcomp-cassandra-init
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: |
+      /bin/bash -c "
+      echo 'Waiting for Cassandra to be ready...';
+      sleep 20;
+      echo 'Creating keyspace...';
+      cqlsh cassandra -e \"
+        CREATE KEYSPACE IF NOT EXISTS distcomp 
+        WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+        CREATE TABLE IF NOT EXISTS distcomp.tbl_comment (
+          story_id bigint,
+          id bigint,
+          content text,
+          country text,
+          created timestamp,
+          state text,
+          PRIMARY KEY (story_id, id)
+        );
+        CREATE INDEX IF NOT EXISTS ON distcomp.tbl_comment (id);
+      \";
+      echo 'Cassandra initialized successfully'
+      "
+
+  # Zookeeper (необходим для Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: distcomp-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Kafka для обмена сообщениями
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: distcomp-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # Redis для кеширования
+  redis:
+    image: redis:7-alpine
+    container_name: distcomp-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+  cassandra-data:
+  redis-data:

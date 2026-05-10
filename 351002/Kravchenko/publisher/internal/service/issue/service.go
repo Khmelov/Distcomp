@@ -16,11 +16,12 @@ type Service interface {
 	ListIssues(ctx context.Context, limit, offset int) ([]*issuemodel.Issue, error)
 }
 type issueServiceImpl struct {
-	repos repository.AppRepository
+	repos  repository.AppRepository
+	caches repository.AppCache
 }
 
-func New(repos repository.AppRepository) Service {
-	return &issueServiceImpl{repos: repos}
+func New(repos repository.AppRepository, caches repository.AppCache) Service {
+	return &issueServiceImpl{repos: repos, caches: caches}
 }
 
 func (s *issueServiceImpl) CreateIssue(ctx context.Context, input *issuemodel.CreateIssueInput) (*issuemodel.Issue, error) {
@@ -55,6 +56,14 @@ func (s *issueServiceImpl) CreateIssue(ctx context.Context, input *issuemodel.Cr
 }
 
 func (s *issueServiceImpl) GetIssue(ctx context.Context, id int64) (*issuemodel.Issue, error) {
+
+	if s.caches != nil {
+		cached, err := s.caches.IssueCache().Get(ctx, id)
+		if err == nil && cached != nil {
+			return cached, nil
+		}
+	}
+
 	issue, err := s.repos.IssueRepo().GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -68,6 +77,9 @@ func (s *issueServiceImpl) GetIssue(ctx context.Context, id int64) (*issuemodel.
 		}
 	}
 
+	if s.caches != nil {
+		_ = s.caches.IssueCache().Set(ctx, issue)
+	}
 	return issue, nil
 }
 
@@ -100,10 +112,18 @@ func (s *issueServiceImpl) UpdateIssue(ctx context.Context, id int64, input *iss
 		}
 	}
 
+	if s.caches != nil {
+		_ = s.caches.IssueCache().Delete(ctx, id)
+	}
+
 	return s.GetIssue(ctx, id)
 }
 
 func (s *issueServiceImpl) DeleteIssue(ctx context.Context, id int64) error {
+	if s.caches != nil {
+		_ = s.caches.IssueCache().Delete(ctx, id)
+	}
+	
 	return s.repos.IssueRepo().Delete(ctx, id)
 }
 

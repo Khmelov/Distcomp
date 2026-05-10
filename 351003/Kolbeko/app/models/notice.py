@@ -6,5 +6,5 @@ class Notice(Base):
     __table_args__ = {"schema": "distcomp"}
 
     id = Column(BigInteger, primary_key=True, index=True)
-    tweet_id = Column(BigInteger, ForeignKey("distcomp.tbl_tweet.id"), nullable=False)
+    tweet_id = Column(BigInteger, ForeignKey("distcomp.tbl_tweet.id", ondelete="CASCADE"), nullable=False)
     content = Column(String(2048), nullable=False)

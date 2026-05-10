@@ -1,0 +1,83 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: "Test Cluster"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  cassandra-init:
+    image: cassandra:4.1
+    container_name: cassandra-init
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./discussion/init.cql:/init.cql
+    command: >
+      sh -c "cqlsh cassandra -f /init.cql && echo 'Keyspace and table created'"
+    restart: "no"
+
+  publisher:
+    build: ./publisher
+    container_name: publisher
+    ports:
+      - "24110:24110"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      cassandra-init:
+        condition: service_completed_successfully
+    environment:
+      PORT: 24110
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: distcomp
+      DISCUSSION_URL: http://discussion:24130
+    restart: on-failure
+
+  discussion:
+    build: ./discussion
+    container_name: discussion
+    ports:
+      - "24130:24130"
+    depends_on:
+      cassandra-init:
+        condition: service_completed_successfully
+    environment:
+      PORT: 24130
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: 9042
+      CASSANDRA_KEYSPACE: distcomp
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  cassandra_data:

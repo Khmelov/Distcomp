@@ -4,6 +4,7 @@ import by.distcomp.app.dto.NoteRequestTo;
 import by.distcomp.app.dto.NoteResponseTo;
 import by.distcomp.app.mapper.NoteMapper;
 import by.distcomp.app.model.Note;
+import by.distcomp.app.model.NoteState;
 import by.distcomp.app.repository.NoteRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,17 +25,26 @@ public class NoteService {
     public NoteResponseTo createNote(NoteRequestTo dto) {
         Note note = noteMapper.toEntity(dto);
 
-        if (note.getId() == null) {
+        if (dto.id() != null) {
+            note.setId(dto.id());
+        } else if (note.getId() == null) {
             note.setId(System.currentTimeMillis());
+        }
+
+        if (dto.content().toLowerCase().contains("spam")) {
+            note.setState(NoteState.DECLINE);
+        } else {
+            note.setState(NoteState.APPROVE);
         }
 
         Note saved = noteRepository.save(note);
         return noteMapper.toResponse(saved);
     }
 
-    public NoteResponseTo updateNote(NoteRequestTo dto) {
-        Note note = noteRepository.findById(dto.id())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found with id: " + dto.id()));
+    public NoteResponseTo updateNote(Long id, NoteRequestTo dto) {
+
+        Note note = noteRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found with id: " + id));
 
         note.setContent(dto.content());
         note.setArticleId(dto.articleId());

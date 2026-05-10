@@ -1,0 +1,55 @@
+spring:
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  datasource:
+    url: jdbc:postgresql://localhost:5432/distcomp
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    bootstrap-servers: 127.0.0.1:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: 1
+      properties:
+        linger.ms: 0
+    consumer:
+      group-id: publisher-group-unique
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: latest
+      properties:
+        spring.json.trusted.packages: "com.github.Lexya06.startrestapp.*"
+        fetch.min.bytes: 1
+        fetch.max.wait.ms: 50
+    listener:
+      poll-timeout: 100ms
+      concurrency: 3
+server:
+  address: localhost
+  port: 24110
+  api:
+    base-path:
+      v1: "/api/v1.0"
+      v2: "/api/v2.0"
+management:
+  endpoints:
+    web:
+      exposure:
+        include: mappings
+services:
+  discussion:
+    url: "http://localhost:24130/api/v1.0"
+
+jwt:
+  secret: "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970"
+  expiration: 86400000 # 24 hours

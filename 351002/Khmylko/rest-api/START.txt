@@ -1,0 +1,6 @@
+cd E:\6 sem\РВ\Distcomp\351002\Khmylko\rest-api
+docker compose down -v
+docker compose up -d --build
+
+
+curl http://localhost:24110/api/v1.0/editors
