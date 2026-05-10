@@ -1,5 +1,6 @@
 package com.distcomp.dto.user;
 
+import com.distcomp.model.user.UserRole;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -29,4 +30,6 @@ public class UserCreateRequest {
     @NotNull
     @Size(min = 8, max = 128)
     private String password;
+
+    private UserRole role;
 }

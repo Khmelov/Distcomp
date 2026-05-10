@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+    <changeSet id="cassandra-20260404-1" author="student">
+        <comment>Keyspace distcomp; партиция по tweet_id; tbl_reaction_by_id для поиска по id без hot partition по одному ключу</comment>
+        <sql>
+            CREATE KEYSPACE IF NOT EXISTS distcomp WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+        </sql>
+        <sql>
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_reaction (
+                tweet_id bigint,
+                id bigint,
+                content text,
+                PRIMARY KEY ((tweet_id), id)
+            );
+        </sql>
+        <sql>
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_reaction_by_id (
+                id bigint PRIMARY KEY,
+                tweet_id bigint,
+                content text
+            );
+        </sql>
+    </changeSet>
+</databaseChangeLog>

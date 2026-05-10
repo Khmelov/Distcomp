@@ -1,11 +1,12 @@
+using Additions;
 using ArticleHouse;
-using ArticleHouse.ExcMiddleware;
 using ArticleHouse.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
-builder.Services.AddArticleHouseServices();
+builder.Services.AddControllers();
+builder.Services.AddArticleHouseServices(builder.Configuration);
 
 var app = builder.Build();
 
@@ -15,9 +16,13 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles("/static");
 app.UseMiddleware<ExcMiddleware>();
+
+app.UseAuthentication(); 
+app.UseAuthorization();
+
+app.MapControllers();
 
 app.MapGet("/", async (HttpContext context) =>
 {

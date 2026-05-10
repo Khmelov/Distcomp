@@ -3,6 +3,7 @@ package com.distcomp.controller
 import com.distcomp.dto.news.NewsRequestTo
 import com.distcomp.dto.news.NewsResponseTo
 import com.distcomp.service.NewsService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -21,7 +22,7 @@ class NewsController (
 ) {
     @PostMapping(version = "1.0")
     @ResponseStatus(HttpStatus.CREATED)
-    fun createUser(@RequestBody newsRequestTo: NewsRequestTo): NewsResponseTo {
+    fun createUser(@Valid @RequestBody newsRequestTo: NewsRequestTo): NewsResponseTo {
         return newsService.createNews(newsRequestTo)
     }
 
@@ -37,7 +38,7 @@ class NewsController (
 
     @PutMapping(path = ["/{id}", ""], version = "1.0")
     @ResponseStatus(HttpStatus.OK)
-    fun updateUser(@RequestBody newsRequestTo: NewsRequestTo,
+    fun updateUser(@Valid @RequestBody newsRequestTo: NewsRequestTo,
                    @PathVariable("id") userId: Long?): NewsResponseTo {
         return newsService.updateNews(newsRequestTo, userId)
     }

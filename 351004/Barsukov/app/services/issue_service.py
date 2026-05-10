@@ -1,48 +1,49 @@
-from datetime import datetime
-
-from app.repository.memory import issue_repo, author_repo
-from app.schemas.issue import IssueRequestTo, IssueResponseTo
-from app.core.exceptions import AppException
-
+import json
+from sqlalchemy.orm import Session
+from repository import IssueRepo
+from schemas.issue import IssueRequestTo, IssueResponseTo
+from redis_config import redis_client
 
 class IssueService:
-    def create(self, dto: IssueRequestTo) -> IssueResponseTo:
-        # Проверяем, что автор существует
-        if not author_repo.find_by_id(dto.authorId):
-            raise AppException(400, "Author not found", 4)
+    def __init__(self):
+        self.repo = IssueRepo()
+        self.cache_prefix = "issue:"
 
-        now = datetime.now().isoformat()
-        data = dto.model_dump()
-        data.update({"created": now, "modified": now})
+    def create(self, db: Session, dto: IssueRequestTo):
+        data = dto.model_dump(exclude_none=True)
+        if "authorId" in data: data["author_id"] = data.pop("authorId")
+        if "stickerIds" in data: data.pop("stickerIds")
+        return self.repo.create(db, data)
 
-        return IssueResponseTo(**issue_repo.save(data))
+    def get_all(self, db: Session, skip=0, limit=10):
+        return self.repo.get_all(db, skip=skip, limit=limit)
 
-    def get_all(self):
-        return [IssueResponseTo(**i) for i in issue_repo.find_all()]
+    async def get_by_id(self, db: Session, id: int):
+        cache_key = f"{self.cache_prefix}{id}"
+        cached = await redis_client.get(cache_key)
+        if cached:
+            return IssueResponseTo(**json.loads(cached))
 
-    def get_by_id(self, id: int):
-        res = issue_repo.find_by_id(id)
-        if not res:
-            raise AppException(404, "Issue not found", 5)
-        return IssueResponseTo(**res)
+        i = self.repo.get_by_id(db, id)
+        if i:
+            res = IssueResponseTo(
+                id=i.id, authorId=i.author_id, title=i.title,
+                content=i.content, created=str(i.created), modified=str(i.modified)
+            )
+            await redis_client.set(cache_key, res.model_dump_json(), ex=3600)
+            return res
+        return None
 
-    def update(self, id: int, dto: IssueRequestTo) -> IssueResponseTo:
-        # Автор должен существовать
-        if not author_repo.find_by_id(dto.authorId):
-            raise AppException(400, "Author not found", 7)
+    async def update(self, db: Session, id: int, dto: IssueRequestTo):
+        data = dto.model_dump(exclude_none=True)
+        if "authorId" in data: data["author_id"] = data.pop("authorId")
+        res = self.repo.update(db, id, data)
+        if res:
+            await redis_client.delete(f"{self.cache_prefix}{id}")
+        return res
 
-        existing = issue_repo.find_by_id(id)
-        if not existing:
-            raise AppException(404, "Issue not found", 6)
-
-        now = datetime.now().isoformat()
-        data = dto.model_dump()
-        data["id"] = id
-        data["created"] = existing.get("created", now)
-        data["modified"] = now
-
-        return IssueResponseTo(**issue_repo.save(data))
-
-    def delete(self, id: int):
-        if not issue_repo.delete(id):
-            raise AppException(404, "Issue not found", 8)
+    async def delete(self, db: Session, id: int):
+        success = self.repo.delete(db, id)
+        if success:
+            await redis_client.delete(f"{self.cache_prefix}{id}")
+        return success

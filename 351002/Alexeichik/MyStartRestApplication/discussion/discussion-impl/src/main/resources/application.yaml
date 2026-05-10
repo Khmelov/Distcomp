@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    type: org.springframework.jdbc.datasource.DriverManagerDataSource
+    url: jdbc:cassandra://localhost:9042/distcomp?compliancemode=Liquibase&localdatacenter=datacenter1
+    driver-class-name: com.ing.data.cassandra.jdbc.CassandraDriver
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+
+  cassandra:
+    contact-points: localhost:9042
+    keyspace-name: distcomp
+    local-datacenter: datacenter1
+  kafka:
+    bootstrap-servers: 127.0.0.1:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: 1
+      properties:
+        linger.ms: 0
+    consumer:
+      group-id: discussion-group
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: latest
+      properties:
+        spring.json.trusted.packages: "com.github.Lexya06.startrestapp.*"
+        fetch.min.bytes: 1
+        fetch.max.wait.ms: 50
+    listener:
+      poll-timeout: 100ms
+      concurrency: 3
+server:
+  address: localhost
+  port: 24130
+  api:
+    base-path:
+      v1: "/api/v1.0"
+      v2: "/api/v2.0"
+management:
+  endpoints:
+    web:
+      exposure:
+        include: mappings

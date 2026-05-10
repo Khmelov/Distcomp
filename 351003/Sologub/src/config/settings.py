@@ -49,7 +49,20 @@ INSTALLED_APPS = [
     'apps.stories.apps.StoriesConfig',
     'apps.notes.apps.NotesConfig',
     'apps.markers.apps.MarkersConfig',
+    'apps.security.apps.SecurityConfig',
 ]
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'apps.security.exceptions.api_exception_handler',
+    'DEFAULT_AUTHENTICATION_CLASSES': (),
+    'DEFAULT_PERMISSION_CLASSES': (),
+}
+
+# JWT settings
+JWT_SECRET = os.getenv('JWT_SECRET', 'change-me-in-prod-distcomp-jwt-secret')
+JWT_ALGORITHM = 'HS256'
+JWT_ACCESS_TOKEN_LIFETIME_SECONDS = 60 * 60  # 1 hour
+JWT_ISSUER = 'distcomp-sologub'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

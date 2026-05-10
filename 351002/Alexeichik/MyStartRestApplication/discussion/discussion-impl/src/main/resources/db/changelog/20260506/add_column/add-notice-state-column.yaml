@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-notice-state-column
+      author: gemini-cli
+      changes:
+        - addColumn:
+            tableName: tbl_notice
+            columns:
+              - column:
+                  name: state
+                  type: text
+                  constraints:
+                    nullable: true

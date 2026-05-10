@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <include file="db/changelog/changes/001-create-core-tables.xml"/>
+    <include file="db/changelog/changes/002-drop-tbl-comment.xml"/>
+    <include file="db/changelog/changes/003-seed-orsik-creator.xml"/>
+    <include file="db/changelog/changes/004-security-role-password.xml"/>
+</databaseChangeLog>

@@ -1,6 +1,6 @@
 ﻿using Application.DTOs.Requests;
 using Application.DTOs.Responses;
-using Application.Exceptions;
+using Application.Exceptions.Application;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,6 +36,11 @@ namespace API.Controllers
                     new { id = createdMarker.Id },
                     createdMarker
                 );
+            }
+            catch (MarkerAlreadyExistsException ex)
+            {
+                _logger.LogError(ex, "Marker already exists");
+                return StatusCode(403);
             }
             catch (Exception ex)
             {

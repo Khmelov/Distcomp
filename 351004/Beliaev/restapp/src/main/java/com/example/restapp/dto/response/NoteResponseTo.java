@@ -1,4 +1,4 @@
-package com.example.restapp.dto.response;
+package com.example.discussion.dto.response;
 
 import lombok.Data;
 

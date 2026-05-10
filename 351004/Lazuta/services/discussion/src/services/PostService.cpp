@@ -1,0 +1,124 @@
+#include "PostService.h"
+#include <storage/database/PostRepository.h>
+#include <mapping/DtoMapper.h>
+#include <exceptions/DatabaseException.h>
+#include <exceptions/NotFoundException.h>
+#include <exceptions/ValidationException.h>
+
+namespace discussion
+{
+
+PostService::PostService(std::shared_ptr<PostRepository> storage)
+    : m_dao(storage)
+{
+}
+
+dto::PostResponseTo PostService::Create(const dto::PostRequestTo& request)
+{
+    request.validate();
+    
+    TblPost entity = DtoMapper::ToEntity(request);
+    auto result = m_dao->Create(entity);
+    
+    if (std::holds_alternative<DatabaseError>(result))
+    {
+        throw DatabaseException("Failed to create post");
+    }
+    
+    int64_t id = std::get<int64_t>(result);
+    auto getResult = m_dao->GetByID(id);
+    
+    if (std::holds_alternative<DatabaseError>(getResult))
+    {
+        throw DatabaseException("Failed to retrieve created post");
+    }
+    
+    return DtoMapper::ToResponse(std::get<TblPost>(getResult));
+}
+
+dto::PostResponseTo PostService::Read(int64_t id)
+{
+    auto result = m_dao->GetByID(id);
+    
+    if (std::holds_alternative<DatabaseError>(result))
+    {
+        DatabaseError error = std::get<DatabaseError>(result);
+        if (error == DatabaseError::NotFound)
+        {
+            throw NotFoundException("Post not found");
+        }
+        throw DatabaseException("Failed to retrieve post");
+    }
+    
+    return DtoMapper::ToResponse(std::get<TblPost>(result));
+}
+
+dto::PostResponseTo PostService::Update(const dto::PostRequestTo& request, int64_t id)
+{
+    request.validate();
+    
+    TblPost entity = DtoMapper::ToEntityForUpdate(request, id);
+    auto updateResult = m_dao->Update(id, entity);
+    
+    if (std::holds_alternative<DatabaseError>(updateResult))
+    {
+        DatabaseError error = std::get<DatabaseError>(updateResult);
+        if (error == DatabaseError::NotFound)
+        {
+            throw NotFoundException("Post not found for update");
+        }
+        throw DatabaseException("Failed to update post");
+    }
+    
+    auto getResult = m_dao->GetByID(id);
+    
+    if (std::holds_alternative<DatabaseError>(getResult))
+    {
+        throw DatabaseException("Failed to retrieve updated post");
+    }
+    
+    return DtoMapper::ToResponse(std::get<TblPost>(getResult));
+}
+
+bool PostService::Delete(int64_t id)
+{
+    auto result = m_dao->Delete(id);
+    
+    if (std::holds_alternative<DatabaseError>(result))
+    {
+        DatabaseError error = std::get<DatabaseError>(result);
+        if (error == DatabaseError::NotFound)
+        {
+            throw NotFoundException("Post not found for deletion");
+        }
+        throw DatabaseException("Failed to delete post");
+    }
+    
+    return std::get<bool>(result);
+}
+
+std::vector<dto::PostResponseTo> PostService::GetAll()
+{
+    auto result = m_dao->ReadAll();
+    
+    if (std::holds_alternative<DatabaseError>(result))
+    {
+        throw DatabaseException("Failed to retrieve all posts");
+    }
+    
+    return DtoMapper::ToResponseList(std::get<std::vector<TblPost>>(result));
+}
+
+std::vector<dto::PostResponseTo> PostService::GetByIssueId(int64_t issueId)
+{
+    auto result = m_dao->FindByIssueId(issueId);
+    
+    if (std::holds_alternative<DatabaseError>(result))
+    {
+        throw DatabaseException("Failed to retrieve posts by issue id");
+    }
+    
+    return DtoMapper::ToResponseList(std::get<std::vector<TblPost>>(result));
+}
+
+}

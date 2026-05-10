@@ -1,29 +1,41 @@
-from app.repository.memory import sticker_repo
-from app.schemas.sticker import StickerRequestTo, StickerResponseTo
-from app.core.exceptions import AppException
-
+import json
+from sqlalchemy.orm import Session
+from repository import StickerRepo
+from schemas.sticker import StickerRequestTo, StickerResponseTo
+from redis_config import redis_client
 
 class StickerService:
-    def create(self, dto: StickerRequestTo) -> StickerResponseTo:
-        return StickerResponseTo(**sticker_repo.save(dto.model_dump()))
+    def __init__(self):
+        self.repo = StickerRepo()
+        self.cache_prefix = "sticker:"
 
-    def get_all(self):
-        return [StickerResponseTo(**s) for s in sticker_repo.find_all()]
+    def create(self, db: Session, dto: StickerRequestTo):
+        return self.repo.create(db, dto.model_dump(exclude_none=True))
 
-    def get_by_id(self, id: int):
-        res = sticker_repo.find_by_id(id)
-        if not res:
-            raise AppException(404, "Sticker not found", 9)
-        return StickerResponseTo(**res)
+    def get_all(self, db: Session):
+        return self.repo.get_all(db)
 
-    def update(self, id: int, dto: StickerRequestTo) -> StickerResponseTo:
-        if not sticker_repo.find_by_id(id):
-            raise AppException(404, "Sticker not found", 10)
-        data = dto.model_dump()
-        data["id"] = id
-        saved = sticker_repo.save(data)
-        return StickerResponseTo(**saved)
+    async def get_by_id(self, db: Session, id: int):
+        cache_key = f"{self.cache_prefix}{id}"
+        cached = await redis_client.get(cache_key)
+        if cached:
+            return StickerResponseTo(**json.loads(cached))
 
-    def delete(self, id: int):
-        if not sticker_repo.delete(id):
-            raise AppException(404, "Sticker not found", 11)
+        res = self.repo.get_by_id(db, id)
+        if res:
+            dto = StickerResponseTo(id=res.id, name=res.name)
+            await redis_client.set(cache_key, dto.model_dump_json(), ex=3600)
+            return dto
+        return None
+
+    async def update(self, db: Session, id: int, dto: StickerRequestTo):
+        res = self.repo.update(db, id, dto.model_dump(exclude_none=True))
+        if res:
+            await redis_client.delete(f"{self.cache_prefix}{id}")
+        return res
+
+    async def delete(self, db: Session, id: int):
+        success = self.repo.delete(db, id)
+        if success:
+            await redis_client.delete(f"{self.cache_prefix}{id}")
+        return success

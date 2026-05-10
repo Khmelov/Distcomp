@@ -10,4 +10,6 @@
     <include file="changes/003-create-topic-table.xml" relativeToChangelogFile="true"/>
     <include file="changes/004-create-note-table.xml" relativeToChangelogFile="true"/>
     <include file="changes/005-create-topic-tag-m2m-table.xml" relativeToChangelogFile="true"/>
+    <include file="changes/006-drop-note-table.xml" relativeToChangelogFile="true"/>
+    <include file="changes/007-add-role-to-user.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="001-create-tbl-creator" author="codex">
+        <createTable tableName="tbl_creator">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_tbl_creator_login"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="002-create-tbl-tweet" author="codex">
+        <createTable tableName="tbl_tweet">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="creator_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_tbl_tweet_title"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="modified" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="tbl_tweet"
+                baseColumnNames="creator_id"
+                constraintName="fk_tbl_tweet_creator"
+                referencedTableName="tbl_creator"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+        <createIndex tableName="tbl_tweet" indexName="idx_tbl_tweet_creator_id">
+            <column name="creator_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="003-create-tbl-label" author="codex">
+        <createTable tableName="tbl_label">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_tbl_label_name"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="004-create-tbl-comment" author="codex">
+        <createTable tableName="tbl_comment">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tweet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="tbl_comment"
+                baseColumnNames="tweet_id"
+                constraintName="fk_tbl_comment_tweet"
+                referencedTableName="tbl_tweet"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+        <createIndex tableName="tbl_comment" indexName="idx_tbl_comment_tweet_id">
+            <column name="tweet_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="005-create-tbl-tweet-label" author="codex">
+        <createTable tableName="tbl_tweet_label">
+            <column name="tweet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="label_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey
+                tableName="tbl_tweet_label"
+                columnNames="tweet_id,label_id"
+                constraintName="pk_tbl_tweet_label"/>
+        <addForeignKeyConstraint
+                baseTableName="tbl_tweet_label"
+                baseColumnNames="tweet_id"
+                constraintName="fk_tbl_tweet_label_tweet"
+                referencedTableName="tbl_tweet"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+        <addForeignKeyConstraint
+                baseTableName="tbl_tweet_label"
+                baseColumnNames="label_id"
+                constraintName="fk_tbl_tweet_label_label"
+                referencedTableName="tbl_label"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+        <createIndex tableName="tbl_tweet_label" indexName="idx_tbl_tweet_label_label_id">
+            <column name="label_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="02-create-table-editor" author="lashchenka">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="tbl_editor" schemaName="public"/></not>
+        </preConditions>
+        <createTable tableName="tbl_editor">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_tbl_editor"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_editor_login"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="02-create-table-tweet" author="lashchenka">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="tbl_tweet" schemaName="public"/></not>
+        </preConditions>
+        <createTable tableName="tbl_tweet">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_tbl_tweet"/>
+            </column>
+            <column name="editor_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_tweet_editor"
+                             references="public.tbl_editor(id)"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_tweet_title"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP"/>
+            <column name="modified" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="02-create-table-mark" author="lashchenka">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="tbl_mark" schemaName="public"/></not>
+        </preConditions>
+        <createTable tableName="tbl_mark">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_tbl_mark"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_mark_name"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="02-create-table-tweet-mark" author="lashchenka">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="tbl_tweet_mark" schemaName="public"/></not>
+        </preConditions>
+        <createTable tableName="tbl_tweet_mark">
+            <column name="tweet_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_tweet_mark_tweet"
+                             references="public.tbl_tweet(id)"/>
+            </column>
+            <column name="mark_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_tweet_mark_mark"
+                             references="public.tbl_mark(id)"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="tbl_tweet_mark"
+                       columnNames="tweet_id, mark_id"
+                       constraintName="pk_tbl_tweet_mark"/>
+    </changeSet>
+
+    <changeSet id="02-create-table-reaction" author="lashchenka">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="tbl_reaction" schemaName="public"/></not>
+        </preConditions>
+        <createTable tableName="tbl_reaction">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_tbl_reaction"/>
+            </column>
+            <column name="tweet_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_reaction_tweet"
+                             references="public.tbl_tweet(id)"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

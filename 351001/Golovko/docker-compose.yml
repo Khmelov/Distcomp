@@ -1,0 +1,136 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: distcomp_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d distcomp"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: distcomp_cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: "DistCompCluster"
+    ports:
+      - "9042:9042"
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.2
+    container_name: distcomp_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.2
+    container_name: distcomp_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_HOST://localhost:9092,PLAINTEXT://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    restart: unless-stopped
+
+  pg_migrator:
+    image: migrate/migrate
+    container_name: distcomp_pg_migrator
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./db/migrations/postgres:/migrations
+    command: 
+      - -path=/migrations
+      - -database=postgres://postgres:postgres@db:5432/distcomp?sslmode=disable
+      - up
+
+  cass_migrator:
+    image: cassandra:4.1
+    container_name: distcomp_cass_migrator
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./db/migrations/cassandra:/migrations
+    command: /bin/bash -c "cqlsh cassandra -f /migrations/init.cql"
+
+  redis:
+    image: redis:7-alpine
+    container_name: distcomp_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  publisher_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: publisher
+    container_name: distcomp_publisher
+    ports:
+      - "24110:24110"
+    env_file:
+      - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      REDIS_HOST: redis:6379
+    restart: unless-stopped
+    depends_on:
+      pg_migrator:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  discussion_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: discussion
+    container_name: distcomp_discussion
+    ports:
+      - "24130:24130"
+    env_file:
+      - .env
+    environment:
+      KAFKA_BROKERS: kafka:29092
+    restart: unless-stopped
+    depends_on:
+      cass_migrator:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  cassandra_data:

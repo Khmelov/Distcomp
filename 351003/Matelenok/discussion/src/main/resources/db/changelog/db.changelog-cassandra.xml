@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="20260331-01-v2" author="dasha">
+        <createTable tableName="tbl_note">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="article_id" type="bigint"/>
+            <column name="content" type="text"/>
+            <column name="created" type="timestamp"/>
+        </createTable>
+
+        <createIndex tableName="tbl_note" indexName="idx_note_article_id">
+            <column name="article_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

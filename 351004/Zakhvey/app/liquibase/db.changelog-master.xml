@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+    <changeSet id="1" author="student">
+        <sql>CREATE SCHEMA IF NOT EXISTS distcomp;</sql>
+        <sql>ALTER DATABASE distcomp SET search_path TO distcomp, public;</sql>
+    </changeSet>
+
+    <changeSet id="2" author="student" logicalFilePath="path-independent">
+        <!-- Таблица User -->
+        <createTable schemaName="distcomp" tableName="tbl_user">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Таблица Issue -->
+        <createTable schemaName="distcomp" tableName="tbl_issue">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_issue_user" referencedTableName="tbl_user" referencedTableSchemaName="distcomp" referencedColumnNames="id"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Таблица Label -->
+        <createTable schemaName="distcomp" tableName="tbl_label">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Таблица Comment -->
+        <!-- Удалена в связи с кассандрой -->
+<!--        <createTable schemaName="distcomp" tableName="tbl_comment">-->
+<!--            <column name="id" type="BIGINT" autoIncrement="true">-->
+<!--                <constraints primaryKey="true" nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="issue_id" type="BIGINT">-->
+<!--                <constraints nullable="false" foreignKeyName="fk_comment_issue" referencedTableName="tbl_issue" referencedTableSchemaName="distcomp" referencedColumnNames="id"/>-->
+<!--            </column>-->
+<!--            <column name="content" type="VARCHAR(2048)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--        </createTable>-->
+
+        <!-- Таблица связи Issue и Label (многие ко многим) -->
+        <createTable schemaName="distcomp" tableName="tbl_issue_label">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="issue_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_il_issue" referencedTableName="tbl_issue" referencedTableSchemaName="distcomp" referencedColumnNames="id"/>
+            </column>
+            <column name="label_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_il_label" referencedTableName="tbl_label" referencedTableSchemaName="distcomp" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="student">
+        <!-- Первичные данные согласно заданию -->
+        <insert schemaName="distcomp" tableName="tbl_user">
+            <column name="login" value="zakhvey.ivan@gmail.com"/>
+            <column name="password" value="hashed_password_example"/>
+            <column name="firstname" value="Иван"/>
+            <column name="lastname" value="Захвей"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
