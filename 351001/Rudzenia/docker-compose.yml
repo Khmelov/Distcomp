@@ -1,0 +1,124 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  cassandra:
+    image: cassandra:4.1
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: "DistcompCluster"
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'SELECT now() FROM system.local'"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+
+  discussion:
+    build:
+      context: .
+      dockerfile: RW.Discussion/Dockerfile
+    ports:
+      - "24130:24130"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:24130
+      Cassandra__ContactPoint: cassandra
+      Cassandra__Port: 9042
+      Cassandra__Keyspace: distcomp
+      Kafka__BootstrapServers: kafka:29092
+      Kafka__InTopic: InTopic
+      Kafka__OutTopic: OutTopic
+      Kafka__GroupId: discussion-group
+      Redis__ConnectionString: redis:6379
+      Redis__KeyPrefix: rw
+      Redis__TtlSeconds: 300
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
+  publisher:
+    build:
+      context: .
+      dockerfile: RW.Api/Dockerfile
+    ports:
+      - "24110:24110"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:24110
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=distcomp;Username=postgres;Password=postgres"
+      DiscussionServiceUrl: "http://discussion:24130/"
+      Kafka__BootstrapServers: kafka:29092
+      Kafka__InTopic: InTopic
+      Kafka__OutTopic: OutTopic
+      Kafka__GroupId: publisher-group
+      Kafka__RequestTimeoutMs: 10000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discussion:
+        condition: service_started
+      kafka:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  cassandra_data:

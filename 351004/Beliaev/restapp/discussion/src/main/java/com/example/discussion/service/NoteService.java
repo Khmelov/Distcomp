@@ -8,6 +8,7 @@ import com.example.discussion.model.Note;
 import com.example.discussion.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -53,5 +54,23 @@ public class NoteService {
             throw new EntityNotFoundException("Note not found with id: " + id);
         }
         repository.deleteById(id);
+    }
+    // если используете Spring Data Cassandra, можно убрать, но для надежности оставьте
+    public void processNote(NoteRequestTo request, String state) {
+        Note note = new Note(); // Создаем явно
+        note.setId(Math.abs(UUID.randomUUID().getMostSignificantBits()));
+        note.setArticleId(request.getArticleId()); // ЯВНО УСТАНАВЛИВАЕМ!
+        note.setContent(request.getContent());
+        note.setState(state);
+        repository.save(note);
+    }
+    @Transactional
+    public void createWithId(Long id, NoteRequestTo request, String state) {
+        Note note = new Note();
+        note.setId(id);
+        note.setArticleId(request.getArticleId());
+        note.setContent(request.getContent());
+        note.setState(state);
+        repository.save(note);
     }
 }

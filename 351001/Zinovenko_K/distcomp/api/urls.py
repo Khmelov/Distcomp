@@ -6,7 +6,7 @@ router = DefaultRouter(trailing_slash=False)
 router.register(r'editors', EditorViewSet)
 router.register(r'labels', LabelViewSet)
 router.register(r'issues', IssueViewSet)
-router.register(r'messages', MessageViewSet)
+router.register(r'messages', MessageViewSet, basename='message')
 
 urlpatterns = [
     path('healthcheck/', api_healthcheck),

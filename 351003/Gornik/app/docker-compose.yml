@@ -7,23 +7,92 @@ services:
       - "24110:24110"
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres # Исправлено с 1234
-      - POSTGRES_DB=distcomp       # Изменено для соответствия требованиям (или оставьте rv_db, если так задумано)
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=distcomp
       - POSTGRES_HOST=pg
       - POSTGRES_PORT=5432
+      - DISCUSSION_URL=http://discussion:24130
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
-      - pg
+      pg:
+        condition: service_started
+      discussion:
+        condition: service_started
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  discussion:
+    build:
+      context: ./discussion
+      dockerfile: Dockerfile
+    ports:
+      - "24130:24130"
+    environment:
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
+      - CASSANDRA_KEYSPACE=distcomp
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      kafka:
+        condition: service_started
 
   pg:
     image: postgres:16-alpine
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=distcomp       # Должно совпадать с POSTGRES_DB в app
+      - POSTGRES_DB=distcomp
     volumes:
       - pg_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
+  cassandra:
+    image: cassandra:4.1
+    environment:
+      - CASSANDRA_CLUSTER_NAME=distcomp_cluster
+      - CASSANDRA_DC=dc1
+      - CASSANDRA_RACK=rack1
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    ports:
+      - "29092:29092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,HOST://localhost:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
 volumes:
   pg_data:
+  cassandra_data:

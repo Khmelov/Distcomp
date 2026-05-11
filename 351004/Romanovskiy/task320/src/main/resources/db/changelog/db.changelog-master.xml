@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="1" author="matvei">
+        <!-- Таблица Авторов -->
+        <createTable tableName="tbl_author">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)"/>
+            <column name="lastname" type="VARCHAR(64)"/>
+        </createTable>
+
+        <!-- Таблица Твитов -->
+        <createTable tableName="tbl_tweet">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="author_id" type="BIGINT">
+                <constraints foreignKeyName="fk_tweet_author" referencedTableName="tbl_author" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/> <!-- Добавь unique="true" здесь -->
+            </column>
+            <column name="content" type="VARCHAR(2048)"/>
+            <column name="created" type="TIMESTAMP"/>
+            <column name="modified" type="TIMESTAMP"/>
+        </createTable>
+
+        <!-- Таблица Маркеров -->
+        <createTable tableName="tbl_marker">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Таблица Реакций -->
+        <createTable tableName="tbl_reaction">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tweet_id" type="BIGINT">
+                <constraints foreignKeyName="fk_reaction_tweet" referencedTableName="tbl_tweet" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)"/>
+        </createTable>
+
+        <!-- Связующая таблица для многие-ко-многим (Tweet <-> Marker) -->
+        <createTable tableName="tbl_tweet_marker">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tweet_id" type="BIGINT">
+                <constraints foreignKeyName="fk_tm_tweet" referencedTableName="tbl_tweet" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="marker_id" type="BIGINT">
+                <constraints foreignKeyName="fk_tm_marker" referencedTableName="tbl_marker" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

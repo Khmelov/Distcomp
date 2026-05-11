@@ -1,3 +1,4 @@
+using Additions.Cache.Interfaces;
 using Additions.Service;
 using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
@@ -9,11 +10,16 @@ namespace ArticleHouse.Service.Implementations;
 public class CreatorService : BasicService, ICreatorService
 {
     private readonly ICreatorDAO dao;
+    private readonly IDistributedCache cache;
+    private readonly ILogger<CreatorService> logger;
 
-    public CreatorService(ICreatorDAO dao)
+    public CreatorService(ICreatorDAO dao, IDistributedCache cache, ILogger<CreatorService> logger)
     {
         this.dao = dao;
+        this.cache = cache;
+        this.logger = logger;
     }
+
     public async Task<CreatorResponseDTO[]> GetAllCreatorsAsync()
     {
         CreatorModel[] daoModels = await InvokeDAOMethod(() => dao.GetAllAsync());
@@ -30,19 +36,32 @@ public class CreatorService : BasicService, ICreatorService
     public async Task DeleteCreatorAsync(long id)
     {
         await InvokeDAOMethod(() => dao.DeleteAsync(id));
+        await cache.RemoveAsync($"creator:{id}");
     }
 
     public async Task<CreatorResponseDTO> GetCreatorByIdAsync(long id)
     {
-        CreatorModel model = await InvokeDAOMethod(() => dao.GetByIdAsync(id));
-        return MakeResponseFromModel(model);
+        var key = $"creator:{id}";
+        
+        return await cache.GetOrSetAsync(
+            key,
+            async () =>
+            {
+                CreatorModel model = await InvokeDAOMethod(() => dao.GetByIdAsync(id));
+                return MakeResponseFromModel(model);
+            },
+            TimeSpan.FromMinutes(10)
+        );
     }
 
     public async Task<CreatorResponseDTO> UpdateCreatorByIdAsync(long creatorId, CreatorRequestDTO dto)
     {
+        CreatorModel origin = await InvokeLowerMethod(() => dao.GetByIdAsync(creatorId));
         CreatorModel model = MakeModelFromRequest(dto);
         model.Id = creatorId;
-        CreatorModel result = await InvokeDAOMethod(() => dao.UpdateAsync(model));
+        model.Role = origin.Role;
+        CreatorModel result = await InvokeLowerMethod(() => dao.UpdateAsync(model));
+        await cache.RemoveAsync($"creator:{creatorId}");
         return MakeResponseFromModel(result);
     }
 
@@ -60,6 +79,7 @@ public class CreatorService : BasicService, ICreatorService
         model.LastName = dto.LastName;
         model.Login = dto.Login;
         model.Password = dto.Password;
+        model.Role = CreatorModel.CUSTOMER_ROLE;
     }
 
     private static CreatorResponseDTO MakeResponseFromModel(CreatorModel model)
@@ -70,7 +90,7 @@ public class CreatorService : BasicService, ICreatorService
             FirstName = model.FirstName,
             LastName = model.LastName,
             Login = model.Login,
-            Password = model.Password
+            Role = model.Role
         };
     }
 }

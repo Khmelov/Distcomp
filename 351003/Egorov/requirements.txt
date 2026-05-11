@@ -14,7 +14,3 @@ greenlet==3.1.1
 
 cassandra-driver~=3.29.1
 aiokafka>=0.10.0
-python-jose[cryptography]
-passlib[bcrypt]
-python-multipart
-bcrypt==4.0.1

@@ -1,5 +1,5 @@
-﻿using Cassandra;
-using Distcomp.Discussion.Domain.Models;
+﻿using Distcomp.Shared.Models;
+using Cassandra;
 using Distcomp.Discussion.Infrastructure.Data;
 
 namespace Distcomp.Discussion.Infrastructure.Repositories
@@ -12,13 +12,16 @@ namespace Distcomp.Discussion.Infrastructure.Repositories
         public NoteRepository(CassandraProvider provider)
         {
             _session = provider.Session;
-            _insertStmt = _session.Prepare("INSERT INTO tbl_note (country, issue_id, id, content) VALUES (?, ?, ?, ?)");
+            _insertStmt = _session.Prepare("INSERT INTO tbl_note (country, issue_id, id, content, state) VALUES (?, ?, ?, ?, ?)");
         }
 
         public void Update(Note note) => Save(note);
 
-        public void Save(Note note) =>
-            _session.Execute(_insertStmt.Bind(note.Country, note.IssueId, note.Id, note.Content));
+        public void Save(Note note)
+        {
+            var statement = _insertStmt.Bind(note.Country, note.IssueId, note.Id, note.Content, note.State.ToString());
+            _session.Execute(statement);
+        }
 
         public Note? GetOne(string country, long issueId, long id)
         {
@@ -38,12 +41,19 @@ namespace Distcomp.Discussion.Infrastructure.Repositories
         public void Delete(string country, long issueId, long id) =>
             _session.Execute($"DELETE FROM tbl_note WHERE country='{country}' AND issue_id={issueId} AND id={id}");
 
+        public Note? GetByIdOnly(long id)
+        {
+            var row = _session.Execute($"SELECT * FROM tbl_note WHERE id={id} ALLOW FILTERING").FirstOrDefault();
+            return row == null ? null : Map(row);
+        }
+
         private Note Map(Row row) => new Note
         {
             Country = row.GetValue<string>("country"),
             IssueId = row.GetValue<long>("issue_id"),
             Id = row.GetValue<long>("id"),
-            Content = row.GetValue<string>("content")
+            Content = row.GetValue<string>("content"),
+            State = Enum.Parse<NoteState>(row.GetValue<string>("state"))
         };
     }
 }

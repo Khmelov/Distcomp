@@ -18,25 +18,29 @@ type Config struct {
 	JWTSecret         string
 	DiscussionBaseURL string
 	Brokers           []string
+	RedisHost         string
+	RedisPort         string
+	RedisDB           string
+	CacheTTL          string
 }
 
 func Load() (*Config, error) {
-	// Примечание: обычно здесь загружают просто ".env",
-	// но оставляю ".env.example", как было в вашем коде.
 	_ = godotenv.Load(".env.example")
 
 	return &Config{
-		ServerPort: getEnv("SERVER_PORT", "24110"),
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", "postgres"),
-		DBName:     getEnv("DB_NAME", "distcomp"),
-		JWTSecret:  getEnv("JWT_SECRET", "your-secret-key"),
-		Brokers:    strings.Split(getEnv("BROKERS", "localhost"), ","),
-
-		// Читаем из окружения, по умолчанию ставим локальный адрес Discussion
+		ServerPort:        getEnv("SERVER_PORT", "24110"),
+		DBHost:            getEnv("DB_HOST", "localhost"),
+		DBPort:            getEnv("DB_PORT", "5432"),
+		DBUser:            getEnv("DB_USER", "postgres"),
+		DBPassword:        getEnv("DB_PASSWORD", "postgres"),
+		DBName:            getEnv("DB_NAME", "distcomp"),
+		JWTSecret:         getEnv("JWT_SECRET", "your-secret-key"),
+		Brokers:           strings.Split(getEnv("BROKERS", "localhost"), ","),
 		DiscussionBaseURL: getEnv("DISCUSSION_BASE_URL", "http://localhost:24130"),
+		RedisHost:         getEnv("REDIS_HOST", "localhost"),
+		RedisPort:         getEnv("REDIS_PORT", "6379"),
+		RedisDB:           getEnv("REDIS_DB", ""),
+		CacheTTL:          getEnv("CACHE_TTL", "3600"),
 	}, nil
 }
 

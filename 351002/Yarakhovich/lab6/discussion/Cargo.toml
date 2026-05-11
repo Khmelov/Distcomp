@@ -1,0 +1,20 @@
+[package]
+name = "lab6_discussion"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde_json ={version = "1"}
+axum = {workspace = true}
+serde = {workspace = true}
+tokio = {workspace = true}
+tokio-stream = {workspace = true}
+sqlx = {workspace = true}
+rdkafka = {workspace = true}
+uuid = {workspace = true}
+
+common = {workspace = true}
+storage = {workspace = true, features = ["cassandra"]}
+domain = {workspace = true}
+validator = "0.20.0"

@@ -24,6 +24,7 @@ public interface ArticleMapper {
 
     @Mapping(target = "writerId", source = "writer.id")
     @Mapping(target = "markerIds", source = "markers", qualifiedByName = "mapMarkersToIds")
+    @Mapping(target = "messages", ignore = true)
     ArticleResponseTo toResponse(Article entity);
 
     @Named("mapMarkersToIds")

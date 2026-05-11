@@ -1,17 +1,19 @@
 using System.Text.Json.Serialization;
 
 namespace Discussion.DTO {
+    public enum ReactionState { PENDING, APPROVE, DECLINE }
+
+    public class KafkaMessage {
+        public string Operation { get; set; } // POST, GET, PUT, DELETE
+        public ReactionRequestTo Data { get; set; }
+        public string CorrelationId { get; set; } // Для сопоставления ответа в OutTopic
+    }
+
     public class ReactionRequestTo {
-        [JsonPropertyName("id")]
         public long Id { get; set; }
-
-        [JsonPropertyName("tweetId")]
         public long TweetId { get; set; }
-
-        [JsonPropertyName("content")]
-        public string Content { get; set; } = string.Empty;
-
-        [JsonPropertyName("country")]
         public string Country { get; set; } = "by";
+        public string Content { get; set; }
+        public ReactionState State { get; set; } = ReactionState.PENDING;
     }
 }

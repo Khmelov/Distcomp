@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Discussion/Discussion.csproj" Id="c9091aee-1201-43ba-a4d6-a8ec82eefe4c" />
+  <Project Path="Publisher/Publisher.csproj" />
+</Solution>

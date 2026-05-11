@@ -1,16 +1,16 @@
 using System.Text.Json;
+using Additions.Messaging.Interfaces;
 using Additions.Service;
-using Additions.Service.EventService.Interfaces;
 using CommentMicroservice.Service.DTOs;
 using CommentMicroservice.Service.Interfaces;
-using CommonAPI.Service.Events;
+using CommonAPI.Messaging;
 
 namespace CommentMicroservice.Service.Implementations.EventHandlers;
 
 public class UpdateCommentHandler : IEventHandler
 {
     private readonly ICommentService commentService;
-    private readonly IEventProducerService producerService;
+    private readonly IEventProducer producerService;
     private readonly string eventTopic;
 
     public string SupportedOperation
@@ -21,7 +21,7 @@ public class UpdateCommentHandler : IEventHandler
         }
     }
 
-    public UpdateCommentHandler(ICommentService commentService, IEventProducerService producerService,
+    public UpdateCommentHandler(ICommentService commentService, IEventProducer producerService,
                                     IConfiguration configuration)
     {
         this.commentService = commentService;
