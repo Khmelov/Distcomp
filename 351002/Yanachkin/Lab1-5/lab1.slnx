@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="discussion/discussion.csproj" />
+  <Project Path="discussion.Tests/discussion.Tests.csproj" />
+  <Project Path="lab1/lab1.csproj" />
+  <Project Path="lab1.Tests/lab1.Tests.csproj" />
+</Solution>
