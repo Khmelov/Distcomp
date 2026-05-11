@@ -54,4 +54,50 @@ public class MessageRepository
             Content = r.GetValue<string>("content")
         });
     }
+
+    public IEnumerable<dynamic> GetAll()
+    {
+        // Внимание: В Cassandra ALLOW FILTERING или SELECT * без ключа 
+        // считается плохой практикой на больших объемах данных, но для тестов ТЗ это нужно.
+        var ps = _session.Prepare("SELECT * FROM tbl_message");
+        var rows = _session.Execute(ps.Bind());
+        
+        return rows.Select(r => new {
+            Id = r.GetValue<long>("id"),
+            ArticleId = r.GetValue<long>("article_id"),
+            // Добавляем Country, так как ТЗ (схема) требует его возвращать
+            Country = r.GetValue<string>("country"),
+            Content = r.GetValue<string>("content")
+        });
+    }
+    
+    public dynamic? GetById(long id)
+    {
+        // ВАЖНО: В Cassandra фильтрация только по clustering key (id) без partition key (article_id)
+        // требует ALLOW FILTERING. Это плохо для продакшена, но допустимо для учебного ТЗ.
+        var ps = _session.Prepare("SELECT * FROM tbl_message WHERE id = ? ALLOW FILTERING");
+        var row = _session.Execute(ps.Bind(id)).FirstOrDefault();
+        
+        if (row == null) return null;
+
+        return new {
+            Id = row.GetValue<long>("id"),
+            ArticleId = row.GetValue<long>("article_id"),
+            Country = row.GetValue<string>("country"),
+            Content = row.GetValue<string>("content")
+        };
+    }
+
+    public void Update(long id, long articleId, string content, string country = "Unknown")
+    {
+        // Для UPDATE в Cassandra обязательно нужен весь PRIMARY KEY (article_id, id)
+        var ps = _session.Prepare("UPDATE tbl_message SET content = ?, country = ? WHERE article_id = ? AND id = ?");
+        _session.Execute(ps.Bind(content, country, articleId, id));
+    }
+
+    public void Delete(long id, long articleId)
+    {
+        var ps = _session.Prepare("DELETE FROM tbl_message WHERE article_id = ? AND id = ?");
+        _session.Execute(ps.Bind(articleId, id));
+    }
 }

@@ -25,6 +25,13 @@ builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IStickerService, StickerService>();
 
+builder.Services.AddHttpClient<IMessageService, MessageService>(client =>
+{
+    // Берем URL из docker-compose
+    var discussionUrl = builder.Configuration["DiscussionServiceUrl"] ?? "http://localhost:24130";
+    client.BaseAddress = new Uri(discussionUrl);
+});
+
 builder.Services.AddControllers(options =>
     {
         options.Conventions.Add(new ApiPrefixConvention(new RouteAttribute("api/v1.0")));
