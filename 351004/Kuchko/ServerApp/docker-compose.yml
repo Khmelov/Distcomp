@@ -1,8 +1,6 @@
-version: '3.9'
-
 services:
   db:
-    image: postgres:latest
+    image: postgres:17
     container_name: postgres_db
     environment:
       POSTGRES_USER: postgres
@@ -41,16 +39,15 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:24110
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=distcomp;Username=postgres;Password=postgres
-      
       - DiscussionServiceUrl=http://discussion_api:24130
     ports:
-      - "24110:8080"
-        
-  discussion_api: # Новый микросервис (порт 24130)
+      - "24110:24110"
+  
+  discussion_api:
     build:
       context: .
       dockerfile: DiscussionApp/Dockerfile
-    ports: [ "24130:24130" ]
+    container_name: discussion_api
     depends_on:
       cassandra_db:
         condition: service_healthy
@@ -58,6 +55,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:24130
       - Cassandra__ContactPoint=cassandra_db
+    ports:
+      - "24130:24130"
 
 volumes:
   db_data:
