@@ -7,6 +7,7 @@ using ServerApp.Infrastructure;
 using ServerApp.Models.DTOs;
 using ServerApp.Models.Entities;
 using ServerApp.Repository;
+using ServerApp.Services;
 using ServerApp.Services.Implementations;
 using ServerApp.Services.Interfaces;
 
@@ -24,6 +25,10 @@ builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IStickerService, StickerService>();
+
+builder.Services.AddSingleton<KafkaRequestManager>();
+builder.Services.AddHostedService<KafkaResponseListener>(); // Код из предыдущего ответа
+builder.Services.AddScoped<IMessageService, MessageService>();
 
 builder.Services.AddHttpClient<IMessageService, MessageService>(client =>
 {

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ServerApp.Models.DTOs.Requests;
-using ServerApp.Models.DTOs.Responses;
 using ServerApp.Services.Interfaces;
+using SharedModels;
 
 namespace ServerApp.Controllers;
 

@@ -1,5 +1,6 @@
 ﻿using DiscussionApp.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using SharedModels;
 
 namespace DiscussionApp.Controllers;
 
@@ -8,43 +9,30 @@ namespace DiscussionApp.Controllers;
 public class DiscussionController(MessageRepository repo) : ControllerBase
 {
     [HttpPost]
-    public IActionResult Create([FromBody] MessageRequest request)
+    public IActionResult Create([FromBody] MessageRequestTo request)
     {
-        // В реальном проекте ID генерирует Cassandra (uuid), но для совместимости с ТЗ генерим тут
         long newId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(); 
-        repo.Create(request.ArticleId, newId, request.Content);
-        return Ok(new { Id = newId, ArticleId = request.ArticleId, Content = request.Content });
-    }
-
-    [HttpGet("{articleId}")]
-    public IActionResult GetByArticle(long articleId)
-    {
-        return Ok(repo.GetByArticle(articleId));
+        var msg = new MessageResponseTo(newId, request.ArticleId, request.Content, MessageState.Approve);
+        repo.Create(msg);
+        return Ok(msg);
     }
 
     [HttpGet]
-    public IActionResult GetAll()
-    {
-        return Ok(repo.GetAll());
-    }
+    public IActionResult GetAll() => Ok(repo.GetAll());
+
     [HttpGet("{id:long}")]
     public IActionResult GetById(long id)
     {
         var msg = repo.GetById(id);
-        if (msg == null) return NotFound();
-        return Ok(msg);
+        return msg == null ? NotFound() : Ok(msg);
     }
 
     [HttpPut("{id:long}")]
-    public IActionResult Update(long id, [FromBody] MessageRequest request)
+    public IActionResult Update(long id, [FromBody] MessageRequestTo request)
     {
-        var existing = repo.GetById(id);
-        if (existing == null) return NotFound();
-
-        // По логике ТЗ, articleId привязан к сообщению, поэтому мы передаем его из запроса
-        repo.Update(id, request.ArticleId, request.Content);
-        
-        return Ok(new { Id = id, ArticleId = request.ArticleId, Content = request.Content });
+        var msg = new MessageResponseTo(id, request.ArticleId, request.Content, MessageState.Approve);
+        repo.Update(msg);
+        return Ok(msg);
     }
 
     [HttpDelete("{id:long}")]
@@ -52,14 +40,7 @@ public class DiscussionController(MessageRepository repo) : ControllerBase
     {
         var existing = repo.GetById(id);
         if (existing == null) return NotFound();
-
-        // Достаем articleId из существующего сообщения, так как он нужен для удаления в Cassandra
-        long articleId = (long)existing.GetType().GetProperty("ArticleId").GetValue(existing, null);
-        
-        repo.Delete(id, articleId);
+        repo.Delete(id, existing.ArticleId);
         return NoContent();
     }
-    
 }
-
-public record MessageRequest(long ArticleId, string Content);

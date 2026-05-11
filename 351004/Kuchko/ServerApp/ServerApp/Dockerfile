@@ -13,7 +13,8 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-# ИСПРАВЛЕНО: Правильный путь к файлу проекта из корня решения
+# ВАЖНО: Сначала копируем проекты
+COPY ["SharedModels/SharedModels.csproj", "SharedModels/"]
 COPY ["ServerApp/ServerApp.csproj", "ServerApp/"]
 RUN dotnet restore "ServerApp/ServerApp.csproj"
 

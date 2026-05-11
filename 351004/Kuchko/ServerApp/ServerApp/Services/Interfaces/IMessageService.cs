@@ -1,6 +1,4 @@
-﻿using ServerApp.Models.DTOs.Requests;
-using ServerApp.Models.DTOs.Responses;
-
+﻿using SharedModels;
 namespace ServerApp.Services.Interfaces;
 
 public interface IMessageService

@@ -1,4 +1,5 @@
 ﻿using Cassandra;
+using SharedModels;
 using ISession = Cassandra.ISession;
 
 namespace DiscussionApp.Repositories;
@@ -12,87 +13,41 @@ public class MessageRepository
         var contactPoint = config["Cassandra:ContactPoint"] ?? "localhost";
         var cluster = Cluster.Builder().AddContactPoint(contactPoint).Build();
         _session = cluster.Connect();
-
         InitializeDatabase();
     }
 
     private void InitializeDatabase()
     {
-        // Создаем Keyspace (Схему distcomp)
-        _session.Execute(@"
-            CREATE KEYSPACE IF NOT EXISTS distcomp 
-            WITH replication = {'class':'SimpleStrategy', 'replication_factor':1};");
-
+        _session.Execute("CREATE KEYSPACE IF NOT EXISTS distcomp WITH replication = {'class':'SimpleStrategy', 'replication_factor':1};");
         _session.ChangeKeyspace("distcomp");
-
-        // Создаем таблицу. РЕШАЕМ ПРОБЛЕМУ ПЕРЕКОСА ДАННЫХ:
-        // PRIMARY KEY ((article_id), id) - article_id это partition key!
-        _session.Execute(@"
-            CREATE TABLE IF NOT EXISTS tbl_message (
-                article_id bigint,
-                id bigint,
-                country text,
-                content text,
-                PRIMARY KEY ((article_id), id)
-            );");
+        _session.Execute(@"CREATE TABLE IF NOT EXISTS tbl_message (
+            article_id bigint, id bigint, content text, state text, country text,
+            PRIMARY KEY ((article_id), id));");
     }
 
-    public void Create(long articleId, long id, string content, string country = "Unknown")
+    public IEnumerable<MessageResponseTo> GetAll()
     {
-        var ps = _session.Prepare("INSERT INTO tbl_message (article_id, id, country, content) VALUES (?, ?, ?, ?)");
-        _session.Execute(ps.Bind(articleId, id, country, content));
+        var rows = _session.Execute("SELECT * FROM tbl_message ALLOW FILTERING");
+        return rows.Select(MapRow);
     }
 
-    // Для внешнего API
-    public IEnumerable<dynamic> GetByArticle(long articleId)
+    public MessageResponseTo? GetById(long id)
     {
-        var ps = _session.Prepare("SELECT * FROM tbl_message WHERE article_id = ?");
-        var rows = _session.Execute(ps.Bind(articleId));
-        return rows.Select(r => new {
-            Id = r.GetValue<long>("id"),
-            ArticleId = r.GetValue<long>("article_id"),
-            Content = r.GetValue<string>("content")
-        });
-    }
-
-    public IEnumerable<dynamic> GetAll()
-    {
-        // Внимание: В Cassandra ALLOW FILTERING или SELECT * без ключа 
-        // считается плохой практикой на больших объемах данных, но для тестов ТЗ это нужно.
-        var ps = _session.Prepare("SELECT * FROM tbl_message");
-        var rows = _session.Execute(ps.Bind());
-        
-        return rows.Select(r => new {
-            Id = r.GetValue<long>("id"),
-            ArticleId = r.GetValue<long>("article_id"),
-            // Добавляем Country, так как ТЗ (схема) требует его возвращать
-            Country = r.GetValue<string>("country"),
-            Content = r.GetValue<string>("content")
-        });
-    }
-    
-    public dynamic? GetById(long id)
-    {
-        // ВАЖНО: В Cassandra фильтрация только по clustering key (id) без partition key (article_id)
-        // требует ALLOW FILTERING. Это плохо для продакшена, но допустимо для учебного ТЗ.
         var ps = _session.Prepare("SELECT * FROM tbl_message WHERE id = ? ALLOW FILTERING");
         var row = _session.Execute(ps.Bind(id)).FirstOrDefault();
-        
-        if (row == null) return null;
-
-        return new {
-            Id = row.GetValue<long>("id"),
-            ArticleId = row.GetValue<long>("article_id"),
-            Country = row.GetValue<string>("country"),
-            Content = row.GetValue<string>("content")
-        };
+        return row != null ? MapRow(row) : null;
     }
 
-    public void Update(long id, long articleId, string content, string country = "Unknown")
+    public void Create(MessageResponseTo msg)
     {
-        // Для UPDATE в Cassandra обязательно нужен весь PRIMARY KEY (article_id, id)
-        var ps = _session.Prepare("UPDATE tbl_message SET content = ?, country = ? WHERE article_id = ? AND id = ?");
-        _session.Execute(ps.Bind(content, country, articleId, id));
+        var ps = _session.Prepare("INSERT INTO tbl_message (article_id, id, content, state, country) VALUES (?, ?, ?, ?, ?)");
+        _session.Execute(ps.Bind(msg.ArticleId, msg.Id, msg.Content, msg.State, "Unknown"));
+    }
+
+    public void Update(MessageResponseTo msg)
+    {
+        var ps = _session.Prepare("UPDATE tbl_message SET content = ?, state = ? WHERE article_id = ? AND id = ?");
+        _session.Execute(ps.Bind(msg.Content, msg.State, msg.ArticleId, msg.Id));
     }
 
     public void Delete(long id, long articleId)
@@ -100,4 +55,8 @@ public class MessageRepository
         var ps = _session.Prepare("DELETE FROM tbl_message WHERE article_id = ? AND id = ?");
         _session.Execute(ps.Bind(articleId, id));
     }
+
+    private MessageResponseTo MapRow(Row r) => new(
+        r.GetValue<long>("id"), r.GetValue<long>("article_id"), 
+        r.GetValue<string>("content"), r.GetValue<string>("state"));
 }

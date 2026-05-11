@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="CassandraCSharpDriver" Version="3.22.0" />
+        <PackageReference Include="Confluent.Kafka" Version="2.14.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.14"/>
     </ItemGroup>
 
@@ -16,6 +17,10 @@
       <Content Include="..\.dockerignore">
         <Link>.dockerignore</Link>
       </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\SharedModels\SharedModels.csproj" />
     </ItemGroup>
 
 </Project>

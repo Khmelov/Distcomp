@@ -2,6 +2,7 @@
 using ServerApp.Models.DTOs.Requests;
 using ServerApp.Models.DTOs.Responses;
 using ServerApp.Models.Entities;
+using SharedModels;
 
 namespace ServerApp.Services.Mapping;
 

@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerApp", "ServerApp\Serv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscussionApp", "DiscussionApp\DiscussionApp.csproj", "{46462AFC-56FE-480A-84FC-488D4DB0C32E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedModels", "SharedModels\SharedModels.csproj", "{6DAA6601-8D50-45D6-A710-55448D8DCF0E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{46462AFC-56FE-480A-84FC-488D4DB0C32E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46462AFC-56FE-480A-84FC-488D4DB0C32E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46462AFC-56FE-480A-84FC-488D4DB0C32E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DAA6601-8D50-45D6-A710-55448D8DCF0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DAA6601-8D50-45D6-A710-55448D8DCF0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DAA6601-8D50-45D6-A710-55448D8DCF0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DAA6601-8D50-45D6-A710-55448D8DCF0E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

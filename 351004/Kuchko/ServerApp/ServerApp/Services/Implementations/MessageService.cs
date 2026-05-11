@@ -1,87 +1,86 @@
-﻿using System.Net;
-using System.Text;
-using System.Text.Json;
-using ServerApp.Models.DTOs.Requests;
-using ServerApp.Models.DTOs.Responses;
-using ServerApp.Models.Entities;
-using ServerApp.Repository;
+﻿using System.Text.Json;
+using Confluent.Kafka;
+using SharedModels;
 using ServerApp.Services.Interfaces;
+using ServerApp.Repository;
 
 namespace ServerApp.Services.Implementations;
 
 public class MessageService(
-    IRepository<Article> articleRepo, // Оставляем ArticleRepo для валидации
-    HttpClient httpClient) : IMessageService
+    KafkaRequestManager rms, 
+    IConfiguration config, 
+    IRepository<Models.Entities.Article> articleRepo) : IMessageService
 {
-    private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
-
-    // 1. Получить все сообщения (GET /api/v1.0/messages)
-    public IEnumerable<MessageResponseTo> GetAll()
+    private readonly ProducerConfig _pConf = new() { BootstrapServers = config["Kafka:BootstrapServers"] ?? "kafka:29092" };
+    private readonly JsonSerializerOptions _options = new() { PropertyNameCaseInsensitive = true };
+    private async Task<KafkaEvent> RequestReply(KafkaEvent ev)
     {
-        var response = httpClient.GetAsync("/api/v1.0/messages").Result;
-        EnsureSuccess(response);
+        var tcs = new TaskCompletionSource<KafkaEvent>();
+        rms.Add(ev.CorrelationId, tcs);
 
-        var content = response.Content.ReadAsStringAsync().Result;
-        return JsonSerializer.Deserialize<IEnumerable<MessageResponseTo>>(content, _jsonOptions)!;
+        using var p = new ProducerBuilder<string, string>(_pConf).Build();
+        await p.ProduceAsync("InTopic", new Message<string, string> { Key = ev.ArticleId.ToString(), Value = JsonSerializer.Serialize(ev) });
+
+        if (await Task.WhenAny(tcs.Task, Task.Delay(1000)) == tcs.Task) return await tcs.Task;
+        throw new TimeoutException("Discussion service timeout");
     }
 
-    // 2. Получить сообщение по ID (GET /api/v1.0/messages/{id})
-    public MessageResponseTo GetById(long id)
-    {
-        var response = httpClient.GetAsync($"/api/v1.0/messages/{id}").Result;
-        EnsureSuccess(response, id);
-
-        var content = response.Content.ReadAsStringAsync().Result;
-        return JsonSerializer.Deserialize<MessageResponseTo>(content, _jsonOptions)!;
-    }
-
-    // 3. Создать сообщение (POST /api/v1.0/messages)
     public MessageResponseTo Create(MessageRequestTo request)
     {
-        // Бизнес-логика остается в Publisher: проверяем, существует ли статья в Postgres
-        if (articleRepo.GetById(request.ArticleId) == null)
-            throw new ArgumentException($"Article {request.ArticleId} not found");
+        if (articleRepo.GetById(request.ArticleId) == null) throw new ArgumentException("Article not found");
+        
+        var msg = new MessageResponseTo(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), request.ArticleId, request.Content, MessageState.Pending);
+        var ev = new KafkaEvent { Action = "CREATE", ArticleId = request.ArticleId, Payload = JsonSerializer.Serialize(msg) };
 
-        var response = httpClient.PostAsJsonAsync("/api/v1.0/messages", request).Result;
-        EnsureSuccess(response);
-
-        var content = response.Content.ReadAsStringAsync().Result;
-        return JsonSerializer.Deserialize<MessageResponseTo>(content, _jsonOptions)!;
+        using var p = new ProducerBuilder<string, string>(_pConf).Build();
+        p.Produce("InTopic", new Message<string, string> { Key = ev.ArticleId.ToString(), Value = JsonSerializer.Serialize(ev) });
+        return msg; // Сразу возвращаем PENDING
     }
 
-    // 4. Обновить сообщение (PUT /api/v1.0/messages/{id})
+    private async Task<KafkaEvent> SendRequestReply(KafkaEvent ev)
+    {
+        var tcs = new TaskCompletionSource<KafkaEvent>();
+        rms.Add(ev.CorrelationId, tcs);
+
+        using var p = new ProducerBuilder<string, string>(_pConf).Build();
+        await p.ProduceAsync("InTopic", new Message<string, string> { Key = ev.ArticleId.ToString(), Value = JsonSerializer.Serialize(ev) });
+
+        if (await Task.WhenAny(tcs.Task, Task.Delay(1000)) == tcs.Task) return await tcs.Task;
+        throw new TimeoutException("Discussion service timeout (1s)");
+    }
+
     public MessageResponseTo Update(long id, MessageRequestTo request)
     {
-        if (articleRepo.GetById(request.ArticleId) == null)
-            throw new ArgumentException($"Article {request.ArticleId} not found");
+        var msg = new MessageResponseTo(id, request.ArticleId, request.Content, MessageState.Pending);
+        var ev = new KafkaEvent { 
+            Action = "UPDATE", 
+            ArticleId = request.ArticleId, 
+            Payload = JsonSerializer.Serialize(msg),
+            CorrelationId = Guid.NewGuid().ToString() 
+        };
 
-        // Отправляем PUT запрос в DiscussionApp
-        var jsonContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-        var response = httpClient.PutAsync($"/api/v1.0/messages/{id}", jsonContent).Result;
-        EnsureSuccess(response, id);
-
-        var content = response.Content.ReadAsStringAsync().Result;
-        return JsonSerializer.Deserialize<MessageResponseTo>(content, _jsonOptions)!;
+        var result = SendRequestReply(ev).Result;
+        return JsonSerializer.Deserialize<MessageResponseTo>(result.Payload, _options)!;
     }
 
-    // 5. Удалить сообщение (DELETE /api/v1.0/messages/{id})
+    public MessageResponseTo GetById(long id)
+    {
+        // Для упрощения в этом задании ищем по ID (с ALLOW FILTERING в Cassandra)
+        var res = RequestReply(new KafkaEvent { Action = "GET", Payload = id.ToString() }).Result;
+        return JsonSerializer.Deserialize<MessageResponseTo>(res.Payload)!;
+    }
+
+    public IEnumerable<MessageResponseTo> GetAll()
+    {
+        var res = RequestReply(new KafkaEvent { Action = "GET_ALL" }).Result;
+        return JsonSerializer.Deserialize<IEnumerable<MessageResponseTo>>(res.Payload)!;
+    }
+
     public void Delete(long id)
     {
-        var response = httpClient.DeleteAsync($"/api/v1.0/messages/{id}").Result;
-        EnsureSuccess(response, id);
-    }
-
-    // --- Вспомогательный метод для обработки ошибок от DiscussionApp ---
-    private void EnsureSuccess(HttpResponseMessage response, long? id = null)
-    {
-        if (response.IsSuccessStatusCode) return;
-
-        if (response.StatusCode == HttpStatusCode.NotFound)
-            throw new KeyNotFoundException($"Message {id?.ToString() ?? "data"} not found in Discussion Service");
-
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-            throw new ArgumentException("Invalid data sent to Discussion Service");
-
-        throw new Exception($"Discussion Service error: {response.StatusCode}");
+        // Нам нужно знать articleId для удаления в Cassandra. 
+        // В реальном API он должен передаваться, тут получим его через GET
+        var msg = GetById(id);
+        _ = RequestReply(new KafkaEvent { Action = "DELETE", ArticleId = msg.ArticleId, Payload = id.ToString() }).Result;
     }
 }
