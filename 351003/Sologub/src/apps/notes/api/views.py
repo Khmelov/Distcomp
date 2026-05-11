@@ -1,65 +1,175 @@
-import os
-import requests
+import logging
+import random
+import time
+
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.request import Request
 
+from apps.notes import cache as notes_cache
 
-def _discussion_url() -> str:
-    base = os.environ.get("DISCUSSION_SERVICE_URL", "http://localhost:24130/api/v1.0")
-    return base.rstrip("/")
+logger = logging.getLogger(__name__)
 
 
-def _proxy(request: Request, path_suffix: str = "", method: str = None) -> Response:
-    method = (method or request.method).upper()
-    url = f"{_discussion_url()}/notes{path_suffix}"
-    params = request.query_params
-    headers = {"Content-Type": "application/json"}
+# ---------------------------------------------------------------------------
+# REST (publisher) service for Notes.
+# Redis is used as a shared cache / store so the service stays stateless and
+# can be scaled horizontally. Every mutation is also published to Kafka so
+# that the discussion service reconciles the authoritative state in Cassandra.
+# ---------------------------------------------------------------------------
+
+
+def _generate_id() -> int:
+    return (int(time.time() * 1_000_000) << 10) + random.randint(0, 1023)
+
+
+def _publish(action: str, **payload) -> None:
     try:
-        if method == "GET":
-            r = requests.get(url, params=params, timeout=10)
-        elif method == "POST":
-            r = requests.post(url, json=request.data, params=params, timeout=10)
-        elif method == "PUT":
-            r = requests.put(url, json=request.data, params=params, timeout=10)
-        elif method == "PATCH":
-            r = requests.patch(url, json=request.data, params=params, timeout=10)
-        elif method == "DELETE":
-            r = requests.delete(url, params=params, timeout=10)
-        else:
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-    except requests.RequestException as e:
-        return Response(
-            {"detail": f"Discussion service error: {str(e)}"},
-            status=status.HTTP_502_BAD_GATEWAY,
+        from apps.notes.kafka_producer import send_note_event
+        send_note_event(action=action, **payload)
+    except Exception as exc:
+        logger.warning("Kafka publish failed (%s): %s", action, exc)
+
+
+def _validate_payload(data: dict):
+    story_id = data.get("storyId")
+    content = data.get("content") or ""
+    country = data.get("country", "") or ""
+
+    if story_id is None:
+        return None, Response(
+            {"detail": "storyId is required."},
+            status=status.HTTP_400_BAD_REQUEST,
         )
     try:
-        data = r.json() if r.content else None
-    except Exception:
-        data = {"detail": r.text or f"Discussion returned {r.status_code}"} if r.content else None
-    return Response(data=data, status=r.status_code)
+        story_id = int(story_id)
+    except (TypeError, ValueError):
+        return None, Response(
+            {"detail": "storyId must be an integer."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if len(content) < 2 or len(content) > 2048:
+        return None, Response(
+            {"detail": "content must be between 2 and 2048 characters."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return {"storyId": story_id, "content": content, "country": country}, None
+
+
+def _parse_id(pk):
+    try:
+        return int(pk), None
+    except (TypeError, ValueError):
+        return None, Response(
+            {"detail": "Invalid note id."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class NoteViewSet(viewsets.ViewSet):
-    """
-    Прокси к микросервису discussion (Note хранятся в Cassandra).
-    Внешнее API приложения остаётся прежним: /api/v1.0/notes.
-    """
 
     def list(self, request: Request):
-        return _proxy(request)
+        story_id = request.query_params.get("storyId")
+        if story_id is not None:
+            try:
+                story_id = int(story_id)
+            except (TypeError, ValueError):
+                return Response(
+                    {"detail": "storyId must be an integer."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        try:
+            notes = notes_cache.list_all(story_id=story_id)
+        except Exception as exc:
+            logger.exception("Redis list failure")
+            return Response({"detail": f"Cache unavailable: {exc}"},
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return Response(notes, status=status.HTTP_200_OK)
 
     def create(self, request: Request):
-        return _proxy(request)
+        data = request.data if isinstance(request.data, dict) else {}
+        clean, err = _validate_payload(data)
+        if err is not None:
+            return err
+        note_id = _generate_id()
+        note = {
+            "id": note_id,
+            "storyId": clean["storyId"],
+            "content": clean["content"],
+            "country": clean["country"],
+            "state": "PENDING",
+        }
+        try:
+            notes_cache.save(note)
+        except Exception as exc:
+            logger.exception("Redis save failure")
+            return Response({"detail": f"Cache unavailable: {exc}"},
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        _publish("create", note_id=note_id, story_id=clean["storyId"],
+                 content=clean["content"], country=clean["country"])
+        return Response(note, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request: Request, pk=None):
-        return _proxy(request, path_suffix=f"/{pk}")
+        note_id, err = _parse_id(pk)
+        if err is not None:
+            return err
+        try:
+            note = notes_cache.get(note_id)
+        except Exception as exc:
+            logger.exception("Redis get failure")
+            return Response({"detail": f"Cache unavailable: {exc}"},
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        if not note:
+            return Response({"detail": "Note not found."},
+                            status=status.HTTP_404_NOT_FOUND)
+        return Response(note, status=status.HTTP_200_OK)
 
     def update(self, request: Request, pk=None):
-        return _proxy(request, path_suffix=f"/{pk}")
+        data = request.data if isinstance(request.data, dict) else {}
+        if pk is None:
+            pk = data.get("id")
+        note_id, err = _parse_id(pk)
+        if err is not None:
+            return err
+        clean, err = _validate_payload(data)
+        if err is not None:
+            return err
+        try:
+            existing = notes_cache.get(note_id)
+            if not existing:
+                return Response({"detail": "Note not found."},
+                                status=status.HTTP_404_NOT_FOUND)
+            note = {
+                "id": note_id,
+                "storyId": clean["storyId"],
+                "content": clean["content"],
+                "country": clean["country"],
+                "state": existing.get("state", "PENDING"),
+            }
+            notes_cache.save(note)
+        except Exception as exc:
+            logger.exception("Redis update failure")
+            return Response({"detail": f"Cache unavailable: {exc}"},
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        _publish("update", note_id=note_id, story_id=clean["storyId"],
+                 content=clean["content"], country=clean["country"])
+        return Response(note, status=status.HTTP_200_OK)
 
     def partial_update(self, request: Request, pk=None):
-        return _proxy(request, path_suffix=f"/{pk}", method="PUT")
+        return self.update(request, pk=pk)
 
     def destroy(self, request: Request, pk=None):
-        return _proxy(request, path_suffix=f"/{pk}")
+        note_id, err = _parse_id(pk)
+        if err is not None:
+            return err
+        try:
+            removed = notes_cache.delete(note_id)
+        except Exception as exc:
+            logger.exception("Redis delete failure")
+            return Response({"detail": f"Cache unavailable: {exc}"},
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        if not removed:
+            return Response({"detail": "Note not found."},
+                            status=status.HTTP_404_NOT_FOUND)
+        _publish("delete", note_id=note_id, story_id=int(removed["storyId"]))
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -1,16 +1,14 @@
-using System.Text.Json;
+using Additions.Messaging.Interfaces;
 using Additions.Service;
-using Additions.Service.EventService.Interfaces;
-using CommentMicroservice.Service.DTOs;
 using CommentMicroservice.Service.Interfaces;
-using CommonAPI.Service.Events;
+using CommonAPI.Messaging;
 
 namespace CommentMicroservice.Service.Implementations.EventHandlers;
 
 public class DeleteCommentHandler : IEventHandler
 {
     private readonly ICommentService commentService;
-    private readonly IEventProducerService producerService;
+    private readonly IEventProducer producerService;
     private readonly string eventTopic;
 
     public string SupportedOperation
@@ -21,7 +19,7 @@ public class DeleteCommentHandler : IEventHandler
         }
     }
 
-    public DeleteCommentHandler(ICommentService commentService, IEventProducerService producerService,
+    public DeleteCommentHandler(ICommentService commentService, IEventProducer producerService,
                                     IConfiguration configuration)
     {
         this.commentService = commentService;

@@ -33,11 +33,12 @@ class EditorBase(BaseModel):
 
 
 class EditorCreate(EditorBase):
-    pass
+    role: Optional[str] = "CUSTOMER"
 
 
 class EditorUpdate(EditorBase):
     id: Optional[int] = None
+    role: Optional[str] = "CUSTOMER"
 
 
 class EditorResponse(BaseModel):
@@ -47,3 +48,14 @@ class EditorResponse(BaseModel):
     login: str
     firstname: str
     lastname: str
+    role: Optional[str] = "CUSTOMER"
+
+
+class LoginRequest(BaseModel):
+    login: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "Bearer"

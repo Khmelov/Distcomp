@@ -1,0 +1,31 @@
+server:
+  port: 24130
+
+spring:
+  application:
+    name: discussion
+  cassandra:
+    contact-points: localhost
+    port: 9042
+    local-datacenter: datacenter1
+    keyspace-name: distcomp
+    schema-action: CREATE_IF_NOT_EXISTS
+    request:
+      timeout: 10s
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: discussion-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+app:
+  kafka:
+    in-topic: InTopic
+    out-topic: OutTopic

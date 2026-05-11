@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 
+from src.models.user_role import UserRole
+
 
 @dataclass(kw_only=True)
 class Editor:
@@ -8,3 +10,4 @@ class Editor:
     password: str
     firstname: str
     lastname: str
+    role: UserRole = UserRole.CUSTOMER

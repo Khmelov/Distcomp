@@ -50,10 +50,10 @@ class Databasechangeloglock
         static const std::string _lockedby;
     };
 
-    const static int primaryKeyNumber;
-    const static std::string tableName;
-    const static bool hasPrimaryKey;
-    const static std::string primaryKeyName;
+    static const int primaryKeyNumber;
+    static const std::string tableName;
+    static const bool hasPrimaryKey;
+    static const std::string primaryKeyName;
     using PrimaryKeyType = int32_t;
     const PrimaryKeyType &getPrimaryKey() const;
 
@@ -139,6 +139,7 @@ class Databasechangeloglock
     static const std::string &getColumnName(size_t index) noexcept(false);
 
     Json::Value toJson() const;
+    std::string toString() const;
     Json::Value toMasqueradedJson(const std::vector<std::string> &pMasqueradingVector) const;
     /// Relationship interfaces
   private:

@@ -1,6 +1,7 @@
 using System.Text.Json;
+using Additions.Cache.Interfaces;
+using Additions.Messaging.Interfaces;
 using Additions.Service;
-using Additions.Service.EventService.Interfaces;
 using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
 using ArticleHouse.Service.DTOs;
@@ -14,15 +15,18 @@ public class ArticleService : BasicService, IArticleService
     private readonly IArticleDAO dao;
     private readonly IArticleMarkDAO m2mDAO;
     private readonly IMarkDAO markDAO;
-    private readonly IEventProducerService producerService;
+    private readonly IEventProducer eventProducer;
+    private readonly IDistributedCache cache;
     private readonly string eventTopic;
 
-    public ArticleService(IArticleDAO dao, IArticleMarkDAO m2mDAO, IMarkDAO markDAO, IEventProducerService producerService, IConfiguration configuration)
+    public ArticleService(IArticleDAO dao, IArticleMarkDAO m2mDAO, IMarkDAO markDAO,
+                          IEventProducer eventProducer, IDistributedCache cache, IConfiguration configuration)
     {
         this.dao = dao;
         this.m2mDAO = m2mDAO;
         this.markDAO = markDAO;
-        this.producerService = producerService;
+        this.eventProducer = eventProducer;
+        this.cache = cache;
         eventTopic = configuration["Kafka:SendTopic"] ?? "default-topic";
     }
 
@@ -34,7 +38,6 @@ public class ArticleService : BasicService, IArticleService
 
     public async Task<ArticleResponseDTO> CreateArticleAsync(ArticleRequestDTO dto)
     {
-        //Пока предположим, что хеш-теги можно добавлять только при создании.
         long[]? markIds = null;
         if (null != dto.Marks)
         {
@@ -52,25 +55,34 @@ public class ArticleService : BasicService, IArticleService
 
     public async Task<ArticleResponseDTO> GetArticleByIdAsync(long id)
     {
-        ArticleModel model = await InvokeDAOMethod(() => dao.GetByIdAsync(id));
-        return MakeResponseFromModel(model);
+        return await cache.GetOrSetAsync(
+            $"article:{id}",
+            async () =>
+            {
+                ArticleModel model = await InvokeDAOMethod(() => dao.GetByIdAsync(id));
+                return MakeResponseFromModel(model);
+            },
+            TimeSpan.FromMinutes(10)
+        );
     }
 
     public async Task DeleteArticleAsync(long id)
     {
-        //Какой богомерзкий API.
         var result = await InvokeDAOMethod(() => dao.GetByIdWithMarksAsync(id));
         long[] leftMarkIds = result.Item2;
-        await InvokeDAOMethod(async () =>
+        
+        await InvokeLowerMethod(async () =>
         {
             await dao.DeleteAsync(id);
-            await producerService.ProduceEventAsync(eventTopic, new EventMessage()
+            await eventProducer.ProduceEventAsync(eventTopic, new EventMessage()
             {
                 Operation = EventNames.ARTICLE_DELETED,
                 Payload = JsonSerializer.Serialize(id)
             });
             await markDAO.ReleaseByIdsAsync(leftMarkIds);
         });
+        
+        await cache.RemoveAsync($"article:{id}");
     }
 
     public async Task<ArticleResponseDTO> UpdateArticleByIdAsync(long id, ArticleRequestDTO dto)
@@ -78,6 +90,9 @@ public class ArticleService : BasicService, IArticleService
         ArticleModel model = MakeModelFromRequest(dto);
         model.Id = id;
         ArticleModel result = await InvokeDAOMethod(() => dao.UpdateAsync(model));
+        
+        await cache.RemoveAsync($"article:{id}");
+        
         return MakeResponseFromModel(result);
     }
 

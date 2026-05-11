@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1.0/markers")
+@RequestMapping({"/api/v1.0/markers", "/api/v2.0/markers"})
 @RequiredArgsConstructor
 public class MarkerController {
 
@@ -21,7 +21,7 @@ public class MarkerController {
     @GetMapping
     public ResponseEntity<List<MarkerResponseTo>> findAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "1000") int size,
             @RequestParam(defaultValue = "id") String sortBy) {
         return ResponseEntity.ok(markerService.findAll(page, size, sortBy));
     }

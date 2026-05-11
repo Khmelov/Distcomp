@@ -21,7 +21,7 @@ namespace DiscussionService.Services
         public async Task<PostResponseTo> CreatePost(PostRequestTo createPostRequestTo)
         {
             Post postFromDto = _mapper.Map<Post>(createPostRequestTo);
-            // можно добавить бизнес-валидацию
+
             Post createdPost = await _repository.AddAsync(postFromDto);
 
             PostResponseTo dtoFromCreatedPost = _mapper.Map<PostResponseTo>(createdPost);
@@ -73,6 +73,46 @@ namespace DiscussionService.Services
             Post postFromDto = _mapper.Map<Post>(deletePostRequestTo);
 
             await _repository.DeleteAsync(postFromDto);
+        }
+
+        public async Task<Post> CreatePostInternalAsync(Post post)
+        {
+            // Предполагаем, что post.Id уже установлен (приходит из publisher)
+            // Проверяем, нет ли уже такого поста
+            var existing = await _repository.GetByIdAsync(post.Id);
+            if (existing != null)
+            {
+                // Если уже есть, лучше обновить, но по логике задания мы просто обновим.
+                return await UpdatePostInternalAsync(post);
+            }
+
+            return await _repository.AddAsync(post);
+        }
+
+        public async Task<Post> UpdatePostInternalAsync(Post post)
+        {
+            var updated = await _repository.UpdateAsync(post);
+            if (updated == null)
+            {
+                // Если запись не найдена, создаём новую
+                return await _repository.AddAsync(post);
+            }
+            return updated;
+        }
+
+        public async Task UpdatePostStateAsync(long postId, PostState state)
+        {
+            var post = await _repository.GetByIdAsync(postId);
+            if (post == null)
+                throw new ArgumentException($"Post with id {postId} not found");
+
+            post.State = state;
+            await _repository.UpdateAsync(post);
+        }
+
+        public async Task<Post?> GetPostById(long id)
+        {
+            return await _repository.GetByIdAsync(id);
         }
     }
 

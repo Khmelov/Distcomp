@@ -1,0 +1,58 @@
+services:
+  # База данных
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_START_RPC=true
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Liquibase для создания таблиц
+  liquibase:
+    image: liquibase/liquibase:4.23
+    volumes:
+      - .:/liquibase/changelog
+    # Указываем полный путь к файлу changelog.xml относительно корня проекта
+    command: >
+      --changelog-file=src/main/resources/liquibase/changelog.xml
+      --url=jdbc:postgresql://db:5432/distcomp
+      --username=postgres
+      --password=postgres
+      update
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Ваше Node.js приложение
+  app:
+    build: .
+    ports:
+      - "24110:24110"
+      - "24130:24130"
+    environment:
+      DB_HOST: db
+    depends_on:
+      db:
+        condition: service_healthy
+      liquibase:
+        condition: service_completed_successfully

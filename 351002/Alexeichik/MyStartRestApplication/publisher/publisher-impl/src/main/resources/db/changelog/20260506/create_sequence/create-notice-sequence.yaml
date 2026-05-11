@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-notice-sequence
+      author: gemini-cli
+      changes:
+        - createSequence:
+            sequenceName: notice_id_seq
+            startValue: 1
+            incrementBy: 1

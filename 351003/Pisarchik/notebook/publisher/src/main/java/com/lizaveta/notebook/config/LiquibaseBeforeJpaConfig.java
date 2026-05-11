@@ -14,16 +14,16 @@ import java.util.List;
 public class LiquibaseBeforeJpaConfig implements BeanFactoryPostProcessor {
 
     private static final String ENTITY_MANAGER_FACTORY_BEAN = "entityManagerFactory";
+    private static final String LIQUIBASE_BEAN = "liquibase";
 
     @Override
     public void postProcessBeanFactory(final ConfigurableListableBeanFactory beanFactory) {
         if (!beanFactory.containsBeanDefinition(ENTITY_MANAGER_FACTORY_BEAN)) {
             return;
         }
-        if (!beanFactory.containsBeanDefinition(LiquibaseMigrationConfig.LIQUIBASE_RUNNER_BEAN)) {
+        if (!beanFactory.containsBeanDefinition(LIQUIBASE_BEAN)) {
             return;
         }
-        String liquibaseBeanName = LiquibaseMigrationConfig.LIQUIBASE_RUNNER_BEAN;
         BeanDefinition emfBd = beanFactory.getBeanDefinition(ENTITY_MANAGER_FACTORY_BEAN);
         if (!(emfBd instanceof AbstractBeanDefinition)) {
             return;
@@ -33,8 +33,8 @@ public class LiquibaseBeforeJpaConfig implements BeanFactoryPostProcessor {
         if (abd.getDependsOn() != null) {
             dependsOn.addAll(Arrays.asList(abd.getDependsOn()));
         }
-        if (!dependsOn.contains(liquibaseBeanName)) {
-            dependsOn.add(0, liquibaseBeanName);
+        if (!dependsOn.contains(LIQUIBASE_BEAN)) {
+            dependsOn.add(0, LIQUIBASE_BEAN);
             abd.setDependsOn(dependsOn.toArray(new String[0]));
         }
     }

@@ -1,0 +1,32 @@
+[workspace.package]
+version = "0.1.0"
+authors = ["Yarakhovich Dzianis"]
+edition = "2024"
+
+[workspace]
+members = [
+    "lab1",
+    "lab2", 
+    "lab3/discussion", "lab3/publisher", 
+    "lab4/discussion", "lab4/publisher", 
+    "lab5/discussion", "lab5/publisher", "lab6/server",
+]
+resolver = "2"
+
+[workspace.dependencies]
+tokio = {version = "1", features = ["full"]}
+chrono = {version = "0.4.44", features = ["serde"]}
+serde = {version = "1", features = ["derive"]}
+serde_json = {version = "1.0"}
+axum = {version = "0.8.9", features = ["json", "macros"]}
+sqlx = {version = "0.8.6", features = ["runtime-tokio-rustls", "postgres", "chrono"]}
+scylla = {version = "0.12"}
+rdkafka = {version = "0.39.0", features = ["tokio"]}
+tokio-stream = {version = "0.1.18"}
+uuid = { version = "1.6", features = ["v4"] }
+redis = { version = "0.23", features = ["tokio-comp", "connection-manager", "serde"] }
+
+# Internal dependencies
+common = {path = "lib/common"}
+domain = {path = "lib/domain"}
+storage = {path = "lib/storage", features = ["in_memory", "postgres"]}

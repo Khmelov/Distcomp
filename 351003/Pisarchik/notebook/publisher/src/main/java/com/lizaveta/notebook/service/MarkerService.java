@@ -1,5 +1,8 @@
 package com.lizaveta.notebook.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.lizaveta.notebook.cache.NotebookCacheKeys;
+import com.lizaveta.notebook.cache.PublisherRedisCache;
 import com.lizaveta.notebook.exception.ResourceNotFoundException;
 import com.lizaveta.notebook.exception.ValidationException;
 import com.lizaveta.notebook.mapper.MarkerMapper;
@@ -26,26 +29,37 @@ public class MarkerService {
     private final MarkerRepository repository;
     private final StoryRepository storyRepository;
     private final MarkerMapper mapper;
+    private final PublisherRedisCache redisCache;
 
     public MarkerService(
             final MarkerRepository repository,
             final StoryRepository storyRepository,
-            final MarkerMapper mapper) {
+            final MarkerMapper mapper,
+            final PublisherRedisCache redisCache) {
         this.repository = repository;
         this.storyRepository = storyRepository;
         this.mapper = mapper;
+        this.redisCache = redisCache;
     }
 
     public MarkerResponseTo create(final MarkerRequestTo request) {
         Marker entity = mapper.toEntity(request);
         Marker saved = repository.save(entity);
-        return mapper.toResponse(saved);
+        MarkerResponseTo response = mapper.toResponse(saved);
+        evictMarkerAndStoryCaches();
+        return response;
     }
 
     public List<MarkerResponseTo> findAll() {
-        return repository.findAll().stream()
-                .map(mapper::toResponse)
-                .toList();
+        String key = NotebookCacheKeys.markerAll();
+        return redisCache.get(key, new TypeReference<List<MarkerResponseTo>>() {
+        }).orElseGet(() -> {
+            List<MarkerResponseTo> loaded = repository.findAll().stream()
+                    .map(mapper::toResponse)
+                    .toList();
+            redisCache.put(key, loaded);
+            return loaded;
+        });
     }
 
     public PageResponseTo<MarkerResponseTo> findAll(final int page, final int size, final String sortBy, final String sortOrder) {
@@ -53,30 +67,48 @@ public class MarkerService {
                 ? Sort.by(Sort.Direction.fromString(sortOrder != null && sortOrder.equalsIgnoreCase("desc") ? "desc" : "asc"), sortBy)
                 : Sort.unsorted();
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.min(Math.max(1, size), 100), sort);
-        var pageResult = repository.findAll(pageable);
-        List<MarkerResponseTo> content = pageResult.getContent().stream()
-                .map(mapper::toResponse)
-                .toList();
-        return new PageResponseTo<>(content, pageResult.getTotalElements(), pageResult.getTotalPages(), pageResult.getSize(), pageResult.getNumber());
+        String key = NotebookCacheKeys.markerPage(pageable.getPageNumber(), pageable.getPageSize(), sortBy, sortOrder);
+        return redisCache.get(key, new TypeReference<PageResponseTo<MarkerResponseTo>>() {
+        }).orElseGet(() -> {
+            var pageResult = repository.findAll(pageable);
+            List<MarkerResponseTo> content = pageResult.getContent().stream()
+                    .map(mapper::toResponse)
+                    .toList();
+            PageResponseTo<MarkerResponseTo> loaded = new PageResponseTo<>(
+                    content, pageResult.getTotalElements(), pageResult.getTotalPages(), pageResult.getSize(), pageResult.getNumber());
+            redisCache.put(key, loaded);
+            return loaded;
+        });
     }
 
     public MarkerResponseTo findById(final Long id) {
         validateId(id);
-        Marker entity = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(MARKER_NOT_FOUND + id));
-        return mapper.toResponse(entity);
+        String key = NotebookCacheKeys.markerById(id);
+        return redisCache.get(key, MarkerResponseTo.class).orElseGet(() -> {
+            Marker entity = repository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(MARKER_NOT_FOUND + id));
+            MarkerResponseTo loaded = mapper.toResponse(entity);
+            redisCache.put(key, loaded);
+            return loaded;
+        });
     }
 
     public List<MarkerResponseTo> findByStoryId(final Long storyId) {
         validateId(storyId);
-        return storyRepository.findById(storyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Story not found with id: " + storyId))
-                .getMarkerIds().stream()
-                .map(repository::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .map(mapper::toResponse)
-                .toList();
+        String key = NotebookCacheKeys.markerByStory(storyId);
+        return redisCache.get(key, new TypeReference<List<MarkerResponseTo>>() {
+        }).orElseGet(() -> {
+            List<MarkerResponseTo> loaded = storyRepository.findById(storyId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Story not found with id: " + storyId))
+                    .getMarkerIds().stream()
+                    .map(repository::findById)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .map(mapper::toResponse)
+                    .toList();
+            redisCache.put(key, loaded);
+            return loaded;
+        });
     }
 
     public MarkerResponseTo update(final Long id, final MarkerRequestTo request) {
@@ -85,7 +117,9 @@ public class MarkerService {
                 .orElseThrow(() -> new ResourceNotFoundException(MARKER_NOT_FOUND + id));
         Marker updated = existing.withName(request.name());
         repository.update(updated);
-        return mapper.toResponse(updated);
+        MarkerResponseTo response = mapper.toResponse(updated);
+        evictMarkerAndStoryCaches();
+        return response;
     }
 
     public void deleteById(final Long id) {
@@ -94,6 +128,12 @@ public class MarkerService {
         if (!deleted) {
             throw new ResourceNotFoundException(MARKER_NOT_FOUND + id);
         }
+        evictMarkerAndStoryCaches();
+    }
+
+    private void evictMarkerAndStoryCaches() {
+        redisCache.evictKeyPattern(NotebookCacheKeys.MARKER_PREFIX + "*");
+        redisCache.evictKeyPattern(NotebookCacheKeys.STORY_PREFIX + "*");
     }
 
     private void validateId(final Long id) {

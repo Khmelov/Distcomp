@@ -1,0 +1,2 @@
+CREATE SCHEMA IF NOT EXISTS distcomp;
+GRANT ALL ON SCHEMA distcomp TO postgres;

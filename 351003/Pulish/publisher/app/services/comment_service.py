@@ -4,6 +4,7 @@ from app.dto.comment import CommentRequestTo, CommentResponseTo
 from app.core.exceptions import NotFoundException, AppException
 from app.models.topic import Topic
 from app.kafka import manager as kafka
+from app.cache.redis_client import cache_get, cache_set, cache_delete
 
 
 class CommentService:
@@ -29,14 +30,21 @@ class CommentService:
         }
         kafka.send_fire_and_forget("POST", payload, key=dto.topicId)
 
-        return CommentResponseTo(
+        result = CommentResponseTo(
             id=comment_id,
             content=dto.content,
             topicId=dto.topicId,
             state="PENDING",
         )
+        cache_set(f"comment:{comment_id}", result.model_dump())
+        cache_delete("comments:all")
+        return result
 
     def find_all(self) -> list[CommentResponseTo]:
+        cached = cache_get("comments:all")
+        if cached is not None:
+            return [CommentResponseTo(**c) for c in cached]
+
         response = kafka.send_and_wait("GET_ALL", {}, key=None)
         if response is None:
             raise AppException(
@@ -44,9 +52,15 @@ class CommentService:
         status = response.get("status", 200)
         if status != 200:
             raise AppException(response.get("error", "Error"), 50000, status)
-        return [CommentResponseTo(**c) for c in response.get("payload", [])]
+        result = [CommentResponseTo(**c) for c in response.get("payload", [])]
+        cache_set("comments:all", [r.model_dump() for r in result])
+        return result
 
     def find_by_id(self, id: int) -> CommentResponseTo:
+        cached = cache_get(f"comment:{id}")
+        if cached is not None:
+            return CommentResponseTo(**cached)
+
         response = kafka.send_and_wait("GET", {"id": id}, key=id)
         if response is None:
             raise AppException(
@@ -56,7 +70,9 @@ class CommentService:
             raise NotFoundException("Comment not found", 40404)
         if status != 200:
             raise AppException(response.get("error", "Error"), 50000, status)
-        return CommentResponseTo(**response["payload"])
+        result = CommentResponseTo(**response["payload"])
+        cache_set(f"comment:{id}", result.model_dump())
+        return result
 
     def update(self, dto: CommentRequestTo) -> CommentResponseTo:
         self._validate_topic(dto.topicId)
@@ -75,7 +91,10 @@ class CommentService:
             raise NotFoundException("Comment not found", 40404)
         if status not in (200, 204):
             raise AppException(response.get("error", "Error"), 50000, status)
-        return CommentResponseTo(**response["payload"])
+        result = CommentResponseTo(**response["payload"])
+        cache_set(f"comment:{dto.id}", result.model_dump())
+        cache_delete("comments:all")
+        return result
 
     def delete(self, id: int):
         response = kafka.send_and_wait("DELETE", {"id": id}, key=id)
@@ -87,3 +106,5 @@ class CommentService:
             raise NotFoundException("Comment not found", 40404)
         if status not in (200, 204):
             raise AppException(response.get("error", "Error"), 50000, status)
+        cache_delete(f"comment:{id}")
+        cache_delete("comments:all")

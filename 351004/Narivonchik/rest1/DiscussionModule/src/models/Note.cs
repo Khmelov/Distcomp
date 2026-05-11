@@ -17,4 +17,7 @@ public class Note
 
     [Column("country")]
     public string Country { get; set; } = string.Empty;
+    
+    [Column("state")]
+    public string State { get; set; } = "PENDING"; // PENDING, APPROVE, DECLINE
 }

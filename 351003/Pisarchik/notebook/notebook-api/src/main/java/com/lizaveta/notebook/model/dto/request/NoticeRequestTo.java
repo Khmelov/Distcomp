@@ -1,11 +1,9 @@
 package com.lizaveta.notebook.model.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-@JsonRootName("notice")
 public record NoticeRequestTo(
         @NotNull(message = "Story id must not be null")
         Long storyId,
