@@ -20,6 +20,24 @@ public class ExceptionHandlingMiddleware
         try
         {
             await _next(context);
+
+            // Handle 401 / 403 produced by the auth pipeline so they conform to errorCode/errorMessage shape
+            if (!context.Response.HasStarted &&
+                (context.Response.StatusCode == (int)HttpStatusCode.Unauthorized ||
+                 context.Response.StatusCode == (int)HttpStatusCode.Forbidden) &&
+                context.Response.ContentLength is null or 0)
+            {
+                var status = context.Response.StatusCode;
+                var message = status == 401
+                    ? "Authentication required or token invalid."
+                    : "Access denied: insufficient permissions.";
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                {
+                    errorCode = status * 100 + 1,
+                    errorMessage = message
+                }));
+            }
         }
         catch (NotFoundException ex)
         {
@@ -27,7 +45,27 @@ public class ExceptionHandlingMiddleware
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(JsonSerializer.Serialize(new
             {
-                errorCode = 404,
+                errorCode = 40400,
+                errorMessage = ex.Message
+            }));
+        }
+        catch (UnauthorizedException ex)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new
+            {
+                errorCode = 40101,
+                errorMessage = ex.Message
+            }));
+        }
+        catch (ForbiddenException ex)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new
+            {
+                errorCode = 40301,
                 errorMessage = ex.Message
             }));
         }
@@ -37,7 +75,7 @@ public class ExceptionHandlingMiddleware
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(JsonSerializer.Serialize(new
             {
-                errorCode = 403,
+                errorCode = 40300,
                 errorMessage = ex.Message
             }));
         }
@@ -47,7 +85,7 @@ public class ExceptionHandlingMiddleware
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(JsonSerializer.Serialize(new
             {
-                errorCode = 403,
+                errorCode = 40302,
                 errorMessage = "Duplicate entry violates unique constraint."
             }));
         }
@@ -57,7 +95,7 @@ public class ExceptionHandlingMiddleware
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(JsonSerializer.Serialize(new
             {
-                errorCode = 500,
+                errorCode = 50000,
                 errorMessage = "An unexpected error occurred."
             }));
         }

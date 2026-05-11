@@ -47,6 +47,17 @@ services:
 #    networks:
 #      - user-network
 
+  redis:
+    image: redis:latest
+    container_name: distcomp-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - distcomp-network
+    volumes:
+      - redis_data:/data
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     container_name: distcomp-zookeeper
@@ -104,3 +115,4 @@ volumes:
   zookeeper_data:
   zookeeper_log:
   kafka_data:
+  redis_data:

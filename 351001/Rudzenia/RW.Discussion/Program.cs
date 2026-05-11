@@ -1,6 +1,9 @@
 using Cassandra;
+using RW.Discussion.Caching;
+using RW.Discussion.Kafka;
 using RW.Discussion.Middleware;
 using RW.Discussion.Services;
+using StackExchange.Redis;
 using ISession = Cassandra.ISession;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,8 +54,26 @@ session.Execute(@"
         PRIMARY KEY (id)
     )");
 
-builder.Services.AddSingleton<ISession>(session);
-builder.Services.AddSingleton<INoteService, CassandraNoteService>();
+builder.Services.AddSingleton(session);
+
+builder.Services.Configure<RedisSettings>(builder.Configuration.GetSection("Redis"));
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var redisCfg = builder.Configuration.GetSection("Redis")["ConnectionString"] ?? "localhost:6379";
+    var options = ConfigurationOptions.Parse(redisCfg);
+    options.AbortOnConnectFail = false;
+    return ConnectionMultiplexer.Connect(options);
+});
+builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+
+builder.Services.AddSingleton<CassandraNoteService>();
+builder.Services.AddSingleton<INoteService>(sp => new CachedNoteService(
+    sp.GetRequiredService<CassandraNoteService>(),
+    sp.GetRequiredService<ICacheService>(),
+    sp.GetRequiredService<ILogger<CachedNoteService>>()));
+
+builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("Kafka"));
+builder.Services.AddHostedService<KafkaRequestConsumer>();
 
 var app = builder.Build();
 
