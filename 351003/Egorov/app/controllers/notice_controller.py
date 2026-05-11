@@ -16,6 +16,8 @@ def get_notice_service() -> NoticeService:
     return notice_service
 
 
+@router.post("", status_code=status.HTTP_201_CREATED)
+def create_notice(dto: NoticeRequestTo) :
     service = NoticeService(NoticeRepository())
     try:
         res = service.create_notice(dto)
