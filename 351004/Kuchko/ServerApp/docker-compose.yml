@@ -19,19 +19,45 @@ services:
       retries: 15
       start_period: 10s
   
-  api:
+  cassandra_db:
+    image: cassandra:latest
+    container_name: cassandra_db
+    ports: [ "9042:9042" ]
+    environment:
+      - CASSANDRA_CLUSTER_NAME=DistcompCluster
+    healthcheck:
+      test: [ "CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES'" ]
+      interval: 15s
+  
+  publisher_api:
     build:
-      context: ./ServerApp
-      dockerfile: Dockerfile
-    container_name: distcomp_api
+      context: .
+      dockerfile: ServerApp/Dockerfile
+    container_name: publisher_api
     depends_on:
       db:
         condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:24110
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=distcomp;Username=postgres;Password=postgres
+      
+      - DiscussionServiceUrl=http://discussion_api:24130
     ports:
       - "24110:8080"
         
+  discussion_api: # Новый микросервис (порт 24130)
+    build:
+      context: .
+      dockerfile: DiscussionApp/Dockerfile
+    ports: [ "24130:24130" ]
+    depends_on:
+      cassandra_db:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:24130
+      - Cassandra__ContactPoint=cassandra_db
+
 volumes:
   db_data:
