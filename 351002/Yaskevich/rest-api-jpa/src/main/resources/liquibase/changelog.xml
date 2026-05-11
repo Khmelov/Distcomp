@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+    <changeSet id="1" author="student">
+        <!-- Таблица Creator -->
+        <createTable tableName="tbl_creator">
+            <column name="id" type="bigserial"><constraints primaryKey="true"/></column>
+            <column name="login" type="varchar(64)"><constraints nullable="false" unique="true"/></column>
+            <column name="password" type="varchar(128)"><constraints nullable="false"/></column>
+            <column name="firstname" type="varchar(64)"><constraints nullable="false"/></column>
+            <column name="lastname" type="varchar(64)"><constraints nullable="false"/></column>
+        </createTable>
+
+        <!-- Таблица Topic -->
+        <createTable tableName="tbl_topic">
+            <column name="id" type="bigserial"><constraints primaryKey="true"/></column>
+            <column name="title" type="varchar(64)"><constraints nullable="false"/></column>
+            <column name="content" type="text"><constraints nullable="false"/></column>
+            <column name="created" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="modified" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="creator_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_topic_creator" references="tbl_creator(id) ON DELETE CASCADE"/>
+            </column>
+        </createTable>
+
+        <!-- Таблица Mark -->
+        <createTable tableName="tbl_mark">
+            <column name="id" type="bigserial"><constraints primaryKey="true"/></column>
+            <column name="name" type="varchar(32)"><constraints nullable="false" unique="true"/></column>
+        </createTable>
+
+        <!-- Таблица Post -->
+        <createTable tableName="tbl_post">
+            <column name="id" type="bigserial"><constraints primaryKey="true"/></column>
+            <column name="content" type="text"><constraints nullable="false"/></column>
+            <column name="topic_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_post_topic" references="tbl_topic(id) ON DELETE CASCADE"/>
+            </column>
+        </createTable>
+
+        <!-- Вспомогательная таблица TopicMark (Многие-ко-Многим) -->
+        <createTable tableName="tbl_topic_mark">
+            <column name="topic_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_tm_topic" references="tbl_topic(id) ON DELETE CASCADE"/>
+            </column>
+            <column name="mark_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_tm_mark" references="tbl_mark(id) ON DELETE CASCADE"/>
+            </column>
+        </createTable>
+
+        <!-- Вставка первой обязательной записи -->
+        <insert tableName="tbl_creator">
+            <column name="login" value="zhenya.02.06@mail.ru"/>
+            <column name="password" value="password123"/> <!-- В реальной системе должен быть хэш -->
+            <column name="firstname" value="Евгений"/>
+            <column name="lastname" value="Яскевич"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
