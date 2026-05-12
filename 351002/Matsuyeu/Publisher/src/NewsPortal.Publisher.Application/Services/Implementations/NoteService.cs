@@ -6,47 +6,70 @@ using Publisher.src.NewsPortal.Publisher.Infrastructure.Clients.Abstractions;
 
 namespace Publisher.src.NewsPortal.Publisher.Application.Services.Implementations
 {
-    // Publisher.Application/Services/Implementations/NoteService.cs
     public class NoteService : INoteService
     {
         private readonly IDiscussionApiClient _discussionApiClient;
-        //private readonly IMapper _mapper;
+        private static readonly Dictionary<long, NoteResponseTo> _noteCache = new();
 
-        public NoteService(IDiscussionApiClient discussionApiClient)//, IMapper mapper)
+        public NoteService(IDiscussionApiClient discussionApiClient)
         {
             _discussionApiClient = discussionApiClient;
-            //_mapper = mapper;
         }
 
         public async Task<IEnumerable<NoteResponseTo>> GetAllNotesAsync()
         {
-            var notes = await _discussionApiClient.GetAllNotesAsync();
-            return notes;
-            //return _mapper.Map<IEnumerable<NoteResponseTo>>(notes);
+            // Для простоты возвращаем из кеша
+            return _noteCache.Values;
         }
 
         public async Task<NoteResponseTo> GetNoteByIdAsync(long id)
         {
+            // Сначала проверяем кеш
+            if (_noteCache.TryGetValue(id, out var cachedNote))
+            {
+                return cachedNote;
+            }
+
+            // Если нет в кеше, идем в Discussion API
             var note = await _discussionApiClient.GetNoteByIdAsync(id);
             if (note == null)
                 throw new NotFoundException($"Note with ID {id} not found");
 
+            // Сохраняем в кеш
+            _noteCache[id] = note;
+
             return note;
-            //return _mapper.Map<NoteResponseTo>(note);
         }
 
         public async Task<NoteResponseTo> CreateNoteAsync(NoteRequestTo noteRequest)
         {
-            //var requestDto = _mapper.Map<NoteRequestTo>(noteRequest);
             var createdNote = await _discussionApiClient.CreateNoteAsync(noteRequest);
-            //return _mapper.Map<NoteResponseTo>(createdNote);
+
+            // Сохраняем в кеш
+            _noteCache[createdNote.Id] = createdNote;
+
             return createdNote;
         }
 
         public async Task UpdateNoteAsync(NoteRequestTo noteRequest)
         {
-            //var requestDto = _mapper.Map<NoteRequestTo>(noteRequest);
-            await _discussionApiClient.UpdateNoteAsync(noteRequest);
+            // Обновляем в Discussion API
+            var updatedNote = await _discussionApiClient.UpdateNoteAsync(noteRequest);
+
+            // КРИТИЧЕСКИ ВАЖНО: Обновляем кеш после успешного обновления!
+            if (updatedNote != null)
+            {
+                _noteCache[updatedNote.Id] = updatedNote;
+            }
+            else
+            {
+                // Если UpdateNoteAsync не возвращает заметку, получаем её отдельно
+                var note = await _discussionApiClient.GetNoteByIdAsync(noteRequest.Id);
+                if (note != null)
+                {
+                    _noteCache[note.Id] = note;
+                }
+            }
         }
 
         public async Task DeleteNoteAsync(long id)
@@ -54,6 +77,9 @@ namespace Publisher.src.NewsPortal.Publisher.Application.Services.Implementation
             var deleted = await _discussionApiClient.DeleteNoteAsync(id);
             if (!deleted)
                 throw new NotFoundException($"Note with ID {id} not found");
+
+            // Удаляем из кеша
+            _noteCache.Remove(id);
         }
     }
 }

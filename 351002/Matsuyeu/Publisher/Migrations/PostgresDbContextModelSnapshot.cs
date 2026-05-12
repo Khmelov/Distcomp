@@ -55,6 +55,14 @@ namespace Publisher.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("password");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("CUSTOMER")
+                        .HasColumnName("role");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Login")

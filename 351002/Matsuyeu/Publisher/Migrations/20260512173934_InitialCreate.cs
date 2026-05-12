@@ -21,7 +21,8 @@ namespace Publisher.Migrations
                     login = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
                     password = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     firstname = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    lastname = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false)
+                    lastname = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false, defaultValue: "CUSTOMER")
                 },
                 constraints: table =>
                 {

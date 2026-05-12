@@ -1,5 +1,4 @@
-﻿// Data/Repositories/GenericRepository.cs
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Publisher.src.NewsPortal.Publisher.Domain.Entities;
 using Publisher.src.NewsPortal.Publisher.Infrastructure.Data;
@@ -37,7 +36,7 @@ namespace Publisher.src.NewsPortal.Publisher.Infrastructure.Repositories
 
         public virtual async Task UpdateAsync(T entity)
         {
-            // Проверяем, отслеживается ли уже сущность
+            //Проверяем, отслеживается ли уже сущность
             var trackedEntity = _context.ChangeTracker.Entries<T>()
                 .FirstOrDefault(e => e.Entity == entity ||
                                     e.Property("Id") != null &&
@@ -45,11 +44,11 @@ namespace Publisher.src.NewsPortal.Publisher.Infrastructure.Repositories
 
             if (trackedEntity != null)
             {
-                // Если отслеживается другая сущность с тем же ID, отсоединяем её
+                //Если отслеживается другая сущность с тем же ID, отсоединяем её
                 trackedEntity.State = EntityState.Detached;
             }
 
-            // Присоединяем и помечаем как измененную
+            //Присоединяем и помечаем как измененную
             _dbSet.Update(entity);
             await _context.SaveChangesAsync();
         }
@@ -73,13 +72,13 @@ namespace Publisher.src.NewsPortal.Publisher.Infrastructure.Repositories
         {
             var query = _dbSet.AsQueryable();
 
-            // Применяем поиск если есть
+            //Применяем поиск если есть
             if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
             {
                 query = ApplySearch(query, parameters.SearchTerm);
             }
 
-            // Применяем фильтрацию по дате для News
+            //Применяем фильтрацию по дате для News
             if (typeof(T) == typeof(News) && parameters.FromDate.HasValue)
             {
                 query = query.Where(e => EF.Property<DateTime>(e, "Created") >= parameters.FromDate.Value);
@@ -90,16 +89,16 @@ namespace Publisher.src.NewsPortal.Publisher.Infrastructure.Repositories
                 query = query.Where(e => EF.Property<DateTime>(e, "Created") <= parameters.ToDate.Value);
             }
 
-            // Подсчет общего количества
+            //Подсчет общего количества
             var totalCount = await query.CountAsync();
 
-            // Применяем сортировку
+            //Применяем сортировку
             if (!string.IsNullOrWhiteSpace(parameters.SortBy))
             {
                 query = ApplySorting(query, parameters.SortBy, parameters.SortOrder);
             }
 
-            // Применяем пагинацию
+            //Применяем пагинацию
             var items = await query
                 .Skip((parameters.PageNumber - 1) * parameters.PageSize)
                 .Take(parameters.PageSize)
@@ -136,7 +135,7 @@ namespace Publisher.src.NewsPortal.Publisher.Infrastructure.Repositories
 
         private IQueryable<T> ApplySearch(IQueryable<T> query, string searchTerm)
         {
-            // Поиск по текстовым полям в зависимости от типа сущности
+            //Поиск по текстовым полям в зависимости от типа сущности
             if (typeof(T) == typeof(Creator))
             {
                 return query.Where(e =>

@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.Json;
 using Discussion.src.NewsPortal.Discussion.Application.Dtos.ResponseTo;
 using Publisher.src.NewsPortal.Publisher.Application.Dtos.RequestTo;
-using Publisher.src.NewsPortal.Publisher.Domain.Entities;
 using Publisher.src.NewsPortal.Publisher.Domain.Exceptions;
 using Publisher.src.NewsPortal.Publisher.Infrastructure.Clients.Abstractions;
 

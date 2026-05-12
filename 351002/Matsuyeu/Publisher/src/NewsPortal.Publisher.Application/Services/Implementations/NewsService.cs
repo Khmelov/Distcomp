@@ -55,10 +55,10 @@ namespace Publisher.src.NewsPortal.Publisher.Application.Services.Implementation
 
         public async Task<NewsResponseTo> CreateNewsAsync(NewsRequestTo newsRequest)
         {
-            // Проверка существования Creator
+            //Проверка существования Creator
             await ValidateCreatorExistsAsync(newsRequest.CreatorId);
 
-            // Проверка уникальности заголовка
+            //Проверка уникальности заголовка
             var existingNews = await _newsRepository.FindSingleAsync(n => n.Title == newsRequest.Title);
             if (existingNews != null)
                 throw new ConflictException($"News with title '{newsRequest.Title}' already exists");
@@ -73,13 +73,13 @@ namespace Publisher.src.NewsPortal.Publisher.Application.Services.Implementation
                 Marks = new List<Mark>()
             };
 
-            // Обработка меток по именам (создаем новые, если не существуют)
+            //Обработка меток по именам (создаем новые, если не существуют)
             if (newsRequest.Marks != null && newsRequest.Marks.Any())
             {
                 news.Marks = await ProcessMarksAsync(newsRequest.Marks);
             }
 
-            // Сохраняем новость с метками
+            //Сохраняем новость с метками
             var createdNews = await _newsRepository.AddAsync(news);
 
             return await BuildResponseAsync(createdNews);
@@ -94,13 +94,13 @@ namespace Publisher.src.NewsPortal.Publisher.Application.Services.Implementation
             if (existingNews == null)
                 throw new NotFoundException($"News with ID {newsRequest.Id} not found");
 
-            // Проверка существования Creator, если ID изменился
+            //Проверка существования Creator, если ID изменился
             if (existingNews.CreatorId != newsRequest.CreatorId)
             {
                 await ValidateCreatorExistsAsync(newsRequest.CreatorId);
             }
 
-            // Проверка уникальности заголовка (исключая текущую новость)
+            //Проверка уникальности заголовка (исключая текущую новость)
             var duplicateNews = await _newsRepository.FindSingleAsync(n =>
                 n.Title == newsRequest.Title && n.Id != newsRequest.Id);
             if (duplicateNews != null)
@@ -112,7 +112,7 @@ namespace Publisher.src.NewsPortal.Publisher.Application.Services.Implementation
             existingNews.Content = newsRequest.Content.Trim();
             existingNews.Modified = DateTime.UtcNow;
 
-            // Обновление меток
+            //Обновление меток
             if (newsRequest.Marks != null)
             {
                 existingNews.Marks = await ProcessMarksAsync(newsRequest.Marks);
@@ -131,7 +131,7 @@ namespace Publisher.src.NewsPortal.Publisher.Application.Services.Implementation
             if (existingNews == null)
                 throw new NotFoundException($"News with ID {id} not found");
 
-            // Удаляем связанные заметки через Discussion API (каскадное удаление)
+            //Удаляем связанные заметки через Discussion API (каскадное удаление)
             try
             {
                 await _discussionApiClient.DeleteNotesByNewsIdAsync(id);
@@ -140,16 +140,16 @@ namespace Publisher.src.NewsPortal.Publisher.Application.Services.Implementation
             catch (Exception ex)
             {
                 Console.WriteLine($"Warning: Failed to delete notes for news {id}: {ex.Message}");
-                // Продолжаем удаление новости даже если не получилось удалить заметки
+                //Продолжаем удаление новости даже если не получилось удалить заметки
             }
 
-            // Сохраняем список меток до удаления новости
+            //Сохраняем список меток до удаления новости
             var marksToCheck = existingNews.Marks?.ToList() ?? new List<Mark>();
 
-            // Удаляем новость
+            //Удаляем новость
             await _newsRepository.DeleteAsync(id);
 
-            // Проверяем каждую метку - остались ли у нее другие новости
+            //Проверяем каждую метку - остались ли у нее другие новости
             foreach (var mark in marksToCheck)
             {
                 var updatedMark = await _markRepository.GetByIdAsync(mark.Id);

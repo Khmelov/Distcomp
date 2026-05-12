@@ -36,7 +36,7 @@ namespace Publisher.src.NewsPortal.Publisher.Application.Services.Implementation
 
         public async Task<MarkResponseTo> CreateMarkAsync(MarkRequestTo markRequest)
         {
-            // Проверка уникальности имени
+            //Проверка уникальности имени
             var existingMark = await _markRepository.FindSingleAsync(m => m.Name == markRequest.Name);
             if (existingMark != null)
                 throw new ConflictException($"Mark name '{markRequest.Name}' is already taken");
@@ -55,7 +55,7 @@ namespace Publisher.src.NewsPortal.Publisher.Application.Services.Implementation
             if (existingMark == null)
                 throw new NotFoundException($"Mark with ID {markRequest.Id} not found");
 
-            // Проверка уникальности имени (исключая текущую метку)
+            //Проверка уникальности имени (исключая текущую метку)
             var duplicateMark = await _markRepository.FindSingleAsync(m =>
                 m.Name == markRequest.Name && m.Id != markRequest.Id);
             if (duplicateMark != null)
@@ -71,7 +71,7 @@ namespace Publisher.src.NewsPortal.Publisher.Application.Services.Implementation
             if (id <= 0)
                 throw new BadRequestException("ID must be greater than 0");
 
-            // Проверка, используется ли метка в новостях
+            //Проверка, используется ли метка в новостях
             var mark = await _markRepository.GetByIdAsync(id);
             if (mark == null)
                 throw new NotFoundException($"Mark with ID {id} not found");

@@ -1,5 +1,4 @@
-﻿// src/Publisher/NewsPortal.Publisher.Infrastructure/Data/PostgresDbContext.cs
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Publisher.src.NewsPortal.Publisher.Domain.Entities;
 
 namespace Publisher.src.NewsPortal.Publisher.Infrastructure.Data
@@ -11,18 +10,16 @@ namespace Publisher.src.NewsPortal.Publisher.Infrastructure.Data
         {
         }
 
-        // DbSet только для сущностей, которые остаются в PostgreSQL
+        //DbSet только для сущностей, которые остаются в PostgreSQL
         public DbSet<Creator> Creators { get; set; }
         public DbSet<News> News { get; set; }
         public DbSet<Mark> Marks { get; set; }
-
-        // Note удаляем! Он будет в Cassandra через Discussion микросервис
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Конфигурация Creator
+            //Конфигурация Creator
             modelBuilder.Entity<Creator>(entity =>
             {
                 entity.ToTable("tbl_creator");
@@ -55,7 +52,10 @@ namespace Publisher.src.NewsPortal.Publisher.Infrastructure.Data
                 entity.HasIndex(e => e.Login)
                     .IsUnique()
                     .HasDatabaseName("ix_creator_login");
-
+                entity.Property(e => e.Role)
+                    .HasMaxLength(50)
+                    .HasColumnName("role")
+                    .HasDefaultValue("CUSTOMER");
                 entity.HasMany(e => e.News)
                     .WithOne(e => e.Creator)
                     .HasForeignKey(e => e.CreatorId)
@@ -63,7 +63,7 @@ namespace Publisher.src.NewsPortal.Publisher.Infrastructure.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Конфигурация News (без связи с Notes)
+            //Конфигурация News (без связи с Notes)
             modelBuilder.Entity<News>(entity =>
             {
                 entity.ToTable("tbl_news");
@@ -106,12 +106,9 @@ namespace Publisher.src.NewsPortal.Publisher.Infrastructure.Data
                     .HasForeignKey(e => e.CreatorId)
                     .HasConstraintName("fk_news_creator")
                     .OnDelete(DeleteBehavior.Restrict);
-
-                // Удаляем связь с Notes, так как они теперь в другом сервисе
-                // entity.HasMany(e => e.Notes) - больше не нужно
             });
 
-            // Конфигурация Mark
+            //Конфигурация Mark
             modelBuilder.Entity<Mark>(entity =>
             {
                 entity.ToTable("tbl_mark");
@@ -131,7 +128,7 @@ namespace Publisher.src.NewsPortal.Publisher.Infrastructure.Data
                     .HasDatabaseName("ix_mark_name");
             });
 
-            // Связь многие-ко-многим между News и Mark
+            //Связь многие-ко-многим между News и Mark
             modelBuilder.Entity<News>()
                 .HasMany(e => e.Marks)
                 .WithMany(e => e.News)

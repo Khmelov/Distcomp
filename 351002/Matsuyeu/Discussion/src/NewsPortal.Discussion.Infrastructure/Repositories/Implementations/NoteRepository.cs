@@ -1,5 +1,4 @@
-﻿// src/Discussion/NewsPortal.Discussion.Infrastructure/Repositories/NoteRepository.cs
-using Cassandra.Mapping;
+﻿using Cassandra.Mapping;
 using Discussion.src.NewsPortal.Discussion.Domain.Entities;
 using Discussion.src.NewsPortal.Discussion.Infrastructure.Data;
 using Discussion.src.NewsPortal.Discussion.Infrastructure.Repositories.Abstractions;
@@ -23,7 +22,6 @@ public class NoteRepository : INoteRepository
     {
         try
         {
-            // Внимание: Это может быть медленно для больших таблиц!
             var query = "SELECT * FROM tbl_note";
             return await _mapper.FetchAsync<Note>(query);
         }
@@ -51,33 +49,37 @@ public class NoteRepository : INoteRepository
 
     public async Task<Note> AddAsync(Note entity)
     {
-        try
+        if (entity.Id <= 0)
         {
-            // Генерируем новый id для данной новости
-            entity.Id = await GetNextIdAsync(entity.NewsId);
+            entity.Id = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            _logger.LogWarning("Generated new ID {Id} for note (should come from Publisher)", entity.Id);
+        }
+        else
+        {
+            _logger.LogInformation("Using existing ID {Id} from Publisher", entity.Id);
+        }
 
-            // Вставляем
-            await _mapper.InsertAsync(entity);
-
-            _logger.LogInformation("Added note with id {Id} for news {NewsId}", entity.Id, entity.NewsId);
+        // Проверяем, существует ли уже заметка с таким ID
+        var existing = await GetByIdAsync(entity.Id);
+        if (existing != null)
+        {
+            _logger.LogWarning("Note with ID {Id} already exists, updating instead", entity.Id);
+            await UpdateAsync(entity);
             return entity;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error adding note for news {NewsId}", entity.NewsId);
-            throw;
-        }
+
+        await _mapper.InsertAsync(entity);
+        return entity;
     }
 
     public async Task UpdateAsync(Note entity)
     {
         try
         {
-            // Обновляем только content (created не меняем)
-            var query = "UPDATE tbl_note SET content = ? WHERE news_id = ? AND id = ?";
-            await _mapper.ExecuteAsync(query, entity.Content, entity.NewsId, entity.Id);
+            var query = "UPDATE tbl_note SET content = ?, state = ? WHERE news_id = ? AND id = ?";
+            await _mapper.ExecuteAsync(query, entity.Content, entity.State, entity.NewsId, entity.Id);
 
-            _logger.LogInformation("Updated note with id {Id} for news {NewsId}", entity.Id, entity.NewsId);
+            _logger.LogInformation("Updated note {Id} with state {State}", entity.Id, entity.State);
         }
         catch (Exception ex)
         {
@@ -90,7 +92,6 @@ public class NoteRepository : INoteRepository
     {
         try
         {
-            // Сначала нужно найти note по id, чтобы узнать news_id
             var note = await GetByIdAsync(id);
             if (note == null)
             {
@@ -98,7 +99,6 @@ public class NoteRepository : INoteRepository
                 return;
             }
 
-            // Удаляем используя составной ключ
             var query = "DELETE FROM tbl_note WHERE news_id = ? AND id = ?";
             await _mapper.ExecuteAsync(query, note.NewsId, id);
 
@@ -125,7 +125,6 @@ public class NoteRepository : INoteRepository
         }
     }
 
-    // Вспомогательный метод для генерации следующего ID
     private async Task<long> GetNextIdAsync(long newsId)
     {
         try
@@ -139,7 +138,7 @@ public class NoteRepository : INoteRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting next id for news {NewsId}", newsId);
-            // Fallback: используем timestamp
+            //Fallback: используем timestamp
             return DateTime.UtcNow.Ticks;
         }
     }
