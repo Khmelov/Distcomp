@@ -1,0 +1,21 @@
+server:
+  port: 24110
+
+spring:
+  application:
+    name: publisher
+  datasource:
+    url: jdbc:postgresql://localhost:5432/distcomp
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+discussion:
+  base-url: http://localhost:24130

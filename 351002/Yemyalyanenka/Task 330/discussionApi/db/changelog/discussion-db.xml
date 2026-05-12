@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+	<changeSet id="001-create-tbl-message" author="restapitask">
+		<sql>
+			CREATE TABLE IF NOT EXISTS tbl_message (
+			id bigint PRIMARY KEY,
+			article_id bigint,
+			country text,
+			content text
+			);
+		</sql>
+	</changeSet>
+
+	<changeSet id="000-create-keyspace" author="restapitask">
+		<sql>
+			CREATE KEYSPACE IF NOT EXISTS distcomp
+			WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+		</sql>
+	</changeSet>
+
+	<changeSet id="001-create-tbl-message" author="restapitask">
+		<sql>
+			USE distcomp;
+			CREATE TABLE IF NOT EXISTS tbl_message (
+			id bigint PRIMARY KEY,
+			article_id bigint,
+			country text,
+			content text
+			);
+			CREATE INDEX IF NOT EXISTS ON tbl_message (article_id);
+		</sql>
+	</changeSet>
+
+</databaseChangeLog>

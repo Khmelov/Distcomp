@@ -71,4 +71,15 @@ public class UserResponseTo {
     public void setModified(LocalDateTime modified) {
         this.modified = modified;
     }
+
+    @JsonProperty("role")
+    private String role;
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
 }

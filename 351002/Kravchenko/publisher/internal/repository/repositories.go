@@ -7,6 +7,9 @@ import (
 	"labs/publisher/internal/repository/issue"
 	"labs/publisher/internal/repository/note"
 	"labs/publisher/internal/repository/sticker"
+	"time"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type AppRepository interface {
@@ -14,6 +17,22 @@ type AppRepository interface {
 	IssueRepo() issue.Repository
 	NoteRepo() note.Repository
 	StickerRepo() sticker.Repository
+}
+
+type AppCache interface {
+	EditorCache() editor.Cache
+	IssueCache() issue.Cache
+	NoteCache() note.Cache
+	StickerCache() sticker.Cache
+}
+
+func NewCache(redisClient *redis.Client, ttl time.Duration) AppCache {
+	return &appCache{
+		editorCache:  editor.NewCacheRepository(redisClient, ttl),
+		issueCache:   issue.NewCacheRepository(redisClient, ttl),
+		noteCache:    note.NewCacheRepository(redisClient, ttl),
+		stickerCache: sticker.NewCacheRepository(redisClient, ttl),
+	}
 }
 
 func NewInMemory() AppRepository {
@@ -65,4 +84,27 @@ func (r *appRepository) NoteRepo() note.Repository {
 
 func (r *appRepository) StickerRepo() sticker.Repository {
 	return r.stickerRepo
+}
+
+type appCache struct {
+	editorCache  editor.Cache
+	issueCache   issue.Cache
+	noteCache    note.Cache
+	stickerCache sticker.Cache
+}
+
+func (r *appCache) EditorCache() editor.Cache {
+	return r.editorCache
+}
+
+func (r *appCache) IssueCache() issue.Cache {
+	return r.issueCache
+}
+
+func (r *appCache) NoteCache() note.Cache {
+	return r.noteCache
+}
+
+func (r *appCache) StickerCache() sticker.Cache {
+	return r.stickerCache
 }

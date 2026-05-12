@@ -13,4 +13,5 @@ public class MessageResponseTo {
 
     private String content;
 
+    private String state;
 }

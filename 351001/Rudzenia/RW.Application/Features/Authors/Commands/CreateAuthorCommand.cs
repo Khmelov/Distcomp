@@ -7,7 +7,7 @@ using RW.Domain.Interfaces;
 
 namespace RW.Application.Features.Authors.Commands;
 
-public record CreateAuthorCommand(AuthorRequestTo Dto) : IRequest<AuthorResponseTo>;
+public record CreateAuthorCommand(AuthorRequestTo Dto, bool HashPassword = false) : IRequest<AuthorResponseTo>;
 
 public class CreateAuthorHandler : IRequestHandler<CreateAuthorCommand, AuthorResponseTo>
 {
@@ -32,6 +32,12 @@ public class CreateAuthorHandler : IRequestHandler<CreateAuthorCommand, AuthorRe
             throw new Exceptions.ValidationException("LastName must be between 2 and 64 characters.");
 
         var entity = _mapper.Map<Author>(request.Dto);
+        // Ensure Role from DTO survives any AutoMapper/EF default-value semantics.
+        entity.Role = request.Dto.Role;
+        if (request.HashPassword)
+        {
+            entity.Password = BCrypt.Net.BCrypt.HashPassword(request.Dto.Password);
+        }
         var created = await _repository.CreateAsync(entity);
         return _mapper.Map<AuthorResponseTo>(created);
     }

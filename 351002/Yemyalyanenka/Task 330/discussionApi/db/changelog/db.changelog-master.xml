@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="010-create-tbl-writer" author="restapitask">
+        <createTable tableName="tbl_writer">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="020-create-tbl-article" author="restapitask">
+        <validCheckSum>9:10bbedf2bbfbe055fd4bdbc5990fac2c</validCheckSum>
+        <createTable tableName="tbl_article">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="writer_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                constraintName="fk_article_writer"
+                baseTableName="tbl_article"
+                baseColumnNames="writer_id"
+                referencedTableName="tbl_writer"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="030-create-tbl-marker" author="restapitask">
+        <createTable tableName="tbl_marker">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="040-create-tbl-message" author="restapitask">
+        <createTable tableName="tbl_message">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="article_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                constraintName="fk_message_article"
+                baseTableName="tbl_message"
+                baseColumnNames="article_id"
+                referencedTableName="tbl_article"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- recommended by the diagram (many-to-many) -->
+    <changeSet id="050-create-tbl-article-marker" author="restapitask">
+        <createTable tableName="tbl_article_marker">
+            <column name="article_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="marker_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+                tableName="tbl_article_marker"
+                columnNames="article_id, marker_id"
+                constraintName="pk_article_marker"/>
+
+        <addForeignKeyConstraint
+                constraintName="fk_article_marker_article"
+                baseTableName="tbl_article_marker"
+                baseColumnNames="article_id"
+                referencedTableName="tbl_article"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                constraintName="fk_article_marker_marker"
+                baseTableName="tbl_article_marker"
+                baseColumnNames="marker_id"
+                referencedTableName="tbl_marker"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="060-alter-fk-article-writer-cascade" author="restapitask">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="fk_article_writer"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="tbl_article" constraintName="fk_article_writer"/>
+        <addForeignKeyConstraint
+                constraintName="fk_article_writer"
+                baseTableName="tbl_article"
+                baseColumnNames="writer_id"
+                referencedTableName="tbl_writer"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+</databaseChangeLog>
+

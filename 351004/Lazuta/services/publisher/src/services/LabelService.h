@@ -10,14 +10,16 @@ namespace publisher
 {
 
 class LabelRepository;
+class LabelCache;
 
 class LabelService 
 {
 private:
     std::shared_ptr<LabelRepository> m_dao;
+    std::shared_ptr<LabelCache> m_cache;
     
 public:
-    explicit LabelService(std::shared_ptr<LabelRepository> storage);
+    LabelService(std::shared_ptr<LabelRepository> storage, std::shared_ptr<LabelCache> cache);
     
     dto::LabelResponseTo Create(const dto::LabelRequestTo& request);
     dto::LabelResponseTo Read(int64_t id);

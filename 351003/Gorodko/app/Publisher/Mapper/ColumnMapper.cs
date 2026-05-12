@@ -10,7 +10,8 @@ namespace Publisher.Mapper {
                 ["Login"] = "login",
                 ["Password"] = "password",
                 ["Firstname"] = "firstname",
-                ["Lastname"] = "lastname"
+                ["Lastname"] = "lastname",
+                ["Role"] = "role"
             };
 
             _columnMappings[typeof(Tweet)] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {

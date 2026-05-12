@@ -19,6 +19,7 @@ public interface MessageMapper {
     @Mapping(target = "key.articleId", source = "articleId")
     @Mapping(target = "content", source = "content", ignore = true)
     @Mapping(target = "state", ignore = true)
+    @Mapping(target = "country", ignore = true)
     Message toEntity(MessageRequestTo request);
 
 

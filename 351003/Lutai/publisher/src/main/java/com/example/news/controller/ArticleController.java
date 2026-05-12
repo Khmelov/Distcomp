@@ -3,7 +3,6 @@ package com.example.news.controller;
 import com.example.common.dto.ArticleRequestTo;
 import com.example.common.dto.ArticleResponseTo;
 import com.example.common.dto.MarkerResponseTo;
-import com.example.common.dto.MessageResponseTo;
 import com.example.news.service.ArticleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1.0/articles")
+@RequestMapping({"/api/v1.0/articles", "/api/v2.0/articles"})
 @RequiredArgsConstructor
 public class ArticleController {
 
@@ -23,7 +22,7 @@ public class ArticleController {
     @GetMapping
     public ResponseEntity<List<ArticleResponseTo>> getAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "1000") int size,
             @RequestParam(defaultValue = "id") String sortBy) {
         return ResponseEntity.ok(articleService.findAll(page, size, sortBy));
     }

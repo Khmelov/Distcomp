@@ -1,0 +1,16 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="4" author="developer">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="tbl_editor" columnName="role"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="tbl_editor">
+            <column name="role" type="VARCHAR(20)" defaultValue="CUSTOMER">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

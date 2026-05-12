@@ -25,8 +25,15 @@ namespace Distcomp.Application.Services
                 throw new RestException(403, 40301, "User with this login already exists");
 
             var user = _mapper.Map<User>(request);
-            var createdUser = _repository.Create(user);
 
+            if (!string.IsNullOrEmpty(request.Password))
+            {
+                user.Password = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            }
+
+            user.Role = request.Role;
+
+            var createdUser = _repository.Create(user);
             return _mapper.Map<UserResponseTo>(createdUser);
         }
 

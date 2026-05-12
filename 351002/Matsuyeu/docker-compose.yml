@@ -1,0 +1,92 @@
+﻿# docker-compose.yml (в корне проекта)
+version: '3.8'
+
+services:
+  # PostgreSQL для Publisher
+  postgres:
+    image: postgres:15
+    container_name: newsportal-postgres
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d newsportal"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - newsportal-network
+
+  # Cassandra для Discussion
+  cassandra:
+    image: cassandra:4.1
+    container_name: newsportal-cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: NewsPortalCluster
+      CASSANDRA_DC: datacenter1
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      - newsportal-network
+
+  # Publisher микросервис (PostgreSQL)
+  publisher:
+    build:
+      context: ./Publisher
+      dockerfile: Dockerfile
+    container_name: newsportal-publisher
+    ports:
+      - "24110:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=distcomp;Username=postgres;Password=postgres
+      - DiscussionApi__BaseUrl=http://discussion:80
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    networks:
+      - newsportal-network
+    restart: unless-stopped
+
+  # Discussion микросервис (Cassandra)
+  discussion:
+    build:
+      context: ./Discussion
+      dockerfile: Dockerfile
+    container_name: newsportal-discussion
+    ports:
+      - "24130:80"
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    environment:
+      - Cassandra__ContactPoint=cassandra
+      - Cassandra__Port=9042
+      - Cassandra__Keyspace=discussion_keyspace
+      - PublisherApi__BaseUrl=http://publisher:80  
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    networks:
+      - newsportal-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  cassandra_data:
+
+networks:
+  newsportal-network:
+    driver: bridge

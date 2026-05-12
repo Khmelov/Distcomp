@@ -3,6 +3,7 @@ package com.sergey.orsik.service;
 import com.sergey.orsik.dto.request.CreatorRequestTo;
 import com.sergey.orsik.dto.response.CreatorResponseTo;
 import com.sergey.orsik.entity.Creator;
+import com.sergey.orsik.entity.CreatorRole;
 import com.sergey.orsik.exception.EntityNotFoundException;
 import com.sergey.orsik.mapper.CreatorMapper;
 import com.sergey.orsik.repository.CreatorRepository;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -28,17 +30,20 @@ class CreatorServiceImplTest {
     @Mock
     private CreatorMapper mapper;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private CreatorServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new CreatorServiceImpl(repository, mapper);
+        service = new CreatorServiceImpl(repository, mapper, passwordEncoder);
     }
 
     @Test
     void findByIdReturnsDtoWhenEntityExists() {
-        Creator entity = new Creator(1L, "user@mail.com", "pass", "John", "Doe");
-        CreatorResponseTo response = new CreatorResponseTo(1L, "user@mail.com", "John", "Doe");
+        Creator entity = new Creator(1L, "user@mail.com", "pass", "John", "Doe", CreatorRole.CUSTOMER);
+        CreatorResponseTo response = new CreatorResponseTo(1L, "user@mail.com", "John", "Doe", CreatorRole.CUSTOMER);
 
         when(repository.findById(1L)).thenReturn(Optional.of(entity));
         when(mapper.toResponse(entity)).thenReturn(response);
@@ -57,12 +62,13 @@ class CreatorServiceImplTest {
 
     @Test
     void createSetsNullIdAndReturnsSavedDto() {
-        CreatorRequestTo request = new CreatorRequestTo(null, "new@mail.com", "pass", "New", "User");
-        Creator entity = new Creator(null, "new@mail.com", "pass", "New", "User");
-        Creator saved = new Creator(100L, "new@mail.com", "pass", "New", "User");
-        CreatorResponseTo response = new CreatorResponseTo(100L, "new@mail.com", "New", "User");
+        CreatorRequestTo request = new CreatorRequestTo(null, "new@mail.com", "pass", "New", "User", CreatorRole.CUSTOMER);
+        Creator entity = new Creator(null, "new@mail.com", "pass", "New", "User", CreatorRole.CUSTOMER);
+        Creator saved = new Creator(100L, "new@mail.com", "hashed", "New", "User", CreatorRole.CUSTOMER);
+        CreatorResponseTo response = new CreatorResponseTo(100L, "new@mail.com", "New", "User", CreatorRole.CUSTOMER);
 
         when(mapper.toEntity(request)).thenReturn(entity);
+        when(passwordEncoder.encode("pass")).thenReturn("hashed");
         when(repository.save(entity)).thenReturn(saved);
         when(mapper.toResponse(saved)).thenReturn(response);
 

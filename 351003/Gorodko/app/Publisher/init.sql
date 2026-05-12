@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS tbl_editor (
     password VARCHAR(128) NOT NULL,
     firstname VARCHAR(64) NOT NULL,
     lastname VARCHAR(64) NOT NULL,
+    role VARCHAR(64) NULL,
     CONSTRAINT ck_editor_login_length CHECK (length(login) BETWEEN 2 AND 64),
     CONSTRAINT ck_editor_password_length CHECK (length(password) BETWEEN 8 AND 128),
     CONSTRAINT ck_editor_firstname_length CHECK (length(firstname) BETWEEN 2 AND 64),
@@ -77,7 +78,6 @@ CREATE TRIGGER trigger_cleanup_stickers
     FOR EACH ROW
     EXECUTE FUNCTION cleanup_unused_stickers();
 
-
-INSERT INTO tbl_editor (login, password, firstname, lastname)
-VALUES ('xgorodko@gmail.com', 'password123', 'Ксения', 'Городко')
+INSERT INTO tbl_editor (login, password, firstname, lastname, role)
+VALUES ('xgorodko@gmail.com', 'password123', 'Ксения', 'Городко', 'ADMIN')
 ON CONFLICT (login) DO NOTHING;

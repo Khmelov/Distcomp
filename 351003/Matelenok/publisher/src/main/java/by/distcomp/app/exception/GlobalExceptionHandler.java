@@ -2,6 +2,8 @@ package by.distcomp.app.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -47,5 +49,19 @@ public class GlobalExceptionHandler {
         error.put("errorCode", 40402);
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+    @ExceptionHandler(org.springframework.security.core.userdetails.UsernameNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUsernameNotFound(UsernameNotFoundException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("errorMessage", ex.getMessage());
+        error.put("errorCode", 40401); // 404 (Not Found) + 01 (порядковый номер)
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("errorMessage", "У вас недостаточно прав для этого действия");
+        error.put("errorCode", 40302);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 }

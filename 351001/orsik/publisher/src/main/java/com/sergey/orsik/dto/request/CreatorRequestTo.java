@@ -2,6 +2,7 @@ package com.sergey.orsik.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import com.sergey.orsik.entity.CreatorRole;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,4 +27,6 @@ public class CreatorRequestTo {
 
     @Size(min = 2, max = 64)
     private String lastname;
+
+    private CreatorRole role;
 }

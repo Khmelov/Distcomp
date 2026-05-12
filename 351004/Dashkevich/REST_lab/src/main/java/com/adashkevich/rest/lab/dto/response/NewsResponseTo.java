@@ -1,0 +1,14 @@
+package com.adashkevich.rest.lab.dto.response;
+
+import java.util.Set;
+
+
+public class NewsResponseTo {
+    public Long id;
+    public Long editorId;
+    public String title;
+    public String content;
+    public String created;
+    public String modified;
+    public Set<Long> markerIds;
+}

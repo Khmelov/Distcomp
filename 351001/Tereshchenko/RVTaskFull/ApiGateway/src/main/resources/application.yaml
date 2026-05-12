@@ -1,6 +1,27 @@
 spring:
   application:
     name: ApiGateway
+  kafka:
+    bootstrap-servers: localhost:9092
+
+app:
+  kafka:
+    in-topic: InTopic
+    out-topic: OutTopic
+    publisher-group: publisher-group
+    request-timeout-ms: 750
+  cache:
+    enabled: true
+    ttl-seconds: 60
+    key-prefix: "rv:publisher:cache:"
+  security:
+    jwt:
+      secret: "rv-task-security-local-secret-change-me-please"
+      expiration-seconds: 3600
+    services:
+      writer-url: "http://localhost:24111"
+      tweet-url: "http://localhost:24112"
+      message-url: "http://localhost:24130"
 
 server:
   port: 24110

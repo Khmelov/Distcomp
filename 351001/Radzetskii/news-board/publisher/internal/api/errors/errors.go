@@ -35,6 +35,18 @@ func ErrorHandler() gin.HandlerFunc {
 				status = http.StatusForbidden
 				code = "40301"
 				message = "User login already exists"
+			case errors.Is(err, domain.ErrInvalidCredentials):
+				status = http.StatusUnauthorized
+				code = "40103"
+				message = "Invalid credentials"
+			case errors.Is(err, domain.ErrUnauthorized):
+				status = http.StatusUnauthorized
+				code = "40104"
+				message = "Unauthorized"
+			case errors.Is(err, domain.ErrForbidden):
+				status = http.StatusForbidden
+				code = "40302"
+				message = "Forbidden"
 			case errors.Is(err, domain.ErrNewsNotFound):
 				status = http.StatusNotFound
 				code = "40402"

@@ -10,6 +10,8 @@ import (
 	"publisher/internal/repository"
 	"publisher/internal/transport/dto/request"
 	"publisher/internal/transport/dto/response"
+
+	"go.uber.org/zap"
 )
 
 type userServiceImpl struct {
@@ -351,11 +353,28 @@ func (s *labelServiceImpl) Delete(ctx context.Context, id int64) error {
 }
 
 type reactionGatewayService struct {
-	client *gateway.DiscussionClient
+	client    gateway.ReactionGateway
+	issueRepo repository.IssueRepository
+	producer  kafkaProducerPort
+	logger    *zap.Logger
 }
 
-func NewReactionService(client *gateway.DiscussionClient) ReactionService {
-	return &reactionGatewayService{client: client}
+type kafkaProducerPort interface {
+	Publish(ctx context.Context, r *model.Reaction) error
+}
+
+func NewReactionService(
+	client gateway.ReactionGateway,
+	issueRepo repository.IssueRepository,
+	producer kafkaProducerPort,
+	logger *zap.Logger,
+) ReactionService {
+	return &reactionGatewayService{
+		client:    client,
+		issueRepo: issueRepo,
+		producer:  producer,
+		logger:    logger,
+	}
 }
 
 func (s *reactionGatewayService) FindByID(ctx context.Context, id int64) (*response.ReactionResponseTo, error) {
@@ -371,11 +390,53 @@ func (s *reactionGatewayService) FindByIssueID(ctx context.Context, issueID int6
 }
 
 func (s *reactionGatewayService) Create(ctx context.Context, req *request.ReactionRequestTo) (*response.ReactionResponseTo, error) {
-	return s.client.Create(ctx, req)
+	if req.IssueID == 0 {
+		return nil, errors.ErrBadRequest
+	}
+	if len(req.Content) < 2 || len(req.Content) > 2048 {
+		return nil, errors.ErrBadRequest
+	}
+	if _, err := s.issueRepo.FindByID(ctx, req.IssueID); err != nil {
+		return nil, errors.ErrBadRequest
+	}
+	resp, err := s.client.Create(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	resp.State = model.ReactionStatePending
+	r := &model.Reaction{
+		ID:      resp.ID,
+		IssueID: resp.IssueID,
+		Content: resp.Content,
+		State:   model.ReactionStatePending,
+	}
+	if pubErr := s.producer.Publish(ctx, r); pubErr != nil {
+		s.logger.Error("kafka publish failed on create", zap.Error(pubErr), zap.Int64("id", r.ID))
+	}
+	return resp, nil
 }
 
 func (s *reactionGatewayService) Update(ctx context.Context, id int64, req *request.ReactionRequestTo) (*response.ReactionResponseTo, error) {
-	return s.client.Update(ctx, id, req)
+	if req.IssueID != 0 {
+		if _, err := s.issueRepo.FindByID(ctx, req.IssueID); err != nil {
+			return nil, errors.ErrBadRequest
+		}
+	}
+	resp, err := s.client.Update(ctx, id, req)
+	if err != nil {
+		return nil, err
+	}
+	resp.State = model.ReactionStatePending
+	r := &model.Reaction{
+		ID:      resp.ID,
+		IssueID: resp.IssueID,
+		Content: resp.Content,
+		State:   model.ReactionStatePending,
+	}
+	if pubErr := s.producer.Publish(ctx, r); pubErr != nil {
+		s.logger.Error("kafka publish failed on update", zap.Error(pubErr), zap.Int64("id", r.ID))
+	}
+	return resp, nil
 }
 
 func (s *reactionGatewayService) Delete(ctx context.Context, id int64) error {
