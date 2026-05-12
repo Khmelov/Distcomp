@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="discussion-001-notice-cassandra" author="discussion">
+        <comment>Keyspace создаётся приложением; здесь DDL таблиц Cassandra (tbl_*)</comment>
+        <sqlFile
+            path="cql/001-notice-tables.cql"
+            relativeToChangelogFile="true"
+            splitStatements="false"
+            stripComments="true"/>
+    </changeSet>
+</databaseChangeLog>

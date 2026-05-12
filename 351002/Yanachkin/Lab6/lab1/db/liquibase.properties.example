@@ -1,0 +1,8 @@
+# Пример для CLI: liquibase --defaults-file=liquibase.properties update
+# URL с префиксом jdbc:postgresql:
+changeLogFile=changelog/db.changelog-master.xml
+url=jdbc:postgresql://localhost:5432/distcomp
+username=postgres
+password=postgres
+defaultSchemaName=distcomp
+liquibaseSchemaName=distcomp
