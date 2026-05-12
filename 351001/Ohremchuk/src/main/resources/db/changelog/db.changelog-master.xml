@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="1-create-tables" author="cursor-agent">
+        <!-- The initial schema was adjusted later when comments moved to Cassandra.
+             Allow the previously applied checksum from older version of this changeset. -->
+        <validCheckSum>9:90b1399edd52450a1ea6ad05ce39c959</validCheckSum>
+        <createTable tableName="tbl_editor">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="tbl_story">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="editor_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_story"
+                baseColumnNames="editor_id"
+                referencedTableName="tbl_editor"
+                referencedColumnNames="id"
+                constraintName="fk_story_editor"/>
+
+        <createTable tableName="tbl_marker">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="tbl_story_marker">
+            <column name="story_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="marker_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="tbl_story_marker" columnNames="story_id,marker_id" constraintName="pk_story_marker"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_story_marker"
+                baseColumnNames="story_id"
+                referencedTableName="tbl_story"
+                referencedColumnNames="id"
+                constraintName="fk_storymarker_story"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_story_marker"
+                baseColumnNames="marker_id"
+                referencedTableName="tbl_marker"
+                referencedColumnNames="id"
+                constraintName="fk_storymarker_marker"/>
+    </changeSet>
+
+    <changeSet id="2-editor-role" author="cursor-agent">
+        <addColumn tableName="tbl_editor">
+            <column name="role" type="varchar(16)" defaultValue="CUSTOMER">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
+
