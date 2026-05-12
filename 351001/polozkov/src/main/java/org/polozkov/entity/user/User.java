@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.polozkov.entity.issue.Issue;
+import org.polozkov.other.enums.UserRole;
 
 import java.util.List;
 
@@ -24,6 +25,11 @@ public class User {
     private String firstname;
 
     private String lastname;
+
+    @Column(name = "role")
+    @Enumerated(EnumType.STRING)
+    private UserRole role = UserRole.CUSTOMER;
+
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Issue> issues;

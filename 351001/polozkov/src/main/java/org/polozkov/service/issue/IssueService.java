@@ -14,6 +14,10 @@ import org.polozkov.mapper.issue.IssueMapper;
 import org.polozkov.repository.issue.IssueRepository;
 import org.polozkov.repository.label.LabelRepository;
 import org.polozkov.service.user.UserService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -31,12 +35,14 @@ public class IssueService {
     private final IssueMapper issueMapper;
     private final LabelRepository labelRepository;
 
+    @Cacheable(value = "issues_list")
     public List<IssueResponseTo> getAllIssues() {
         return issueRepository.findAll().stream()
                 .map(issueMapper::issueToResponseDto)
                 .toList();
     }
 
+    @Cacheable(value = "issues", key = "#id")
     public IssueResponseTo getIssue(Long id) {
         return issueMapper.issueToResponseDto(getIssueById(id));
     }
@@ -45,6 +51,7 @@ public class IssueService {
         return issueRepository.byId(id);
     }
 
+    @CacheEvict(value = "issues_list", allEntries = true)
     public IssueResponseTo createIssue(@Valid IssueRequestTo issueRequest) {
         User user = userService.getUserById(issueRequest.getUserId());
 
@@ -55,60 +62,38 @@ public class IssueService {
         Issue issue = issueMapper.requestDtoToIssue(issueRequest);
         issue.setCreated(LocalDateTime.now());
         issue.setModified(LocalDateTime.now());
-
         issue.setUser(user);
 
-        List<Label> labels = new ArrayList<>();
-        if (issueRequest.getLabels() != null) {
-            for (String labelName : issueRequest.getLabels()) {
-                Label label = labelRepository.findByName(labelName)
-                        .orElseGet(() -> {
-                            Label newLabel = new Label();
-                            newLabel.setName(labelName);
-                            newLabel.setIssues(new ArrayList<>());
-                            return labelRepository.save(newLabel);
-                        });
-                labels.add(label);
-            }
-        }
-        issue.setLabels(labels);
+        processLabels(issue, issueRequest.getLabels());
 
         Issue savedIssue = issueRepository.save(issue);
         return issueMapper.issueToResponseDto(savedIssue);
     }
 
+    @Caching(
+            put = @CachePut(value = "issues", key = "#issueRequest.id"),
+            evict = @CacheEvict(value = "issues_list", allEntries = true)
+    )
     public IssueResponseTo updateIssue(@Valid IssueRequestTo issueRequest) {
         Issue existingIssue = issueRepository.byId(issueRequest.getId());
-
         User user = userService.getUserById(issueRequest.getUserId());
 
         Issue issue = issueMapper.updateIssue(existingIssue, issueRequest);
         issue.setModified(LocalDateTime.now());
-
         issue.setCreated(existingIssue.getCreated());
-
         issue.setUser(user);
 
-        List<Label> labels = new ArrayList<>();
-        if (issueRequest.getLabels() != null) {
-            for (String labelName : issueRequest.getLabels()) {
-                Label label = labelRepository.findByName(labelName)
-                        .orElseGet(() -> {
-                            Label newLabel = new Label();
-                            newLabel.setName(labelName);
-                            newLabel.setIssues(new ArrayList<>());
-                            return labelRepository.save(newLabel);
-                        });
-                labels.add(label);
-            }
-        }
-        issue.setLabels(labels);
+        processLabels(issue, issueRequest.getLabels());
 
         Issue updatedIssue = issueRepository.save(issue);
         return issueMapper.issueToResponseDto(updatedIssue);
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "issues", key = "#id"),
+            @CacheEvict(value = "issues_list", allEntries = true)
+    })
     public void deleteIssue(Long id) {
         Issue issue = issueRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Issue not found"));
@@ -117,7 +102,6 @@ public class IssueService {
 
         issue.getLabels().clear();
         issueRepository.delete(issue);
-
         issueRepository.flush();
 
         for (Label label : labelsToCheck) {
@@ -127,4 +111,21 @@ public class IssueService {
         }
     }
 
+    // Вынес повторяющуюся логику с метками в отдельный метод
+    private void processLabels(Issue issue, List<String> labelNames) {
+        List<Label> labels = new ArrayList<>();
+        if (labelNames != null) {
+            for (String name : labelNames) {
+                Label label = labelRepository.findByName(name)
+                        .orElseGet(() -> {
+                            Label newLabel = new Label();
+                            newLabel.setName(name);
+                            newLabel.setIssues(new ArrayList<>());
+                            return labelRepository.save(newLabel);
+                        });
+                labels.add(label);
+            }
+        }
+        issue.setLabels(labels);
+    }
 }

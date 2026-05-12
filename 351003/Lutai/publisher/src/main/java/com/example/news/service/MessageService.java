@@ -1,14 +1,17 @@
 package com.example.news.service;
 
+import com.example.common.dto.ArticleResponseTo;
 import com.example.common.dto.MessageRequestTo;
 import com.example.common.dto.MessageResponseTo;
 import com.example.common.dto.model.enums.MessageState;
+import com.example.news.repository.WriterRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
@@ -24,6 +27,8 @@ public class MessageService {
     private final KafkaTemplate<String, MessageResponseTo> kafkaTemplate;
     private static final String IN_TOPIC = "InTopic";
     private final RedisTemplate<String, Object> redisTemplate;
+    private final WriterRepository writerRepository;
+    private final ArticleService articleService;
 
     public MessageResponseTo create(MessageRequestTo request) {
         Long generatedId = System.currentTimeMillis();
@@ -82,5 +87,22 @@ public void listenOutTopic(@Payload MessageResponseTo messageDto) {
         restTemplate.put(DISCUSSION_URL + "/" + id, request);
 
         return new MessageResponseTo(id, request.articleId(), request.content(), MessageState.APPROVE);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isOwner(Long messageId, String currentLogin) {
+        try {
+            MessageResponseTo message = this.findById(messageId);
+            if (message == null) return false;
+
+            ArticleResponseTo article = articleService.findById(message.articleId());
+            if (article == null || article.writerId() == null) return false;
+
+            return writerRepository.findByLogin(currentLogin)
+                    .map(writer -> article.writerId().equals(writer.getId()))
+                    .orElse(false);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

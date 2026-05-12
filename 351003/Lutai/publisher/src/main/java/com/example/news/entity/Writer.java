@@ -1,5 +1,6 @@
 package com.example.news.entity;
 
+import com.example.common.dto.model.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,4 +29,8 @@ public class Writer extends BaseEntity {
 
     @OneToMany(mappedBy = "writer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Article> articles;
+
+    @Column(length = 64)
+    @Enumerated(EnumType.STRING)
+    private Role role;
 }

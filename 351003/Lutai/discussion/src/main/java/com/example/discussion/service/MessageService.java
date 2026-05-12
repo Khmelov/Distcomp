@@ -9,6 +9,7 @@ import com.example.discussion.model.Message;
 import com.example.discussion.model.MessageKey;
 import com.example.discussion.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MessageService {
 
     private final MessageRepository messageRepository;
@@ -28,6 +30,12 @@ public class MessageService {
     @KafkaListener(topics = "InTopic", groupId = "discussion-group")
     public void listenInTopic(MessageResponseTo messageDto) {
         MessageState finalState = MessageState.APPROVE;
+
+        if (messageDto.content() == null) {
+            // Логируем или просто выходим, чтобы не упасть в бесконечный ретрай
+            log.warn("Received message with null content, skipping. ID: {}", messageDto.id());
+            return;
+        }
 
         String content = messageDto.content().toLowerCase();
 

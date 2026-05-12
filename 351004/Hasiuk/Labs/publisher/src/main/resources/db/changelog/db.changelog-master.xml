@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <include file="db/changelog/changesets/00-create-schema.xml"/>
+    <include file="db/changelog/changesets/01-create-tables.xml"/>
+    <include file="db/changelog/changesets/02-insert-initial-data.xml"/>
+    <include file="db/changelog/changesets/03-add-constraints.xml"/>
+    <include file="db/changelog/changesets/04-add-role-to-editor.xml"/>
+
+</databaseChangeLog>
