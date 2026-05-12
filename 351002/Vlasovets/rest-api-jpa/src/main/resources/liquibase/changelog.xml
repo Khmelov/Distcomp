@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+    <changeSet id="1" author="student">
+        <createTable tableName="tbl_editor">
+            <column name="id" type="serial" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="login" type="varchar(32)"><constraints nullable="false" unique="true"/></column>
+            <column name="password" type="varchar(32)"><constraints nullable="false"/></column>
+            <column name="firstname" type="varchar(32)"><constraints nullable="false"/></column>
+            <column name="lastname" type="varchar(32)"><constraints nullable="false"/></column>
+        </createTable>
+
+        <createTable tableName="tbl_story">
+            <column name="id" type="serial" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="title" type="varchar(32)"><constraints nullable="false" unique="true"/></column>
+            <column name="content" type="text"><constraints nullable="false"/></column>
+            <!-- Исправлено на editor_id -->
+            <column name="editor_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_story_editor" references="tbl_editor(id) ON DELETE CASCADE"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="tbl_label">
+            <column name="id" type="serial" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="name" type="varchar(32)"><constraints nullable="false" unique="true"/></column>
+        </createTable>
+
+        <createTable tableName="tbl_comment">
+            <column name="id" type="serial" autoIncrement="true"><constraints primaryKey="true"/></column>
+            <column name="content" type="text"><constraints nullable="false"/></column>
+            <!-- Исправлено на story_id -->
+            <column name="story_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_comment_story" references="tbl_story(id) ON DELETE CASCADE"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="tbl_story_label">
+            <!-- Исправлено на story_id и label_id -->
+            <column name="story_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_sl_story" references="tbl_story(id) ON DELETE CASCADE"/>
+            </column>
+            <column name="label_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_sl_label" references="tbl_label(id) ON DELETE CASCADE"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
