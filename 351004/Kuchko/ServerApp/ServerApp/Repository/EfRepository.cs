@@ -33,18 +33,11 @@ public class EfRepository<T>(AppDbContext context) : IRepository<T> where T : Ba
         var query = context.Set<T>().AsQueryable();
 
         if (typeof(T) == typeof(Article))
-        {
             query = query.Include("Stickers");
-        }
-        else if (typeof(T) == typeof(Sticker)) 
-        {
+        else if (typeof(T) == typeof(Sticker))
             query = query.Include("Articles");
-        }
-        else if (typeof(T) == typeof(Author)) 
-        {
-            query = query.Include("Articles").Include("Articles.Stickers");
-        }
-        
+        else if (typeof(T) == typeof(Author)) query = query.Include("Articles").Include("Articles.Stickers");
+
         return query.FirstOrDefault(e => e.Id == id);
     }
 
@@ -66,7 +59,7 @@ public class EfRepository<T>(AppDbContext context) : IRepository<T> where T : Ba
     {
         var entity = GetById(id);
         if (entity == null) return false;
-        
+
         context.Set<T>().Remove(entity);
         context.SaveChanges();
         return true;

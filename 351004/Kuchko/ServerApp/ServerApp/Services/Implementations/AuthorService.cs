@@ -10,8 +10,10 @@ namespace ServerApp.Services.Implementations;
 
 public class AuthorService(IRepository<Author> repository) : IAuthorService
 {
-    public IEnumerable<AuthorResponseTo> GetPaged(QueryParams parameters) => 
-        repository.GetPaged(parameters).Adapt<IEnumerable<AuthorResponseTo>>();
+    public IEnumerable<AuthorResponseTo> GetPaged(QueryParams parameters)
+    {
+        return repository.GetPaged(parameters).Adapt<IEnumerable<AuthorResponseTo>>();
+    }
 
     public AuthorResponseTo GetById(long id)
     {
@@ -21,14 +23,11 @@ public class AuthorService(IRepository<Author> repository) : IAuthorService
 
     public AuthorResponseTo Create(AuthorRequestTo request)
     {
-        bool loginExists = repository.GetAll()
+        var loginExists = repository.GetAll()
             .Any(a => a.Login.Equals(request.Login, StringComparison.OrdinalIgnoreCase));
-        
-        if (loginExists)
-        {
-            throw new InvalidOperationException($"Login '{request.Login}' is already taken");
-        }
-        
+
+        if (loginExists) throw new InvalidOperationException($"Login '{request.Login}' is already taken");
+
         var author = request.Adapt<Author>();
         var created = repository.Create(author);
         return created.Adapt<AuthorResponseTo>();
@@ -37,7 +36,7 @@ public class AuthorService(IRepository<Author> repository) : IAuthorService
     public AuthorResponseTo Update(long id, AuthorRequestTo request)
     {
         var existing = repository.GetById(id) ?? throw new KeyNotFoundException($"Author {id} not found");
-        request.Adapt(existing); 
+        request.Adapt(existing);
         existing.Id = id;
         repository.Update(existing);
         return existing.Adapt<AuthorResponseTo>();

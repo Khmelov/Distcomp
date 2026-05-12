@@ -11,6 +11,5 @@ public record ArticleRequestTo(
     [Required]
     [StringLength(2048, MinimumLength = 4)]
     string Content,
-    
-    ICollection<string>? Stickers 
+    ICollection<string>? Stickers
 );

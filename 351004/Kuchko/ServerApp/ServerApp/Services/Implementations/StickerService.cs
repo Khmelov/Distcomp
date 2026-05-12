@@ -9,7 +9,10 @@ namespace ServerApp.Services.Implementations;
 
 public class StickerService(IRepository<Sticker> repository) : IStickerService
 {
-    public IEnumerable<StickerResponseTo> GetAll() => repository.GetAll().Adapt<IEnumerable<StickerResponseTo>>();
+    public IEnumerable<StickerResponseTo> GetAll()
+    {
+        return repository.GetAll().Adapt<IEnumerable<StickerResponseTo>>();
+    }
 
     public StickerResponseTo GetById(long id)
     {

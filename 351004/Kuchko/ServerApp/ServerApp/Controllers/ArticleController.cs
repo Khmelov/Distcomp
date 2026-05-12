@@ -13,11 +13,16 @@ public class ArticleController(IArticleService articleService) : ControllerBase
 {
     [HttpGet]
     [HttpGet("{parameters}")]
-    public ActionResult<IEnumerable<ArticleResponseTo>> GetPaged([FromQuery] QueryParams parameters) =>
-        Ok(articleService.GetPaged(parameters));
+    public ActionResult<IEnumerable<ArticleResponseTo>> GetPaged([FromQuery] QueryParams parameters)
+    {
+        return Ok(articleService.GetPaged(parameters));
+    }
 
     [HttpGet("{id:long}")]
-    public ActionResult<ArticleResponseTo> GetById(long id) => Ok(articleService.GetById(id));
+    public ActionResult<ArticleResponseTo> GetById(long id)
+    {
+        return Ok(articleService.GetById(id));
+    }
 
     [HttpPost]
     public ActionResult<ArticleResponseTo> Create([FromBody] ArticleRequestTo request)
@@ -30,13 +35,10 @@ public class ArticleController(IArticleService articleService) : ControllerBase
     [HttpPut]
     public ActionResult<ArticleResponseTo> Update(long? id, [FromBody] ArticleRequestTo request)
     {
-        long finalId = id ?? (request.Id ?? 0);
-        
-        if (finalId == 0)
-        {
-            return BadRequest(new ErrorResponse("ID must be provided in URL or body", 40002));
-        }
-        
+        var finalId = id ?? (request.Id ?? 0);
+
+        if (finalId == 0) return BadRequest(new ErrorResponse("ID must be provided in URL or body", 40002));
+
         return Ok(articleService.Update(finalId, request));
     }
 

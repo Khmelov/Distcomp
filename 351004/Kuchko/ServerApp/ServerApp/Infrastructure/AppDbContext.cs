@@ -13,7 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         // 1. Уникальный индекс для логина автора
         modelBuilder.Entity<Author>()
             .HasIndex(a => a.Login)
@@ -41,7 +41,5 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 j => j.HasOne<Sticker>().WithMany().HasForeignKey("sticker_id"),
                 j => j.HasOne<Article>().WithMany().HasForeignKey("article_id")
             );
-        
-        
     }
 }

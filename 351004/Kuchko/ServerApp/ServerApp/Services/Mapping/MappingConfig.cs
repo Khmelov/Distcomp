@@ -21,11 +21,11 @@ public class MappingConfig : IRegister
             {
                 // При создании статьи устанавливаем даты
                 var now = DateTime.UtcNow;
-                dest.Stickers = new List<Sticker>(); 
+                dest.Stickers = new List<Sticker>();
                 dest.Created = now;
                 dest.Modified = now;
             });
-            
+
         config.NewConfig<Article, ArticleResponseTo>();
 
         // 3. Маппинг для Message

@@ -1,4 +1,5 @@
 ﻿using SharedModels;
+
 namespace ServerApp.Services.Interfaces;
 
 public interface IMessageService

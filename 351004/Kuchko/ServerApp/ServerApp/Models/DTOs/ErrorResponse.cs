@@ -1,6 +1,6 @@
 ﻿namespace ServerApp.Models.DTOs;
 
 public record ErrorResponse(
-    string ErrorMessage, 
+    string ErrorMessage,
     int ErrorCode
 );

@@ -11,14 +11,17 @@ public class DiscussionController(MessageRepository repo) : ControllerBase
     [HttpPost]
     public IActionResult Create([FromBody] MessageRequestTo request)
     {
-        long newId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(); 
+        var newId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var msg = new MessageResponseTo(newId, request.ArticleId, request.Content, MessageState.Approve);
         repo.Create(msg);
         return Ok(msg);
     }
 
     [HttpGet]
-    public IActionResult GetAll() => Ok(repo.GetAll());
+    public IActionResult GetAll()
+    {
+        return Ok(repo.GetAll());
+    }
 
     [HttpGet("{id:long}")]
     public IActionResult GetById(long id)

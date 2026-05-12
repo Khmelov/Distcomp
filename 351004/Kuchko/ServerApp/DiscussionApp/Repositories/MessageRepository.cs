@@ -18,7 +18,8 @@ public class MessageRepository
 
     private void InitializeDatabase()
     {
-        _session.Execute("CREATE KEYSPACE IF NOT EXISTS distcomp WITH replication = {'class':'SimpleStrategy', 'replication_factor':1};");
+        _session.Execute(
+            "CREATE KEYSPACE IF NOT EXISTS distcomp WITH replication = {'class':'SimpleStrategy', 'replication_factor':1};");
         _session.ChangeKeyspace("distcomp");
         _session.Execute(@"CREATE TABLE IF NOT EXISTS tbl_message (
             article_id bigint, id bigint, content text, state text, country text,
@@ -40,7 +41,8 @@ public class MessageRepository
 
     public void Create(MessageResponseTo msg)
     {
-        var ps = _session.Prepare("INSERT INTO tbl_message (article_id, id, content, state, country) VALUES (?, ?, ?, ?, ?)");
+        var ps = _session.Prepare(
+            "INSERT INTO tbl_message (article_id, id, content, state, country) VALUES (?, ?, ?, ?, ?)");
         _session.Execute(ps.Bind(msg.ArticleId, msg.Id, msg.Content, msg.State, "Unknown"));
     }
 
@@ -56,7 +58,10 @@ public class MessageRepository
         _session.Execute(ps.Bind(articleId, id));
     }
 
-    private MessageResponseTo MapRow(Row r) => new(
-        r.GetValue<long>("id"), r.GetValue<long>("article_id"), 
-        r.GetValue<string>("content"), r.GetValue<string>("state"));
+    private MessageResponseTo MapRow(Row r)
+    {
+        return new MessageResponseTo(
+            r.GetValue<long>("id"), r.GetValue<long>("article_id"),
+            r.GetValue<string>("content"), r.GetValue<string>("state"));
+    }
 }

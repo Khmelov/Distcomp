@@ -6,7 +6,7 @@ public class KafkaEvent
     public string Action { get; set; } = string.Empty; // CREATE, GET, UPDATE, DELETE
     public long ArticleId { get; set; } // Ключ для партиционирования
     public string Payload { get; set; } = string.Empty; // Сами данные (JSON)
-    public string ErrorMessage { get; set; } = string.Empty; 
+    public string ErrorMessage { get; set; } = string.Empty;
 }
 
 public static class MessageState

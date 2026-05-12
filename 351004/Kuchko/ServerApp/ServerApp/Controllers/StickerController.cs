@@ -10,10 +10,16 @@ namespace ServerApp.Controllers;
 public class StickerController(IStickerService stickerService) : ControllerBase
 {
     [HttpGet]
-    public ActionResult<IEnumerable<StickerResponseTo>> GetAll() => Ok(stickerService.GetAll());
+    public ActionResult<IEnumerable<StickerResponseTo>> GetAll()
+    {
+        return Ok(stickerService.GetAll());
+    }
 
     [HttpGet("{id:long}")]
-    public ActionResult<StickerResponseTo> GetById(long id) => Ok(stickerService.GetById(id));
+    public ActionResult<StickerResponseTo> GetById(long id)
+    {
+        return Ok(stickerService.GetById(id));
+    }
 
     [HttpPost]
     public ActionResult<StickerResponseTo> Create([FromBody] StickerRequestTo request)

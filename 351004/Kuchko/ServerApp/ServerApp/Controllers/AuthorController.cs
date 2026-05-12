@@ -8,13 +8,15 @@ using ServerApp.Services.Interfaces;
 namespace ServerApp.Controllers;
 
 [ApiController]
-[Route("authors")] 
+[Route("authors")]
 public class AuthorController(IAuthorService authorService) : ControllerBase
 {
     [HttpGet]
     [HttpGet("{parameters}")]
-    public ActionResult<IEnumerable<AuthorResponseTo>> GetPaged([FromQuery] QueryParams parameters) => 
-        Ok(authorService.GetPaged(parameters));
+    public ActionResult<IEnumerable<AuthorResponseTo>> GetPaged([FromQuery] QueryParams parameters)
+    {
+        return Ok(authorService.GetPaged(parameters));
+    }
 
     [HttpGet("{id:long}")]
     public ActionResult<AuthorResponseTo> GetById(long id)
@@ -31,15 +33,12 @@ public class AuthorController(IAuthorService authorService) : ControllerBase
     }
 
     [HttpPut("{id:long}")] // Поддержка /api/v1.0/authors/{id}
-    [HttpPut]              // Поддержка /api/v1.0/authors (ID внутри JSON)
+    [HttpPut] // Поддержка /api/v1.0/authors (ID внутри JSON)
     public ActionResult<AuthorResponseTo> Update(long? id, [FromBody] AuthorRequestTo request)
     {
-        long finalId = id ?? (request.Id ?? 0);
+        var finalId = id ?? (request.Id ?? 0);
 
-        if (finalId == 0)
-        {
-            return BadRequest(new ErrorResponse("ID must be provided in URL or body", 40002));
-        }
+        if (finalId == 0) return BadRequest(new ErrorResponse("ID must be provided in URL or body", 40002));
 
         // Вызываем сервис с найденным ID
         return Ok(authorService.Update(finalId, request));

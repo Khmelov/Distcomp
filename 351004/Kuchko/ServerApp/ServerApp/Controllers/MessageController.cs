@@ -9,10 +9,16 @@ namespace ServerApp.Controllers;
 public class MessageController(IMessageService messageService) : ControllerBase
 {
     [HttpGet]
-    public ActionResult<IEnumerable<MessageResponseTo>> GetAll() => Ok(messageService.GetAll());
+    public ActionResult<IEnumerable<MessageResponseTo>> GetAll()
+    {
+        return Ok(messageService.GetAll());
+    }
 
     [HttpGet("{id:long}")]
-    public ActionResult<MessageResponseTo> GetById(long id) => Ok(messageService.GetById(id));
+    public ActionResult<MessageResponseTo> GetById(long id)
+    {
+        return Ok(messageService.GetById(id));
+    }
 
     [HttpPost]
     public ActionResult<MessageResponseTo> Create([FromBody] MessageRequestTo request)

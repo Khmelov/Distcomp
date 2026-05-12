@@ -7,7 +7,10 @@ public class KafkaRequestManager
 {
     private readonly ConcurrentDictionary<string, TaskCompletionSource<KafkaEvent>> _requests = new();
 
-    public void Add(string id, TaskCompletionSource<KafkaEvent> tcs) => _requests.TryAdd(id, tcs);
+    public void Add(string id, TaskCompletionSource<KafkaEvent> tcs)
+    {
+        _requests.TryAdd(id, tcs);
+    }
 
     public void Resolve(KafkaEvent ev)
     {

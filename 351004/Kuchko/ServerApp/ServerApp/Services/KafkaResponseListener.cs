@@ -10,7 +10,8 @@ public class KafkaResponseListener(KafkaRequestManager requestManager, IConfigur
     {
         return Task.Run(() =>
         {
-            var conf = new ConsumerConfig {
+            var conf = new ConsumerConfig
+            {
                 BootstrapServers = config["Kafka:BootstrapServers"] ?? "kafka:29092",
                 GroupId = "publisher-response-group",
                 AutoOffsetReset = AutoOffsetReset.Earliest
@@ -20,13 +21,16 @@ public class KafkaResponseListener(KafkaRequestManager requestManager, IConfigur
             consumer.Subscribe("OutTopic");
 
             while (!stoppingToken.IsCancellationRequested)
-            {
-                try {
+                try
+                {
                     var result = consumer.Consume(stoppingToken);
                     var @event = JsonSerializer.Deserialize<KafkaEvent>(result.Message.Value);
                     if (@event != null) requestManager.Resolve(@event);
-                } catch { /* log error */ }
-            }
+                }
+                catch
+                {
+                    /* log error */
+                }
         }, stoppingToken);
     }
 }

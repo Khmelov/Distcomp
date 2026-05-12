@@ -17,7 +17,7 @@ public class GlobalExceptionFilter : IExceptionFilter
 
             _ => (StatusCodes.Status500InternalServerError, 01)
         };
-        
+
         var finalErrorCode = statusCode * 100 + customSubCode;
         var response = new ErrorResponse(context.Exception.Message, finalErrorCode);
 
