@@ -9,7 +9,7 @@ router = APIRouter(prefix="/labels")
 
 @router.post("", response_model=LabelResponseTo, status_code=status.HTTP_201_CREATED)
 async def create_label(label_in: LabelRequestTo, label_service: LabelServiceDep, current_user: CurrentUserDep):
-    verify_permissions(current_user) # Только ADMIN может создавать лейблы (передаем None как owner)
+    verify_permissions(current_user)
     return await label_service.create(label_in)
 
 

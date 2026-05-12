@@ -14,7 +14,6 @@ async def login(credentials: LoginRequestTo):
     if not user or not verify_password(credentials.password, user.password):
         raise BaseAppException(401, "40103", "Incorrect login or password")
 
-    # Генерация токена
     access_token = create_access_token(data={
         "sub": user.login,
         "role": user.role

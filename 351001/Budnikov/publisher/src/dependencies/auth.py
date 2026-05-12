@@ -29,10 +29,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 
 def verify_permissions(current_user: Editor, owner_id: int = None):
-    """
-    Проверяет права. ADMIN имеет доступ ко всему.
-    CUSTOMER имеет доступ только если он является владельцем (owner_id).
-    """
     if current_user.role == "ADMIN":
         return True
 

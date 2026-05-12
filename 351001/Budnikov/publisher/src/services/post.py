@@ -29,7 +29,6 @@ async def init_kafka():
         auto_offset_reset="earliest"
     )
 
-    # Повторные попытки подключения к Kafka
     retries = 10
     for i in range(retries):
         try:
