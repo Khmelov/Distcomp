@@ -1,0 +1,84 @@
+
+
+
+
+services:
+  publisher-db:
+    image: postgres:15-alpine
+    container_name: publisher_db_lab6
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_lab6:/var/lib/postgresql/data
+    networks:
+      - appnet_lab6
+
+  discussion-db:
+    image: cassandra:4
+    container_name: discussion_db_lab6
+    environment:
+      - CASSANDRA_START_RPC=true
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+    ports:
+      - "9042:9042"
+      - "7199:7199"
+    volumes:
+      - cassandradata_lab6:/var/lib/cassandra
+    networks:
+      - appnet_lab6
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_lab6
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata_lab6:/data
+    networks:
+      - appnet_lab6
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.2
+    container_name: zookeeper_lab6
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - appnet_lab6
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.2
+    container_name: kafka_lab6
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - appnet_lab6
+
+networks:
+  appnet_lab6:
+    driver: bridge
+
+volumes:
+  pgdata_lab6:
+  cassandradata_lab6:
+  redisdata_lab6:
