@@ -1,0 +1,16 @@
+[package]
+name = "lab1"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde_json ={version = "1"}
+axum = {workspace = true}
+serde = {workspace = true}
+tokio = {workspace = true}
+
+common = {workspace = true}
+storage = {workspace = true, features = ["in_memory"]}
+domain = {workspace = true}
+validator = "0.20.0"
