@@ -2,7 +2,6 @@
 
 namespace Publisher.src.NewsPortal.Publisher.Application.Dtos.ResponseTo
 {
-    // Response DTO - returned to client (no password)
     public class CreatorResponseTo
     {
         public long Id { get; set; }
@@ -14,5 +13,6 @@ namespace Publisher.src.NewsPortal.Publisher.Application.Dtos.ResponseTo
 
         [JsonPropertyName("lastname")]
         public string LastName { get; set; }
+        public string Role { get; set; } = "CUSTOMER";
     }
 }

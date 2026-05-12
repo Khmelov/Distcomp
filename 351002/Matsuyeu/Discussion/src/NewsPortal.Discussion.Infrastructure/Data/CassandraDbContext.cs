@@ -24,16 +24,13 @@ namespace Discussion.src.NewsPortal.Discussion.Infrastructure.Data
 
             _logger.LogInformation("Connecting to Cassandra at {ContactPoint}:{Port}", contactPoint, port);
 
-            // Создаем кластер без указания keyspace
             _cluster = Cluster.Builder()
                 .AddContactPoint(contactPoint)
                 .WithPort(port)
                 .Build();
 
-            // Подключаемся без keyspace
             _session = _cluster.Connect();
 
-            // Создаем keyspace если не существует
             var createKeyspaceQuery = $@"
             CREATE KEYSPACE IF NOT EXISTS {keyspace}
             WITH REPLICATION = {{ 
@@ -44,32 +41,28 @@ namespace Discussion.src.NewsPortal.Discussion.Infrastructure.Data
             _session.Execute(createKeyspaceQuery);
             _logger.LogInformation("Keyspace '{Keyspace}' created or already exists", keyspace);
 
-            // Теперь подключаемся к keyspace
             _session.ChangeKeyspace(keyspace);
 
-            // Создаем таблицу
             var createTableQuery = @"
             CREATE TABLE IF NOT EXISTS tbl_note (
                 news_id bigint,
                 id bigint,
                 content text,
                 created timestamp,
+                state text,
                 PRIMARY KEY (news_id, id)
             )";
 
             _session.Execute(createTableQuery);
             _logger.LogInformation("Table 'tbl_note' created or already exists");
 
-            // Настраиваем маппинг для Note
             ConfigureMappings();
 
-            // Создаем маппер
             _mapper = new Mapper(_session);
         }
 
         private void ConfigureMappings()
         {
-            // Настройка маппинга для Note
             MappingConfiguration.Global.Define(
                 new Map<Note>()
                     .TableName("tbl_note")

@@ -46,18 +46,24 @@ namespace Discussion.src.NewsPortal.Discussion.Application.Services.Implementati
 
         public async Task<NoteResponseTo> CreateNoteAsync(NoteRequestTo noteRequest)
         {
-           await ValidateNewsExistsAsync(noteRequest.NewsId);
-
             var note = new Note
             {
+                Id = noteRequest.Id > 0 ? noteRequest.Id : 0, //ID от Publisher
                 NewsId = noteRequest.NewsId,
-                Content = noteRequest.Content.Trim()
+                Content = noteRequest.Content.Trim(),
+                State = noteRequest.State ?? "PENDING"
             };
 
             var createdNote = await _noteRepository.AddAsync(note);
-            return await BuildResponseAsync(createdNote);
-        }
 
+            return new NoteResponseTo
+            {
+                Id = createdNote.Id,
+                NewsId = createdNote.NewsId,
+                Content = createdNote.Content,
+                State = createdNote.State
+            };
+        }
         public async Task<bool> UpdateNoteAsync(NoteRequestTo noteRequest)
         {
             if (noteRequest.Id <= 0)
@@ -67,15 +73,9 @@ namespace Discussion.src.NewsPortal.Discussion.Application.Services.Implementati
             if (existingNote == null)
                 throw new NotFoundException($"Note with ID {noteRequest.Id} not found");
 
-            // Проверяем существование News, если ID изменился
-            if (existingNote.NewsId != noteRequest.NewsId)
-            {
-                await ValidateNewsExistsAsync(noteRequest.NewsId);
-            }
-
-            // Обновляем поля
             existingNote.NewsId = noteRequest.NewsId;
             existingNote.Content = noteRequest.Content.Trim();
+            existingNote.State = noteRequest.State ?? existingNote.State; 
 
             await _noteRepository.UpdateAsync(existingNote);
             return true;
@@ -96,7 +96,7 @@ namespace Discussion.src.NewsPortal.Discussion.Application.Services.Implementati
 
         #region Private Methods
 
-        private async Task ValidateNewsExistsAsync(long newsId)
+        public async Task ValidateNewsExistsAsync(long newsId)
         {
             var newsExists = await _publisherApiClient.NewsExistsAsync(newsId);
             if (!newsExists)
@@ -105,12 +105,12 @@ namespace Discussion.src.NewsPortal.Discussion.Application.Services.Implementati
 
         private async Task<NoteResponseTo> BuildResponseAsync(Note note)
         {
-
             return new NoteResponseTo
             {
                 Id = note.Id,
                 NewsId = note.NewsId,
-                Content = note.Content
+                Content = note.Content,
+                State = note.State 
             };
         }
 

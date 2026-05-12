@@ -1,6 +1,5 @@
 ﻿namespace Publisher.src.NewsPortal.Publisher.Application.Dtos.ResponseTo
 {
-    // Response DTO - returned to client (no password)
     public class NewsResponseTo
     {
         public long Id { get; set; }

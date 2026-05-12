@@ -1,21 +1,22 @@
-﻿// src/Discussion/NewsPortal.Discussion.API/Program.cs
-using System.Reflection;
+﻿using System.Reflection;
 using Discussion.src.NewsPortal.Discussion.API.Middleware;
+using Discussion.src.NewsPortal.Discussion.Application.Services.Abstractions;
+using Discussion.src.NewsPortal.Discussion.Application.Services.Implementations;
 using Discussion.src.NewsPortal.Discussion.Infrastructure.Clients.Abstractions;
 using Discussion.src.NewsPortal.Discussion.Infrastructure.Clients.Implementations;
 using Discussion.src.NewsPortal.Discussion.Infrastructure.Data;
+using Discussion.src.NewsPortal.Discussion.Infrastructure.Messaging;
 using Discussion.src.NewsPortal.Discussion.Infrastructure.Repositories.Abstractions;
 using Discussion.src.NewsPortal.Discussion.Infrastructure.Repositories.Implementations;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Регистрируем CassandraDbContext
 builder.Services.AddSingleton<CassandraDbContext>();
-
-// Регистрируем репозитории
 builder.Services.AddScoped<INoteRepository, NoteRepository>();
-
+builder.Services.AddSingleton<IKafkaProducerService, KafkaProducerService>();
+builder.Services.AddSingleton<IModerationService, ModerationService>();
+builder.Services.AddHostedService<KafkaConsumerService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -41,7 +42,8 @@ builder.Services.AddHttpClient<IPublisherApiClient, PublisherApiClient>(client =
     client.BaseAddress = new Uri(publisherUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });
-// Автоматическая регистрация всех сервисов (заканчивающихся на "Service")
+
+//Автоматическая регистрация всех сервисов (заканчивающихся на "Service")
 var assembly = typeof(Program).Assembly;
 
 assembly.GetTypes()
@@ -58,7 +60,7 @@ assembly.GetTypes()
 
 var app = builder.Build();
 
-// Проверка подключения к Cassandra при старте
+//Проверка подключения к Cassandra при старте
 using (var scope = app.Services.CreateScope())
 {
     var cassandraContext = scope.ServiceProvider.GetRequiredService<CassandraDbContext>();
@@ -83,21 +85,16 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"Cassandra connection error: {ex.Message}");
         logger.LogError(ex, "Cassandra connection error");
         if (ex.InnerException != null)
-            Console.WriteLine($"Details: {ex.InnerException.Message}");
-        // Не выбрасываем исключение, так как Cassandra может быть не критична для старта
-        // throw; 
+            Console.WriteLine($"Details: {ex.InnerException.Message}"); 
     }
 }
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1.0/swagger.json", "NewsPortal Discussion API v1.0");
-        c.RoutePrefix = string.Empty;
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1.0/swagger.json", "NewsPortal Discussion API v1.0");
+    c.RoutePrefix = string.Empty;
+});
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();

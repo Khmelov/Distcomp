@@ -17,7 +17,6 @@ namespace Discussion.src.NewsPortal.Discussion.Infrastructure.Clients.Implementa
         {
             try
             {
-                //Предполагаем, что в Publisher есть эндпоинт / api / v1.0 / news /{ id}
                 var response = await _httpClient.GetAsync($"api/v1.0/news/{newsId}");
                 _logger.LogWarning("Unexpected response from Publisher API: {StatusCode}, {newsId}", response.StatusCode, newsId);
                 if (response.IsSuccessStatusCode)

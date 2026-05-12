@@ -10,5 +10,6 @@ namespace Discussion.src.NewsPortal.Discussion.Application.Services.Abstractions
         Task<NoteResponseTo> CreateNoteAsync(NoteRequestTo noteRequest);
         Task<bool> UpdateNoteAsync(NoteRequestTo noteRequest);
         Task<bool> DeleteNoteAsync(long id);
+        Task ValidateNewsExistsAsync(long newsId);
     }
 }

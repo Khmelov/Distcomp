@@ -12,7 +12,7 @@ using Publisher.src.NewsPortal.Publisher.Infrastructure.Data;
 namespace Publisher.Migrations
 {
     [DbContext(typeof(PostgresDbContext))]
-    [Migration("20260424170937_InitialCreate")]
+    [Migration("20260512173934_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -57,6 +57,14 @@ namespace Publisher.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
                         .HasColumnName("password");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("CUSTOMER")
+                        .HasColumnName("role");
 
                     b.HasKey("Id");
 
