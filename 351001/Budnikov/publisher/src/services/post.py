@@ -1,34 +1,131 @@
 import os
-import httpx
-from fastapi.encoders import jsonable_encoder
+import json
+import uuid
+import time
+import asyncio
+from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
+from pydantic import TypeAdapter
+
 from src.schemas.dto import PostRequestTo, PostResponseTo
 from src.core.exceptions import BaseAppException
 from src.models import Issue
+from src.core.cache import get_cache, set_cache, invalidate_cache_by_prefix
 
 
-DISCUSSION_URL = os.getenv("DISCUSSION_SERVICE_URL", "http://127.0.0.1:24130/api/v1.0/posts")
+KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
+
+kafka_producer = None
+kafka_consumer = None
+response_futures: dict[str, asyncio.Future] = {}
+
+
+async def init_kafka():
+    global kafka_producer, kafka_consumer
+    kafka_producer = AIOKafkaProducer(bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS)
+    kafka_consumer = AIOKafkaConsumer(
+        "OutTopic",
+        bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+        group_id="publisher_group",
+        auto_offset_reset="earliest"
+    )
+
+    retries = 10
+    for i in range(retries):
+        try:
+            await kafka_producer.start()
+            await kafka_consumer.start()
+            print("Publisher: Successfully connected to Kafka!")
+            break
+        except Exception as e:
+            print(f"Waiting for Kafka to be ready... ({i + 1}/{retries})")
+            await asyncio.sleep(5)
+    else:
+        print("Publisher: Failed to connect to Kafka.")
+        return
+
+    asyncio.create_task(consume_kafka_responses())
+
+
+async def stop_kafka():
+    if kafka_producer:
+        try:
+            await kafka_producer.stop()
+        except Exception:
+            pass
+    if kafka_consumer:
+        try:
+            await kafka_consumer.stop()
+        except Exception:
+            pass
+
+
+async def consume_kafka_responses():
+    try:
+        async for msg in kafka_consumer:
+            data = json.loads(msg.value.decode('utf-8'))
+            req_id = data.get("request_id")
+            if req_id and req_id in response_futures:
+                future = response_futures[req_id]
+                if not future.done():
+                    future.set_result(data)
+    except Exception as e:
+        print(f"Publisher Consumer Error: {e}")
 
 
 class PostService:
-    async def get_all(self) -> list[PostResponseTo]:
+    cache_prefix = "post"  # Обязательно добавляем префикс для Redis!
+
+    async def _send_and_wait(self, action: str, data: dict, issue_id: int = None, timeout: float = 1.0):
+        req_id = str(uuid.uuid4())
+        future = asyncio.get_event_loop().create_future()
+        response_futures[req_id] = future
+
+        payload = {
+            "action": action,
+            "request_id": req_id,
+            "data": data
+        }
+
+        key = str(issue_id).encode('utf-8') if issue_id else None
+        await kafka_producer.send_and_wait("InTopic", json.dumps(payload).encode('utf-8'), key=key)
+
         try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.get(DISCUSSION_URL)
-                resp.raise_for_status()
-                return [PostResponseTo(**p) for p in resp.json()]
-        except httpx.ConnectError:
-            raise BaseAppException(500, "50000", "Микросервис discussion недоступен. Запустите его на порту 24130.")
+            result = await asyncio.wait_for(future, timeout=timeout)
+            if result.get("error"):
+                err = result["error"]
+                raise BaseAppException(err.get("status_code", 400), "40000", err.get("detail", "Error"))
+            return result.get("result")
+        except asyncio.TimeoutError:
+            raise BaseAppException(504, "50400", "Timeout waiting for discussion service")
+        finally:
+            response_futures.pop(req_id, None)
+
+    async def get_all(self, issue_id: int = None) -> list[PostResponseTo]:
+        cache_key = f"{self.cache_prefix}:all:{issue_id}"
+        cached = await get_cache(cache_key)
+        if cached:
+            adapter = TypeAdapter(list[PostResponseTo])
+            return adapter.validate_json(cached)
+
+        data = {"issue_id": issue_id} if issue_id else {}
+        result = await self._send_and_wait("GET_ALL", data)
+        posts = [PostResponseTo(**p) for p in result] if result else []
+
+        adapter = TypeAdapter(list[PostResponseTo])
+        await set_cache(cache_key, adapter.dump_json(posts), ex=3600)
+        return posts
 
     async def get_by_id(self, obj_id: int) -> PostResponseTo:
-        try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.get(f"{DISCUSSION_URL}/{obj_id}")
-                if resp.status_code == 404:
-                    raise BaseAppException(404, "40401", f"Post with id {obj_id} not found")
-                resp.raise_for_status()
-                return PostResponseTo(**resp.json())
-        except httpx.ConnectError:
-            raise BaseAppException(500, "50000", "Микросервис discussion недоступен.")
+        cache_key = f"{self.cache_prefix}:{obj_id}"
+        cached = await get_cache(cache_key)
+        if cached:
+            return PostResponseTo.model_validate_json(cached)
+
+        result = await self._send_and_wait("GET_ONE", {"id": obj_id})
+        post = PostResponseTo(**result)
+
+        await set_cache(cache_key, post.model_dump_json(), ex=3600)
+        return post
 
     async def create(self, create_dto: PostRequestTo) -> PostResponseTo:
         issue_id = getattr(create_dto, "issue_id", getattr(create_dto, "issueId", None))
@@ -37,34 +134,26 @@ class PostService:
         if not issue_exists:
             raise BaseAppException(400, "40004", f"Issue with id {issue_id} not found")
 
-        payload = jsonable_encoder(create_dto)
+        post_id = int(time.time() * 1000)
+        payload = {"id": post_id, "issue_id": issue_id, "content": create_dto.content}
 
-        try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.post(DISCUSSION_URL, json=payload)
-                resp.raise_for_status()
-                return PostResponseTo(**resp.json())
-        except httpx.ConnectError:
-            raise BaseAppException(500, "50000", "Микросервис discussion недоступен.")
+        msg = {"action": "CREATE", "request_id": str(uuid.uuid4()), "data": payload}
+        key = str(issue_id).encode('utf-8')
+        await kafka_producer.send_and_wait("InTopic", json.dumps(msg).encode('utf-8'), key=key)
+
+        result = PostResponseTo(id=post_id, content=create_dto.content, issueId=issue_id, state="PENDING")
+        await invalidate_cache_by_prefix(self.cache_prefix)
+        return result
 
     async def update(self, obj_id: int, update_dto: PostRequestTo) -> PostResponseTo:
-        payload = jsonable_encoder(update_dto)
-        try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.put(f"{DISCUSSION_URL}/{obj_id}", json=payload)
-                if resp.status_code == 404:
-                    raise BaseAppException(404, "40402", "Post not found")
-                resp.raise_for_status()
-                return PostResponseTo(**resp.json())
-        except httpx.ConnectError:
-            raise BaseAppException(500, "50000", "discussion is not available.")
+        issue_id = getattr(update_dto, "issue_id", getattr(update_dto, "issueId", None))
+        result_data = await self._send_and_wait("UPDATE", {"id": obj_id, "content": update_dto.content},
+                                                issue_id=issue_id)
+
+        result = PostResponseTo(**result_data)
+        await invalidate_cache_by_prefix(self.cache_prefix)
+        return result
 
     async def delete(self, obj_id: int) -> None:
-        try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.delete(f"{DISCUSSION_URL}/{obj_id}")
-                if resp.status_code == 404:
-                    raise BaseAppException(404, "40403", "Post not found")
-                resp.raise_for_status()
-        except httpx.ConnectError:
-            raise BaseAppException(500, "50000", "discussion is not available.")
+        await self._send_and_wait("DELETE", {"id": obj_id})
+        await invalidate_cache_by_prefix(self.cache_prefix)
