@@ -1,0 +1,2 @@
+producer = None
+consumer = None
