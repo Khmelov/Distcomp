@@ -3,7 +3,7 @@
 public class NoteResponseTo(
         long id,
         long newsId,
-        string content)
+        string content, string state)
 {
     public long Id { get; set; } = id;
 

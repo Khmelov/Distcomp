@@ -7,7 +7,14 @@ import org.polozkov.dto.comment.CommentRequestTo;
 import org.polozkov.dto.comment.CommentResponseTo;
 import org.polozkov.entity.issue.Issue;
 import org.polozkov.exception.InternalServerErrorException;
+import org.polozkov.other.enums.RequestMethod;
+import org.polozkov.other.record.CommentUploadRecord;
 import org.polozkov.service.issue.IssueService;
+import org.polozkov.service.kafka.KafkaService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -18,67 +25,105 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-
+import java.util.UUID;
 @Service
-@Validated
 @RequiredArgsConstructor
 public class CommentService {
 
-    private final IssueService issueService;
+    private final KafkaService kafkaService;
 
-    private final RestClient restClient = RestClient.create("http://localhost:24130/api/v1.0/comments");
-
+    // Кешируем список всех комментариев. Сбрасываем при любых изменениях.
+    @Cacheable(value = "comments_list")
     public List<CommentResponseTo> getAllComments() {
-        return restClient.get()
-                .retrieve()
-                .body(new ParameterizedTypeReference<List<CommentResponseTo>>() {});
+        CommentUploadRecord record = new CommentUploadRecord(
+                UUID.randomUUID(),
+                RequestMethod.GET,
+                null
+        );
+        return kafkaService.sendAndReceive(record);
     }
 
+    // Кешируем конкретный комментарий по его ID.
+    @Cacheable(value = "comments", key = "#id")
     public CommentResponseTo getComment(Long id) {
-        return restClient.get()
-                .uri("/{id}", id)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, (req, res) -> {
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found in discussion");
-                })
-                .body(CommentResponseTo.class);
+        CommentDiscussionRequest cdr = new CommentDiscussionRequest();
+        cdr.setId(id);
+
+        CommentUploadRecord record = new CommentUploadRecord(
+                UUID.randomUUID(),
+                RequestMethod.GET,
+                cdr
+        );
+
+        List<CommentResponseTo> results = kafkaService.sendAndReceive(record);
+
+        if (results == null || results.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return results.get(0);
     }
 
-    public CommentResponseTo createComment(@Valid CommentRequestTo commentRequest) {
-        Issue issue = issueService.getIssueById(commentRequest.getIssueId());
-
-        CommentDiscussionRequest cdr = new CommentDiscussionRequest(commentRequest);
-        cdr.setCountry("BY");
-        CommentResponseTo response = restClient.post()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(cdr)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, (req, res) -> {
-                    throw new InternalServerErrorException("Ошибка при сохранении в Cassandra");
-                })
-                .body(CommentResponseTo.class);
-
-        return response;
-    }
-
+    // При обновлении: обновляем запись в кеше "comments" и чистим общий список.
+    @CachePut(value = "comments", key = "#commentRequest.id")
+    @CacheEvict(value = "comments_list", allEntries = true)
     public CommentResponseTo updateComment(@Valid CommentRequestTo commentRequest) {
-        return restClient.put()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(commentRequest)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, (req, res) -> {
-                    throw new InternalServerErrorException("Ошибка при обновлении в Cassandra");
-                })
-                .body(CommentResponseTo.class);
+        CommentDiscussionRequest cdr = new CommentDiscussionRequest(commentRequest);
+        if (cdr.getCountry() == null) {
+            cdr.setCountry("BY");
+        }
+
+        CommentUploadRecord record = new CommentUploadRecord(
+                UUID.randomUUID(),
+                RequestMethod.PUT,
+                cdr
+        );
+
+        List<CommentResponseTo> results = kafkaService.sendAndReceive(record);
+
+        if (results == null || results.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Не удалось обновить комментарий");
+        }
+
+        return results.get(0);
     }
 
+    // При создании: просто чистим общий список (чтобы он пересобрался при GET).
+    @CacheEvict(value = "comments_list", allEntries = true)
+    public CommentResponseTo createComment(CommentRequestTo request) {
+        UUID requestId = UUID.randomUUID();
+        CommentDiscussionRequest cdr = new CommentDiscussionRequest(request);
+        cdr.setCountry("BY");
+
+        CommentUploadRecord record = new CommentUploadRecord(
+                requestId,
+                RequestMethod.POST,
+                cdr
+        );
+
+        List<CommentResponseTo> results = kafkaService.sendAndReceive(record);
+
+        if (results == null || results.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Не удалось создать комментарий");
+        }
+
+        return results.get(0);
+    }
+
+    // При удалении: чистим и конкретный комментарий, и список.
+    @Caching(evict = {
+            @CacheEvict(value = "comments", key = "#id"),
+            @CacheEvict(value = "comments_list", allEntries = true)
+    })
     public void deleteComment(Long id) {
-        restClient.delete()
-                .uri("/{id}", id)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, (req, res) -> {
-                    throw new InternalServerErrorException("Ошибка при удалении в Cassandra");
-                })
-                .toBodilessEntity();
+        CommentDiscussionRequest cdr = new CommentDiscussionRequest();
+        cdr.setId(id);
+
+        CommentUploadRecord record = new CommentUploadRecord(
+                UUID.randomUUID(),
+                RequestMethod.DELETE,
+                cdr
+        );
+
+        kafkaService.sendAndReceive(record);
     }
 }

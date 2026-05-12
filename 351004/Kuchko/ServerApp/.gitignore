@@ -1,0 +1,71 @@
+## =====================
+## Build results
+## =====================
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+
+## =====================
+## .NET Core
+## =====================
+project.lock.json
+project.fragment.lock.json
+
+## =====================
+## ASP.NET Scaffolding
+## =====================
+ScaffoldingReadMe.txt
+
+## =====================
+## NuGet Packages
+## =====================
+*.nupkg
+*.snupkg
+*.symbols.nupkg
+
+## =====================
+## Environment / secrets
+## =====================
+# dotenv
+.env
+
+# Local appsettings with secrets (Cloudinary keys, DB passwords)
+appsettings.Development.json
+secrets.json
+
+# User Secrets folder (optional, depending on setup)
+%APPDATA%\Microsoft\UserSecrets/
+~/.microsoft/usersecrets/
+
+## =====================
+## Others
+## =====================
+~$*
+*~
+CodeCoverage/
+
+## =====================
+## Logs and test results
+## =====================
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+## =====================
+## MSBuild Binary and Structured Log
+## =====================
+*.binlog

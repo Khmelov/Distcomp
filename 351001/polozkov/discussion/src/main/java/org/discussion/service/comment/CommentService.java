@@ -6,6 +6,7 @@ import org.discussion.dto.comment.CommentRequestTo;
 import org.discussion.dto.comment.CommentResponseTo;
 import org.discussion.entity.comment.Comment;
 import org.discussion.entity.comment.CommentKey;
+import org.discussion.exception.NotFoundException;
 import org.discussion.repository.comment.CommentRepository;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -34,7 +35,7 @@ public class CommentService {
     public CommentResponseTo getComment(Long id) {
         return commentRepository.findByKeyId(id)
                 .map(this::mapToResponse)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new NotFoundException("Comment not found"));
     }
 
     public CommentResponseTo createComment(@Valid CommentRequestTo dto) {

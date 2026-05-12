@@ -1,0 +1,12 @@
+fastapi>=0.115.0
+hypercorn>=0.17.0
+pydantic>=2.9.0
+pydantic-settings>=2.6.0
+cassandra-driver>=3.29.0
+# Python 3.12+: stdlib asyncore удалён; нужен для импорта cassandra.cluster до выхода 3.30+ драйвера
+pyasyncore>=1.0.5
+python-dotenv>=1.0.0
+httpx>=0.27.0
+pytest>=8.3.0
+pytest-cov>=6.0.0
+testcontainers[cassandra]>=4.8.0

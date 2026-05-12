@@ -1,39 +1,30 @@
-.gradle
+.gradle/
+.kotlin/
 build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+**/build/
+out/
+**/out/
+bin/
+**/bin/
 
-### STS ###
-.apt_generated
+!gradle/wrapper/gradle-wrapper.jar
+
+.idea/
+**/.idea/
+.cursor/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
 .classpath
 .factorypath
 .project
-.settings
+.settings/
+.apt_generated/
 .springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+.sts4-cache/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
-.vscode/
-
-### Kotlin ###
-.kotlin
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-notice-id-index
+      author: gemini-cli
+      changes:
+        - createIndex:
+            tableName: tbl_notice
+            columns:
+              - column:
+                  name: id
+            indexName: idx_notice_id

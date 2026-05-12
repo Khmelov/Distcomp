@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: discussion-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d distcomp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  cassandra:
+    image: cassandra:4.1
+    container_name: discussion-cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_KEYSPACE=distcomp
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+  liquibase-cassandra:
+    image: liquibase/liquibase:4.27
+    container_name: discussion-liquibase-cassandra
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./discussionApi/db/changelog:/liquibase/changelog
+    command:
+      - --url=offline:cassandra?output=cql
+      - --changeLogFile=changelog/discussion-db.xml
+      - update
+  liquibase:
+    image: liquibase/liquibase:4.27
+    container_name: discussion-liquibase
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./db/changelog:/liquibase/changelog
+    command:
+      - --url=jdbc:postgresql://postgres:5432/distcomp
+      - --username=postgres
+      - --password=postgres
+      - --changeLogFile=changelog/db.changelog-master.xml
+      - update

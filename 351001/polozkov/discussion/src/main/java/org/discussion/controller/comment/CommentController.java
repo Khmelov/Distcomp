@@ -15,7 +15,6 @@ import java.util.List;
 @RequestMapping("/api/v1.0/comments")
 @RequiredArgsConstructor
 public class CommentController {
-    private final CommentRepository repository;
 
     // Создание комментария
     private final CommentService commentService;
@@ -38,6 +37,12 @@ public class CommentController {
 
     @PutMapping
     public CommentResponseTo updateComment(@Valid @RequestBody CommentRequestTo commentRequest) {
+        return commentService.updateComment(commentRequest);
+    }
+
+    @PutMapping("/{id}")
+    public CommentResponseTo updateCommentWithPath(@PathVariable Long id, @Valid @RequestBody CommentRequestTo commentRequest) {
+        commentRequest.setId(id);
         return commentService.updateComment(commentRequest);
     }
 

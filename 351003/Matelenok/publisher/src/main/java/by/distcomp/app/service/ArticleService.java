@@ -144,6 +144,7 @@ public class ArticleService {
                     .retrieve()
                     .body(new ParameterizedTypeReference<List<NoteResponseTo>>() {});
         } catch (Exception e) {
+
             notes = List.of();
         }
 

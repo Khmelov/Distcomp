@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="0" author="dev">
+        <sql>
+            CREATE SCHEMA IF NOT EXISTS distcomp;
+        </sql>
+    </changeSet>
+    <changeSet id="1" author="dev">
+        <createTable tableName="tbl_creator" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <insert tableName="tbl_creator">
+            <column name="login" value="misabitnol@gmail.com"/>
+            <column name="password" value="password123"/>
+            <column name="firstname" value="Михаил"/>
+            <column name="lastname" value="Битно"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="2" author="dev">
+        <createTable tableName="tbl_marker" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="dev">
+        <createTable tableName="tbl_topic" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="creator_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_topic_creator" references="tbl_creator(id)"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="4" author="dev">
+        <createTable tableName="tbl_notice" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="topic_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_notice_topic" references="tbl_topic(id)"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5" author="dev">
+        <createTable tableName="tbl_topic_marker" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="topic_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_tm_topic"
+                             references="tbl_topic(id)"
+                             deleteCascade="true"/>
+            </column>
+            <column name="marker_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_tm_marker"
+                             references="tbl_marker(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="6" author="dev">
+        <dropForeignKeyConstraint baseTableName="tbl_topic" constraintName="fk_topic_creator"/>
+        <addForeignKeyConstraint constraintName="fk_topic_creator"
+                                 baseTableName="tbl_topic"
+                                 baseColumnNames="creator_id"
+                                 referencedTableName="tbl_creator"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+    </changeSet>
+</databaseChangeLog>

@@ -22,5 +22,8 @@ namespace Publisher.Dto {
         [StringLength(64, MinimumLength = 2)]
         [JsonPropertyName("lastname")]
         public string Lastname { get; set; } = string.Empty;
+
+        [JsonPropertyName("role")]
+        public string Role { get; set; } = string.Empty;
     }
 }

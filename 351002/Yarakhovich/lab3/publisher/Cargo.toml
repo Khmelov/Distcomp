@@ -1,0 +1,18 @@
+[package]
+name = "lab3_publisher"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde_json ={version = "1"}
+axum = {workspace = true}
+serde = {workspace = true}
+tokio = {workspace = true}
+sqlx = {workspace = true}
+
+common = {workspace = true}
+storage = {workspace = true, features = ["postgres"]}
+domain = {workspace = true}
+validator = "0.20.0"
+reqwest = "0.13.3"

@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Controllers.Abstractions;
 
-// [controller] автоматически подставит имя класса (например, "Authors" из AuthorsController)
 [ApiController]
 [Route("api/v1.0/[controller]")]
 public abstract class BaseController<TRequest, TResponse> : ControllerBase 
