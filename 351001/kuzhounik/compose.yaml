@@ -1,0 +1,79 @@
+﻿version: '3.8'
+
+services:
+  # --- ИНФРАСТРУКТУРА ---
+  
+  db_postgres:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db_cassandra:
+    image: cassandra:latest
+    container_name: cassandra_db
+    ports:
+      - "9042:9042"
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # --- МИГРАЦИИ ---
+
+  postgres_migrations:
+    image: liquibase/liquibase
+    container_name: pg_migrations
+    volumes:
+      - ./Shared.Infrastructure/Db/Changelogs:/liquibase/changelog
+    command: >
+      --changelog-file=/liquibase/changelog/dbchangelog.xml
+      --url=jdbc:postgresql://db_postgres:5432/postgres?currentSchema=distcomp
+      --username=postgres
+      --password=postgres
+      update
+    depends_on:
+      db_postgres:
+        condition: service_healthy
+
+  # --- МИКРОСЕРВИСЫ ---
+
+  blog_service:
+    build:
+      context: .
+      dockerfile: BlogService.API/Dockerfile
+    container_name: blog_api
+    ports:
+      - "24110:8080" # Порт из задания
+    environment:
+      - ConnectionStrings__PostgresConnection=Host=db_postgres;Port=5432;Database=postgres;Username=postgres;Password=postgres;SearchPath=distcomp
+    depends_on:
+      postgres_migrations:
+        condition: service_completed_successfully
+
+  discussion_service:
+    build:
+      context: .
+      dockerfile: DiscussionService.API/Dockerfile
+    container_name: discussion_api
+    ports:
+      - "24120:8080" # Другой порт для второго сервиса
+    environment:
+      - ConnectionStrings__CassandraConnection=Contact Points=db_cassandra;Port=9042;Keyspace=distcomp
+    depends_on:
+      db_cassandra:
+        condition: service_healthy
+
+networks:
+  default:
+    name: distcomp_network

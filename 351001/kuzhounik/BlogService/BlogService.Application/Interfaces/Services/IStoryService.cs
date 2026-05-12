@@ -1,10 +1,10 @@
-﻿using BlogService.Application.DTOs.Request;
+using BlogService.Application.DTOs.Request;
 using BlogService.Application.DTOs.Response;
-using BlogService.Domain.Entities;
+using Shared.Application.Interfaces.Services;
 
 namespace BlogService.Application.Interfaces.Services;
 
-public interface IStoryService : IService<long, StoryRequestToDto, StoryResponseToDto>
+public interface IStoryService<Id> : IService<Id, StoryRequestToDto<Id>, StoryResponseToDto<Id>>
 {
     
 }

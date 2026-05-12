@@ -1,24 +1,24 @@
 ﻿using BlogService.Application.DTOs.Request;
 using BlogService.Application.DTOs.Response;
-using BlogService.Application.Interfaces.Mappers;
 using BlogService.Domain.Entities;
+using Shared.Application.Interfaces.Mappers;
 
 namespace BlogService.Application.Mappers;
 
-public class StickerMapper : IRequestMapper<StickerRequestToDto, Sticker>, IResponseMapper<Sticker, StickerResponseToDto>
+public class StickerMapper<Id> : IRequestMapper<StickerRequestToDto<Id>, Sticker<Id>>, IResponseMapper<Sticker<Id>, StickerResponseToDto<Id>>
 {
-    public Sticker Map(StickerRequestToDto dto)
+    public Sticker<Id> Map(StickerRequestToDto<Id> dto)
     {
-        return new Sticker()
+        return new Sticker<Id>()
         {
             ID =  dto.ID,
             Text =  dto.Name,
         };
     }
 
-    public StickerResponseToDto Map(Sticker entity)
+    public StickerResponseToDto<Id> Map(Sticker<Id> entity)
     {
-        return new StickerResponseToDto()
+        return new StickerResponseToDto<Id>()
         {
             ID = entity.ID,
             Name = entity.Text,
