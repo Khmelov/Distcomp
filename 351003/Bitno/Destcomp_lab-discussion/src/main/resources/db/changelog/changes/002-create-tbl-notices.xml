@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="002" author="mihail">
+        <ext:cql>
+            CREATE TABLE IF NOT EXISTS distcomp.tbl_notices (
+            topic_id BIGINT,
+            id BIGINT,
+            content TEXT,
+            country TEXT,
+            state TEXT,
+            created TIMESTAMP,
+            modified TIMESTAMP,
+            PRIMARY KEY (topic_id, id)
+            ) WITH CLUSTERING ORDER BY (id ASC);
+        </ext:cql>
+    </changeSet>
+
+    <!-- Опционально: индекс для поиска по id (для тестов) -->
+    <changeSet id="002-idx" author="mihail" runOnChange="true">
+        <ext:cql>
+            CREATE INDEX IF NOT EXISTS idx_notice_id ON distcomp.tbl_notices (id);
+        </ext:cql>
+    </changeSet>
+
+</databaseChangeLog>
