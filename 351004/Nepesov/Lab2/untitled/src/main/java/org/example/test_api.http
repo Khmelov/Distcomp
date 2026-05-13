@@ -1,0 +1,38 @@
+### 1. Создать редактора (Editor)
+POST http://localhost:24110/api/v1.0/editors
+Content-Type: application/json
+
+{
+  "login": "rustam_nepesov",
+  "password": "password123",
+  "firstname": "Рустам",
+  "lastname": "Непесов"
+}
+
+### 2. Получить список всех редакторов
+GET http://localhost:24110/api/v1.0/editors
+
+### 3. Создать новость (News)
+POST http://localhost:24110/api/v1.0/news
+Content-Type: application/json
+
+{
+  "editorId": 1,
+  "title": "Заголовок новости",
+  "content": "Содержимое новости длиннее 4 символов"
+}
+
+### 4. Получить конкретную новость по ID
+GET http://localhost:24110/api/v1.0/news/1
+
+### 5. Попытка обновить несуществующего редактора (Проверка ошибки 40401)
+PUT http://localhost:24110/api/v1.0/editors
+Content-Type: application/json
+
+{
+  "id": 999,
+  "login": "ghost",
+  "password": "password123",
+  "firstname": "Ghost",
+  "lastname": "User"
+}
