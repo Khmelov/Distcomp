@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DiscussionService.Domain\DiscussionService.Domain.csproj" />
+      <ProjectReference Include="..\DiscussionService.Infrastructure\DiscussionService.Infrastructure.csproj" />
+      <ProjectReference Include="..\Shared.Application\Shared.Application.csproj" />
+      <ProjectReference Include="..\Shared.Infrastructure\Shared.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-preview.2.26159.112" />
+    </ItemGroup>
+
+</Project>

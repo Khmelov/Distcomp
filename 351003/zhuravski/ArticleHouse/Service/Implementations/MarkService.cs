@@ -1,3 +1,4 @@
+using Additions.Cache.Interfaces;
 using Additions.Service;
 using ArticleHouse.DAO.Interfaces;
 using ArticleHouse.DAO.Models;
@@ -9,10 +10,16 @@ namespace ArticleHouse.Service.Implementations;
 public class MarkService : BasicService, IMarkService
 {
     private readonly IMarkDAO dao;
-    public MarkService(IMarkDAO dao)
+    private readonly IDistributedCache cache;
+    private readonly ILogger<MarkService> logger;
+
+    public MarkService(IMarkDAO dao, IDistributedCache cache, ILogger<MarkService> logger)
     {
         this.dao = dao;
+        this.cache = cache;
+        this.logger = logger;
     }
+
     public async Task<MarkResponseDTO> CreateMarkAsync(MarkRequestDTO dto)
     {
         MarkModel model = MakeModelFromRequest(dto);
@@ -23,6 +30,7 @@ public class MarkService : BasicService, IMarkService
     public async Task DeleteMarkAsync(long id)
     {
         await InvokeDAOMethod(() => dao.DeleteAsync(id));
+        await cache.RemoveAsync($"mark:{id}");
     }
 
     public async Task<MarkResponseDTO[]> GetAllMarksAsync()
@@ -33,8 +41,17 @@ public class MarkService : BasicService, IMarkService
 
     public async Task<MarkResponseDTO> GetMarkByIdAsync(long id)
     {
-        MarkModel model = await InvokeDAOMethod(() => dao.GetByIdAsync(id));
-        return MakeResponseFromModel(model);
+        var key = $"mark:{id}";
+        
+        return await cache.GetOrSetAsync(
+            key,
+            async () =>
+            {
+                MarkModel model = await InvokeDAOMethod(() => dao.GetByIdAsync(id));
+                return MakeResponseFromModel(model);
+            },
+            TimeSpan.FromMinutes(10)
+        );
     }
 
     public async Task<MarkResponseDTO> UpdateMarkByIdAsync(long id, MarkRequestDTO dto)
@@ -42,6 +59,7 @@ public class MarkService : BasicService, IMarkService
         MarkModel model = MakeModelFromRequest(dto);
         model.Id = id;
         MarkModel result = await InvokeDAOMethod(() => dao.UpdateAsync(model));
+        await cache.RemoveAsync($"mark:{id}");
         return MakeResponseFromModel(result);
     }
 

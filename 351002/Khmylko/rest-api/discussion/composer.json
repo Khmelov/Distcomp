@@ -1,0 +1,13 @@
+{
+  "name": "distcomp/discussion",
+  "description": "Discussion microservice with Cassandra",
+  "type": "project",
+  "require": {
+    "php": ">=8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Discussion\\": "src/"
+    }
+  }
+}

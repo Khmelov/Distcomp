@@ -1,0 +1,4 @@
+# Environment variables
+publisher/.env
+.env
+!.env.example

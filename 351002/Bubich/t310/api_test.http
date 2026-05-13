@@ -1,0 +1,101 @@
+### 1. Создание Writer (ожидаем 201 Created)
+POST http://localhost:24110/api/v1.0/writers
+Content-Type: application/json
+
+{
+  "login": "bubichviktorgmail.com",
+  "password": "password123",
+  "firstname": "Victor",
+  "lastname": "Bubich"
+}
+
+### 2. Получение всех Writers (ожидаем 200 OK)
+GET http://localhost:24110/api/v1.0/writers
+
+### 3. Получение Writer по ID (ожидаем 200 OK)
+GET http://localhost:24110/api/v1.0/writers/1
+
+### 4. Создание Story (ожидаем 201 Created)
+POST http://localhost:24110/api/v1.0/stories
+Content-Type: application/json
+
+{
+  "writer_id": 1,
+  "title": "My First Story",
+  "content": "This is the content of my first story. It's very interesting!"
+}
+
+### 5. Создание второй Story
+POST http://localhost:24110/api/v1.0/stories
+Content-Type: application/json
+
+{
+  "writer_id": 1,
+  "title": "Second Story",
+  "content": "Another story with different content for testing purposes."
+}
+
+### 6. Получение всех Stories (ожидаем 200 OK)
+GET http://localhost:24110/api/v1.0/stories
+
+### 7. Получение Story по ID (ожидаем 200 OK)
+GET http://localhost:24110/api/v1.0/stories/1
+
+### 8. Фильтрация Stories по title
+GET http://localhost:24110/api/v1.0/stories?title=First
+
+### 9. Обновление Story (ожидаем 200 OK)
+PUT http://localhost:24110/api/v1.0/stories/1
+Content-Type: application/json
+
+{
+  "writer_id": 1,
+  "title": "Updated Story Title",
+  "content": "This content has been updated with new information."
+}
+
+### 10. Удаление Story (ожидаем 204 No Content)
+DELETE http://localhost:24110/api/v1.0/stories/2
+
+### 11. Создание Comment (ожидаем 201 Created)
+POST http://localhost:24110/api/v1.0/comments
+Content-Type: application/json
+
+{
+  "story_id": 1,
+  "content": "This is a great comment on the first story!"
+}
+
+### 12. Получение всех Comments (ожидаем 200 OK)
+GET http://localhost:24110/api/v1.0/comments
+
+### 13. Получение Comments по story_id
+GET http://localhost:24110/api/v1.0/comments?storyId=1
+
+### 14. Создание Mark (ожидаем 201 Created)
+POST http://localhost:24110/api/v1.0/marks
+Content-Type: application/json
+
+{
+  "name": "important"
+}
+
+### 15. Получение всех Marks (ожидаем 200 OK)
+GET http://localhost:24110/api/v1.0/marks
+
+### 16. Проверка валидации: короткий пароль (ожидаем 400)
+POST http://localhost:24110/api/v1.0/writers
+Content-Type: application/json
+
+{
+  "login": "test",
+  "password": "123",
+  "firstname": "Test",
+  "lastname": "User"
+}
+
+### 17. Проверка 404: несуществующий Writer (ожидаем 404)
+GET http://localhost:24110/api/v1.0/writers/999
+
+### 18. Удаление Writer (ожидаем 204)
+DELETE http://localhost:24110/api/v1.0/writers/1

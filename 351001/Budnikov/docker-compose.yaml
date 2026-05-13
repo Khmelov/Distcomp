@@ -1,0 +1,99 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.4
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.4
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  redis:
+    image: redis:7
+    container_name: distcomp_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  db:
+    image: postgres:17
+    container_name: distcomp_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d distcomp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  cassandra:
+      image: cassandra:4.1
+      container_name: distcomp_cassandra
+      restart: always
+      ports:
+        - "9042:9042"
+      environment:
+        - CASSANDRA_CLUSTER_NAME=DiscussionCluster
+      healthcheck:
+        test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces' || exit 1"]
+        interval: 15s
+        timeout: 10s
+        retries: 5
+        start_period: 90s
+
+  publisher:
+    build: ./publisher
+    container_name: distcomp_publisher
+    restart: always
+    ports:
+      - "24110:24110"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: distcomp
+      DISCUSSION_SERVICE_URL: http://discussion:24130/api/v1.0/posts
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  discussion:
+    build: ./discussion
+    container_name: distcomp_discussion
+    restart: always
+    ports:
+      - "24130:24130"
+    environment:
+      CASSANDRA_HOST: cassandra
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      cassandra:
+        condition: service_healthy

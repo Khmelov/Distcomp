@@ -1,0 +1,86 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: rv-lab1-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: distcomp
+    # If you already ran this container before, the volume may be initialized
+    # and POSTGRES_DB won't be applied. In that case:
+    # - either run: docker compose down -v && docker compose up -d
+    # - or run: scripts/docker-create-distcomp.ps1
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d distcomp"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - rv_lab1_pgdata:/var/lib/postgresql/data
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: rv-lab1-cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: rv-lab1
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_RACK: rack1
+    ports:
+      - "9042:9042"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/cassandra/bin/cqlsh -e \"DESCRIBE KEYSPACES\" localhost 9042"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+    volumes:
+      - rv_lab1_cassdata:/var/lib/cassandra
+
+  cassandra-init:
+    image: cassandra:4.1
+    container_name: rv-lab1-cassandra-init
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./cassandra/init.cql:/init.cql:ro
+    entrypoint: ["/bin/bash", "-lc"]
+    command: >
+      "/opt/cassandra/bin/cqlsh cassandra 9042 -f /init.cql && echo 'Cassandra schema initialized'"
+    restart: "no"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: rv-lab1-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: rv-lab1-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+  redis:
+    image: redis:7-alpine
+    container_name: rv-lab1-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+
+volumes:
+  rv_lab1_pgdata:
+  rv_lab1_cassdata:

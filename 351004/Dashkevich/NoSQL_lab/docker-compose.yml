@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: distcomp-postgres
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: distcomp-cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: distcomp
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+
+volumes:
+  postgres_data:
+  cassandra_data:

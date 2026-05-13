@@ -7,11 +7,18 @@ import {
 import { PrismaService } from '../../../services/prisma.service';
 import { UserResponseTo } from '../../../dto/users/UserResponseTo.dto';
 import { UserRequestTo } from '../../../dto/users/UserRequestTo.dto';
+import { RedisService } from '../../../redis/redis.service';
 import * as bcrypt from 'bcrypt';
+
+const CACHE_PREFIX = 'user';
+const CACHE_TTL = 60;
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private redis: RedisService,
+  ) {}
 
   async createUser(user: UserRequestTo): Promise<UserResponseTo> {
     if (await this.prisma.user.findUnique({ where: { login: user.login } }))
@@ -20,16 +27,28 @@ export class UsersService {
     const salt = await bcrypt.genSalt();
     user.password = await bcrypt.hash(user.password, salt);
 
-    return this.prisma.user.create({
+    const created = await this.prisma.user.create({
       data: user,
     });
+
+    await this.redis.del(`${CACHE_PREFIX}:all`);
+
+    return created;
   }
 
   async getAll(): Promise<UserResponseTo[]> {
-    return this.prisma.user.findMany();
+    const cached = await this.redis.get<UserResponseTo[]>(`${CACHE_PREFIX}:all`);
+    if (cached) return cached;
+
+    const users = await this.prisma.user.findMany();
+    await this.redis.set(`${CACHE_PREFIX}:all`, users, CACHE_TTL);
+    return users;
   }
 
   async getUserById(id: number): Promise<UserResponseTo> {
+    const cached = await this.redis.get<UserResponseTo>(`${CACHE_PREFIX}:${id}`);
+    if (cached) return cached;
+
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
@@ -38,6 +57,7 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    await this.redis.set(`${CACHE_PREFIX}:${id}`, user, CACHE_TTL);
     return user;
   }
 
@@ -51,10 +71,14 @@ export class UsersService {
     }
 
     try {
-      return await this.prisma.user.update({
+      const updated = await this.prisma.user.update({
         where: { id },
         data: user,
       });
+
+      await this.redis.del(`${CACHE_PREFIX}:${id}`, `${CACHE_PREFIX}:all`);
+
+      return updated;
     } catch {
       throw new InternalServerErrorException('Database error occurred');
     }
@@ -70,5 +94,7 @@ export class UsersService {
     }
 
     await this.prisma.user.delete({ where: { id } });
+
+    await this.redis.del(`${CACHE_PREFIX}:${id}`, `${CACHE_PREFIX}:all`);
   }
 }

@@ -1,22 +1,26 @@
-# Build stage
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /app
 
 COPY pom.xml .
-RUN apk add --no-cache maven && \
-    mvn dependency:go-offline -B
+COPY notebook-api/pom.xml notebook-api/
+COPY publisher/pom.xml publisher/
+COPY discussion/pom.xml discussion/
 
-COPY src ./src
-RUN mvn package -DskipTests -B
+RUN apk add --no-cache maven \
+    && mvn dependency:go-offline -B -pl publisher -am
 
-# Run stage
-FROM eclipse-temurin:21-jre-alpine
+COPY notebook-api/src notebook-api/src
+COPY publisher/src publisher/src
+
+RUN mvn package -pl publisher -am -DskipTests -B
+
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 RUN addgroup -g 1000 app && adduser -u 1000 -G app -D app
 USER app
 
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/publisher/target/publisher-*-exec.jar app.jar
 
 EXPOSE 24110
 

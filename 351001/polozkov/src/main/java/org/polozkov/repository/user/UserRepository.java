@@ -16,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
         return findById(id).orElseThrow(() -> new BadRequestException("User with id "  + id + " does not exists "));
     }
 
+    Optional<User> findByLoginAndPassword(String login, String password);
+
 }

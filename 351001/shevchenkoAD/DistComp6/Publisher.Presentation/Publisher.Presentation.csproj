@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AutoMapper" Version="16.1.1"/>
+        <PackageReference Include="BCrypt.Net-Next" Version="4.1.0"/>
+        <PackageReference Include="Confluent.Kafka" Version="2.14.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.26"/>
+        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.25"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.25">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11"/>
+        <PackageReference Include="StackExchange.Redis" Version="2.12.14"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2"/>
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Publisher.Application\Publisher.Application.csproj"/>
+        <ProjectReference Include="..\Publisher.Domain\Publisher.Domain.csproj"/>
+        <ProjectReference Include="..\Publisher.Infrastructure\Publisher.Infrastructure.csproj"/>
+    </ItemGroup>
+
+</Project>

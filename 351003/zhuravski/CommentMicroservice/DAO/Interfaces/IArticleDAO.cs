@@ -1,4 +1,5 @@
 using CommentMicroservice.DAO.Models;
+using Additions.DAO;
 
 namespace CommentMicroservice.DAO.Interfaces;
 

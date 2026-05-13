@@ -1,27 +1,27 @@
 ﻿using BlogService.Application.DTOs.Request;
 using BlogService.Application.DTOs.Response;
-using BlogService.Application.Interfaces.Mappers;
 using BlogService.Domain.Entities;
+using Shared.Application.Interfaces.Mappers;
 
 namespace BlogService.Application.Mappers;
 
-public class StoryMapper : IRequestMapper<StoryRequestToDto, Story>, IResponseMapper<Story, StoryResponseToDto>
+public class StoryMapper<Id> : IRequestMapper<StoryRequestToDto<Id>, Story<Id>>, IResponseMapper<Story<Id>, StoryResponseToDto<Id>>
 {
-    public Story Map(StoryRequestToDto dto)
+    public Story<Id> Map(StoryRequestToDto<Id> dto)
     {
-        return new Story()
+        return new Story<Id>()
         {
             ID = dto.ID,
             UserID = dto.UserID,
             Title = dto.Title,
             Content = dto.Content,
-            Modified =  DateTime.Now,
+            Modified = DateTime.UtcNow,
         };
     }
 
-    public StoryResponseToDto Map(Story entity)
+    public StoryResponseToDto<Id> Map(Story<Id> entity)
     {
-        return new StoryResponseToDto()
+        return new StoryResponseToDto<Id>()
         {
             ID = entity.ID,
             UserID = entity.UserID,

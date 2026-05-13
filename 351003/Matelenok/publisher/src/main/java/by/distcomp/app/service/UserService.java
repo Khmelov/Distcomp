@@ -81,7 +81,7 @@ public class UserService {
             }
             user.setLogin(dto.login());
         }
-
+        if (dto.role() != null) user.setRole(dto.role());
         if (dto.firstname() != null) user.setFirstname(dto.firstname());
         if (dto.lastname() != null) user.setLastname(dto.lastname());
         if (dto.password() != null) user.setPassword(dto.password());
@@ -95,7 +95,11 @@ public class UserService {
                 .map(userMapper::toResponse)
                 .collect(Collectors.toList());
     }
-
+    public UserResponseTo getUserByLogin(String login) {
+        return userRepository.findByLogin(login)
+                .map(userMapper::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "login", login));
+    }
     public UserResponseTo getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));

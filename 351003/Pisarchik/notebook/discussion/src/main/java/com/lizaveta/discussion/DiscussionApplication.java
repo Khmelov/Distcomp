@@ -2,9 +2,10 @@ package com.lizaveta.discussion;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.data.cassandra.repository.config.EnableCassandraRepositories;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @EnableCassandraRepositories(basePackages = "com.lizaveta.discussion.repository")
 public class DiscussionApplication {
 

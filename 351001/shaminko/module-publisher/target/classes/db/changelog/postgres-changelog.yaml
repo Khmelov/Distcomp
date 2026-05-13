@@ -1,0 +1,192 @@
+databaseChangeLog:
+#  - changeSet:
+#      id: 010-create-schema
+#      author: shaminko
+#      runOnChange: true
+#      changes:
+#        - sql:
+#            dbms: postgresql
+#            sql: "CREATE SCHEMA IF NOT EXISTS distcomp;"
+#  - property:
+#      name: defaultSchemaName
+#      value: distcomp
+  - changeSet:
+      id: 011-create-creator-table
+      author: shaminko
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_creator
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: login
+                  type: text
+                  constraints:
+                    nullable: false
+                    unique: true
+                    checkConstraint: "char_length(login) >= 2 AND char_length(login) <= 64"
+              - column:
+                  name: password
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(password) >= 8 AND char_length(password) <= 128"
+              - column:
+                  name: firstname
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(firstname) >= 2 AND char_length(firstname) <= 64"
+              - column:
+                  name: lastname
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(lastname) >= 2 AND char_length(lastname) <= 64"
+
+  - changeSet:
+      id: 013-add-creator-role
+      author: shaminko
+      changes:
+        - addColumn:
+            tableName: tbl_creator
+            columns:
+              - column:
+                  name: role
+                  type: text
+                  defaultValue: "CUSTOMER"
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 012-create-article-table
+      author: shaminko
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_article
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: creator_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_article_creator
+                    references: tbl_creator(id) # distcomp.tbl_creator(id)
+              - column:
+                  name: title
+                  type: text
+                  constraints:
+                    nullable: false
+                    unique: true
+                    checkConstraint: "char_length(title) >= 2 AND char_length(title) <= 64"
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+                    checkConstraint: "char_length(content) >= 4 AND char_length(content) <= 2048"
+              - column:
+                  name: created
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: modified
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 014-create-marker-table
+      author: shaminko
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_marker
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: text
+                  constraints:
+                    nullable: false
+                    unique: true
+                    checkConstraint: "char_length(name) >= 2 AND char_length(name) <= 32"
+
+  - changeSet:
+      id: 015-create-articlemarker-table
+      author: shaminko
+      changes:
+        - createTable:
+#            schemaName: distcomp
+            tableName: tbl_article_marker
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: article_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_articlemarker_article
+                    references: tbl_article(id) #distcomp.tbl_article(id)
+              - column:
+                  name: marker_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_articlemarker_marker
+                    references: tbl_marker(id) #distcomp.tbl_marker(id)
+  - changeSet:
+      id: 016-insert-creator
+      author: shaminko
+      changes:
+        - insert:
+            tableName: tbl_creator
+            columns:
+              - column:
+                  name: login
+                  value: "vanya10293847@gmail.com"
+              - column:
+                  name: password
+                  value: "123456789"
+              - column:
+                  name: firstname
+                  value: "Ivan"
+              - column:
+                  name: lastname
+                  value: "Shaminko"
+
+  - changeSet:
+      id: 017-promote-seed-creator-to-admin
+      author: shaminko
+      changes:
+        - update:
+            tableName: tbl_creator
+            columns:
+              - column:
+                  name: role
+                  value: "ADMIN"
+            where: "login = 'vanya10293847@gmail.com'"

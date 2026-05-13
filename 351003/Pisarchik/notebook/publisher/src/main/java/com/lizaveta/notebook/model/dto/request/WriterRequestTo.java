@@ -20,5 +20,6 @@ public record WriterRequestTo(
 
         @NotBlank(message = "Lastname must not be blank")
         @Size(min = 2, max = 64, message = "Lastname length must be between 2 and 64")
-        String lastname) {
+        String lastname,
+        String role) {
 }

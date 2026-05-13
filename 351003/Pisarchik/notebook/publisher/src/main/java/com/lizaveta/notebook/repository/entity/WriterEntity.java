@@ -1,7 +1,10 @@
 package com.lizaveta.notebook.repository.entity;
 
+import com.lizaveta.notebook.model.UserRole;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,6 +29,10 @@ public class WriterEntity {
 
     @Column(nullable = false, length = 64)
     private String lastname;
+
+    @Column(nullable = false, length = 32)
+    @Enumerated(EnumType.STRING)
+    private UserRole role = UserRole.CUSTOMER;
 
     public WriterEntity() {
     }
@@ -68,5 +75,13 @@ public class WriterEntity {
 
     public void setLastname(final String lastname) {
         this.lastname = lastname;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(final UserRole role) {
+        this.role = role;
     }
 }

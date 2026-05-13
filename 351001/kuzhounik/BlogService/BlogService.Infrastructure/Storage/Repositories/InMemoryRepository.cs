@@ -1,4 +1,5 @@
-﻿using BlogService.Domain.Interfaces;
+﻿using System.Linq.Expressions;
+using Shared.Domain.Interfaces;
 
 namespace BlogService.Infrastructure.Storage.Repositories;
 
@@ -44,5 +45,10 @@ public class InMemoryRepository<ID, Entity> : IRepository<ID, Entity>
             _storage.Remove(entity);
 
         return Task.CompletedTask;
+    }
+
+    public Task<bool> ExistsAsync(Expression<Func<Entity, bool>> condition)
+    {
+        throw new NotImplementedException();
     }
 }

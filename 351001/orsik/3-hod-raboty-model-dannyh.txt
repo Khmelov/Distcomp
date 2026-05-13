@@ -1,0 +1,39 @@
+3 ХОД РАБОТЫ
+
+3.1 МОДЕЛЬ ДАННЫХ (СУЩНОСТИ)
+
+Система разделена на два хранилища по назначению: реляционная БД (publisher) и Cassandra (discussion для комментариев), с дизайном под запросы (query-first) для Cassandra: отдельные таблицы под разные access patterns (по id и по tweet_id с сортировкой по времени).
+
+Publisher (JPA, PostgreSQL / Liquibase)
+
+- Creator — сущность tbl_creator: суррогатный id, уникальный login, password, firstname, lastname. Аннотации JPA (@Entity, @Table, @Id, @GeneratedValue, @Column), Lombok @Data, @NoArgsConstructor, @AllArgsConstructor, интерфейс Identifiable.
+
+- Tweet — tbl_tweet: id, creator_id (FK на создателя), уникальный title, content, created, modified. Связь многие-ко-многим с метками через tbl_tweet_label (@ManyToMany, @JoinTable).
+
+- Label — tbl_label: id, уникальное name.
+
+- Связь Tweet–Label — таблица tbl_tweet_label (составной первичный ключ tweet_id, label_id, FK на tbl_tweet и tbl_label).
+
+- Comment (реляционный) — в миграциях задана таблица tbl_comment (id, tweet_id, content, created с FK на tweet); в коде publisher для комментариев используется иной контур (Kafka/клиент discussion), реляционная схема отражает классическую нормализованную модель.
+
+Discussion (Spring Data Cassandra)
+
+Реализована двухтабличная модель комментариев, согласованная со схемой в CassandraSchemaInitializer / Liquibase: keyspace distcomp, таблицы tbl_comment_by_id и tbl_comment_by_tweet, поле state (модерация) типа CommentState (PENDING, APPROVE, DECLINE).
+
+- CommentByTweetKey (@PrimaryKeyClass — аналог композитного ключа):
+  1. tweet_id (Partition Key) — определяет партиционирование по твиту.
+  2. created (Clustering Column) — физическая сортировка внутри партиции (в CQL: WITH CLUSTERING ORDER BY (created DESC, id DESC)).
+  3. id (Clustering Column) — уникальность строки в рамках (tweet_id, created, ...).
+
+- CommentByTweetRow (@Table tbl_comment_by_tweet):
+  1. key (CommentByTweetKey) — встроенный составной первичный ключ (@PrimaryKey).
+  2. content — текст комментария.
+  3. state — состояние модерации (CommentState).
+
+- CommentByIdRow (@Table tbl_comment_by_id): прямой доступ по id (одиночный @PrimaryKey Long id), плюс колонки tweet_id, content, created, state — отдельная таблица для запросов «комментарий по идентификатору» без обхода партиции по твиту.
+
+Технологии в Cassandra-слое: Lombok (@Data, @NoArgsConstructor, @AllArgsConstructor), @Table / @Column, для ключа — @PrimaryKeyClass, @PrimaryKeyColumn с типами PARTITIONED и CLUSTERED, у сущности с составным ключом вложенное поле key с @PrimaryKey.
+
+3.2 КЕШ (Redis, модуль publisher)
+
+В publisher включён cache-aside через Spring Cache (`@Cacheable` / `@CacheEvict` / `@Caching`) и `RedisCacheManager` (конфигурация `RedisCacheConfig`): восемь имён кеша — `creators`, `creators:list`, `tweets`, `tweets:list`, `labels`, `labels:list`, `comments`, `comments:list`. TTL записей задаётся свойством `cache.ttl-seconds` (по умолчанию 300 с); ключи списков строятся как hash параметров пагинации/фильтров; при создании/изменении/удалении сущности выполняется инвалидация соответствующих записей (списки — `allEntries=true`). Для комментариев ответ асинхронного `create` (состояние PENDING) в кеш по id не кладётся; при удалении твита дополнительно сбрасывается `comments:list`. Подключение к Redis: `spring.data.redis.host` / `port` (локально `localhost:6379`, в Docker — сервис `redis`). Сид данных: в `tbl_creator` через Liquibase добавляется запись с `lastname = Орсик` (требование к диаграмме взаимодействия).

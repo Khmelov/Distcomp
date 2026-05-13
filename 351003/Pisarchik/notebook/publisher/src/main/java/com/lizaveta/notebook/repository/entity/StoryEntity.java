@@ -102,6 +102,6 @@ public class StoryEntity {
     }
 
     public void setMarkers(final Set<MarkerEntity> markers) {
-        this.markers = markers == null ? new HashSet<>() : new HashSet<>(markers);
+        this.markers = markers;
     }
 }

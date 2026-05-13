@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="insert-test-topics" author="marynia">
+        <!-- Сначала убедимся, что есть пользователь с id=78 -->
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM distcomp.tbl_user WHERE id = 78
+            </sqlCheck>
+        </preConditions>
+
+        <insert schemaName="distcomp" tableName="tbl_topic">
+            <column name="user_id" value="78"/>
+            <column name="title" value="title4312"/>
+            <column name="content" value="content2889"/>
+            <column name="created" valueDate="now()"/>
+            <column name="modified" valueDate="now()"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

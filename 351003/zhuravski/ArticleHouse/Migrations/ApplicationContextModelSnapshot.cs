@@ -105,6 +105,11 @@ namespace ArticleHouse.Migrations
                         .HasColumnType("text")
                         .HasColumnName("password");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("role");
+
                     b.HasKey("Id")
                         .HasName("pk_tbl_creator");
 

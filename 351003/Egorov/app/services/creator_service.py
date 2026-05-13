@@ -1,3 +1,5 @@
+import json
+import subprocess
 from typing import List
 
 from app.dtos.creator_request import CreatorRequestTo
@@ -13,9 +15,15 @@ class CreatorService:
     def create_creator(self, dto: CreatorRequestTo) -> CreatorResponseTo:
         entity = Creator(login=dto.login, name=dto.name, email=dto.email)
         created = self._repository.create(entity)
+        response = self._to_response(created)
+        subprocess.run(
+            ["docker", "exec", "redis", "redis-cli", "SET", f"creator:{created.id}", json.dumps(response.__dict__),
+             "EX", "300"])
         return self._to_response(created)
 
     def get_creator(self, creator_id: int) -> CreatorResponseTo | None:
+        subprocess.run(["docker", "exec", "redis", "redis-cli", "GET", f"creator:{creator_id}"],
+                                capture_output=True, text=True)
         entity = self._repository.read_by_id(creator_id)
         return self._to_response(entity) if entity else None
 
@@ -27,12 +35,17 @@ class CreatorService:
             return None
         entity = Creator(id=creator_id, login=dto.login, name=dto.name, email=dto.email)
         updated = self._repository.update(creator_id, entity)
+        response = self._to_response(updated)
+        subprocess.run(
+            ["docker", "exec", "redis", "redis-cli", "SET", f"creator:{creator_id}", json.dumps(response.__dict__),
+             "EX", "300"])
         return self._to_response(updated)
 
     def delete_creator(self, creator_id: int) -> bool:
         if self._repository.read_by_id(creator_id) is None:
             return False
         self._repository.delete(creator_id)
+        subprocess.run(["docker", "exec", "redis", "redis-cli", "DEL", f"creator:{creator_id}"])
         return True
 
     @staticmethod

@@ -17,6 +17,9 @@ public class Comment {
     @Column("content")
     private String content;
 
+    @Column("state")
+    private String state;
+
     @Column("created")
     private LocalDateTime created;
 
@@ -27,7 +30,12 @@ public class Comment {
         this.id = System.currentTimeMillis();
         this.created = LocalDateTime.now();
         this.modified = LocalDateTime.now();
+        this.state = CommentState.PENDING.name();
+
     }
+
+    public String getState() { return state; }
+    public void setState(String state) { this.state = state; }
 
     public Long getArticleId() { return articleId; }
     public void setArticleId(Long articleId) { this.articleId = articleId; }
