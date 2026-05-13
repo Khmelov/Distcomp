@@ -105,7 +105,9 @@ namespace Discussion.Service {
                 throw new ValidationException($"Cannot verify tweet existence: Publisher unavailable");
             }
 
-            request.Id = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            if (request.Id <= 0) {
+                request.Id = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            }
 
             var reaction = _mapper.Map<Reaction>(request);
             var created = await _repository.AddAsync(reaction);

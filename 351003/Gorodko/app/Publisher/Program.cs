@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Publisher.Exceptions;
 using Publisher.Model;
 using Publisher.Repository;
 using Publisher.Service;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -34,15 +34,37 @@ builder.Services.AddScoped<IRepository<Editor>, EditorRepository>();
 builder.Services.AddScoped<IRepository<Tweet>, TweetRepository>();
 builder.Services.AddScoped<IStickerRepository, StickerRepository>();
 builder.Services.AddScoped<IRepository<Sticker>, StickerRepository>();
-//builder.Services.AddScoped<IRepository<Reaction>, ReactionRepository>();
 
 builder.Services.AddScoped<EditorService>();
 builder.Services.AddScoped<TweetService>();
 builder.Services.AddScoped<StickerService>();
+builder.Services.AddScoped<TokenService>();
 
 builder.Services.AddSingleton<KafkaService>();
 builder.Services.AddHostedService<KafkaResponseListener>();
-//builder.Services.AddScoped<ReactionService>();
+
+builder.Services.AddStackExchangeRedisCache(options => {
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "Publisher_";
+});
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => {
+        options.TokenValidationParameters = new TokenValidationParameters {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        };
+    });
+
+builder.Services.AddAuthorization(options => {
+    options.AddPolicy("AdminOnly", policy => policy.RequireClaim("role", "ADMIN"));
+    options.AddPolicy("CustomerPolicy", policy => policy.RequireClaim("role", "ADMIN", "CUSTOMER"));
+});
 
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
@@ -64,6 +86,7 @@ if (app.Environment.IsDevelopment()) {
 //app.UseMiddleware<GlobalExceptionHandler>();
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

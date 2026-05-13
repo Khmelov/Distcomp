@@ -2,15 +2,18 @@
 namespace App\Service;
 
 use App\Exception\ApiException;
+use App\Kafka\NoticeKafkaProducer;
 use App\Repository\TweetRepository;
 
 class NoticeService {
     private string $discussionUrl;
     private TweetRepository $tweetRepository;
+    private NoticeKafkaProducer $kafkaProducer;
 
-    public function __construct(TweetRepository $tweetRepository) {
+    public function __construct(TweetRepository $tweetRepository, ?NoticeKafkaProducer $kafkaProducer = null) {
         $this->tweetRepository = $tweetRepository;
         $this->discussionUrl = rtrim(getenv('DISCUSSION_URL') ?: 'http://discussion:24130', '/');
+        $this->kafkaProducer = $kafkaProducer ?? new NoticeKafkaProducer();
     }
 
     private function request(string $method, string $path, ?array $data = null): array {
@@ -71,6 +74,11 @@ class NoticeService {
         }
         if (isset($result['tweetId'])) {
             $result['tweetId'] = (int)$result['tweetId'];
+        }
+        try {
+            $this->kafkaProducer->publishPendingNotice($result);
+        } catch (\Throwable) {
+            // Kafka is best-effort for API availability
         }
         return $result;
     }

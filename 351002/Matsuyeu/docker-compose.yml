@@ -1,0 +1,153 @@
+﻿version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: newsportal-postgres
+    environment:
+      POSTGRES_DB: distcomp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d distcomp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - newsportal-network
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: newsportal-cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: NewsPortalCluster
+      CASSANDRA_DC: datacenter1
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      - newsportal-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: newsportal-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispass}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - newsportal-network
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - newsportal-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      
+      # КРИТИЧЕСКИ ВАЖНО: Добавляем оба адреса
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+    networks:
+      - newsportal-network
+    restart: on-failure
+
+  publisher:
+    build:
+      context: ./Publisher
+      dockerfile: Dockerfile
+    container_name: newsportal-publisher
+    ports:
+      - "24110:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=distcomp;Username=postgres;Password=postgres
+      - DiscussionApi__BaseUrl=http://discussion:80
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:80
+      - Kafka__BootstrapServers=kafka:9092
+      - Kafka__InTopic=InTopic
+      - Kafka__OutTopic=OutTopic
+    networks:
+      - newsportal-network
+    restart: unless-stopped
+
+  discussion:
+    build:
+      context: ./Discussion
+      dockerfile: Dockerfile
+    container_name: newsportal-discussion
+    ports:
+      - "24130:80"
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      - Cassandra__ContactPoint=cassandra
+      - Cassandra__Port=9042
+      - Cassandra__Keyspace=discussion_keyspace
+      - PublisherApi__BaseUrl=http://publisher:80
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:80
+      - Kafka__BootstrapServers=kafka:9092
+      - Kafka__InTopic=InTopic
+      - Kafka__OutTopic=OutTopic
+    networks:
+      - newsportal-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  cassandra_data:
+  redis_data:
+
+networks:
+  newsportal-network:
+    driver: bridge

@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/discussion/" />
+  <Folder Name="/discussion/src/">
+    <Project Path="discussion/src/Discussion.Application/Discussion.Application.csproj" />
+    <Project Path="discussion/src/Discussion.Domain/Discussion.Domain.csproj" />
+    <Project Path="discussion/src/Discussion.Infrastructure/Discussion.Infrastructure.csproj" />
+    <Project Path="discussion/src/Discussion.Presentation/Discussion.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/publisher/" />
+  <Folder Name="/publisher/src/">
+    <Project Path="publisher/src/Publisher.Application/Publisher.Application.csproj" />
+    <Project Path="publisher/src/Publisher.Domain/Publisher.Domain.csproj" />
+    <Project Path="publisher/src/Publisher.Infrastructure/Publisher.Infrastructure.csproj" />
+    <Project Path="publisher/src/Publisher.Presentation/Publisher.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/Shared/" />
+  <Folder Name="/Shared/src/">
+    <Project Path="Shared/src/Shared/Shared.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="compose.yml" />
+  </Folder>
+</Solution>

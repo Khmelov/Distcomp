@@ -1,0 +1,36 @@
+@RW.Api_HostAddress = http://localhost:24110
+
+### v1.0 — unprotected
+GET {{RW.Api_HostAddress}}/api/v1.0/authors
+Accept: application/json
+
+### v2.0 — registration
+POST {{RW.Api_HostAddress}}/api/v2.0/authors
+Content-Type: application/json
+
+{
+  "login": "alice",
+  "password": "password123",
+  "firstname": "Alice",
+  "lastname": "A",
+  "role": "ADMIN"
+}
+
+### v2.0 — login
+POST {{RW.Api_HostAddress}}/api/v2.0/login
+Content-Type: application/json
+
+{
+  "login": "alice",
+  "password": "password123"
+}
+
+### v2.0 — get authors with JWT
+GET {{RW.Api_HostAddress}}/api/v2.0/authors
+Authorization: Bearer <paste access_token here>
+
+### v2.0 — current user
+GET {{RW.Api_HostAddress}}/api/v2.0/authors/me
+Authorization: Bearer <paste access_token here>
+
+###

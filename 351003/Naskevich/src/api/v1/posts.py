@@ -3,13 +3,14 @@ import uuid
 from time import time_ns
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
 from starlette import status
 
-from src.api.dependencies import SessionDep
+from src.api.dependencies import RedisCacheDep, SessionDep
 from src.api.posts_kafka import get_posts_kafka_broker
-from src.config import KafkaConfig
+from src.cache import keys as cache_keys
+from src.config import KafkaConfig, RedisConfig
 from src.database.repositories.tweet import TweetRepository
 from src.dto.post import PostRequestTo, PostResponseTo
 from src.exceptions import EntityNotFoundException
@@ -24,6 +25,10 @@ from src.models.post_state import PostState
 router = APIRouter(prefix="/posts", tags=["posts"])
 
 KafkaBrokerDep = Annotated[object, Depends(get_posts_kafka_broker)]
+
+
+def _redis_ttl(request: Request) -> int:
+    return getattr(request.app.state, "redis_ttl_seconds", RedisConfig().default_ttl_seconds)
 
 
 def _rpc_timeout() -> float:
@@ -73,30 +78,64 @@ def _reply_to_http(reply: PostReplyMessage) -> JSONResponse | Response:
     return JSONResponse(content={}, status_code=reply.status_code)
 
 
+def _post_body_dict(p: PostPayload) -> dict:
+    return PostResponseTo(
+        id=p.id,
+        tweet_id=p.tweet_id,
+        content=p.content,
+        state=p.state,
+    ).model_dump(mode="json", by_alias=True)
+
+
 @router.get("")
-async def get_posts(broker: KafkaBrokerDep):
+async def get_posts(request: Request, broker: KafkaBrokerDep, cache: RedisCacheDep):
+    ttl = _redis_ttl(request)
+    cached = await cache.get_json(cache_keys.posts_all())
+    if cached is not None:
+        return JSONResponse(content=cached)
     cid = str(uuid.uuid4())
     cmd = PostCommandMessage(correlation_id=cid, operation="GET_ALL")
     key = partition_key_for_command(cmd)
     await broker.publish(cmd, IN_TOPIC, key=key)
     reply = await _wait_reply(cid)
+    if reply.status_code == 200 and reply.posts is not None:
+        data = [_post_body_dict(p) for p in reply.posts]
+        await cache.set_json(cache_keys.posts_all(), data, ttl_seconds=ttl)
     return _reply_to_http(reply)
 
 
 @router.get("/{post_id}")
-async def get_post(post_id: int, broker: KafkaBrokerDep):
+async def get_post(
+    post_id: int,
+    request: Request,
+    broker: KafkaBrokerDep,
+    cache: RedisCacheDep,
+):
+    ttl = _redis_ttl(request)
+    ck = cache_keys.post(post_id)
+    cached = await cache.get_json(ck)
+    if cached is not None:
+        return JSONResponse(content=cached)
     cid = str(uuid.uuid4())
     cmd = PostCommandMessage(correlation_id=cid, operation="GET", post_id=post_id)
     await broker.publish(cmd, IN_TOPIC, key=partition_key_for_command(cmd))
     reply = await _wait_reply(cid)
+    if reply.status_code == 200 and reply.post is not None:
+        await cache.set_json(ck, _post_body_dict(reply.post), ttl_seconds=ttl)
     return _reply_to_http(reply)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=PostResponseTo)
-async def create_post(data: PostRequestTo, session: SessionDep, broker: KafkaBrokerDep):
+async def create_post(
+    data: PostRequestTo,
+    session: SessionDep,
+    broker: KafkaBrokerDep,
+    cache: RedisCacheDep,
+):
     tweet = await TweetRepository(session).get_by_id(data.tweet_id)
     if tweet is None:
         raise EntityNotFoundException("Tweet", data.tweet_id)
+    await cache.delete(cache_keys.posts_all())
     post_id = time_ns()
     payload = PostPayload(
         id=post_id,
@@ -115,9 +154,12 @@ async def create_post(data: PostRequestTo, session: SessionDep, broker: KafkaBro
 async def update_post(
     post_id: int,
     data: PostRequestTo,
+    request: Request,
     session: SessionDep,
     broker: KafkaBrokerDep,
+    cache: RedisCacheDep,
 ):
+    ttl = _redis_ttl(request)
     tweet = await TweetRepository(session).get_by_id(data.tweet_id)
     if tweet is None:
         raise EntityNotFoundException("Tweet", data.tweet_id)
@@ -131,13 +173,24 @@ async def update_post(
     )
     await broker.publish(cmd, IN_TOPIC, key=partition_key_for_command(cmd))
     reply = await _wait_reply(cid)
-    return _reply_to_http(reply)
+    http = _reply_to_http(reply)
+    if reply.status_code == 200 and reply.post is not None:
+        await cache.delete(cache_keys.posts_all())
+        await cache.set_json(
+            cache_keys.post(post_id),
+            _post_body_dict(reply.post),
+            ttl_seconds=ttl,
+        )
+    return http
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_post(post_id: int, broker: KafkaBrokerDep):
+async def delete_post(post_id: int, broker: KafkaBrokerDep, cache: RedisCacheDep):
     cid = str(uuid.uuid4())
     cmd = PostCommandMessage(correlation_id=cid, operation="DELETE", post_id=post_id)
     await broker.publish(cmd, IN_TOPIC, key=partition_key_for_command(cmd))
     reply = await _wait_reply(cid)
-    return _reply_to_http(reply)
+    http = _reply_to_http(reply)
+    if reply.status_code == 204:
+        await cache.delete(cache_keys.posts_all(), cache_keys.post(post_id))
+    return http

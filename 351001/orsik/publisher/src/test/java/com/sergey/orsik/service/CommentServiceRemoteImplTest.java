@@ -48,7 +48,7 @@ class CommentServiceRemoteImplTest {
                 .setHeader("Content-Type", "application/json")
                 .setBody("{\"id\":55,\"tweetId\":2,\"content\":\"ok\",\"created\":\"2020-01-01T00:00:00Z\"}"));
 
-        CommentResponseTo created = service.create(new CommentRequestTo(null, 2L, "ok", null));
+        CommentResponseTo created = service.create(new CommentRequestTo(null, 2L, 1L, "ok", null));
 
         assertThat(created.getId()).isEqualTo(55L);
         assertThat(created.getTweetId()).isEqualTo(2L);

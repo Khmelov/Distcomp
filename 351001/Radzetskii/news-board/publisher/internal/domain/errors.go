@@ -5,6 +5,9 @@ import "errors"
 var (
 	ErrUserNotFound       = errors.New("user not found")
 	ErrUserLoginNotUnique = errors.New("user login already exists")
+	ErrInvalidCredentials = errors.New("invalid user credentials")
+	ErrUnauthorized       = errors.New("unauthorized")
+	ErrForbidden          = errors.New("forbidden")
 
 	ErrNewsNotFound     = errors.New("news not found")
 	ErrNewsUserNotFound = errors.New("user for news not found")

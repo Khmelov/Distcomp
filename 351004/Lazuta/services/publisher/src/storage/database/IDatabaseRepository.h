@@ -1,5 +1,6 @@
 #pragma once
 
+#include <drogon/drogon.h>
 #include <drogon/orm/Mapper.h>
 #include <dao/DAO.h>
 

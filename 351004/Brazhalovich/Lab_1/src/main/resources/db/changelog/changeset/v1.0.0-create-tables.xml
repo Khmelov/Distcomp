@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="1-create-sequences" author="brazhalovich">
+        <createSequence sequenceName="user_seq" incrementBy="1" startValue="1"/>
+        <createSequence sequenceName="news_seq" incrementBy="1" startValue="1"/>
+        <createSequence sequenceName="marker_seq" incrementBy="1" startValue="1"/>
+        <createSequence sequenceName="comment_seq" incrementBy="1" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="2-create-tbl-user" author="brazhalovich">
+        <createTable tableName="tbl_user">
+            <column name="id" type="BIGINT" defaultValueComputed="nextval('user_seq')"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="login" type="VARCHAR(64)"><constraints nullable="false" unique="true"/></column>
+            <column name="password" type="VARCHAR(128)"><constraints nullable="false"/></column>
+            <column name="firstname" type="VARCHAR(64)"/><column name="lastname" type="VARCHAR(64)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3-create-tbl-news" author="brazhalovich">
+        <createTable tableName="tbl_news">
+            <column name="id" type="BIGINT" defaultValueComputed="nextval('news_seq')"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="user_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="title" type="VARCHAR(64)"><constraints nullable="false" unique="true"/></column>
+            <column name="content" type="VARCHAR(2048)"><constraints nullable="false"/></column>
+            <column name="created" type="TIMESTAMP"/><column name="modified" type="TIMESTAMP"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="tbl_news" baseColumnNames="user_id" constraintName="fk_news_user" referencedTableName="tbl_user" referencedColumnNames="id" onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="4-create-tbl-marker" author="brazhalovich">
+        <createTable tableName="tbl_marker">
+            <column name="id" type="BIGINT" defaultValueComputed="nextval('marker_seq')"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="name" type="VARCHAR(32)"><constraints nullable="false" unique="true"/></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5-create-tbl-comment" author="brazhalovich">
+        <createTable tableName="tbl_comment">
+            <column name="id" type="BIGINT" defaultValueComputed="nextval('comment_seq')"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="news_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="content" type="VARCHAR(2048)"><constraints nullable="false"/></column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="tbl_comment" baseColumnNames="news_id" constraintName="fk_comment_news" referencedTableName="tbl_news" referencedColumnNames="id" onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="6-create-tbl-news-marker" author="brazhalovich">
+        <createTable tableName="tbl_news_marker">
+            <column name="news_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="marker_id" type="BIGINT"><constraints nullable="false"/></column>
+        </createTable>
+        <addPrimaryKey tableName="tbl_news_marker" columnNames="news_id, marker_id"/>
+        <addForeignKeyConstraint baseTableName="tbl_news_marker" baseColumnNames="news_id" constraintName="fk_nm_news" referencedTableName="tbl_news" referencedColumnNames="id" onDelete="CASCADE"/>
+        <addForeignKeyConstraint baseTableName="tbl_news_marker" baseColumnNames="marker_id" constraintName="fk_nm_marker" referencedTableName="tbl_marker" referencedColumnNames="id" onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="7-insert-initial-user" author="brazhalovich">
+        <insert tableName="tbl_user">
+            <column name="id" valueNumeric="1"/>
+            <column name="login" value="sashabrazhalovich2005@gmail.com"/>
+            <column name="password" value="temp_password"/>
+            <column name="firstname" value="Александр"/>
+            <column name="lastname" value="Бражалович"/>
+        </insert>
+        <sql>SELECT setval('user_seq', 1);</sql>
+    </changeSet>
+
+    <changeSet id="8-insert-initial-markers" author="brazhalovich">
+        <insert tableName="tbl_marker">
+            <column name="id" valueNumeric="1"/>
+            <column name="name" value="red2"/>
+        </insert>
+        <insert tableName="tbl_marker">
+            <column name="id" valueNumeric="2"/>
+            <column name="name" value="green2"/>
+        </insert>
+        <insert tableName="tbl_marker">
+            <column name="id" valueNumeric="3"/>
+            <column name="name" value="blue2"/>
+        </insert>
+        <!-- Обновляем последовательность, чтобы новые маркеры создавались с правильными ID -->
+        <sql>SELECT setval('marker_seq', 3);</sql>
+    </changeSet>
+</databaseChangeLog>

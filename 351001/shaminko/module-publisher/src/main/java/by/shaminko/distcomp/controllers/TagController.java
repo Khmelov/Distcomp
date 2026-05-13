@@ -33,17 +33,19 @@ public class TagController {
     public TagResponseTo create(@RequestBody @Valid TagRequestTo request){
         return serviceImpl.create(request);
     }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id){
         serviceImpl.delete(id);
     }
+
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public TagResponseTo update(@RequestBody @Valid TagRequestTo request){
         try{
             return serviceImpl.update(request);
-        }catch( NoSuchElementException e){
+        } catch( NoSuchElementException e){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 

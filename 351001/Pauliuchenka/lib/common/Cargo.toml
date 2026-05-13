@@ -1,0 +1,10 @@
+[package]
+name = "common"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+chrono = {workspace = true}
+domain = {workspace = true}
+serde = {workspace = true}

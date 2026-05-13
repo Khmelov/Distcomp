@@ -7,8 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.web.client.RestTemplate;
 
-@SpringBootApplication
-@EnableJpaAuditing
+@SpringBootApplication(scanBasePackages = {"com.example.news", "com.example.common"})@EnableJpaAuditing
 public class NewsServiceApplication {
     static {
         Dotenv dotenv = Dotenv.configure()

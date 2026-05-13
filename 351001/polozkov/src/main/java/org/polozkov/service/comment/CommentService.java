@@ -11,6 +11,10 @@ import org.polozkov.other.enums.RequestMethod;
 import org.polozkov.other.record.CommentUploadRecord;
 import org.polozkov.service.issue.IssueService;
 import org.polozkov.service.kafka.KafkaService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -28,17 +32,20 @@ public class CommentService {
 
     private final KafkaService kafkaService;
 
+    // Кешируем список всех комментариев. Сбрасываем при любых изменениях.
+    @Cacheable(value = "comments_list")
     public List<CommentResponseTo> getAllComments() {
         CommentUploadRecord record = new CommentUploadRecord(
                 UUID.randomUUID(),
                 RequestMethod.GET,
-                null // Для getAll данные не нужны
+                null
         );
         return kafkaService.sendAndReceive(record);
     }
 
+    // Кешируем конкретный комментарий по его ID.
+    @Cacheable(value = "comments", key = "#id")
     public CommentResponseTo getComment(Long id) {
-        // Создаем DTO для поиска, в котором заполнен только id
         CommentDiscussionRequest cdr = new CommentDiscussionRequest();
         cdr.setId(id);
 
@@ -53,13 +60,14 @@ public class CommentService {
         if (results == null || results.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-        return results.get(0); // Берем первый и единственный элемент
+        return results.get(0);
     }
 
+    // При обновлении: обновляем запись в кеше "comments" и чистим общий список.
+    @CachePut(value = "comments", key = "#commentRequest.id")
+    @CacheEvict(value = "comments_list", allEntries = true)
     public CommentResponseTo updateComment(@Valid CommentRequestTo commentRequest) {
-        System.out.println("put zapros");
         CommentDiscussionRequest cdr = new CommentDiscussionRequest(commentRequest);
-
         if (cdr.getCountry() == null) {
             cdr.setCountry("BY");
         }
@@ -79,6 +87,8 @@ public class CommentService {
         return results.get(0);
     }
 
+    // При создании: просто чистим общий список (чтобы он пересобрался при GET).
+    @CacheEvict(value = "comments_list", allEntries = true)
     public CommentResponseTo createComment(CommentRequestTo request) {
         UUID requestId = UUID.randomUUID();
         CommentDiscussionRequest cdr = new CommentDiscussionRequest(request);
@@ -99,6 +109,11 @@ public class CommentService {
         return results.get(0);
     }
 
+    // При удалении: чистим и конкретный комментарий, и список.
+    @Caching(evict = {
+            @CacheEvict(value = "comments", key = "#id"),
+            @CacheEvict(value = "comments_list", allEntries = true)
+    })
     public void deleteComment(Long id) {
         CommentDiscussionRequest cdr = new CommentDiscussionRequest();
         cdr.setId(id);

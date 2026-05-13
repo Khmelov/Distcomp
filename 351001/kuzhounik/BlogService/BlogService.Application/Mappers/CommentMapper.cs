@@ -1,15 +1,15 @@
 ﻿using BlogService.Application.DTOs.Request;
 using BlogService.Application.DTOs.Response;
-using BlogService.Application.Interfaces.Mappers;
 using BlogService.Domain.Entities;
+using Shared.Application.Interfaces.Mappers;
 
 namespace BlogService.Application.Mappers;
 
-public class CommentMapper : IRequestMapper<CommentRequestToDto, Comment>, IResponseMapper<Comment, CommentResponseToDto>
+public class CommentMapper<Id> : IRequestMapper<CommentRequestToDto<Id>, Comment<Id>>, IResponseMapper<Comment<Id>, CommentResponseToDto<Id>>
 {
-    public Comment Map(CommentRequestToDto dto)
+    public Comment<Id> Map(CommentRequestToDto<Id> dto)
     {
-        return new Comment()
+        return new Comment<Id>()
         {
             ID = dto.ID,
             StoryID = dto.StoryID,
@@ -17,9 +17,9 @@ public class CommentMapper : IRequestMapper<CommentRequestToDto, Comment>, IResp
         };
     }
 
-    public CommentResponseToDto Map(Comment entity)
+    public CommentResponseToDto<Id> Map(Comment<Id> entity)
     {
-        return new CommentResponseToDto()
+        return new CommentResponseToDto<Id>()
         {
             ID =  entity.ID,
             StoryID =  entity.StoryID,

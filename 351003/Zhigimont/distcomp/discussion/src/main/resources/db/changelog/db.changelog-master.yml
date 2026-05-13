@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: you
+      changes:
+        - sql:
+            sql: |
+              CREATE KEYSPACE IF NOT EXISTS distcomp
+              WITH replication = {
+                'class': 'SimpleStrategy',
+                'replication_factor': 1
+              };
+
+  - changeSet:
+      id: 2
+      author: you
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE IF NOT EXISTS distcomp.tbl_comment (
+                  topic_id bigint,
+                  id uuid,
+                  writer_id bigint,
+                  content text,
+                  created timestamp,
+                  PRIMARY KEY ((topic_id), id)
+              );4

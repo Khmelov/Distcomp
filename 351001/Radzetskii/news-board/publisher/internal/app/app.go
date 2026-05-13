@@ -6,8 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"regexp"
+	"syscall"
+	"time"
 
 	"news-board/publisher/internal/api/controllers"
 	"news-board/publisher/internal/config"
@@ -19,10 +22,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 )
 
-// p.s. I know that there are many logical mistakes especially in data processing (i mean requests with 1st get and update than)
-// it could be enough just to add constraints and check on violation
 func Run() {
 	cfg := config.Load("../infra/env/.env")
 
@@ -45,23 +47,47 @@ func Run() {
 		log.Fatal("Failed to run migrations:", err)
 	}
 
+	rdb := redis.NewClient(&redis.Options{
+		Addr: cfg.RedisAddr,
+	})
+	defer rdb.Close()
+
+	pingCtx, cancelPing := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelPing()
+	if err := rdb.Ping(pingCtx).Err(); err != nil {
+		log.Fatal("Failed to connect to Redis:", err)
+	}
+	log.Printf("Connected to Redis at %s", cfg.RedisAddr)
+
+	kafkaProducer, err := service.NewKafkaProducer(cfg.KafkaBrokers)
+	if err != nil {
+		log.Fatal("Failed to connect to Kafka:", err)
+	}
+	defer kafkaProducer.Close()
+
 	userRepo := repository.NewUserRepository(pool)
 	newsRepo := repository.NewNewsRepository(pool)
 	markerRepo := repository.NewMarkerRepository(pool)
+
 	userSvc := service.NewUserService(userRepo)
 	newsSvc := service.NewNewsService(newsRepo, markerRepo)
 	markerSvc := service.NewMarkerService(markerRepo)
-	noticeSvc := service.NewNoticeService(cfg.DiscussionBaseURL, newsRepo)
+
+	noticeSvc := service.NewNoticeService(kafkaProducer, newsRepo, cfg.DiscussionBaseURL, rdb)
+
+	replyConsumer := service.NewKafkaConsumer(cfg.KafkaBrokers, cfg.KafkaGroup, service.OutTopic, noticeSvc)
+	replyConsumer.StartReplyListener(context.Background())
+	defer replyConsumer.Close()
 
 	r := gin.Default()
 	r.Use(apiErrors.ErrorHandler())
 
 	api := r.Group("/api")
 	{
-		controllers.NewUserHandler(userSvc).RegisterRoutes(api)
-		controllers.NewNewsHandler(newsSvc).RegisterRoutes(api)
-		controllers.NewMarkerHandler(markerSvc).RegisterRoutes(api)
-		controllers.NewNoticeHandler(noticeSvc).RegisterRoutes(api)
+		controllers.NewUserHandler(userSvc, cfg.JWTSecret).RegisterRoutes(api)
+		controllers.NewNewsHandler(newsSvc, cfg.JWTSecret).RegisterRoutes(api)
+		controllers.NewMarkerHandler(markerSvc, cfg.JWTSecret).RegisterRoutes(api)
+		controllers.NewNoticeHandler(noticeSvc, cfg.JWTSecret).RegisterRoutes(api)
 	}
 
 	r.NoRoute(func(c *gin.Context) {
@@ -71,10 +97,31 @@ func Run() {
 		})
 	})
 
-	log.Println("Server starting on :24110")
-	if err := r.Run(":24110"); err != nil {
-		log.Fatal("Server failed:", err)
+	srv := &http.Server{
+		Addr:    ":" + cfg.AppPort,
+		Handler: r,
 	}
+
+	go func() {
+		log.Printf("Server starting on port %s", cfg.AppPort)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server failed: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+
+	log.Println("Server exiting")
 }
 
 func runMigrations(pool *pgxpool.Pool, schema string) error {

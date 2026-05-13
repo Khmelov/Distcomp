@@ -15,4 +15,8 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.14" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\RedisService\RedisService.csproj" />
+    </ItemGroup>
+
 </Project>

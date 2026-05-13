@@ -7,6 +7,7 @@ import com.sergey.orsik.discussion.client.PublisherTweetClient;
 import com.sergey.orsik.discussion.exception.EntityNotFoundException;
 import com.sergey.orsik.discussion.repository.CommentByIdRepository;
 import com.sergey.orsik.discussion.repository.CommentByTweetRepository;
+import com.sergey.orsik.dto.CommentState;
 import com.sergey.orsik.dto.request.CommentRequestTo;
 import com.sergey.orsik.dto.response.CommentResponseTo;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,21 +47,29 @@ class CommentDiscussionServiceTest {
 
     @BeforeEach
     void setUp() {
+        CommentModerationService moderation = new CommentModerationService("spam,offensive,blocked");
         service = new CommentDiscussionService(
-                commentByIdRepository, commentByTweetRepository, publisherTweetClient, cassandraTemplate, "distcomp");
+                commentByIdRepository,
+                commentByTweetRepository,
+                publisherTweetClient,
+                moderation,
+                cassandraTemplate,
+                "distcomp");
     }
 
     @Test
     void createGeneratesIdAndSavesBothProjections() {
         when(commentByIdRepository.existsById(anyLong())).thenReturn(false);
-        CommentRequestTo req = new CommentRequestTo(null, 9L, "Hello world", null);
+        CommentRequestTo req = new CommentRequestTo(null, 9L, 1L, "Hello world", null);
 
         CommentResponseTo created = service.create(req);
 
         assertThat(created.getId()).isNotNull();
         assertThat(created.getTweetId()).isEqualTo(9L);
+        assertThat(created.getCreatorId()).isEqualTo(1L);
         assertThat(created.getContent()).isEqualTo("Hello world");
         assertThat(created.getCreated()).isNotNull();
+        assertThat(created.getState()).isEqualTo(CommentState.APPROVE);
 
         verify(publisherTweetClient).requireTweetExists(9L);
         ArgumentCaptor<CommentByIdRow> idCap = ArgumentCaptor.forClass(CommentByIdRow.class);
@@ -81,8 +90,8 @@ class CommentDiscussionServiceTest {
     @Test
     void findAllByTweetFiltersContent() {
         Instant t = Instant.parse("2020-01-01T00:00:00Z");
-        CommentByTweetRow a = new CommentByTweetRow(new CommentByTweetKey(1L, t, 10L), "Alpha beta");
-        CommentByTweetRow b = new CommentByTweetRow(new CommentByTweetKey(1L, t.plusSeconds(1), 11L), "Gamma");
+        CommentByTweetRow a = new CommentByTweetRow(new CommentByTweetKey(1L, t, 10L), 1L, "Alpha beta", CommentState.APPROVE);
+        CommentByTweetRow b = new CommentByTweetRow(new CommentByTweetKey(1L, t.plusSeconds(1), 11L), 2L, "Gamma", CommentState.APPROVE);
         when(commentByTweetRepository.findByKeyTweetId(1L)).thenReturn(List.of(a, b));
 
         List<CommentResponseTo> out = service.findAll(0, 10, "id", "asc", 1L, "alp");
@@ -100,10 +109,10 @@ class CommentDiscussionServiceTest {
 
     @Test
     void updateDeletesOldTweetProjection() {
-        CommentByIdRow existing = new CommentByIdRow(5L, 1L, "old", Instant.parse("2021-05-05T12:00:00Z"));
+        CommentByIdRow existing = new CommentByIdRow(5L, 1L, 1L, "old", Instant.parse("2021-05-05T12:00:00Z"), CommentState.APPROVE);
         when(commentByIdRepository.findById(5L)).thenReturn(Optional.of(existing));
 
-        CommentRequestTo req = new CommentRequestTo(5L, 2L, "new text", null);
+        CommentRequestTo req = new CommentRequestTo(5L, 2L, 1L, "new text", null);
         service.update(5L, req);
 
         verify(publisherTweetClient).requireTweetExists(2L);
@@ -114,7 +123,7 @@ class CommentDiscussionServiceTest {
 
     @Test
     void deleteByIdRemovesBothProjections() {
-        CommentByIdRow existing = new CommentByIdRow(7L, 3L, "x", Instant.parse("2022-02-02T00:00:00Z"));
+        CommentByIdRow existing = new CommentByIdRow(7L, 3L, 1L, "x", Instant.parse("2022-02-02T00:00:00Z"), CommentState.APPROVE);
         when(commentByIdRepository.findById(7L)).thenReturn(Optional.of(existing));
 
         service.deleteById(7L);
@@ -126,8 +135,8 @@ class CommentDiscussionServiceTest {
     @Test
     void deleteAllByTweetIdDeletesRows() {
         Instant t = Instant.parse("2023-03-03T00:00:00Z");
-        CommentByTweetRow r1 = new CommentByTweetRow(new CommentByTweetKey(99L, t, 1L), "a");
-        CommentByTweetRow r2 = new CommentByTweetRow(new CommentByTweetKey(99L, t.plusSeconds(1), 2L), "b");
+        CommentByTweetRow r1 = new CommentByTweetRow(new CommentByTweetKey(99L, t, 1L), 1L, "a", CommentState.APPROVE);
+        CommentByTweetRow r2 = new CommentByTweetRow(new CommentByTweetKey(99L, t.plusSeconds(1), 2L), 2L, "b", CommentState.APPROVE);
         when(commentByTweetRepository.findByKeyTweetId(99L)).thenReturn(List.of(r1, r2));
 
         service.deleteAllByTweetId(99L);
@@ -153,7 +162,7 @@ class CommentDiscussionServiceTest {
         doThrow(new EntityNotFoundException("Tweet", 404L))
                 .when(publisherTweetClient).requireTweetExists(404L);
 
-        assertThatThrownBy(() -> service.create(new CommentRequestTo(null, 404L, "xx", null)))
+        assertThatThrownBy(() -> service.create(new CommentRequestTo(null, 404L, 1L, "xx", null)))
                 .isInstanceOf(EntityNotFoundException.class);
         verify(commentByIdRepository, never()).save(any());
     }

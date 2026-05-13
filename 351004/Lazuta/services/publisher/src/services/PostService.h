@@ -13,6 +13,7 @@ namespace publisher
 
 class PostRepository;
 class IssueRepository;
+class PostCache;
 
 class PostService 
 {
@@ -20,12 +21,14 @@ private:
     std::shared_ptr<PostRepository> m_dao;
     std::shared_ptr<IssueRepository> m_issueRepository;
     std::unique_ptr<KafkaProducer> m_kafkaProducer; 
+    std::shared_ptr<PostCache> m_cache;
     
 public:
     PostService(
         std::shared_ptr<PostRepository> storage,
         std::shared_ptr<IssueRepository> issueRepository,
-        std::unique_ptr<KafkaProducer> kafkaProducer);
+        std::unique_ptr<KafkaProducer> kafkaProducer,
+        std::shared_ptr<PostCache> cache);
     
     dto::PostResponseTo Create(const dto::PostRequestTo& request);
     dto::PostResponseTo Read(int64_t id);

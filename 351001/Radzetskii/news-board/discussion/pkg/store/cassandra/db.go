@@ -2,6 +2,7 @@ package cassandra
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gocql/gocql"
 )
@@ -36,15 +37,15 @@ func NewSession(cfg *Config) (*gocql.Session, error) {
 	}
 
 	if err := session.Query(`CREATE TABLE IF NOT EXISTS tbl_notice (
-		country text,
 		news_id bigint,
 		id bigint,
 		content text,
-		PRIMARY KEY ((country), news_id, id)
+		PRIMARY KEY (news_id, id)
 	)`).Exec(); err != nil {
 		session.Close()
 		return nil, fmt.Errorf("failed to ensure tbl_notice table: %w", err)
 	}
 
+	log.Println("Connected to Cassandra and ensured schema")
 	return session, nil
 }

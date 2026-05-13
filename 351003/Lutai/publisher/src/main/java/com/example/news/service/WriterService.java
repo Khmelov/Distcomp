@@ -2,6 +2,7 @@ package com.example.news.service;
 
 import com.example.common.dto.WriterRequestTo;
 import com.example.common.dto.WriterResponseTo;
+import com.example.common.dto.model.enums.Role;
 import com.example.news.entity.Writer;
 import com.example.common.exception.EntityNotFoundException;
 import com.example.common.exception.LoginAlreadyExistsException;
@@ -13,6 +14,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,17 +28,7 @@ public class WriterService {
 
     private final WriterRepository writerRepository;
     private final WriterMapper writerMapper;
-
-    @Transactional
-    public WriterResponseTo create(WriterRequestTo request) {
-        if (writerRepository.existsByLogin(request.login())) {
-            throw new LoginAlreadyExistsException("Writer with login " + request.login() + " already exists");
-        }
-
-        Writer writer = writerMapper.toEntity(request);
-        Writer saved = writerRepository.save(writer);
-        return writerMapper.toResponse(saved);
-    }
+    private final PasswordEncoder passwordEncoder;
 
     public List<WriterResponseTo> findAll(int page, int size, String sortBy) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).ascending());
@@ -73,6 +65,20 @@ public class WriterService {
             throw new EntityNotFoundException("Writer not found", "40401");
         }
         writerRepository.deleteById(id);
+    }
+
+    @Transactional
+    public WriterResponseTo create(WriterRequestTo request) {
+        if (writerRepository.existsByLogin(request.login())) {
+            throw new LoginAlreadyExistsException("Writer with login " + request.login() + " already exists");
+        }
+        Writer writer = writerMapper.toEntity(request);
+        writer.setPassword(passwordEncoder.encode(request.password()));
+        if (writer.getRole() == null) {
+            writer.setRole(Role.CUSTOMER);
+        }
+
+        return writerMapper.toResponse(writerRepository.save(writer));
     }
 
 }

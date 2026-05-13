@@ -51,6 +51,20 @@ databaseChangeLog:
                     checkConstraint: "char_length(lastname) >= 2 AND char_length(lastname) <= 64"
 
   - changeSet:
+      id: 013-add-creator-role
+      author: shaminko
+      changes:
+        - addColumn:
+            tableName: tbl_creator
+            columns:
+              - column:
+                  name: role
+                  type: text
+                  defaultValue: "CUSTOMER"
+                  constraints:
+                    nullable: false
+
+  - changeSet:
       id: 012-create-article-table
       author: shaminko
       changes:
@@ -164,3 +178,15 @@ databaseChangeLog:
               - column:
                   name: lastname
                   value: "Shaminko"
+
+  - changeSet:
+      id: 017-promote-seed-creator-to-admin
+      author: shaminko
+      changes:
+        - update:
+            tableName: tbl_creator
+            columns:
+              - column:
+                  name: role
+                  value: "ADMIN"
+            where: "login = 'vanya10293847@gmail.com'"

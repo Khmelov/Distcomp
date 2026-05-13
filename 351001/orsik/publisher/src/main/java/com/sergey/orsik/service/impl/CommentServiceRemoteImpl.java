@@ -7,13 +7,11 @@ import com.sergey.orsik.exception.EntityNotFoundException;
 import com.sergey.orsik.service.CommentService;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
 
-@Service
 public class CommentServiceRemoteImpl implements CommentService {
 
     private static final String COMMENTS_PATH = "/api/v1.0/comments";

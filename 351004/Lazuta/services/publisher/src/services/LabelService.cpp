@@ -1,5 +1,6 @@
 #include "LabelService.h"
 #include <storage/database/LabelRepository.h>
+#include <storage/cache/LabelCache.h>
 #include <mapping/DtoMapper.h>
 #include <exceptions/DatabaseException.h>
 #include <exceptions/NotFoundException.h>
@@ -10,8 +11,9 @@ namespace publisher
 using namespace drogon_model::distcomp;
 using namespace publisher::dto;
 
-LabelService::LabelService(std::shared_ptr<LabelRepository> storage)
+LabelService::LabelService(std::shared_ptr<LabelRepository> storage, std::shared_ptr<LabelCache> cache)
     : m_dao(storage)
+    , m_cache(cache)
 {
 }
 
@@ -35,11 +37,21 @@ LabelResponseTo LabelService::Create(const LabelRequestTo& request)
         throw DatabaseException("Failed to retrieve created label");
     }
     
-    return DtoMapper::ToResponse(std::get<TblLabel>(getResult));
+    auto entityResult = std::get<TblLabel>(getResult);
+    m_cache->Create(entityResult);
+    
+    return DtoMapper::ToResponse(entityResult);
 }
 
 LabelResponseTo LabelService::Read(int64_t id)
 {
+    auto cacheResult = m_cache->GetByID(id);
+    
+    if (std::holds_alternative<TblLabel>(cacheResult))
+    {
+        return DtoMapper::ToResponse(std::get<TblLabel>(cacheResult));
+    }
+    
     auto result = m_dao->GetByID(id);
     
     if (std::holds_alternative<DatabaseError>(result))
@@ -52,7 +64,10 @@ LabelResponseTo LabelService::Read(int64_t id)
         throw DatabaseException("Failed to retrieve label");
     }
     
-    return DtoMapper::ToResponse(std::get<TblLabel>(result));
+    auto entity = std::get<TblLabel>(result);
+    m_cache->Create(entity);
+    
+    return DtoMapper::ToResponse(entity);
 }
 
 LabelResponseTo LabelService::Update(const LabelRequestTo& request, int64_t id)
@@ -78,6 +93,8 @@ LabelResponseTo LabelService::Update(const LabelRequestTo& request, int64_t id)
     {
         throw DatabaseException("Failed to retrieve updated label");
     }
+
+    m_cache->Update(id, entity);
     
     return DtoMapper::ToResponse(std::get<TblLabel>(getResult));
 }
@@ -96,11 +113,24 @@ bool LabelService::Delete(int64_t id)
         throw DatabaseException("Failed to delete label");
     }
     
+    m_cache->Delete(id);
+    
     return std::get<bool>(result);
 }
 
 std::vector<LabelResponseTo> LabelService::GetAll()
 {
+    auto cacheResult = m_cache->ReadAll();
+    
+    if (std::holds_alternative<std::vector<TblLabel>>(cacheResult))
+    {
+        auto& labels = std::get<std::vector<TblLabel>>(cacheResult);
+        if (!labels.empty())
+        {
+            return DtoMapper::ToResponseList(labels);
+        }
+    }
+    
     auto result = m_dao->ReadAll();
     
     if (std::holds_alternative<DatabaseError>(result))
@@ -108,7 +138,13 @@ std::vector<LabelResponseTo> LabelService::GetAll()
         throw DatabaseException("Failed to retrieve all labels");
     }
     
-    return DtoMapper::ToResponseList(std::get<std::vector<TblLabel>>(result));
+    auto& labels = std::get<std::vector<TblLabel>>(result);
+    for (const auto& label : labels)
+    {
+        m_cache->Create(label);
+    }
+    
+    return DtoMapper::ToResponseList(labels);
 }
 
 }

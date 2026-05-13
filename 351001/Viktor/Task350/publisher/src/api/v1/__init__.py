@@ -1,0 +1,1 @@
+from Task350.publisher.src.api.v1.router import router_v1

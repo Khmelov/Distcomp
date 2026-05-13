@@ -1,6 +1,5 @@
 package com.distcomp.controller
 
-import com.distcomp.client.DiscussionServiceClient
 import com.distcomp.dto.notice.NoticeRequestTo
 import com.distcomp.service.NoticeService
 import jakarta.validation.Valid
@@ -18,14 +17,13 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/{version}/notices")
 class NoticeController(
-    private val discussionServiceClient: DiscussionServiceClient,
     private val noticeService: NoticeService
 ) {
     @GetMapping("{id}")
-    fun getById(@PathVariable("id") id: Long) = discussionServiceClient.getById(id)
+    fun getById(@PathVariable("id") id: Long) = noticeService.getById(id)
 
     @GetMapping
-    fun getAll() = discussionServiceClient.getAll()
+    fun getAll() = noticeService.getAll()
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -40,5 +38,5 @@ class NoticeController(
 
     @DeleteMapping("{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun removeById(@PathVariable id: Long) = discussionServiceClient.delete(id)
+    fun removeById(@PathVariable id: Long) = noticeService.deleteById(id)
 }

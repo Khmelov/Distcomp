@@ -2,12 +2,20 @@ package model
 
 import "time"
 
+type UserRole string
+
+const (
+	RoleAdmin    UserRole = "ADMIN"
+	RoleCustomer UserRole = "CUSTOMER"
+)
+
 type User struct {
-	ID        int64  `json:"id"`
-	Login     string `json:"login"`
-	Password  string `json:"password"`
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
+	ID        int64    `json:"id"`
+	Login     string   `json:"login"`
+	Password  string   `json:"password"`
+	Firstname string   `json:"firstname"`
+	Lastname  string   `json:"lastname"`
+	Role      UserRole `json:"role"`
 }
 
 type Label struct {
@@ -31,8 +39,17 @@ type Issue struct {
 	User     *User     `json:"user,omitempty"`
 }
 
+type ReactionState string
+
+const (
+	ReactionStatePending ReactionState = "PENDING"
+	ReactionStateApprove ReactionState = "APPROVE"
+	ReactionStateDecline ReactionState = "DECLINE"
+)
+
 type Reaction struct {
-	ID      int64  `json:"id"`
-	IssueID int64  `json:"issueId"`
-	Content string `json:"content"`
+	ID      int64         `json:"id"`
+	IssueID int64         `json:"issueId"`
+	Content string        `json:"content"`
+	State   ReactionState `json:"state"`
 }

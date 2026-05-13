@@ -1,0 +1,26 @@
+server:
+  port: 24110
+
+discussion:
+  base-url: http://localhost:24130
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/distcomp
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  liquibase:
+    enabled: true
+    change-log: changelog/db.changelog-master.xml
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2s
