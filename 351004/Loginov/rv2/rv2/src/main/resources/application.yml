@@ -1,0 +1,54 @@
+server:
+  address: ${SERVER_ADDRESS:localhost}
+  port: ${SERVER_PORT:24110}
+
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: by.bsuir.*
+      auto-offset-reset: earliest
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/distcomp?currentSchema=distcomp}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: distcomp
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: distcomp
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.hibernate.SQL: INFO
+
+discussion:
+  cassandra:
+    host: ${DISCUSSION_CASSANDRA_HOST:localhost}
+    port: ${DISCUSSION_CASSANDRA_PORT:9042}
+    datacenter: ${DISCUSSION_CASSANDRA_DATACENTER:datacenter1}
+    keyspace: ${DISCUSSION_CASSANDRA_KEYSPACE:distcomp}
+
+kafka:
+  topics:
+    in: ${KAFKA_IN_TOPIC:InTopic}
+    out: ${KAFKA_OUT_TOPIC:OutTopic}
+  groups:
+    publisher: ${KAFKA_PUBLISHER_GROUP:publisher-comments-${random.uuid}}
