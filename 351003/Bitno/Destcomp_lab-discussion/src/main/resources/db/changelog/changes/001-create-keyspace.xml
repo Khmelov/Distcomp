@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="001" author="mihail">
+        <ext:cql>
+            CREATE KEYSPACE IF NOT EXISTS distcomp
+            WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}
+            AND durable_writes = true;
+        </ext:cql>
+    </changeSet>
+
+</databaseChangeLog>
