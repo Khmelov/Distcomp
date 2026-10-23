@@ -1,0 +1,17 @@
+server:
+  port: 24110
+
+spring:
+  application:
+    name: distcomp-rest
+  jackson:
+    default-property-inclusion: always
+    serialization:
+      write-dates-as-timestamps: false
+  mvc:
+    problemdetails:
+      enabled: false
+
+logging:
+  level:
+    com.distcomp: INFO

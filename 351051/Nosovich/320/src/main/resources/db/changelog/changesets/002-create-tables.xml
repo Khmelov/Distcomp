@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- ==================== Creator ==================== -->
+    <changeSet id="002-create-creator" author="distcomp">
+        <comment>Authors of the issues</comment>
+        <createTable tableName="tbl_creator" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_creator" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="tbl_creator" schemaName="distcomp"
+                             columnNames="login" constraintName="uk_creator_login"/>
+    </changeSet>
+
+    <!-- ==================== Tag ==================== -->
+    <changeSet id="003-create-tag" author="distcomp">
+        <comment>Labels that may be attached to many issues</comment>
+        <createTable tableName="tbl_tag" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_tag" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="tbl_tag" schemaName="distcomp"
+                             columnNames="name" constraintName="uk_tag_name"/>
+    </changeSet>
+
+    <!-- ==================== Issue ==================== -->
+    <changeSet id="004-create-issue" author="distcomp">
+        <comment>Problem statements, one creator owns many issues</comment>
+        <createTable tableName="tbl_issue" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_issue" nullable="false"/>
+            </column>
+            <column name="creator_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="tbl_issue" schemaName="distcomp"
+                             columnNames="title" constraintName="uk_issue_title"/>
+        <addForeignKeyConstraint baseTableName="tbl_issue" baseTableSchemaName="distcomp"
+                                 baseColumnNames="creator_id"
+                                 referencedTableName="tbl_creator"
+                                 referencedTableSchemaName="distcomp"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_issue_creator"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- ==================== Notice ==================== -->
+    <changeSet id="005-create-notice" author="distcomp">
+        <comment>Remarks attached to an issue</comment>
+        <createTable tableName="tbl_notice" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_notice" nullable="false"/>
+            </column>
+            <column name="issue_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="tbl_notice" baseTableSchemaName="distcomp"
+                                 baseColumnNames="issue_id"
+                                 referencedTableName="tbl_issue"
+                                 referencedTableSchemaName="distcomp"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_notice_issue"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- ==================== Issue-Tag (many-to-many) ==================== -->
+    <changeSet id="006-create-issue-tag" author="distcomp">
+        <comment>Join table of the Issue-Tag many-to-many relation</comment>
+        <createTable tableName="tbl_issue_tag" schemaName="distcomp">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_issue_tag" nullable="false"/>
+            </column>
+            <column name="issue_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="tbl_issue_tag" schemaName="distcomp"
+                             columnNames="issue_id, tag_id" constraintName="uk_issue_tag"/>
+        <addForeignKeyConstraint baseTableName="tbl_issue_tag" baseTableSchemaName="distcomp"
+                                 baseColumnNames="issue_id"
+                                 referencedTableName="tbl_issue"
+                                 referencedTableSchemaName="distcomp"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_issue_tag_issue"
+                                 onDelete="CASCADE"/>
+        <addForeignKeyConstraint baseTableName="tbl_issue_tag" baseTableSchemaName="distcomp"
+                                 baseColumnNames="tag_id"
+                                 referencedTableName="tbl_tag"
+                                 referencedTableSchemaName="distcomp"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_issue_tag_tag"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+</databaseChangeLog>
