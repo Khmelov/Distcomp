@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        The application keeps all of its tables inside the dedicated schema "distcomp".
+        The schema is also added to the search_path of the current role, so that an
+        external client (for example a plain JDBC connection that issues
+        "SELECT * FROM tbl_creator") resolves the tables without a schema prefix.
+    -->
+    <changeSet id="001-create-schema" author="distcomp">
+        <comment>Create the application schema and expose it through the search_path</comment>
+        <sql>CREATE SCHEMA IF NOT EXISTS distcomp</sql>
+        <sql splitStatements="false">
+            DO $$
+            BEGIN
+                EXECUTE format('ALTER ROLE %I SET search_path TO distcomp, public', current_user);
+            END $$;
+        </sql>
+        <rollback>
+            <sql>DROP SCHEMA IF EXISTS distcomp CASCADE</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
