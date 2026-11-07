@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <!-- Таблица редакторов -->
+    <changeSet id="1-create-editor" author="Vyrko">
+        <createTable tableName="tbl_editor">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(255)"/>
+            <column name="firstname" type="VARCHAR(255)"/>
+            <column name="lastname" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Таблица тем -->
+    <changeSet id="2-create-topic" author="Vyrko">
+        <createTable tableName="tbl_topic">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="editor_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="TEXT"/>
+            <column name="created" type="TIMESTAMP"/>
+            <column name="modified" type="TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_topic"
+                baseColumnNames="editor_id"
+                referencedTableName="tbl_editor"
+                referencedColumnNames="id"
+                constraintName="fk_topic_editor"/>
+    </changeSet>
+
+    <!-- Таблица маркеров -->
+    <changeSet id="3-create-marker" author="Vyrko">
+        <createTable tableName="tbl_marker">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Таблица реакций -->
+    <changeSet id="4-create-reaction" author="Vyrko">
+        <createTable tableName="tbl_reaction">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="content" type="TEXT"/>
+            <column name="topic_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_reaction"
+                baseColumnNames="topic_id"
+                referencedTableName="tbl_topic"
+                referencedColumnNames="id"
+                constraintName="fk_reaction_topic"/>
+    </changeSet>
+
+    <!-- Промежуточная таблица связи тем и маркеров -->
+    <changeSet id="5-create-topic-marker" author="Vyrko">
+        <createTable tableName="tbl_topic_marker">
+            <column name="topic_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="marker_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+                tableName="tbl_topic_marker"
+                columnNames="topic_id, marker_id"
+                constraintName="pk_topic_marker"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_topic_marker"
+                baseColumnNames="topic_id"
+                referencedTableName="tbl_topic"
+                referencedColumnNames="id"
+                constraintName="fk_topic_marker_topic"/>
+
+        <addForeignKeyConstraint
+                baseTableName="tbl_topic_marker"
+                baseColumnNames="marker_id"
+                referencedTableName="tbl_marker"
+                referencedColumnNames="id"
+                constraintName="fk_topic_marker_marker"/>
+    </changeSet>
+
+</databaseChangeLog>
