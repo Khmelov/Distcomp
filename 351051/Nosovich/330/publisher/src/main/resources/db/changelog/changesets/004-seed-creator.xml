@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        The training stand checks the first creator row against the activated
+        profile. The row is inserted only into an empty table, so the changelog
+        remains safe for a database that already contains user data.
+    -->
+    <changeSet id="008-seed-profile-creator" author="distcomp">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM distcomp.tbl_creator</sqlCheck>
+        </preConditions>
+        <comment>Seed the creator that identifies the student profile</comment>
+        <insert tableName="tbl_creator" schemaName="distcomp">
+            <column name="login" value="artem5027@gmail.com"/>
+            <column name="password" value="password123"/>
+            <column name="firstname" value="Артём"/>
+            <column name="lastname" value="Носович"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
