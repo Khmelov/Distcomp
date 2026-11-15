@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Создание таблицы для поиска реакций по идентификатору -->
+    <changeSet id="001-create-reaction-by-id" author="Vyrko">
+        <sql splitStatements="false">
+            CREATE TABLE IF NOT EXISTS tbl_reaction_by_id (
+            id bigint PRIMARY KEY,
+            topic_id bigint,
+            content text
+            )
+        </sql>
+    </changeSet>
+
+    <!-- Создание таблицы для поиска реакций по теме -->
+    <changeSet id="002-create-reaction-by-topic" author="Vyrko">
+        <sql splitStatements="false">
+            CREATE TABLE IF NOT EXISTS tbl_reaction_by_topic (
+            topic_id bigint,
+            id bigint,
+            content text,
+            PRIMARY KEY (topic_id, id)
+            ) WITH CLUSTERING ORDER BY (id ASC)
+        </sql>
+    </changeSet>
+
+
+    <!-- Добавление состояния реакции в обе таблицы -->
+    <changeSet id="003-add-reaction-state" author="Vyrko">
+        <sql splitStatements="false">
+            ALTER TABLE tbl_reaction_by_id ADD state text
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE tbl_reaction_by_topic ADD state text
+        </sql>
+    </changeSet>
+
+
+</databaseChangeLog>
