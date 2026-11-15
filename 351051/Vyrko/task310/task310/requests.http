@@ -1,0 +1,9 @@
+POST http://localhost:24110/api/v1.0/editors
+Content-Type: application/json
+
+{
+  "login": "test@example.com",
+  "password": "password123",
+  "firstname": "Антон",
+  "lastname": "Вырко"
+}
