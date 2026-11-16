@@ -2,6 +2,7 @@ package by.bsuir.discussion.service;
 
 import by.bsuir.discussion.dto.MessageRequestTo;
 import by.bsuir.discussion.dto.MessageResponseTo;
+import by.bsuir.discussion.dto.MessageState;
 import by.bsuir.discussion.entity.MessageById;
 import by.bsuir.discussion.entity.MessageByStory;
 import by.bsuir.discussion.entity.MessageKey;
@@ -44,7 +45,7 @@ class MessageServiceTest {
     @BeforeEach
     void setUp() {
         Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-        service = new MessageService(byStory, byId, ids, new RequestValidator(validator));
+        service = new MessageService(byStory, byId, ids, new RequestValidator(validator), new Moderator());
     }
 
     @Test
@@ -56,6 +57,7 @@ class MessageServiceTest {
 
         assertThat(created.getId()).isEqualTo(4L);
         assertThat(created.getStoryId()).isEqualTo(10L);
+        assertThat(created.getState()).isEqualTo(MessageState.APPROVE);
         ArgumentCaptor<MessageByStory> storyRow = ArgumentCaptor.forClass(MessageByStory.class);
         verify(byStory).save(storyRow.capture());
         assertThat(storyRow.getValue().getKey()).isEqualTo(new MessageKey(10L, 4L));
@@ -64,6 +66,19 @@ class MessageServiceTest {
         verify(byId).save(idRow.capture());
         assertThat(idRow.getValue().getId()).isEqualTo(4L);
         assertThat(idRow.getValue().getStoryId()).isEqualTo(10L);
+    }
+
+    @Test
+    @DisplayName("Стоп-слово оставляет сообщение в состоянии DECLINE")
+    void declinesStopWord() {
+        when(ids.nextId()).thenReturn(5L);
+
+        MessageResponseTo created = service.create(request(null, 10L, "this is spam"));
+
+        assertThat(created.getState()).isEqualTo(MessageState.DECLINE);
+        ArgumentCaptor<MessageById> idRow = ArgumentCaptor.forClass(MessageById.class);
+        verify(byId).save(idRow.capture());
+        assertThat(idRow.getValue().getState()).isEqualTo("DECLINE");
     }
 
     @Test

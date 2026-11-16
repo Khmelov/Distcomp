@@ -16,6 +16,9 @@ public class MessageById {
     @Column("content")
     private String content;
 
+    @Column("state")
+    private String state;
+
     public Long getId() {
         return id;
     }
@@ -38,5 +41,13 @@ public class MessageById {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
     }
 }

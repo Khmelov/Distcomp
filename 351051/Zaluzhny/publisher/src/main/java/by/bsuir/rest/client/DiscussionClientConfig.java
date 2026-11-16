@@ -10,7 +10,7 @@ import org.springframework.web.client.RestClient;
 import java.time.Duration;
 
 @Configuration
-@ConditionalOnProperty(name = "discussion.client", havingValue = "http", matchIfMissing = true)
+@ConditionalOnProperty(name = "discussion.client", havingValue = "http")
 public class DiscussionClientConfig {
 
     @Bean

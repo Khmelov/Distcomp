@@ -15,3 +15,28 @@ spring:
     keyspace-name: distcomp
     local-datacenter: ${CASSANDRA_DC:datacenter1}
     schema-action: none
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: discussion
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: by.bsuir.discussion.kafka.MessageEvent
+
+app:
+  kafka:
+    enabled: true
+
+discussion:
+  topics:
+    in: InTopic
+    out: OutTopic

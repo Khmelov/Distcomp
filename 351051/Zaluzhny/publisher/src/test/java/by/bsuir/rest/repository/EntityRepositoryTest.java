@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -33,6 +35,13 @@ class EntityRepositoryTest extends PostgresTestSupport {
 
     @Autowired
     private JdbcTemplate jdbc;
+
+    @DynamicPropertySource
+    static void withoutKafka(DynamicPropertyRegistry registry) {
+        registry.add("discussion.client", () -> "http");
+        registry.add("spring.autoconfigure.exclude", () ->
+                "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration");
+    }
 
     @BeforeEach
     void cleanTables() {

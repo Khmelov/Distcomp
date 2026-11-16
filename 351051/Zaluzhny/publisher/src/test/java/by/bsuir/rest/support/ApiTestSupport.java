@@ -29,6 +29,8 @@ public abstract class ApiTestSupport extends PostgresTestSupport {
     @DynamicPropertySource
     static void discussion(DynamicPropertyRegistry registry) {
         registry.add("discussion.client", () -> "memory");
+        registry.add("spring.autoconfigure.exclude", () ->
+                "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration");
     }
 
     @BeforeEach

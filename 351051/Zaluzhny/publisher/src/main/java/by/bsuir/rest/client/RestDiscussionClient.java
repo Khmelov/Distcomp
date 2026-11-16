@@ -19,7 +19,7 @@ import org.springframework.web.client.RestClientResponseException;
 import java.util.List;
 
 @Component
-@ConditionalOnProperty(name = "discussion.client", havingValue = "http", matchIfMissing = true)
+@ConditionalOnProperty(name = "discussion.client", havingValue = "http")
 public class RestDiscussionClient implements DiscussionClient {
 
     private static final Logger log = LoggerFactory.getLogger(RestDiscussionClient.class);

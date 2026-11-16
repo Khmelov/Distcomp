@@ -5,6 +5,7 @@ public class MessageResponseTo {
     private Long id;
     private Long storyId;
     private String content;
+    private MessageState state;
 
     public MessageResponseTo() {
     }
@@ -37,5 +38,13 @@ public class MessageResponseTo {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public MessageState getState() {
+        return state;
+    }
+
+    public void setState(MessageState state) {
+        this.state = state;
     }
 }

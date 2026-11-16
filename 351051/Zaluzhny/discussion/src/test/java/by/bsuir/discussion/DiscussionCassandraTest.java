@@ -39,6 +39,9 @@ class DiscussionCassandraTest {
         registry.add("spring.cassandra.port", () -> cassandraPort);
         registry.add("spring.cassandra.local-datacenter", () -> datacenter);
         registry.add("spring.cassandra.keyspace-name", () -> "distcomp");
+        registry.add("app.kafka.enabled", () -> "false");
+        registry.add("spring.autoconfigure.exclude", () ->
+                "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration");
         CassandraKeyspaceInitializer.ensureKeyspace(host, cassandraPort, datacenter, "distcomp");
     }
 

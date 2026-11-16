@@ -1,6 +1,7 @@
 package by.bsuir.rest.support;
 
 import by.bsuir.rest.client.DiscussionClient;
+import by.bsuir.rest.dto.MessageState;
 import by.bsuir.rest.dto.request.MessageRequestTo;
 import by.bsuir.rest.dto.response.MessageResponseTo;
 import by.bsuir.rest.exception.ApiException;
@@ -18,7 +19,7 @@ public class MemoryDiscussionClient implements DiscussionClient {
 
     @Override
     public MessageResponseTo create(MessageRequestTo request) {
-        long id = ids.incrementAndGet();
+        long id = request.getId() != null ? request.getId() : ids.incrementAndGet();
         MessageResponseTo stored = copy(id, request.getStoryId(), request.getContent());
         rows.put(id, stored);
         return copy(stored);
@@ -68,7 +69,9 @@ public class MemoryDiscussionClient implements DiscussionClient {
     }
 
     private MessageResponseTo copy(MessageResponseTo source) {
-        return copy(source.getId(), source.getStoryId(), source.getContent());
+        MessageResponseTo response = copy(source.getId(), source.getStoryId(), source.getContent());
+        response.setState(source.getState());
+        return response;
     }
 
     private MessageResponseTo copy(Long id, Long storyId, String content) {
@@ -76,6 +79,7 @@ public class MemoryDiscussionClient implements DiscussionClient {
         response.setId(id);
         response.setStoryId(storyId);
         response.setContent(content);
+        response.setState(MessageState.APPROVE);
         return response;
     }
 }

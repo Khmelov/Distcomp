@@ -6,6 +6,7 @@ import by.bsuir.rest.dto.response.MessageResponseTo;
 import by.bsuir.rest.exception.ApiException;
 import by.bsuir.rest.exception.ErrorCode;
 import by.bsuir.rest.repository.StoryRepository;
+import by.bsuir.rest.service.MessageIds;
 import by.bsuir.rest.service.MessageService;
 import by.bsuir.rest.service.RequestValidator;
 import by.bsuir.rest.service.UpdateIdResolver;
@@ -23,12 +24,13 @@ public class MessageServiceImpl implements MessageService {
     private final StoryRepository storyRepository;
     private final RequestValidator requestValidator;
     private final UpdateIdResolver updateIdResolver;
+    private final MessageIds messageIds;
 
     @Override
     public MessageResponseTo create(MessageRequestTo request) {
         requestValidator.validate(request);
         ensureStoryExists(request.getStoryId());
-        request.setId(null);
+        request.setId(messageIds.nextId());
         return discussion.create(request);
     }
 

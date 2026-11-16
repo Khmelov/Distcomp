@@ -13,6 +13,9 @@ public class MessageByStory {
     @Column("content")
     private String content;
 
+    @Column("state")
+    private String state;
+
     public MessageKey getKey() {
         return key;
     }
@@ -27,5 +30,13 @@ public class MessageByStory {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
     }
 }
