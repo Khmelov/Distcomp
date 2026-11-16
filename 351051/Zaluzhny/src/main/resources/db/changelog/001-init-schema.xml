@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="001-schema-distcomp" author="rest">
+        <sql>CREATE SCHEMA IF NOT EXISTS distcomp</sql>
+    </changeSet>
+
+    <changeSet id="002-tables" author="rest">
+        <createTable schemaName="distcomp" tableName="tbl_user">
+            <column name="id" type="bigint" autoIncrement="true" startWith="1">
+                <constraints primaryKey="true" primaryKeyName="pk_tbl_user" nullable="false"/>
+            </column>
+            <column name="login" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="firstname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable schemaName="distcomp" tableName="tbl_story">
+            <column name="id" type="bigint" autoIncrement="true" startWith="1">
+                <constraints primaryKey="true" primaryKeyName="pk_tbl_story" nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable schemaName="distcomp" tableName="tbl_marker">
+            <column name="id" type="bigint" autoIncrement="true" startWith="1">
+                <constraints primaryKey="true" primaryKeyName="pk_tbl_marker" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable schemaName="distcomp" tableName="tbl_message">
+            <column name="id" type="bigint" autoIncrement="true" startWith="1">
+                <constraints primaryKey="true" primaryKeyName="pk_tbl_message" nullable="false"/>
+            </column>
+            <column name="story_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable schemaName="distcomp" tableName="tbl_story_marker">
+            <column name="id" type="bigint" autoIncrement="true" startWith="1">
+                <constraints primaryKey="true" primaryKeyName="pk_tbl_story_marker" nullable="false"/>
+            </column>
+            <column name="story_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="marker_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint schemaName="distcomp" tableName="tbl_story"
+                             columnNames="title" constraintName="uq_tbl_story_title"/>
+        <addUniqueConstraint schemaName="distcomp" tableName="tbl_marker"
+                             columnNames="name" constraintName="uq_tbl_marker_name"/>
+        <addUniqueConstraint schemaName="distcomp" tableName="tbl_story_marker"
+                             columnNames="story_id, marker_id" constraintName="uq_tbl_story_marker_pair"/>
+
+        <addForeignKeyConstraint constraintName="fk_story_marker_story"
+                                 baseTableSchemaName="distcomp" baseTableName="tbl_story_marker" baseColumnNames="story_id"
+                                 referencedTableSchemaName="distcomp" referencedTableName="tbl_story" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+        <addForeignKeyConstraint constraintName="fk_story_marker_marker"
+                                 baseTableSchemaName="distcomp" baseTableName="tbl_story_marker" baseColumnNames="marker_id"
+                                 referencedTableSchemaName="distcomp" referencedTableName="tbl_marker" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <createIndex schemaName="distcomp" tableName="tbl_story" indexName="idx_tbl_story_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex schemaName="distcomp" tableName="tbl_message" indexName="idx_tbl_message_story_id">
+            <column name="story_id"/>
+        </createIndex>
+        <createIndex schemaName="distcomp" tableName="tbl_story_marker" indexName="idx_tbl_story_marker_marker_id">
+            <column name="marker_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
