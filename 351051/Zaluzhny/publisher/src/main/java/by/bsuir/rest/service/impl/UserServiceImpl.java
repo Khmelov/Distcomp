@@ -1,5 +1,6 @@
 package by.bsuir.rest.service.impl;
 
+import by.bsuir.rest.cache.ResponseCache;
 import by.bsuir.rest.dto.request.UserRequestTo;
 import by.bsuir.rest.dto.response.UserResponseTo;
 import by.bsuir.rest.entity.User;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -28,6 +30,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper mapper;
     private final RequestValidator requestValidator;
     private final UpdateIdResolver updateIdResolver;
+    private final ResponseCache cache;
 
     @Override
     public UserResponseTo create(UserRequestTo request) {
@@ -35,19 +38,33 @@ public class UserServiceImpl implements UserService {
         ensureLoginAvailable(request.getLogin(), null);
         User user = mapper.toEntity(request);
         user.setId(null);
-        return mapper.toResponse(repository.save(user));
+        UserResponseTo response = mapper.toResponse(repository.save(user));
+        cache.put(ResponseCache.USER, response.getId(), response);
+        cache.evict(ResponseCache.USER, ResponseCache.ALL);
+        return response;
     }
 
     @Override
     public UserResponseTo getById(Long id) {
-        return mapper.toResponse(find(id));
+        return cache.get(ResponseCache.USER, id, UserResponseTo.class)
+                .orElseGet(() -> {
+                    UserResponseTo response = mapper.toResponse(find(id));
+                    cache.put(ResponseCache.USER, id, response);
+                    return response;
+                });
     }
 
     @Override
     public List<UserResponseTo> getAll() {
-        return repository.find(UserFilter.empty(), PageQuery.all()).content().stream()
+        Optional<List<UserResponseTo>> cached = cache.getList(ResponseCache.USER, ResponseCache.ALL, UserResponseTo.class);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
+        List<UserResponseTo> responses = repository.find(UserFilter.empty(), PageQuery.all()).content().stream()
                 .map(mapper::toResponse)
                 .toList();
+        cache.put(ResponseCache.USER, ResponseCache.ALL, responses);
+        return responses;
     }
 
     @Override
@@ -57,7 +74,10 @@ public class UserServiceImpl implements UserService {
         User user = find(id);
         ensureLoginAvailable(request.getLogin(), id);
         mapper.update(request, user);
-        return mapper.toResponse(user);
+        UserResponseTo response = mapper.toResponse(user);
+        cache.put(ResponseCache.USER, response.getId(), response);
+        cache.evict(ResponseCache.USER, ResponseCache.ALL);
+        return response;
     }
 
     @Override
@@ -65,6 +85,8 @@ public class UserServiceImpl implements UserService {
         if (!repository.deleteById(id)) {
             throw ApiException.notFound("User", id);
         }
+        cache.evict(ResponseCache.USER, id);
+        cache.evict(ResponseCache.USER, ResponseCache.ALL);
     }
 
     private User find(Long id) {

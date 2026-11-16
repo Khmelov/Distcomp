@@ -44,9 +44,17 @@ spring:
         spring.json.use.type.headers: false
         spring.json.value.default.type: by.bsuir.rest.kafka.MessageEvent
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
 discussion:
   base-url: ${DISCUSSION_URL:http://localhost:24130}
   client: kafka
   topics:
     in: InTopic
     out: OutTopic
+
+app:
+  cache: redis

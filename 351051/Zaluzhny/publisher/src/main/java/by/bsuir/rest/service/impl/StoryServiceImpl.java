@@ -1,5 +1,6 @@
 package by.bsuir.rest.service.impl;
 
+import by.bsuir.rest.cache.ResponseCache;
 import by.bsuir.rest.dto.request.MarkerRequestTo;
 import by.bsuir.rest.dto.request.StoryRequestTo;
 import by.bsuir.rest.dto.response.MarkerResponseTo;
@@ -7,12 +8,10 @@ import by.bsuir.rest.dto.response.StoryResponseTo;
 import by.bsuir.rest.dto.response.UserResponseTo;
 import by.bsuir.rest.entity.Marker;
 import by.bsuir.rest.entity.Story;
-import by.bsuir.rest.entity.User;
 import by.bsuir.rest.exception.ApiException;
 import by.bsuir.rest.exception.ErrorCode;
 import by.bsuir.rest.mapper.MarkerMapper;
 import by.bsuir.rest.mapper.StoryMapper;
-import by.bsuir.rest.mapper.UserMapper;
 import by.bsuir.rest.repository.MarkerFilter;
 import by.bsuir.rest.repository.MarkerRepository;
 import by.bsuir.rest.repository.PageQuery;
@@ -22,6 +21,7 @@ import by.bsuir.rest.service.RequestValidator;
 import by.bsuir.rest.service.StorySearchCriteria;
 import by.bsuir.rest.service.StoryService;
 import by.bsuir.rest.service.UpdateIdResolver;
+import by.bsuir.rest.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -43,10 +44,11 @@ public class StoryServiceImpl implements StoryService {
     private final UserRepository userRepository;
     private final MarkerRepository markerRepository;
     private final StoryMapper mapper;
-    private final UserMapper userMapper;
     private final MarkerMapper markerMapper;
     private final RequestValidator requestValidator;
     private final UpdateIdResolver updateIdResolver;
+    private final UserService userService;
+    private final ResponseCache cache;
 
     @Override
     public StoryResponseTo create(StoryRequestTo request) {
@@ -59,19 +61,38 @@ public class StoryServiceImpl implements StoryService {
         story.setCreated(now);
         story.setModified(now);
         applyMarkers(story, request);
-        return toResponse(repository.save(story));
+        StoryResponseTo response = toResponse(repository.save(story));
+        rememberStory(response);
+        cache.evict(ResponseCache.MARKER, ResponseCache.ALL);
+        return response;
     }
 
     @Override
     public StoryResponseTo getById(Long id) {
-        return toResponse(find(id));
+        return cache.get(ResponseCache.STORY, id, StoryResponseTo.class)
+                .orElseGet(() -> {
+                    StoryResponseTo response = toResponse(find(id));
+                    cache.put(ResponseCache.STORY, id, response);
+                    return response;
+                });
     }
 
     @Override
     public List<StoryResponseTo> find(StorySearchCriteria criteria) {
-        return repository.find(criteria, PageQuery.all()).content().stream()
+        if (criteria.unfiltered()) {
+            Optional<List<StoryResponseTo>> cached = cache.getList(
+                    ResponseCache.STORY, ResponseCache.ALL, StoryResponseTo.class);
+            if (cached.isPresent()) {
+                return cached.get();
+            }
+        }
+        List<StoryResponseTo> responses = repository.find(criteria, PageQuery.all()).content().stream()
                 .map(this::toResponse)
                 .toList();
+        if (criteria.unfiltered()) {
+            cache.put(ResponseCache.STORY, ResponseCache.ALL, responses);
+        }
+        return responses;
     }
 
     @Override
@@ -86,7 +107,10 @@ public class StoryServiceImpl implements StoryService {
             applyMarkers(story, request);
         }
         story.setModified(nextModified(story.getCreated()));
-        return toResponse(story);
+        StoryResponseTo response = toResponse(story);
+        rememberStory(response);
+        cache.evict(ResponseCache.MARKER, ResponseCache.ALL);
+        return response;
     }
 
     @Override
@@ -96,20 +120,28 @@ public class StoryServiceImpl implements StoryService {
         if (!repository.deleteById(id)) {
             throw ApiException.notFound("Story", id);
         }
+        List<Long> removedMarkers = new ArrayList<>();
         for (Long markerId : markerIds) {
             StorySearchCriteria criteria = new StorySearchCriteria(List.of(), List.of(markerId), null, null, null);
             if (repository.find(criteria, PageQuery.all()).content().isEmpty()) {
                 markerRepository.deleteById(markerId);
+                removedMarkers.add(markerId);
             }
+        }
+        cache.evict(ResponseCache.STORY, id);
+        cache.evict(ResponseCache.STORY, ResponseCache.ALL);
+        for (Long markerId : removedMarkers) {
+            cache.evict(ResponseCache.MARKER, markerId);
+        }
+        if (!removedMarkers.isEmpty()) {
+            cache.evict(ResponseCache.MARKER, ResponseCache.ALL);
         }
     }
 
     @Override
     public UserResponseTo getAuthor(Long storyId) {
         Story story = find(storyId);
-        User user = userRepository.findById(story.getUserId())
-                .orElseThrow(() -> ApiException.notFound("User", story.getUserId()));
-        return userMapper.toResponse(user);
+        return userService.getById(story.getUserId());
     }
 
     @Override
@@ -124,6 +156,11 @@ public class StoryServiceImpl implements StoryService {
                 .flatMap(Optional::stream)
                 .map(markerMapper::toResponse)
                 .toList();
+    }
+
+    private void rememberStory(StoryResponseTo response) {
+        cache.put(ResponseCache.STORY, response.getId(), response);
+        cache.evict(ResponseCache.STORY, ResponseCache.ALL);
     }
 
     private Story find(Long id) {

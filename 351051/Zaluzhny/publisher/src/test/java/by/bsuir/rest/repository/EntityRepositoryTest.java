@@ -39,8 +39,11 @@ class EntityRepositoryTest extends PostgresTestSupport {
     @DynamicPropertySource
     static void withoutKafka(DynamicPropertyRegistry registry) {
         registry.add("discussion.client", () -> "http");
+        registry.add("app.cache", () -> "memory");
         registry.add("spring.autoconfigure.exclude", () ->
-                "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration");
+                "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,"
+                        + "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,"
+                        + "org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration");
     }
 
     @BeforeEach

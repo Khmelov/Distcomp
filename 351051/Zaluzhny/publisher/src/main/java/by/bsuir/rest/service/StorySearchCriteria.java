@@ -9,4 +9,16 @@ public record StorySearchCriteria(
         String title,
         String content
 ) {
+
+    public boolean unfiltered() {
+        return empty(markerNames) && empty(markerIds) && blank(login) && blank(title) && blank(content);
+    }
+
+    private static boolean empty(List<?> values) {
+        return values == null || values.isEmpty();
+    }
+
+    private static boolean blank(String value) {
+        return value == null || value.isBlank();
+    }
 }
