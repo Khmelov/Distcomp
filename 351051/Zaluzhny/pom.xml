@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.4.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>by.bsuir</groupId>
+    <artifactId>distcomp</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <name>distcomp</name>
+    <description>Publisher on PostgreSQL and discussion on Cassandra</description>
+
+    <modules>
+        <module>publisher</module>
+        <module>discussion</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
+        <rest-assured.version>5.5.0</rest-assured.version>
+        <liquibase-cassandra.version>4.29.1</liquibase-cassandra.version>
+        <cassandra-jdbc-wrapper.version>4.13.0</cassandra-jdbc-wrapper.version>
+        <jacoco.version>0.8.12</jacoco.version>
+    </properties>
+</project>
