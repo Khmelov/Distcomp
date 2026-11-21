@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { topicService } from '../services';
 import { TopicRequestTo } from '../dtos/requests';
+import { topicService } from '../services';
 
 const router = Router();
 
@@ -17,6 +17,34 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
 router.get('/', (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = topicService.findAll();
+    res.status(200).json(result.map((t) => ({ topic: t })));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/by-filters', (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const markerNames = req.query.markerNames
+      ? String(req.query.markerNames).split(',')
+      : undefined;
+    const markerIds = req.query.markerIds
+      ? String(req.query.markerIds).split(',').map(Number)
+      : undefined;
+    const authorLogin = req.query.authorLogin
+      ? String(req.query.authorLogin)
+      : undefined;
+    const title = req.query.title ? String(req.query.title) : undefined;
+    const content = req.query.content ? String(req.query.content) : undefined;
+
+    const result = topicService.findByFilters({
+      markerNames,
+      markerIds,
+      authorLogin,
+      title,
+      content,
+    });
+
     res.status(200).json(result.map((t) => ({ topic: t })));
   } catch (err) {
     next(err);
