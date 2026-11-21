@@ -23,7 +23,6 @@ export function errorHandler(
     return;
   }
 
-  console.error('Unhandled error:', err);
   res.status(500).json({
     errorMessage: 'Internal server error',
     errorCode: '50001',

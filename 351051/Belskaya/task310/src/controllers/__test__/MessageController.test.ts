@@ -24,7 +24,7 @@ describe('MessageController', () => {
       .send({ topicId: 1, content: 'Hello world' });
 
     expect(res.status).toBe(201);
-    expect(res.body.message.content).toBe('Hello world');
+    expect(res.body.content).toBe('Hello world');
   });
 
   test('POST /messages — 422 при несуществующем topicId', async () => {
@@ -51,7 +51,7 @@ describe('MessageController', () => {
     const res = await request(app).get('/api/v1.0/messages/1');
 
     expect(res.status).toBe(200);
-    expect(res.body.message.content).toBe('Hello world');
+    expect(res.body.content).toBe('Hello world');
   });
 
   test('GET /messages/by-topic/:topicId — возвращает сообщения темы', async () => {
@@ -68,7 +68,7 @@ describe('MessageController', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(2);
-    expect(res.body[0].message.content).toBe('First message');
+    expect(res.body[0].content).toBe('First message');
   });
 
   test('GET /messages/by-topic/:topicId — 404, если темы нет', async () => {
@@ -87,7 +87,7 @@ describe('MessageController', () => {
       .send({ topicId: 1, content: 'Updated content' });
 
     expect(res.status).toBe(200);
-    expect(res.body.message.content).toBe('Updated content');
+    expect(res.body.content).toBe('Updated content');
   });
 
   test('PUT /messages/:id — 404 при обновлении несуществующего', async () => {

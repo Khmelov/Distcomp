@@ -13,7 +13,7 @@ describe('MarkerController', () => {
       .send({ name: 'urgent' });
 
     expect(res.status).toBe(201);
-    expect(res.body.marker.name).toBe('urgent');
+    expect(res.body.name).toBe('urgent');
   });
 
   test('POST /markers — 400 при коротком name', async () => {
@@ -40,7 +40,7 @@ describe('MarkerController', () => {
     const res = await request(app).get('/api/v1.0/markers/1');
 
     expect(res.status).toBe(200);
-    expect(res.body.marker.name).toBe('urgent');
+    expect(res.body.name).toBe('urgent');
   });
 
   test('GET /markers/:id — 404 для несуществующего', async () => {
@@ -82,7 +82,7 @@ describe('MarkerController', () => {
       .send({ name: 'important' });
 
     expect(res.status).toBe(200);
-    expect(res.body.marker.name).toBe('important');
+    expect(res.body.name).toBe('important');
   });
 
   test('PUT /markers/:id — 404 при обновлении несуществующего', async () => {

@@ -8,7 +8,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
   try {
     const dto = req.body as TopicRequestTo;
     const result = topicService.create(dto);
-    res.status(201).json({ topic: result });
+    res.status(201).json(result);
   } catch (err) {
     next(err);
   }
@@ -17,7 +17,7 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
 router.get('/', (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = topicService.findAll();
-    res.status(200).json(result.map((t) => ({ topic: t })));
+    res.status(200).json(result.map((t) => t));
   } catch (err) {
     next(err);
   }
@@ -45,7 +45,7 @@ router.get('/by-filters', (req: Request, res: Response, next: NextFunction) => {
       content,
     });
 
-    res.status(200).json(result.map((t) => ({ topic: t })));
+    res.status(200).json(result.map((t) => t));
   } catch (err) {
     next(err);
   }
@@ -55,7 +55,7 @@ router.get('/:id', (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params.id);
     const result = topicService.findById(id);
-    res.status(200).json({ topic: result });
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }
@@ -66,7 +66,7 @@ router.put('/:id', (req: Request, res: Response, next: NextFunction) => {
     const id = Number(req.params.id);
     const dto = req.body as TopicRequestTo;
     const result = topicService.update(id, dto);
-    res.status(200).json({ topic: result });
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }

@@ -23,9 +23,9 @@ describe('TopicController', () => {
     const res = await request(app).post('/api/v1.0/topics').send(validTopic);
 
     expect(res.status).toBe(201);
-    expect(res.body.topic.id).toBe(1);
-    expect(res.body.topic.created).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-    expect(res.body.topic.modified).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(res.body.id).toBe(1);
+    expect(res.body.created).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(res.body.modified).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
   test('POST /topics — 422 при несуществующем authorId', async () => {
@@ -51,7 +51,7 @@ describe('TopicController', () => {
     const res = await request(app).get('/api/v1.0/topics/1');
 
     expect(res.status).toBe(200);
-    expect(res.body.topic.title).toBe('First Topic');
+    expect(res.body.title).toBe('First Topic');
   });
 
   test('GET /topics/:id — 404 для несуществующего', async () => {
@@ -165,7 +165,7 @@ describe('TopicController', () => {
       .send({ ...validTopic, title: 'Updated Title' });
 
     expect(res.status).toBe(200);
-    expect(res.body.topic.title).toBe('Updated Title');
+    expect(res.body.title).toBe('Updated Title');
   });
 
   test('PUT /topics/:id — 404 при обновлении несуществующего', async () => {

@@ -18,10 +18,10 @@ describe('AuthorController', () => {
     const res = await request(app).post('/api/v1.0/authors').send(validAuthor);
 
     expect(res.status).toBe(201);
-    expect(res.body.author.id).toBe(1);
-    expect(res.body.author.login).toBe('test@example.com');
-    expect(res.body.author.password).toMatch(/^\$2b\$10\$/);
-    expect(res.body.author.password).not.toBe('password123');
+    expect(res.body.id).toBe(1);
+    expect(res.body.login).toBe('test@example.com');
+    expect(res.body.password).toMatch(/^\$2b\$10\$/);
+    expect(res.body.password).not.toBe('password123');
   });
 
   test('POST /authors — 400 при коротком пароле', async () => {
@@ -47,7 +47,7 @@ describe('AuthorController', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
-    expect(res.body[0].author.login).toBe('test@example.com');
+    expect(res.body[0].login).toBe('test@example.com');
   });
 
   test('GET /authors/:id — 404 для несуществующего', async () => {
@@ -68,8 +68,8 @@ describe('AuthorController', () => {
       });
 
     expect(res.status).toBe(200);
-    expect(res.body.author.login).toBe('new@example.com');
-    expect(res.body.author.password).toMatch(/^\$2b\$10\$/);
+    expect(res.body.login).toBe('new@example.com');
+    expect(res.body.password).toMatch(/^\$2b\$10\$/);
   });
 
   test('PUT /authors/:id — 404 при обновлении несуществующего', async () => {
@@ -108,8 +108,8 @@ describe('AuthorController', () => {
     const res = await request(app).get('/api/v1.0/authors/by-topic/1');
 
     expect(res.status).toBe(200);
-    expect(res.body.author.id).toBe(1);
-    expect(res.body.author.login).toBe('test@example.com');
+    expect(res.body.id).toBe(1);
+    expect(res.body.login).toBe('test@example.com');
   });
 
   test('GET /authors/by-topic/:topicId — 404, если темы нет', async () => {
