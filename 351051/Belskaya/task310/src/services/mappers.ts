@@ -1,14 +1,16 @@
+import bcrypt from 'bcrypt';
+
 import {
-   AuthorRequestTo,
-   MarkerRequestTo,
-   MessageRequestTo,
-   TopicRequestTo,
+  AuthorRequestTo,
+  MarkerRequestTo,
+  MessageRequestTo,
+  TopicRequestTo,
 } from '../dtos/requests';
 import {
-   AuthorResponseTo,
-   MarkerResponseTo,
-   MessageResponseTo,
-   TopicResponseTo,
+  AuthorResponseTo,
+  MarkerResponseTo,
+  MessageResponseTo,
+  TopicResponseTo,
 } from '../dtos/responses';
 import { Author, Marker, Message, Topic } from '../entities';
 
@@ -17,7 +19,7 @@ export function toAuthorEntity(req: AuthorRequestTo, id: number): Author {
   return {
     id,
     login: req.login,
-    password: req.password,
+    password: bcrypt.hashSync(req.password, 10),
     firstname: req.firstname,
     lastname: req.lastname,
   };

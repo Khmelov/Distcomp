@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import { AuthorRequestTo } from '../dtos/requests';
 import { AuthorResponseTo } from '../dtos/responses';
 import { authorRequestSchema } from '../dtos/validation';
@@ -43,7 +44,9 @@ export class AuthorService extends BaseService {
     if (duplicate && duplicate.id !== id) {
       throw new ConflictError(`Author with login '${data.login}' already exists`);
     }
-    const updated = this.repository.update(id, data);
+
+    const updated = this.repository.update(id, {...data, password: bcrypt
+      .hashSync(data.password, 10)});
     return toAuthorResponse(updated!);
   }
 

@@ -1,14 +1,7 @@
-import express from 'express';
+import app from './app';
 
-const app = express();
 const PORT = 24110;
 
-app.use(express.json());
-
-app.get('/', (req, res) => {
-  res.send('Entities API is running');
-});
-
-app.listen(PORT, () => {
+app.listen(PORT, 'localhost', () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
