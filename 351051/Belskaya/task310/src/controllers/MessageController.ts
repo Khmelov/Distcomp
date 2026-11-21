@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { messageService } from '../services';
 import { MessageRequestTo } from '../dtos/requests';
+import { messageService } from '../services';
 
 const router = Router();
 
@@ -53,5 +53,18 @@ router.delete('/:id', (req: Request, res: Response, next: NextFunction) => {
     next(err);
   }
 });
+
+router.get(
+  '/by-topic/:topicId',
+  (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const topicId = Number(req.params.topicId);
+      const result = messageService.findByTopicId(topicId);
+      res.status(200).json(result.map((m) => ({ message: m })));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 export default router;

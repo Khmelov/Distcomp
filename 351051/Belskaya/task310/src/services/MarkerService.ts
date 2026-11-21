@@ -1,7 +1,9 @@
 import { MarkerRequestTo } from '../dtos/requests';
 import { MarkerResponseTo } from '../dtos/responses';
 import { markerRequestSchema } from '../dtos/validation';
+import { Marker } from '../entities';
 import { ConflictError, NotFoundError } from '../errors/AppError';
+import { topicMarkerRepository, topicRepository } from '../repositories';
 import { MarkerRepository } from '../repositories/MarkerRepository';
 import { BaseService } from './BaseService';
 import { toMarkerEntity, toMarkerResponse } from './mappers';
@@ -51,5 +53,19 @@ export class MarkerService extends BaseService {
     if (!this.repository.delete(id)) {
       throw new NotFoundError(`Marker with id ${id} not found`, '40403');
     }
+  }
+
+  findByTopicId(topicId: number): MarkerResponseTo[] {
+    const topic = topicRepository.findById(topicId);
+    if (!topic) {
+      throw new NotFoundError(`Topic with id ${topicId} not found`, '40402');
+    }
+
+    const markerIds = topicMarkerRepository.getMarkerIdsByTopicId(topicId);
+
+    return markerIds
+      .map((id) => this.repository.findById(id))
+      .filter((m): m is Marker => m !== undefined)
+      .map(toMarkerResponse);
   }
 }

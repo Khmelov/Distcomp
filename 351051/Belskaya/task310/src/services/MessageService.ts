@@ -61,4 +61,11 @@ export class MessageService extends BaseService {
       throw new NotFoundError(`Message with id ${id} not found`, '40404');
     }
   }
+
+  findByTopicId(topicId: number): MessageResponseTo[] {
+    if (!this.topicRepository.existsById(topicId)) {
+      throw new NotFoundError(`Topic with id ${topicId} not found`, '40402');
+    }
+    return this.repository.findByTopicId(topicId).map(toMessageResponse);
+  }
 }

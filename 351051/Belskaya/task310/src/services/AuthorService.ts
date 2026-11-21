@@ -3,6 +3,7 @@ import { AuthorRequestTo } from '../dtos/requests';
 import { AuthorResponseTo } from '../dtos/responses';
 import { authorRequestSchema } from '../dtos/validation';
 import { ConflictError, NotFoundError } from '../errors/AppError';
+import { topicRepository } from '../repositories';
 import { AuthorRepository } from '../repositories/AuthorRepository';
 import { BaseService } from './BaseService';
 import { toAuthorEntity, toAuthorResponse } from './mappers';
@@ -15,7 +16,9 @@ export class AuthorService extends BaseService {
   create(dto: AuthorRequestTo): AuthorResponseTo {
     const data = this.validate(authorRequestSchema, dto);
     if (this.repository.findByLogin(data.login)) {
-      throw new ConflictError(`Author with login '${data.login}' already exists`);
+      throw new ConflictError(
+        `Author with login '${data.login}' already exists`
+      );
     }
     const entity = toAuthorEntity(data, this.generateId());
     const saved = this.repository.save(entity);
@@ -42,11 +45,15 @@ export class AuthorService extends BaseService {
     }
     const duplicate = this.repository.findByLogin(data.login);
     if (duplicate && duplicate.id !== id) {
-      throw new ConflictError(`Author with login '${data.login}' already exists`);
+      throw new ConflictError(
+        `Author with login '${data.login}' already exists`
+      );
     }
 
-    const updated = this.repository.update(id, {...data, password: bcrypt
-      .hashSync(data.password, 10)});
+    const updated = this.repository.update(id, {
+      ...data,
+      password: bcrypt.hashSync(data.password, 10),
+    });
     return toAuthorResponse(updated!);
   }
 
@@ -54,5 +61,19 @@ export class AuthorService extends BaseService {
     if (!this.repository.delete(id)) {
       throw new NotFoundError(`Author with id ${id} not found`);
     }
+  }
+
+  findByTopicId(topicId: number): AuthorResponseTo {
+    const topic = topicRepository.findById(topicId);
+    if (!topic) {
+      throw new NotFoundError(`Topic with id ${topicId} not found`, '40402');
+    }
+
+    const author = this.repository.findById(topic.authorId);
+    if (!author) {
+      throw new NotFoundError(`Author for topic ${topicId} not found`, '40401');
+    }
+
+    return toAuthorResponse(author);
   }
 }

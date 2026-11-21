@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { markerService } from '../services';
 import { MarkerRequestTo } from '../dtos/requests';
+import { markerService } from '../services';
 
 const router = Router();
 
@@ -53,5 +53,18 @@ router.delete('/:id', (req: Request, res: Response, next: NextFunction) => {
     next(err);
   }
 });
+
+router.get(
+  '/by-topic/:topicId',
+  (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const topicId = Number(req.params.topicId);
+      const result = markerService.findByTopicId(topicId);
+      res.status(200).json(result.map((m) => ({ marker: m })));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 export default router;

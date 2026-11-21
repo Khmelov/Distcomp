@@ -9,7 +9,7 @@ describe('AuthorController', () => {
 
   const validAuthor = {
     login: 'test@example.com',
-    password: 'password123',  
+    password: 'password123',
     firstname: 'Иван',
     lastname: 'Иванов',
   };
@@ -61,7 +61,11 @@ describe('AuthorController', () => {
     await request(app).post('/api/v1.0/authors').send(validAuthor);
     const res = await request(app)
       .put('/api/v1.0/authors/1')
-      .send({ ...validAuthor, login: 'new@example.com', password: 'newpassword123' });
+      .send({
+        ...validAuthor,
+        login: 'new@example.com',
+        password: 'newpassword123',
+      });
 
     expect(res.status).toBe(200);
     expect(res.body.author.login).toBe('new@example.com');
@@ -75,5 +79,27 @@ describe('AuthorController', () => {
 
     const get = await request(app).get('/api/v1.0/authors/1');
     expect(get.status).toBe(404);
+  });
+
+  test('GET /authors/by-topic/:topicId — возвращает автора темы', async () => {
+    await request(app).post('/api/v1.0/authors').send(validAuthor);
+    await request(app).post('/api/v1.0/topics').send({
+      authorId: 1,
+      title: 'Test Topic',
+      content: 'Content',
+    });
+
+    const res = await request(app).get('/api/v1.0/authors/by-topic/1');
+
+    expect(res.status).toBe(200);
+    expect(res.body.author.id).toBe(1);
+    expect(res.body.author.login).toBe('test@example.com');
+  });
+
+  test('GET /authors/by-topic/:topicId — 404, если темы нет', async () => {
+    const res = await request(app).get('/api/v1.0/authors/by-topic/999');
+
+    expect(res.status).toBe(404);
+    expect(res.body.errorCode).toBe('40402');
   });
 });
