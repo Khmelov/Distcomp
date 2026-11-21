@@ -72,6 +72,15 @@ describe('AuthorController', () => {
     expect(res.body.author.password).toMatch(/^\$2b\$10\$/);
   });
 
+  test('PUT /authors/:id — 404 при обновлении несуществующего', async () => {
+    const res = await request(app)
+      .put('/api/v1.0/authors/999')
+      .send(validAuthor);
+
+    expect(res.status).toBe(404);
+    expect(res.body.errorCode).toBe('40401');
+  });
+
   test('DELETE /authors/:id — 204, затем 404', async () => {
     await request(app).post('/api/v1.0/authors').send(validAuthor);
     const del = await request(app).delete('/api/v1.0/authors/1');
@@ -79,6 +88,13 @@ describe('AuthorController', () => {
 
     const get = await request(app).get('/api/v1.0/authors/1');
     expect(get.status).toBe(404);
+  });
+
+  test('DELETE /authors/:id — 404 при удалении несуществующего', async () => {
+    const res = await request(app).delete('/api/v1.0/authors/999');
+
+    expect(res.status).toBe(404);
+    expect(res.body.errorCode).toBe('40401');
   });
 
   test('GET /authors/by-topic/:topicId — возвращает автора темы', async () => {

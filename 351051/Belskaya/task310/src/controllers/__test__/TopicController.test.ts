@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../app';
-import { resetRepositories } from '../../repositories';
+import { resetRepositories, topicMarkerRepository } from '../../repositories';
 
 describe('TopicController', () => {
   beforeEach(async () => {
@@ -46,6 +46,14 @@ describe('TopicController', () => {
     expect(res.body.errorCode).toBe('40001');
   });
 
+  test('GET /topics/:id — 200, успешное получение', async () => {
+    await request(app).post('/api/v1.0/topics').send(validTopic);
+    const res = await request(app).get('/api/v1.0/topics/1');
+
+    expect(res.status).toBe(200);
+    expect(res.body.topic.title).toBe('First Topic');
+  });
+
   test('GET /topics/:id — 404 для несуществующего', async () => {
     const res = await request(app).get('/api/v1.0/topics/999');
 
@@ -60,6 +68,12 @@ describe('TopicController', () => {
 
     const get = await request(app).get('/api/v1.0/topics/1');
     expect(get.status).toBe(404);
+  });
+
+  test('DELETE /topics/:id — 404 при удалении несуществующего', async () => {
+    const res = await request(app).delete('/api/v1.0/topics/999');
+    expect(res.status).toBe(404);
+    expect(res.body.errorCode).toBe('40402');
   });
 
   test('GET /topics/by-filters — фильтр по title', async () => {
@@ -101,5 +115,63 @@ describe('TopicController', () => {
     );
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(0);
+  });
+
+  test('GET /topics/by-filters — фильтр по markerNames и markerIds', async () => {
+    await request(app).post('/api/v1.0/markers').send({ name: 'test-marker' });
+
+    await request(app).post('/api/v1.0/topics').send(validTopic);
+
+    topicMarkerRepository.addLink(1, 1);
+
+    const res1 = await request(app).get(
+      '/api/v1.0/topics/by-filters?markerNames=test-marker'
+    );
+    expect(res1.status).toBe(200);
+    expect(res1.body).toHaveLength(1);
+
+    const res2 = await request(app).get(
+      '/api/v1.0/topics/by-filters?markerIds=1'
+    );
+    expect(res2.status).toBe(200);
+    expect(res2.body).toHaveLength(1);
+
+    const res3 = await request(app).get(
+      '/api/v1.0/topics/by-filters?markerNames=unknown'
+    );
+    expect(res3.status).toBe(200);
+    expect(res3.body).toHaveLength(0);
+
+    const res4 = await request(app).get(
+      '/api/v1.0/topics/by-filters?markerIds=999'
+    );
+    expect(res4.status).toBe(200);
+    expect(res4.body).toHaveLength(0);
+  });
+
+  test('GET /topics/by-filters — фильтр по content', async () => {
+    await request(app).post('/api/v1.0/topics').send(validTopic);
+    const res = await request(app).get(
+      '/api/v1.0/topics/by-filters?content=Some'
+    );
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+  });
+
+  test('PUT /topics/:id — 200, успешное обновление', async () => {
+    await request(app).post('/api/v1.0/topics').send(validTopic);
+    const res = await request(app)
+      .put('/api/v1.0/topics/1')
+      .send({ ...validTopic, title: 'Updated Title' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.topic.title).toBe('Updated Title');
+  });
+
+  test('PUT /topics/:id — 404 при обновлении несуществующего', async () => {
+    const res = await request(app).put('/api/v1.0/topics/999').send(validTopic);
+
+    expect(res.status).toBe(404);
+    expect(res.body.errorCode).toBe('40402');
   });
 });

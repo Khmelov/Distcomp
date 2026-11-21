@@ -35,6 +35,14 @@ describe('MarkerController', () => {
     expect(res.body.errorCode).toBe('40901');
   });
 
+  test('GET /markers/:id — 200, успешное получение', async () => {
+    await request(app).post('/api/v1.0/markers').send({ name: 'urgent' });
+    const res = await request(app).get('/api/v1.0/markers/1');
+
+    expect(res.status).toBe(200);
+    expect(res.body.marker.name).toBe('urgent');
+  });
+
   test('GET /markers/:id — 404 для несуществующего', async () => {
     const res = await request(app).get('/api/v1.0/markers/999');
 
@@ -65,5 +73,38 @@ describe('MarkerController', () => {
     const res = await request(app).get('/api/v1.0/markers/by-topic/999');
     expect(res.status).toBe(404);
     expect(res.body.errorCode).toBe('40402');
+  });
+
+  test('PUT /markers/:id — 200, успешное обновление', async () => {
+    await request(app).post('/api/v1.0/markers').send({ name: 'urgent' });
+    const res = await request(app)
+      .put('/api/v1.0/markers/1')
+      .send({ name: 'important' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.marker.name).toBe('important');
+  });
+
+  test('PUT /markers/:id — 404 при обновлении несуществующего', async () => {
+    const res = await request(app)
+      .put('/api/v1.0/markers/999')
+      .send({ name: 'important' });
+
+    expect(res.status).toBe(404);
+    expect(res.body.errorCode).toBe('40403');
+  });
+
+  test('DELETE /markers/:id — 204, успешное удаление', async () => {
+    await request(app).post('/api/v1.0/markers').send({ name: 'urgent' });
+    const res = await request(app).delete('/api/v1.0/markers/1');
+
+    expect(res.status).toBe(204);
+  });
+
+  test('DELETE /markers/:id — 404 при удалении несуществующего', async () => {
+    const res = await request(app).delete('/api/v1.0/markers/999');
+
+    expect(res.status).toBe(404);
+    expect(res.body.errorCode).toBe('40403');
   });
 });

@@ -23,6 +23,19 @@ router.get('/', (_: Request, res: Response, next: NextFunction) => {
   }
 });
 
+router.get(
+  '/by-topic/:topicId',
+  (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const topicId = Number(req.params.topicId);
+      const result = authorService.findByTopicId(topicId);
+      res.status(200).json({ author: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 router.get('/:id', (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params.id);
@@ -53,18 +66,5 @@ router.delete('/:id', (req: Request, res: Response, next: NextFunction) => {
     next(err);
   }
 });
-
-router.get(
-  '/by-topic/:topicId',
-  (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const topicId = Number(req.params.topicId);
-      const result = authorService.findByTopicId(topicId);
-      res.status(200).json({ author: result });
-    } catch (err) {
-      next(err);
-    }
-  }
-);
 
 export default router;

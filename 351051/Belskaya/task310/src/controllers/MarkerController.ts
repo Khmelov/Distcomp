@@ -23,6 +23,19 @@ router.get('/', (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
+router.get(
+  '/by-topic/:topicId',
+  (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const topicId = Number(req.params.topicId);
+      const result = markerService.findByTopicId(topicId);
+      res.status(200).json(result.map((m) => ({ marker: m })));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 router.get('/:id', (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params.id);
@@ -53,18 +66,5 @@ router.delete('/:id', (req: Request, res: Response, next: NextFunction) => {
     next(err);
   }
 });
-
-router.get(
-  '/by-topic/:topicId',
-  (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const topicId = Number(req.params.topicId);
-      const result = markerService.findByTopicId(topicId);
-      res.status(200).json(result.map((m) => ({ marker: m })));
-    } catch (err) {
-      next(err);
-    }
-  }
-);
 
 export default router;
