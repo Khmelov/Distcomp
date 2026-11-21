@@ -7,4 +7,8 @@ export class IdGenerator {
     this.counters.set(entityName, next);
     return next;
   }
+    
+  static reset(): void {
+    this.counters.clear();
+  }
 }

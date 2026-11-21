@@ -35,4 +35,8 @@ export abstract class InMemoryRepository<T extends { id: number }>
   existsById(id: number): boolean {
     return this.items.has(id);
   }
+
+  clear(): void {
+    this.items.clear();
+  }
 }
