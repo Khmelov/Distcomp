@@ -2,70 +2,74 @@ import { MessageRequestTo } from '../dtos/requests';
 import { MessageResponseTo } from '../dtos/responses';
 import { messageRequestSchema } from '../dtos/validation';
 import { NotFoundError, UnprocessableEntityError } from '../errors/AppError';
-import { MessageRepository } from '../repositories/MessageRepository';
-import { TopicRepository } from '../repositories/TopicRepository';
+import { PrismaMessageRepository } from '../repositories/PrismaMessageRepository';
+import { PrismaTopicRepository } from '../repositories/PrismaTopicRepository';
 import { BaseService } from './BaseService';
-import { toMessageEntity, toMessageResponse } from './mappers';
+import { toMessageResponse } from './mappers';
 
 export class MessageService extends BaseService {
   constructor(
-    private readonly repository: MessageRepository,
-    private readonly topicRepository: TopicRepository
+    private readonly repository: PrismaMessageRepository,
+    private readonly topicRepository: PrismaTopicRepository
   ) {
     super('message');
   }
 
-  create(dto: MessageRequestTo): MessageResponseTo {
+  async create(dto: MessageRequestTo): Promise<MessageResponseTo> {
     const data = this.validate(messageRequestSchema, dto);
-    if (!this.topicRepository.existsById(data.topicId)) {
+    if (!(await this.topicRepository.existsById(data.topicId))) {
       throw new UnprocessableEntityError(
         `Topic with id ${data.topicId} does not exist`,
         '42203'
       );
     }
-    const entity = toMessageEntity(data, this.generateId());
-    const saved = this.repository.save(entity);
+
+    const saved = await this.repository.save(data);
     return toMessageResponse(saved);
   }
 
-  findAll(): MessageResponseTo[] {
-    return this.repository.findAll().map(toMessageResponse);
+  async findAll(): Promise<MessageResponseTo[]> {
+    const messages = await this.repository.findAll();
+    return messages.map(toMessageResponse);
   }
 
-  findById(id: number): MessageResponseTo {
-    const entity = this.repository.findById(id);
+  async findById(id: number): Promise<MessageResponseTo> {
+    const entity = await this.repository.findById(id);
     if (!entity) {
       throw new NotFoundError(`Message with id ${id} not found`, '40404');
     }
     return toMessageResponse(entity);
   }
 
-  update(id: number, dto: MessageRequestTo): MessageResponseTo {
+  async update(id: number, dto: MessageRequestTo): Promise<MessageResponseTo> {
     const data = this.validate(messageRequestSchema, dto);
-    const existing = this.repository.findById(id);
+    const existing = await this.repository.findById(id);
     if (!existing) {
       throw new NotFoundError(`Message with id ${id} not found`, '40404');
     }
-    if (!this.topicRepository.existsById(data.topicId)) {
+    if (!(await this.topicRepository.existsById(data.topicId))) {
       throw new UnprocessableEntityError(
         `Topic with id ${data.topicId} does not exist`,
         '42203'
       );
     }
-    const updated = this.repository.update(id, data);
+
+    const updated = await this.repository.update(id, data);
     return toMessageResponse(updated!);
   }
 
-  delete(id: number): void {
-    if (!this.repository.delete(id)) {
+  async delete(id: number): Promise<void> {
+    const success = await this.repository.delete(id);
+    if (!success) {
       throw new NotFoundError(`Message with id ${id} not found`, '40404');
     }
   }
 
-  findByTopicId(topicId: number): MessageResponseTo[] {
-    if (!this.topicRepository.existsById(topicId)) {
+  async findByTopicId(topicId: number): Promise<MessageResponseTo[]> {
+    if (!(await this.topicRepository.existsById(topicId))) {
       throw new NotFoundError(`Topic with id ${topicId} not found`, '40402');
     }
-    return this.repository.findByTopicId(topicId).map(toMessageResponse);
+    const messages = await this.repository.findByTopicId(topicId);
+    return messages.map(toMessageResponse);
   }
 }

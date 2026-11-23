@@ -14,16 +14,16 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.get('/', (req: Request, res: Response, next: NextFunction) => {
+router.get('/', async(req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = topicService.findAll();
+    const result = await topicService.findAll();
     res.status(200).json(result.map((t) => t));
   } catch (err) {
     next(err);
   }
 });
 
-router.get('/by-filters', (req: Request, res: Response, next: NextFunction) => {
+router.get('/by-filters', async(req: Request, res: Response, next: NextFunction) => {
   try {
     const markerNames = req.query.markerNames
       ? String(req.query.markerNames).split(',')
@@ -37,7 +37,7 @@ router.get('/by-filters', (req: Request, res: Response, next: NextFunction) => {
     const title = req.query.title ? String(req.query.title) : undefined;
     const content = req.query.content ? String(req.query.content) : undefined;
 
-    const result = topicService.findByFilters({
+    const result = await topicService.findByFilters({
       markerNames,
       markerIds,
       authorLogin,

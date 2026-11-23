@@ -1,24 +1,11 @@
-import { IdGenerator } from '../utils/idGenerator';
-import { AuthorRepository } from './AuthorRepository';
-import { MarkerRepository } from './MarkerRepository';
-import { MessageRepository } from './MessageRepository';
-import { TopicMarkerRepository } from './TopicMarkerRepository';
-import { TopicRepository } from './TopicRepository';
+import { PrismaAuthorRepository } from './PrismaAuthorRepository';
+import { PrismaMarkerRepository } from './PrismaMarkerRepository';
+import { PrismaMessageRepository } from './PrismaMessageRepository';
+import { PrismaTopicRepository } from './PrismaTopicRepository';
 
-export const authorRepository = new AuthorRepository();
-export const topicRepository = new TopicRepository();
-export const markerRepository = new MarkerRepository();
-export const messageRepository = new MessageRepository();
-export const topicMarkerRepository = new TopicMarkerRepository();
+const authorRepo = new PrismaAuthorRepository();
+const topicRepo = new PrismaTopicRepository();
+const markerRepo = new PrismaMarkerRepository();
+const messageRepo = new PrismaMessageRepository();
 
-export function resetRepositories(): void {
-  authorRepository.clear();
-  topicRepository.clear();
-  markerRepository.clear();
-  messageRepository.clear();
-  IdGenerator.reset();
-}
-
-export { InMemoryRepository } from './InMemoryRepository';
-export { IRepository } from './IRepository';
-
+export { authorRepo, markerRepo, messageRepo, topicRepo };

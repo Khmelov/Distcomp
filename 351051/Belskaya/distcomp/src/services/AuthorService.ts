@@ -3,73 +3,81 @@ import { AuthorRequestTo } from '../dtos/requests';
 import { AuthorResponseTo } from '../dtos/responses';
 import { authorRequestSchema } from '../dtos/validation';
 import { ConflictError, NotFoundError } from '../errors/AppError';
-import { topicRepository } from '../repositories';
-import { AuthorRepository } from '../repositories/AuthorRepository';
+import { PrismaAuthorRepository } from '../repositories/PrismaAuthorRepository';
 import { BaseService } from './BaseService';
-import { toAuthorEntity, toAuthorResponse } from './mappers';
+import { toAuthorResponse } from './mappers';
+import { PrismaTopicRepository } from '../repositories/PrismaTopicRepository';
 
 export class AuthorService extends BaseService {
-  constructor(private readonly repository: AuthorRepository) {
+  constructor(
+    private readonly repository: PrismaAuthorRepository,
+    private readonly topicRepository: PrismaTopicRepository
+  ) {
     super('author');
   }
 
-  create(dto: AuthorRequestTo): AuthorResponseTo {
+  async create(dto: AuthorRequestTo): Promise<AuthorResponseTo> {
     const data = this.validate(authorRequestSchema, dto);
-    if (this.repository.findByLogin(data.login)) {
+    if (await this.repository.findByLogin(data.login)) {
       throw new ConflictError(
         `Author with login '${data.login}' already exists`
       );
     }
-    const entity = toAuthorEntity(data, this.generateId());
-    const saved = this.repository.save(entity);
+    const hashedPassword = bcrypt.hashSync(data.password, 10);
+    const saved = await this.repository.save({
+      ...data,
+      password: hashedPassword,
+    });
     return toAuthorResponse(saved);
   }
 
-  findAll(): AuthorResponseTo[] {
-    return this.repository.findAll().map(toAuthorResponse);
+  async findAll(): Promise<AuthorResponseTo[]> {
+    const authors = await this.repository.findAll();
+    return authors.map(toAuthorResponse);
   }
 
-  findById(id: number): AuthorResponseTo {
-    const entity = this.repository.findById(id);
+  async findById(id: number): Promise<AuthorResponseTo> {
+    const entity = await this.repository.findById(id);
     if (!entity) {
       throw new NotFoundError(`Author with id ${id} not found`);
     }
     return toAuthorResponse(entity);
   }
 
-  update(id: number, dto: AuthorRequestTo): AuthorResponseTo {
+  async update(id: number, dto: AuthorRequestTo): Promise<AuthorResponseTo> {
     const data = this.validate(authorRequestSchema, dto);
-    const existing = this.repository.findById(id);
+    const existing = await this.repository.findById(id);
     if (!existing) {
       throw new NotFoundError(`Author with id ${id} not found`);
     }
-    const duplicate = this.repository.findByLogin(data.login);
+    const duplicate = await this.repository.findByLogin(data.login);
     if (duplicate && duplicate.id !== id) {
       throw new ConflictError(
         `Author with login '${data.login}' already exists`
       );
     }
 
-    const updated = this.repository.update(id, {
+    const updated = await this.repository.update(id, {
       ...data,
       password: bcrypt.hashSync(data.password, 10),
     });
     return toAuthorResponse(updated!);
   }
 
-  delete(id: number): void {
-    if (!this.repository.delete(id)) {
+  async delete(id: number): Promise<void> {
+    const success = await this.repository.delete(id);
+    if (!success) {
       throw new NotFoundError(`Author with id ${id} not found`);
     }
   }
 
-  findByTopicId(topicId: number): AuthorResponseTo {
-    const topic = topicRepository.findById(topicId);
+  async findByTopicId(topicId: number): Promise<AuthorResponseTo> {
+    const topic = await this.topicRepository.findById(topicId);
     if (!topic) {
       throw new NotFoundError(`Topic with id ${topicId} not found`, '40402');
     }
 
-    const author = this.repository.findById(topic.authorId);
+    const author = await this.repository.findById(topic.authorId);
     if (!author) {
       throw new NotFoundError(`Author for topic ${topicId} not found`, '40401');
     }

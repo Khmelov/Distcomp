@@ -14,9 +14,9 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.get('/', (req: Request, res: Response, next: NextFunction) => {
+router.get('/', async(req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = markerService.findAll();
+    const result = await markerService.findAll();
     res.status(200).json(result.map((m) => (m)));
   } catch (err) {
     next(err);
@@ -25,10 +25,10 @@ router.get('/', (req: Request, res: Response, next: NextFunction) => {
 
 router.get(
   '/by-topic/:topicId',
-  (req: Request, res: Response, next: NextFunction) => {
+  async(req: Request, res: Response, next: NextFunction) => {
     try {
       const topicId = Number(req.params.topicId);
-      const result = markerService.findByTopicId(topicId);
+      const result = await markerService.findByTopicId(topicId);
       res.status(200).json(result.map((m) => (m)));
     } catch (err) {
       next(err);

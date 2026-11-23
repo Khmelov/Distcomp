@@ -2,82 +2,88 @@ import { TopicRequestTo } from '../dtos/requests';
 import { TopicResponseTo } from '../dtos/responses';
 import { topicRequestSchema } from '../dtos/validation';
 import { NotFoundError, UnprocessableEntityError } from '../errors/AppError';
-import { topicMarkerRepository, markerRepository } from '../repositories';
-import { AuthorRepository } from '../repositories/AuthorRepository';
-import { TopicRepository } from '../repositories/TopicRepository';
+import { PrismaAuthorRepository } from '../repositories/PrismaAuthorRepository';
+import { PrismaTopicRepository } from '../repositories/PrismaTopicRepository';
 import { BaseService } from './BaseService';
-import { toTopicEntity, toTopicResponse } from './mappers';
+import { toTopicResponse } from './mappers';
 
 export class TopicService extends BaseService {
   constructor(
-    private readonly repository: TopicRepository,
-    private readonly authorRepository: AuthorRepository
+    private readonly repository: PrismaTopicRepository,
+    private readonly authorRepository: PrismaAuthorRepository
   ) {
     super('topic');
   }
 
-  create(dto: TopicRequestTo): TopicResponseTo {
+  async create(dto: TopicRequestTo): Promise<TopicResponseTo> {
     const data = this.validate(topicRequestSchema, dto);
-    if (!this.authorRepository.existsById(data.authorId)) {
+    if (!(await this.authorRepository.existsById(data.authorId))) {
       throw new UnprocessableEntityError(
         `Author with id ${data.authorId} does not exist`,
         '42202'
       );
     }
-    const now = new Date();
-    const entity = toTopicEntity(data, this.generateId(), now, now);
-    const saved = this.repository.save(entity);
+
+    const saved = await this.repository.save({
+      ...data,
+      created: new Date(),
+      modified: new Date(),
+    });
     return toTopicResponse(saved);
   }
 
-  findAll(): TopicResponseTo[] {
-    return this.repository.findAll().map(toTopicResponse);
+  async findAll(): Promise<TopicResponseTo[]> {
+    const topics = await this.repository.findAll();
+    return topics.map(toTopicResponse);
   }
 
-  findById(id: number): TopicResponseTo {
-    const entity = this.repository.findById(id);
+  async findById(id: number): Promise<TopicResponseTo> {
+    const entity = await this.repository.findById(id);
     if (!entity) {
       throw new NotFoundError(`Topic with id ${id} not found`, '40402');
     }
     return toTopicResponse(entity);
   }
 
-  update(id: number, dto: TopicRequestTo): TopicResponseTo {
+  async update(id: number, dto: TopicRequestTo): Promise<TopicResponseTo> {
     const data = this.validate(topicRequestSchema, dto);
-    const existing = this.repository.findById(id);
+    const existing = await this.repository.findById(id);
     if (!existing) {
       throw new NotFoundError(`Topic with id ${id} not found`, '40402');
     }
-    if (!this.authorRepository.existsById(data.authorId)) {
+    if (!(await this.authorRepository.existsById(data.authorId))) {
       throw new UnprocessableEntityError(
         `Author with id ${data.authorId} does not exist`,
         '42202'
       );
     }
-    const updated = this.repository.update(id, {
+    const updated = await this.repository.update(id, {
       ...data,
       modified: new Date(),
     });
     return toTopicResponse(updated!);
   }
 
-  delete(id: number): void {
-    if (!this.repository.delete(id)) {
+  async delete(id: number): Promise<void> {
+    const success = await this.repository.delete(id);
+    if (!success) {
       throw new NotFoundError(`Topic with id ${id} not found`, '40402');
     }
   }
 
-  findByFilters(filters: {
+  async findByFilters(filters: {
     markerNames?: string[];
     markerIds?: number[];
     authorLogin?: string;
     title?: string;
     content?: string;
-  }): TopicResponseTo[] {
-    let topics = this.repository.findAll();
+  }): Promise<TopicResponseTo[]> {
+    let topics = await this.repository.findAll();
 
     if (filters.authorLogin) {
-      const author = this.authorRepository.findByLogin(filters.authorLogin);
+      const author = await this.authorRepository.findByLogin(
+        filters.authorLogin
+      );
       if (!author) return [];
       topics = topics.filter((t) => t.authorId === author.id);
     }
@@ -88,30 +94,6 @@ export class TopicService extends BaseService {
 
     if (filters.content) {
       topics = topics.filter((t) => t.content.includes(filters.content!));
-    }
-
-    if (filters.markerIds && filters.markerIds.length > 0) {
-      const topicIdsWithMarkers = new Set(
-        filters.markerIds.flatMap((id) =>
-          topicMarkerRepository.getTopicIdsByMarkerId(id)
-        )
-      );
-      topics = topics.filter((t) => topicIdsWithMarkers.has(t.id));
-    }
-
-    if (filters.markerNames && filters.markerNames.length > 0) {
-      const markerIdsFromNames = filters.markerNames
-        .map((name) => markerRepository.findByName(name)?.id)
-        .filter((id): id is number => id !== undefined);
-
-      if (markerIdsFromNames.length === 0) return []; // Если маркеров с такими именами нет
-
-      const topicIdsWithMarkers = new Set(
-        markerIdsFromNames.flatMap((id) =>
-          topicMarkerRepository.getTopicIdsByMarkerId(id)
-        )
-      );
-      topics = topics.filter((t) => topicIdsWithMarkers.has(t.id));
     }
 
     return topics.map(toTopicResponse);

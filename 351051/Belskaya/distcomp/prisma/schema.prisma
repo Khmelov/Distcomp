@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Author {
+  id        Int     @id @default(autoincrement())
+  login     String  @unique @db.VarChar(64)
+  password  String  @db.VarChar(128)
+  firstname String  @db.VarChar(64)
+  lastname  String  @db.VarChar(64)
+  topics    Topic[]
+
+  @@map("tbl_author")
+}
+
+model Topic {
+  id       Int           @id @default(autoincrement())
+  authorId Int
+  title    String        @db.VarChar(64)
+  content  String        @db.VarChar(2048)
+  created  DateTime      @default(now())
+  modified DateTime      @updatedAt
+  messages Message[]
+  author   Author        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  markers  TopicMarker[]
+
+  @@map("tbl_topic")
+}
+
+model Marker {
+  id     Int           @id @default(autoincrement())
+  name   String        @unique @db.VarChar(32)
+  topics TopicMarker[]
+
+  @@map("tbl_marker")
+}
+
+model Message {
+  id      Int    @id @default(autoincrement())
+  topicId Int
+  content String @db.VarChar(2048)
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@map("tbl_message")
+}
+
+model TopicMarker {
+  id       Int    @id @default(autoincrement())
+  topicId  Int
+  markerId Int
+  marker   Marker @relation(fields: [markerId], references: [id], onDelete: Cascade)
+  topic    Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([topicId, markerId])
+  @@map("tbl_topic_marker")
+}
