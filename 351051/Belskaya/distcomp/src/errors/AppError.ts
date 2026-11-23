@@ -23,8 +23,8 @@ export class ValidationError extends AppError {
 }
 
 export class ConflictError extends AppError {
-  constructor(message: string, errorCode = '40901') {
-    super(409, errorCode, message);
+  constructor(message: string, errorCode = '40301') {
+    super(403, errorCode, message);
   }
 }
 

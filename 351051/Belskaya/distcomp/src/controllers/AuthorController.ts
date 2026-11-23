@@ -8,7 +8,7 @@ const router = Router();
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await authorService.create(req.body);
-    res.status(201).json({ author: result });
+    res.status(201).json(result);
   } catch (err) {
     next(err);
   }
@@ -18,7 +18,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const params = parsePaginationQuery(req);
     const result = await authorService.findAll(params);
-    res.status(200).json(result.map((a) => ({ author: a })));
+    res.status(200).json(result.map((a) => a));
   } catch (err) {
     next(err);
   }

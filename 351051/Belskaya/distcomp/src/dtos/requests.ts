@@ -9,6 +9,7 @@ export interface TopicRequestTo {
   authorId: number;
   title: string;
   content: string;
+  markers?: string[];
 }
 
 export interface MarkerRequestTo {

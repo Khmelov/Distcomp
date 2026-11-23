@@ -1,7 +1,11 @@
 import { TopicRequestTo } from '../dtos/requests';
 import { TopicResponseTo } from '../dtos/responses';
 import { topicRequestSchema } from '../dtos/validation';
-import { NotFoundError, UnprocessableEntityError } from '../errors/AppError';
+import {
+  ConflictError,
+  NotFoundError,
+  UnprocessableEntityError,
+} from '../errors/AppError';
 import { PaginationParams } from '../repositories/IRepository';
 import { PrismaAuthorRepository } from '../repositories/PrismaAuthorRepository';
 import { PrismaTopicRepository } from '../repositories/PrismaTopicRepository';
@@ -18,6 +22,7 @@ export class TopicService extends BaseService {
 
   async create(dto: TopicRequestTo): Promise<TopicResponseTo> {
     const data = this.validate(topicRequestSchema, dto);
+
     if (!(await this.authorRepository.existsById(data.authorId))) {
       throw new UnprocessableEntityError(
         `Author with id ${data.authorId} does not exist`,
@@ -25,11 +30,23 @@ export class TopicService extends BaseService {
       );
     }
 
-    const saved = await this.repository.save({
-      ...data,
-      created: new Date(),
-      modified: new Date(),
-    });
+    if (await this.repository.existsByTitle(data.title)) {
+      throw new ConflictError(
+        `Topic with title '${data.title}' already exists`
+      );
+    }
+
+    const { markers = [], ...topicData } = data;
+
+    const saved = await this.repository.saveWithMarkers(
+      {
+        ...topicData,
+        created: new Date(),
+        modified: new Date(),
+      },
+      markers
+    );
+
     return toTopicResponse(saved);
   }
 

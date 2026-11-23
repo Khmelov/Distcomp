@@ -1,16 +1,11 @@
 import { ZodType } from 'zod';
 import { ValidationError } from '../errors/AppError';
-import { IdGenerator } from '../utils/idGenerator';
 
 export abstract class BaseService {
   protected readonly entityName: string;
 
   constructor(entityName: string) {
     this.entityName = entityName;
-  }
-
-  protected generateId(): number {
-    return IdGenerator.next(this.entityName);
   }
 
   protected validate<T>(schema: ZodType<T>, data: unknown): T {

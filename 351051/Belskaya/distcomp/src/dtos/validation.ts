@@ -11,6 +11,7 @@ export const topicRequestSchema = z.object({
   authorId: z.number().int().positive(),
   title: z.string().min(2).max(64),
   content: z.string().min(4).max(2048),
+  markers: z.array(z.string().min(2).max(32)).optional(),
 });
 
 export const markerRequestSchema = z.object({

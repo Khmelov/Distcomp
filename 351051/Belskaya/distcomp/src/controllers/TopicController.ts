@@ -5,10 +5,10 @@ import { parsePaginationQuery } from '../utils/queryParser';
 
 const router = Router();
 
-router.post('/', (req: Request, res: Response, next: NextFunction) => {
+router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const dto = req.body as TopicRequestTo;
-    const result = topicService.create(dto);
+    const result = await topicService.create(dto);
     res.status(201).json(result);
   } catch (err) {
     next(err);
@@ -56,35 +56,38 @@ router.get(
   }
 );
 
-router.get('/:id', (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params.id);
-    const result = topicService.findById(id);
+    const result = await topicService.findById(id);
     res.status(200).json(result);
   } catch (err) {
     next(err);
   }
 });
 
-router.put('/:id', (req: Request, res: Response, next: NextFunction) => {
+router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = Number(req.params.id);
     const dto = req.body as TopicRequestTo;
-    const result = topicService.update(id, dto);
+    const result = await topicService.update(id, dto);
     res.status(200).json(result);
   } catch (err) {
     next(err);
   }
 });
 
-router.delete('/:id', (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const id = Number(req.params.id);
-    topicService.delete(id);
-    res.status(204).send();
-  } catch (err) {
-    next(err);
+router.delete(
+  '/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = Number(req.params.id);
+      await topicService.delete(id);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
   }
-});
+);
 
 export default router;

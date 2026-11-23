@@ -20,7 +20,7 @@ model Author {
 
 model Topic {
   id       Int           @id @default(autoincrement())
-  authorId Int
+  authorId Int           @map("author_id")
   title    String        @db.VarChar(64)
   content  String        @db.VarChar(2048)
   created  DateTime      @default(now())
@@ -42,7 +42,7 @@ model Marker {
 
 model Message {
   id      Int    @id @default(autoincrement())
-  topicId Int
+  topicId Int    @map("topic_id")
   content String @db.VarChar(2048)
   topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
@@ -51,8 +51,8 @@ model Message {
 
 model TopicMarker {
   id       Int    @id @default(autoincrement())
-  topicId  Int
-  markerId Int
+  topicId  Int    @map("topic_id") 
+  markerId Int    @map("marker_id") 
   marker   Marker @relation(fields: [markerId], references: [id], onDelete: Cascade)
   topic    Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
