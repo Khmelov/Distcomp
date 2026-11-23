@@ -5,7 +5,6 @@ import { NotFoundError } from '../errors/AppError';
 import { PaginationParams } from '../repositories/IRepository';
 import { PrismaMarkerRepository } from '../repositories/PrismaMarkerRepository';
 import { BaseService } from './BaseService';
-import { toMarkerResponse } from './mappers';
 
 export class MarkerService extends BaseService {
   constructor(private readonly repository: PrismaMarkerRepository) {
@@ -15,19 +14,19 @@ export class MarkerService extends BaseService {
   async create(dto: MarkerRequestTo): Promise<MarkerResponseTo> {
     const data = this.validate(markerRequestSchema, dto);
     const saved = await this.repository.save(data);
-    return toMarkerResponse(saved);
+    return saved;
   }
 
   async findAll(params?: PaginationParams): Promise<MarkerResponseTo[]> {
     const markers = await this.repository.findAll(params);
-    return markers.map(toMarkerResponse);
+    return markers;
   }
 
   async findById(id: number): Promise<MarkerResponseTo> {
     const entity = await this.repository.findById(id);
     if (!entity)
       throw new NotFoundError(`Marker with id ${id} not found`, '40403');
-    return toMarkerResponse(entity);
+    return entity;
   }
 
   async update(id: number, dto: MarkerRequestTo): Promise<MarkerResponseTo> {
@@ -35,7 +34,7 @@ export class MarkerService extends BaseService {
     const updated = await this.repository.update(id, data);
     if (!updated)
       throw new NotFoundError(`Marker with id ${id} not found`, '40403');
-    return toMarkerResponse(updated);
+    return updated;
   }
 
   async delete(id: number): Promise<void> {
@@ -46,6 +45,6 @@ export class MarkerService extends BaseService {
 
   async findByTopicId(topicId: number): Promise<MarkerResponseTo[]> {
     const markers = await this.repository.findByTopicId(topicId);
-    return markers.map(toMarkerResponse);
+    return markers;
   }
 }

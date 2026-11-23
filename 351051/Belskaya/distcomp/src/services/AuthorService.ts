@@ -7,7 +7,6 @@ import { PaginationParams } from '../repositories/IRepository';
 import { PrismaAuthorRepository } from '../repositories/PrismaAuthorRepository';
 import { PrismaTopicRepository } from '../repositories/PrismaTopicRepository';
 import { BaseService } from './BaseService';
-import { toAuthorResponse } from './mappers';
 
 export class AuthorService extends BaseService {
   constructor(
@@ -29,12 +28,12 @@ export class AuthorService extends BaseService {
       ...data,
       password: hashedPassword,
     });
-    return toAuthorResponse(saved);
+    return saved;
   }
 
   async findAll(params?: PaginationParams): Promise<AuthorResponseTo[]> {
     const authors = await this.repository.findAll(params);
-    return authors.map(toAuthorResponse);
+    return authors;
   }
 
   async findById(id: number): Promise<AuthorResponseTo> {
@@ -42,7 +41,7 @@ export class AuthorService extends BaseService {
     if (!entity) {
       throw new NotFoundError(`Author with id ${id} not found`);
     }
-    return toAuthorResponse(entity);
+    return entity;
   }
 
   async update(id: number, dto: AuthorRequestTo): Promise<AuthorResponseTo> {
@@ -62,7 +61,7 @@ export class AuthorService extends BaseService {
       ...data,
       password: bcrypt.hashSync(data.password, 10),
     });
-    return toAuthorResponse(updated!);
+    return updated!;
   }
 
   async delete(id: number): Promise<void> {
@@ -83,6 +82,6 @@ export class AuthorService extends BaseService {
       throw new NotFoundError(`Author for topic ${topicId} not found`, '40401');
     }
 
-    return toAuthorResponse(author);
+    return author;
   }
 }

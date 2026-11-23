@@ -6,7 +6,6 @@ import { PaginationParams } from '../repositories/IRepository';
 import { PrismaMessageRepository } from '../repositories/PrismaMessageRepository';
 import { PrismaTopicRepository } from '../repositories/PrismaTopicRepository';
 import { BaseService } from './BaseService';
-import { toMessageResponse } from './mappers';
 
 export class MessageService extends BaseService {
   constructor(
@@ -26,12 +25,12 @@ export class MessageService extends BaseService {
     }
 
     const saved = await this.repository.save(data);
-    return toMessageResponse(saved);
+    return saved;
   }
 
   async findAll(params?: PaginationParams): Promise<MessageResponseTo[]> {
     const messages = await this.repository.findAll(params);
-    return messages.map(toMessageResponse);
+    return messages;
   }
 
   async findById(id: number): Promise<MessageResponseTo> {
@@ -39,7 +38,7 @@ export class MessageService extends BaseService {
     if (!entity) {
       throw new NotFoundError(`Message with id ${id} not found`, '40404');
     }
-    return toMessageResponse(entity);
+    return entity;
   }
 
   async update(id: number, dto: MessageRequestTo): Promise<MessageResponseTo> {
@@ -56,7 +55,7 @@ export class MessageService extends BaseService {
     }
 
     const updated = await this.repository.update(id, data);
-    return toMessageResponse(updated!);
+    return updated!;
   }
 
   async delete(id: number): Promise<void> {
@@ -71,6 +70,6 @@ export class MessageService extends BaseService {
       throw new NotFoundError(`Topic with id ${topicId} not found`, '40402');
     }
     const messages = await this.repository.findByTopicId(topicId);
-    return messages.map(toMessageResponse);
+    return messages;
   }
 }

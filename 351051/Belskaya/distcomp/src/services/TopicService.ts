@@ -10,7 +10,6 @@ import { PaginationParams } from '../repositories/IRepository';
 import { PrismaAuthorRepository } from '../repositories/PrismaAuthorRepository';
 import { PrismaTopicRepository } from '../repositories/PrismaTopicRepository';
 import { BaseService } from './BaseService';
-import { toTopicResponse } from './mappers';
 
 export class TopicService extends BaseService {
   constructor(
@@ -47,12 +46,12 @@ export class TopicService extends BaseService {
       markers
     );
 
-    return toTopicResponse(saved);
+    return saved;
   }
 
   async findAll(params?: PaginationParams): Promise<TopicResponseTo[]> {
     const topics = await this.repository.findAll(params);
-    return topics.map(toTopicResponse);
+    return topics;
   }
 
   async findById(id: number): Promise<TopicResponseTo> {
@@ -60,7 +59,7 @@ export class TopicService extends BaseService {
     if (!entity) {
       throw new NotFoundError(`Topic with id ${id} not found`, '40402');
     }
-    return toTopicResponse(entity);
+    return entity;
   }
 
   async update(id: number, dto: TopicRequestTo): Promise<TopicResponseTo> {
@@ -79,7 +78,7 @@ export class TopicService extends BaseService {
       ...data,
       modified: new Date(),
     });
-    return toTopicResponse(updated!);
+    return updated!;
   }
 
   async delete(id: number): Promise<void> {
@@ -114,6 +113,6 @@ export class TopicService extends BaseService {
       topics = topics.filter((t) => t.content.includes(filters.content!));
     }
 
-    return topics.map(toTopicResponse);
+    return topics;
   }
 }

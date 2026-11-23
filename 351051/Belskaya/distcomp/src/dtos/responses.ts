@@ -11,8 +11,8 @@ export interface TopicResponseTo {
   authorId: number;
   title: string;
   content: string;
-  created: string;
-  modified: string;
+  created: Date;
+  modified: Date;
 }
 
 export interface MarkerResponseTo {
