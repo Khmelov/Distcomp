@@ -1,10 +1,11 @@
 import { prisma } from '../db';
 import { Author } from '../entities';
-import { IRepository } from './IRepository';
+import { getPaginationOptions } from '../utils/getPaginationOptions';
+import { IRepository, PaginationParams } from './IRepository';
 
 export class PrismaAuthorRepository implements IRepository<Author> {
-  async findAll(): Promise<Author[]> {
-    return prisma.author.findMany();
+  async findAll(params?: PaginationParams): Promise<Author[]> {
+    return prisma.author.findMany(getPaginationOptions(params));
   }
 
   async findById(id: number): Promise<Author | undefined> {

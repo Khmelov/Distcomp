@@ -2,6 +2,7 @@ import { TopicRequestTo } from '../dtos/requests';
 import { TopicResponseTo } from '../dtos/responses';
 import { topicRequestSchema } from '../dtos/validation';
 import { NotFoundError, UnprocessableEntityError } from '../errors/AppError';
+import { PaginationParams } from '../repositories/IRepository';
 import { PrismaAuthorRepository } from '../repositories/PrismaAuthorRepository';
 import { PrismaTopicRepository } from '../repositories/PrismaTopicRepository';
 import { BaseService } from './BaseService';
@@ -32,8 +33,8 @@ export class TopicService extends BaseService {
     return toTopicResponse(saved);
   }
 
-  async findAll(): Promise<TopicResponseTo[]> {
-    const topics = await this.repository.findAll();
+  async findAll(params?: PaginationParams): Promise<TopicResponseTo[]> {
+    const topics = await this.repository.findAll(params);
     return topics.map(toTopicResponse);
   }
 

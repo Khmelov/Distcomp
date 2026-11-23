@@ -1,10 +1,11 @@
 import { prisma } from '../db';
 import { Topic } from '../entities';
-import { IRepository } from './IRepository';
+import { getPaginationOptions } from '../utils/getPaginationOptions';
+import { IRepository, PaginationParams } from './IRepository';
 
 export class PrismaTopicRepository implements IRepository<Topic> {
-  async findAll(): Promise<Topic[]> {
-    return prisma.topic.findMany();
+  async findAll(params?: PaginationParams): Promise<Topic[]> {
+    return prisma.topic.findMany(getPaginationOptions(params));
   }
   async findById(id: number): Promise<Topic | undefined> {
     const topic = await prisma.topic.findUnique({ where: { id } });

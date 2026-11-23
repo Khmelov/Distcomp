@@ -3,10 +3,11 @@ import { AuthorRequestTo } from '../dtos/requests';
 import { AuthorResponseTo } from '../dtos/responses';
 import { authorRequestSchema } from '../dtos/validation';
 import { ConflictError, NotFoundError } from '../errors/AppError';
+import { PaginationParams } from '../repositories/IRepository';
 import { PrismaAuthorRepository } from '../repositories/PrismaAuthorRepository';
+import { PrismaTopicRepository } from '../repositories/PrismaTopicRepository';
 import { BaseService } from './BaseService';
 import { toAuthorResponse } from './mappers';
-import { PrismaTopicRepository } from '../repositories/PrismaTopicRepository';
 
 export class AuthorService extends BaseService {
   constructor(
@@ -31,8 +32,8 @@ export class AuthorService extends BaseService {
     return toAuthorResponse(saved);
   }
 
-  async findAll(): Promise<AuthorResponseTo[]> {
-    const authors = await this.repository.findAll();
+  async findAll(params?: PaginationParams): Promise<AuthorResponseTo[]> {
+    const authors = await this.repository.findAll(params);
     return authors.map(toAuthorResponse);
   }
 

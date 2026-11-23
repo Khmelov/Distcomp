@@ -1,5 +1,12 @@
+export interface PaginationParams {
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
 export interface IRepository<T> {
-  findAll(): Promise<T[]>;
+  findAll(params?: PaginationParams): Promise<T[]>;
   findById(id: number): Promise<T | undefined>;
   save(entity: Omit<T, 'id'>): Promise<T>; // При создании id генерируется базой
   update(id: number, entity: Partial<T>): Promise<T | undefined>;

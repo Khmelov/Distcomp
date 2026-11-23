@@ -2,6 +2,7 @@ import { MarkerRequestTo } from '../dtos/requests';
 import { MarkerResponseTo } from '../dtos/responses';
 import { markerRequestSchema } from '../dtos/validation';
 import { NotFoundError } from '../errors/AppError';
+import { PaginationParams } from '../repositories/IRepository';
 import { PrismaMarkerRepository } from '../repositories/PrismaMarkerRepository';
 import { BaseService } from './BaseService';
 import { toMarkerResponse } from './mappers';
@@ -17,8 +18,8 @@ export class MarkerService extends BaseService {
     return toMarkerResponse(saved);
   }
 
-  async findAll(): Promise<MarkerResponseTo[]> {
-    const markers = await this.repository.findAll();
+  async findAll(params?: PaginationParams): Promise<MarkerResponseTo[]> {
+    const markers = await this.repository.findAll(params);
     return markers.map(toMarkerResponse);
   }
 

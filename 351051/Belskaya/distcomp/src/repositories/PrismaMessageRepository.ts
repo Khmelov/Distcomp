@@ -1,10 +1,11 @@
 import { prisma } from '../db';
 import { Message } from '../entities';
-import { IRepository } from './IRepository';
+import { getPaginationOptions } from '../utils/getPaginationOptions';
+import { IRepository, PaginationParams } from './IRepository';
 
 export class PrismaMessageRepository implements IRepository<Message> {
-  async findAll(): Promise<Message[]> {
-    return prisma.message.findMany();
+  async findAll(params?: PaginationParams): Promise<Message[]> {
+    return prisma.message.findMany(getPaginationOptions(params));
   }
   async findById(id: number): Promise<Message | undefined> {
     const msg = await prisma.message.findUnique({ where: { id } });

@@ -1,10 +1,11 @@
 import { prisma } from '../db';
 import { Marker } from '../entities';
-import { IRepository } from './IRepository';
+import { getPaginationOptions } from '../utils/getPaginationOptions';
+import { IRepository, PaginationParams } from './IRepository';
 
 export class PrismaMarkerRepository implements IRepository<Marker> {
-  async findAll(): Promise<Marker[]> {
-    return prisma.marker.findMany();
+  async findAll(params?: PaginationParams): Promise<Marker[]> {
+    return prisma.marker.findMany(getPaginationOptions(params));
   }
   async findById(id: number): Promise<Marker | undefined> {
     const marker = await prisma.marker.findUnique({ where: { id } });

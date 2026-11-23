@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { MarkerRequestTo } from '../dtos/requests';
 import { markerService } from '../services';
+import { parsePaginationQuery } from '../utils/queryParser';
 
 const router = Router();
 
@@ -14,10 +15,11 @@ router.post('/', (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.get('/', async(req: Request, res: Response, next: NextFunction) => {
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await markerService.findAll();
-    res.status(200).json(result.map((m) => (m)));
+    const params = parsePaginationQuery(req);
+    const result = await markerService.findAll(params);
+    res.status(200).json(result.map((m) => m));
   } catch (err) {
     next(err);
   }
@@ -25,11 +27,11 @@ router.get('/', async(req: Request, res: Response, next: NextFunction) => {
 
 router.get(
   '/by-topic/:topicId',
-  async(req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const topicId = Number(req.params.topicId);
       const result = await markerService.findByTopicId(topicId);
-      res.status(200).json(result.map((m) => (m)));
+      res.status(200).json(result.map((m) => m));
     } catch (err) {
       next(err);
     }

@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { AuthorRequestTo } from '../dtos/requests';
 import { authorService } from '../services';
+import { parsePaginationQuery } from '../utils/queryParser';
 
 const router = Router();
 
@@ -15,7 +16,8 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await authorService.findAll();
+    const params = parsePaginationQuery(req);
+    const result = await authorService.findAll(params);
     res.status(200).json(result.map((a) => ({ author: a })));
   } catch (err) {
     next(err);
