@@ -19,6 +19,7 @@ describe("MessageRepository", () => {
     topicId: 10,
     country: "US",
     content: "Test message",
+    state: "APPROVE" as const,
   };
 
   const cassandraRow = {
@@ -27,6 +28,7 @@ describe("MessageRepository", () => {
     bucket: 0,
     country: "US",
     content: "Test message",
+    state: "APPROVE",
   };
 
   beforeEach(() => {
@@ -48,7 +50,21 @@ describe("MessageRepository", () => {
       expect(queries[0].query).toContain("distcomp.tbl_message");
       expect(queries[1].query).toContain("distcomp.tbl_message_by_topic");
 
-      expect(queries[1].params).toEqual([10, 0, 100, "US", "Test message"]);
+      expect(queries[0].params).toEqual([
+        100,
+        10,
+        "US",
+        "Test message",
+        "APPROVE",
+      ]);
+      expect(queries[1].params).toEqual([
+        10,
+        0,
+        100,
+        "US",
+        "Test message",
+        "APPROVE",
+      ]);
 
       expect(options).toEqual({ prepare: true });
     });
@@ -200,8 +216,22 @@ describe("MessageRepository", () => {
         "INSERT INTO distcomp.tbl_message_by_topic",
       );
 
+      expect(queries[0].params).toEqual([
+        10,
+        "US",
+        "Updated message",
+        "APPROVE",
+        100,
+      ]);
       expect(queries[1].params).toEqual([10, 0, 100]);
-      expect(queries[2].params).toEqual([10, 0, 100, "US", "Updated message"]);
+      expect(queries[2].params).toEqual([
+        10,
+        0,
+        100,
+        "US",
+        "Updated message",
+        "APPROVE",
+      ]);
     });
 
     it("should return undefined when message does not exist", async () => {

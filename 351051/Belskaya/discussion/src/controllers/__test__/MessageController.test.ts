@@ -14,6 +14,7 @@ describe("MessageController", () => {
     topicId: 10,
     country: "US",
     content: "Test message",
+    state: "APPROVE" as const,
   };
 
   beforeEach(() => {
@@ -49,6 +50,7 @@ describe("MessageController", () => {
         topicId: 10,
         country: "US",
         content: "Test message",
+        state: "PENDING",
       };
 
       repository.save.mockResolvedValue(undefined);
@@ -57,15 +59,27 @@ describe("MessageController", () => {
 
       await controller.create(req as Request, res as Response, next);
 
-      expect(repository.save).toHaveBeenCalledWith(message);
+      expect(repository.save).toHaveBeenCalledWith({
+        id: 100,
+        topicId: 10,
+        country: "US",
+        content: "Test message",
+        state: "PENDING",
+      });
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith(message);
+      expect(res.json).toHaveBeenCalledWith({
+        id: 100,
+        topicId: 10,
+        country: "US",
+        content: "Test message",
+        state: "PENDING",
+      });
       expect(next).not.toHaveBeenCalled();
 
       dateNowSpy.mockRestore();
     });
 
-    it("should create a message without country", async () => {
+    it("should create a message without country and default state to PENDING", async () => {
       req.body = {
         topicId: 10,
         content: "Test message",
@@ -82,6 +96,7 @@ describe("MessageController", () => {
         topicId: 10,
         country: undefined,
         content: "Test message",
+        state: "PENDING",
       });
 
       jest.restoreAllMocks();
@@ -263,6 +278,7 @@ describe("MessageController", () => {
         topicId: 20,
         country: "UK",
         content: "Updated message",
+        state: "APPROVE" as const,
       };
 
       repository.update.mockResolvedValue(updatedMessage);
