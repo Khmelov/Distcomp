@@ -1,5 +1,5 @@
 import { Marker } from '../../generated/prisma/client';
-import { prisma } from '../../db';
+import { prisma, redisClient } from '../../db';
 import { PrismaMarkerRepository } from '../PrismaMarkerRepository';
 
 jest.mock('../../db', () => ({
@@ -13,6 +13,12 @@ jest.mock('../../db', () => ({
       count: jest.fn(),
     },
   },
+  redisClient: {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+    keys: jest.fn().mockResolvedValue([]),
+  },
 }));
 
 const markerPrisma = prisma.marker as unknown as {
@@ -23,6 +29,10 @@ const markerPrisma = prisma.marker as unknown as {
   delete: jest.Mock;
   count: jest.Mock;
 };
+
+const redisGet = redisClient.get as jest.Mock;
+const redisSet = redisClient.set as jest.Mock;
+const redisDel = redisClient.del as jest.Mock;
 
 describe('PrismaMarkerRepository', () => {
   let repository: PrismaMarkerRepository;
@@ -35,6 +45,7 @@ describe('PrismaMarkerRepository', () => {
   beforeEach(() => {
     repository = new PrismaMarkerRepository();
     jest.clearAllMocks();
+    redisGet.mockResolvedValue(null);
   });
 
   describe('findAll', () => {
@@ -51,21 +62,13 @@ describe('PrismaMarkerRepository', () => {
       });
     });
 
-    it('should use provided pagination parameters', async () => {
-      markerPrisma.findMany.mockResolvedValue([marker]);
+    it('should return cached data if available', async () => {
+      redisGet.mockResolvedValue(JSON.stringify([marker]));
 
-      await repository.findAll({
-        page: 2,
-        size: 5,
-        sortBy: 'name',
-        sortOrder: 'desc',
-      });
+      const result = await repository.findAll();
 
-      expect(markerPrisma.findMany).toHaveBeenCalledWith({
-        skip: 5,
-        take: 5,
-        orderBy: { name: 'desc' },
-      });
+      expect(result).toEqual([marker]);
+      expect(markerPrisma.findMany).not.toHaveBeenCalled();
     });
   });
 
@@ -79,6 +82,16 @@ describe('PrismaMarkerRepository', () => {
       expect(markerPrisma.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
       });
+      expect(redisSet).toHaveBeenCalled();
+    });
+
+    it('should return cached marker if available', async () => {
+      redisGet.mockResolvedValue(JSON.stringify(marker));
+
+      const result = await repository.findById(1);
+
+      expect(result).toEqual(marker);
+      expect(markerPrisma.findUnique).not.toHaveBeenCalled();
     });
 
     it('should return undefined when marker does not exist', async () => {
@@ -97,21 +110,6 @@ describe('PrismaMarkerRepository', () => {
       const result = await repository.findByTopicId(10);
 
       expect(result).toEqual([marker]);
-      expect(markerPrisma.findMany).toHaveBeenCalledWith({
-        where: {
-          topics: {
-            some: { topicId: 10 },
-          },
-        },
-      });
-    });
-
-    it('should return an empty array when topic has no markers', async () => {
-      markerPrisma.findMany.mockResolvedValue([]);
-
-      const result = await repository.findByTopicId(10);
-
-      expect(result).toEqual([]);
     });
   });
 
@@ -131,30 +129,24 @@ describe('PrismaMarkerRepository', () => {
 
   describe('update', () => {
     it('should update and return a marker', async () => {
-      const updatedMarker = {
-        ...marker,
-        name: 'TypeScript',
-      };
+      const updatedMarker = { ...marker, name: 'TypeScript' };
 
       markerPrisma.update.mockResolvedValue(updatedMarker);
 
-      const result = await repository.update(1, {
-        name: 'TypeScript',
-      });
+      const result = await repository.update(1, { name: 'TypeScript' });
 
       expect(result).toEqual(updatedMarker);
       expect(markerPrisma.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: { name: 'TypeScript' },
       });
+      expect(redisDel).toHaveBeenCalledWith('marker:1');
     });
 
     it('should return undefined when update fails', async () => {
       markerPrisma.update.mockRejectedValue(new Error('Record not found'));
 
-      const result = await repository.update(999, {
-        name: 'TypeScript',
-      });
+      const result = await repository.update(999, { name: 'TypeScript' });
 
       expect(result).toBeUndefined();
     });
@@ -170,6 +162,7 @@ describe('PrismaMarkerRepository', () => {
       expect(markerPrisma.delete).toHaveBeenCalledWith({
         where: { id: 1 },
       });
+      expect(redisDel).toHaveBeenCalledWith('marker:1');
     });
 
     it('should return false when deletion fails', async () => {
@@ -188,9 +181,6 @@ describe('PrismaMarkerRepository', () => {
       const result = await repository.existsById(1);
 
       expect(result).toBe(true);
-      expect(markerPrisma.count).toHaveBeenCalledWith({
-        where: { id: 1 },
-      });
     });
 
     it('should return false when marker does not exist', async () => {

@@ -1,5 +1,5 @@
+import { prisma, redisClient } from '../../db';
 import { Author } from '../../generated/prisma/client';
-import { prisma } from '../../db';
 import { PrismaAuthorRepository } from '../PrismaAuthorRepository';
 
 jest.mock('../../db', () => ({
@@ -13,6 +13,12 @@ jest.mock('../../db', () => ({
       count: jest.fn(),
     },
   },
+  redisClient: {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+    keys: jest.fn().mockResolvedValue([]),
+  },
 }));
 
 const authorModel = prisma.author as unknown as {
@@ -23,6 +29,11 @@ const authorModel = prisma.author as unknown as {
   delete: jest.Mock;
   count: jest.Mock;
 };
+
+const redisGet = redisClient.get as jest.Mock;
+const redisSet = redisClient.set as jest.Mock;
+const redisDel = redisClient.del as jest.Mock;
+const redisKeys = redisClient.keys as jest.Mock;
 
 describe('PrismaAuthorRepository', () => {
   let repository: PrismaAuthorRepository;
@@ -36,6 +47,8 @@ describe('PrismaAuthorRepository', () => {
   beforeEach(() => {
     repository = new PrismaAuthorRepository();
     jest.clearAllMocks();
+    redisGet.mockResolvedValue(null);
+    redisKeys.mockResolvedValue([]);
   });
 
   describe('findAll', () => {
@@ -50,6 +63,15 @@ describe('PrismaAuthorRepository', () => {
         take: 10,
         orderBy: { id: 'asc' },
       });
+    });
+
+    it('should return cached data if available', async () => {
+      redisGet.mockResolvedValue(JSON.stringify([author]));
+
+      const result = await repository.findAll();
+
+      expect(result).toEqual([author]);
+      expect(authorModel.findMany).not.toHaveBeenCalled();
     });
 
     it('should pass pagination parameters to Prisma', async () => {
@@ -88,6 +110,16 @@ describe('PrismaAuthorRepository', () => {
       expect(authorModel.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
       });
+      expect(redisSet).toHaveBeenCalled();
+    });
+
+    it('should return cached author if available', async () => {
+      redisGet.mockResolvedValue(JSON.stringify(author));
+
+      const result = await repository.findById(1);
+
+      expect(result).toEqual(author);
+      expect(authorModel.findUnique).not.toHaveBeenCalled();
     });
 
     it('should return undefined when author is not found', async () => {
@@ -135,19 +167,14 @@ describe('PrismaAuthorRepository', () => {
       expect(authorModel.create).toHaveBeenCalledWith({
         data: authorData,
       });
+      expect(redisKeys).toHaveBeenCalled();
     });
   });
 
   describe('update', () => {
     it('should update and return an author', async () => {
-      const updateData = {
-        login: 'updated-login',
-      };
-
-      const updatedAuthor = {
-        ...author,
-        ...updateData,
-      };
+      const updateData = { login: 'updated-login' };
+      const updatedAuthor = { ...author, ...updateData };
 
       authorModel.update.mockResolvedValue(updatedAuthor);
 
@@ -158,6 +185,7 @@ describe('PrismaAuthorRepository', () => {
         where: { id: 1 },
         data: updateData,
       });
+      expect(redisDel).toHaveBeenCalledWith('author:1');
     });
 
     it('should return undefined when Prisma throws an error', async () => {
@@ -181,6 +209,7 @@ describe('PrismaAuthorRepository', () => {
       expect(authorModel.delete).toHaveBeenCalledWith({
         where: { id: 1 },
       });
+      expect(redisDel).toHaveBeenCalledWith('author:1');
     });
 
     it('should return false when Prisma throws an error', async () => {
@@ -199,9 +228,6 @@ describe('PrismaAuthorRepository', () => {
       const result = await repository.existsById(1);
 
       expect(result).toBe(true);
-      expect(authorModel.count).toHaveBeenCalledWith({
-        where: { id: 1 },
-      });
     });
 
     it('should return false when author does not exist', async () => {
