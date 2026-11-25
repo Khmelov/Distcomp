@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "build": "tsc",
+    "build": "npm run prisma:generate && tsc && node scripts/copy-prisma.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "prisma:generate": "prisma generate",
