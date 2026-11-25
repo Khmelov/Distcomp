@@ -20,7 +20,8 @@ export async function initCassandra() {
         id bigint PRIMARY KEY,
         topic_id bigint,
         country text,
-        content text
+        content text,
+        state text
       );
     `);
 
@@ -31,6 +32,7 @@ export async function initCassandra() {
         id bigint,
         country text,
         content text,
+        state text,
         PRIMARY KEY ((topic_id, bucket), id)
       ) WITH CLUSTERING ORDER BY (id ASC);
     `);

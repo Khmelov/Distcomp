@@ -11,7 +11,7 @@ export class MessageController {
     next: NextFunction,
   ): Promise<void> => {
     try {
-      const { country, topicId, content } = req.body;
+      const { country, topicId, content, state } = req.body;
 
       if (
         topicId === undefined ||
@@ -26,6 +26,7 @@ export class MessageController {
         topicId: Number(topicId),
         country: country || undefined,
         content,
+        state: state ?? "PENDING",
       };
 
       await this.repository.save(message);

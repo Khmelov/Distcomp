@@ -4,11 +4,14 @@ const BUCKET_COUNT = 4;
 
 const getBucket = (id: number) => id % BUCKET_COUNT;
 
+export type MessageState = "PENDING" | "APPROVE" | "DECLINE";
+
 export interface Message {
   id: number;
   topicId: number;
   country?: string;
   content: string;
+  state: MessageState;
 }
 
 export class MessageRepository {
@@ -19,21 +22,22 @@ export class MessageRepository {
       {
         query: `
           INSERT INTO distcomp.tbl_message
-            (id, topic_id, country, content)
-          VALUES (?, ?, ?, ?)
+            (id, topic_id, country, content, state)
+          VALUES (?, ?, ?, ?, ?)
         `,
         params: [
           message.id,
           message.topicId,
           message.country ?? null,
           message.content,
+          message.state,
         ],
       },
       {
         query: `
           INSERT INTO distcomp.tbl_message_by_topic
-            (topic_id, bucket, id, country, content)
-          VALUES (?, ?, ?, ?, ?)
+            (topic_id, bucket, id, country, content, state)
+          VALUES (?, ?, ?, ?, ?, ?)
         `,
         params: [
           message.topicId,
@@ -41,6 +45,7 @@ export class MessageRepository {
           message.id,
           message.country ?? null,
           message.content,
+          message.state,
         ],
       },
     ];
@@ -67,6 +72,7 @@ export class MessageRepository {
       topicId: Number(row.topic_id),
       country: row.country ?? undefined,
       content: row.content,
+      state: row.state,
     };
   }
 
@@ -96,6 +102,7 @@ export class MessageRepository {
         topicId: Number(row.topic_id),
         country: row.country ?? undefined,
         content: row.content,
+        state: row.state,
       })),
     );
 
@@ -116,6 +123,7 @@ export class MessageRepository {
       topicId: Number(row.topic_id),
       country: row.country ?? undefined,
       content: row.content,
+      state: row.state,
     }));
   }
 
@@ -139,10 +147,16 @@ export class MessageRepository {
       {
         query: `
           UPDATE distcomp.tbl_message
-          SET topic_id = ?, country = ?, content = ?
+          SET topic_id = ?, country = ?, content = ?, state = ?
           WHERE id = ?
         `,
-        params: [updated.topicId, updated.country ?? null, updated.content, id],
+        params: [
+          updated.topicId,
+          updated.country ?? null,
+          updated.content,
+          updated.state,
+          id,
+        ],
       },
       {
         query: `
@@ -154,8 +168,8 @@ export class MessageRepository {
       {
         query: `
           INSERT INTO distcomp.tbl_message_by_topic
-            (topic_id, bucket, id, country, content)
-          VALUES (?, ?, ?, ?, ?)
+            (topic_id, bucket, id, country, content, state)
+          VALUES (?, ?, ?, ?, ?, ?)
         `,
         params: [
           updated.topicId,
@@ -163,6 +177,7 @@ export class MessageRepository {
           id,
           updated.country ?? null,
           updated.content,
+          updated.state,
         ],
       },
     ];
