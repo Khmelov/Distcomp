@@ -24,4 +24,5 @@ export interface Message {
   id: number;
   topicId: number;
   content: string;
+  state?: 'PENDING' | 'APPROVE' | 'DECLINE';
 }

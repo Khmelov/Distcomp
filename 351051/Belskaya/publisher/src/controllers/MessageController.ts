@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { MessageRequestTo } from '../dtos/requests';
+import { ValidationError } from '../errors/AppError';
 import { messageService } from '../services';
 import { parsePaginationQuery } from '../utils/queryParser';
 
@@ -48,13 +49,15 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.put('/', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const id = Number(req.body.id);
-    const { id: _id, ...dto } = req.body as MessageRequestTo & {
-      id: number;
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+      throw new ValidationError('Invalid message id');
+    }
+    const { id: _bodyId, ...dto } = req.body as MessageRequestTo & {
+      id?: number;
     };
-
     const result = await messageService.update(id, dto);
     res.status(200).json(result);
   } catch (err) {
