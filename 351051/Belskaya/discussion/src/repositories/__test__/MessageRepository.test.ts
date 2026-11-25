@@ -24,6 +24,7 @@ describe("MessageRepository", () => {
   const cassandraRow = {
     id: BigInt(100),
     topic_id: BigInt(10),
+    bucket: 0,
     country: "US",
     content: "Test message",
   };
@@ -34,7 +35,7 @@ describe("MessageRepository", () => {
   });
 
   describe("save", () => {
-    it("should save a message into both tables", async () => {
+    it("should save a message into both tables with bucket", async () => {
       batchMock.mockResolvedValue(undefined);
 
       await repository.save(message);
@@ -46,6 +47,9 @@ describe("MessageRepository", () => {
       expect(queries).toHaveLength(2);
       expect(queries[0].query).toContain("distcomp.tbl_message");
       expect(queries[1].query).toContain("distcomp.tbl_message_by_topic");
+
+      expect(queries[1].params).toEqual([10, 0, 100, "US", "Test message"]);
+
       expect(options).toEqual({ prepare: true });
     });
 
@@ -59,7 +63,7 @@ describe("MessageRepository", () => {
       const [queries] = batchMock.mock.calls[0];
 
       expect(queries[0].params[2]).toBeNull();
-      expect(queries[1].params[2]).toBeNull();
+      expect(queries[1].params[3]).toBeNull();
     });
   });
 
@@ -87,21 +91,38 @@ describe("MessageRepository", () => {
   });
 
   describe("findByTopicId", () => {
-    it("should return messages by topic in ascending order", async () => {
-      executeMock.mockResolvedValue({
-        rows: [cassandraRow],
-      });
+    it("should return messages by topic in ascending order from all buckets", async () => {
+      executeMock.mockImplementation(
+        async (_query: string, params: number[]) => ({
+          rows: [
+            {
+              ...cassandraRow,
+              id: BigInt(100 + params[1]),
+              bucket: params[1],
+            },
+          ],
+        }),
+      );
 
       const result = await repository.findByTopicId(10);
 
-      expect(result).toEqual([message]);
+      expect(executeMock).toHaveBeenCalledTimes(4);
 
-      const [query, params, options] = executeMock.mock.calls[0];
+      expect(executeMock.mock.calls.map((call) => call[1])).toEqual([
+        [10, 0],
+        [10, 1],
+        [10, 2],
+        [10, 3],
+      ]);
 
-      expect(query).toContain("tbl_message_by_topic");
-      expect(query).toContain("ORDER BY id ASC");
-      expect(params).toEqual([10]);
-      expect(options).toEqual({ prepare: true });
+      expect(result).toHaveLength(4);
+      expect(result.map((item) => item.id)).toEqual([100, 101, 102, 103]);
+
+      for (const [query, , options] of executeMock.mock.calls) {
+        expect(query).toContain("tbl_message_by_topic");
+        expect(query).toContain("ORDER BY id ASC");
+        expect(options).toEqual({ prepare: true });
+      }
     });
 
     it("should return messages in descending order", async () => {
@@ -109,11 +130,14 @@ describe("MessageRepository", () => {
         rows: [cassandraRow],
       });
 
-      await repository.findByTopicId(10, "desc");
+      const result = await repository.findByTopicId(10, "desc");
 
-      const [query] = executeMock.mock.calls[0];
+      expect(executeMock).toHaveBeenCalledTimes(4);
+      expect(result.map((item) => item.id)).toEqual([100, 100, 100, 100]);
 
-      expect(query).toContain("ORDER BY id DESC");
+      for (const [query] of executeMock.mock.calls) {
+        expect(query).toContain("ORDER BY id DESC");
+      }
     });
 
     it("should return an empty array when topic has no messages", async () => {
@@ -122,6 +146,7 @@ describe("MessageRepository", () => {
       const result = await repository.findByTopicId(10);
 
       expect(result).toEqual([]);
+      expect(executeMock).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -174,6 +199,9 @@ describe("MessageRepository", () => {
       expect(queries[2].query).toContain(
         "INSERT INTO distcomp.tbl_message_by_topic",
       );
+
+      expect(queries[1].params).toEqual([10, 0, 100]);
+      expect(queries[2].params).toEqual([10, 0, 100, "US", "Updated message"]);
     });
 
     it("should return undefined when message does not exist", async () => {
@@ -209,6 +237,8 @@ describe("MessageRepository", () => {
       expect(queries[1].query).toContain(
         "DELETE FROM distcomp.tbl_message_by_topic",
       );
+
+      expect(queries[1].params).toEqual([10, 0, 100]);
     });
 
     it("should return false when message does not exist", async () => {

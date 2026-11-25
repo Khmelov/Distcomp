@@ -27,11 +27,12 @@ export async function initCassandra() {
     await cassandraClient.execute(`
       CREATE TABLE IF NOT EXISTS distcomp.tbl_message_by_topic (
         topic_id bigint,
+        bucket int,
         id bigint,
         country text,
         content text,
-        PRIMARY KEY ((topic_id), id)
-      );
+        PRIMARY KEY ((topic_id, bucket), id)
+      ) WITH CLUSTERING ORDER BY (id ASC);
     `);
 
     console.log("Cassandra initialized successfully.");
