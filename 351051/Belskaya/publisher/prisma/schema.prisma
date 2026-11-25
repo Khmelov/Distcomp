@@ -25,7 +25,6 @@ model Topic {
   content  String        @db.VarChar(2048)
   created  DateTime      @default(now())
   modified DateTime      @updatedAt
-  messages Message[]
   author   Author        @relation(fields: [authorId], references: [id], onDelete: Cascade)
   markers  TopicMarker[]
 
@@ -38,15 +37,6 @@ model Marker {
   topics TopicMarker[]
 
   @@map("tbl_marker")
-}
-
-model Message {
-  id      Int    @id @default(autoincrement())
-  topicId Int    @map("topic_id")
-  content String @db.VarChar(2048)
-  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
-
-  @@map("tbl_message")
 }
 
 model TopicMarker {

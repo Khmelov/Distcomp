@@ -19,7 +19,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const params = parsePaginationQuery(req);
     const result = await messageService.findAll(params);
-    res.status(200).json(result.map((m) => m));
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }
@@ -31,7 +31,7 @@ router.get(
     try {
       const topicId = Number(req.params.topicId);
       const result = await messageService.findByTopicId(topicId);
-      res.status(200).json(result.map((m) => m));
+      res.status(200).json(result);
     } catch (err) {
       next(err);
     }
@@ -48,10 +48,13 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const id = Number(req.params.id);
-    const dto = req.body as MessageRequestTo;
+    const id = Number(req.body.id);
+    const { id: _id, ...dto } = req.body as MessageRequestTo & {
+      id: number;
+    };
+
     const result = await messageService.update(id, dto);
     res.status(200).json(result);
   } catch (err) {

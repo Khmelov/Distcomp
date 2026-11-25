@@ -1,4 +1,4 @@
-import { Topic } from '@prisma/client';
+import { Topic } from '../../generated/prisma/client';
 import { prisma } from '../../db';
 import { PrismaTopicRepository } from '../PrismaTopicRepository';
 

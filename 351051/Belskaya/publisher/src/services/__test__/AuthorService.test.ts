@@ -1,4 +1,4 @@
-import { Author } from '@prisma/client';
+import { Author } from '../../generated/prisma/client';
 import bcrypt from 'bcrypt';
 import {
   ConflictError,

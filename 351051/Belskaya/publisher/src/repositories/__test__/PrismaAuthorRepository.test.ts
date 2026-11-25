@@ -1,4 +1,4 @@
-import { Author } from '@prisma/client';
+import { Author } from '../../generated/prisma/client';
 import { prisma } from '../../db';
 import { PrismaAuthorRepository } from '../PrismaAuthorRepository';
 

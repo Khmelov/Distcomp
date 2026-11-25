@@ -1,10 +1,10 @@
-import { Message } from '@prisma/client';
+import { Message } from '../../entities';
 import {
+  NotFoundError,
   UnprocessableEntityError,
   ValidationError,
-  NotFoundError,
 } from '../../errors/AppError';
-import { PrismaMessageRepository } from '../../repositories/PrismaMessageRepository';
+import { DiscussionMessageRepository } from '../../repositories/DiscussionMessageRepository';
 import { PrismaTopicRepository } from '../../repositories/PrismaTopicRepository';
 import { MessageService } from '../MessageService';
 
@@ -39,7 +39,7 @@ describe('MessageService', () => {
     jest.clearAllMocks();
 
     service = new MessageService(
-      repository as unknown as PrismaMessageRepository,
+      repository as unknown as DiscussionMessageRepository,
       topicRepository as unknown as PrismaTopicRepository
     );
   });

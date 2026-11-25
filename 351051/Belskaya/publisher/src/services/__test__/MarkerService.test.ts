@@ -1,4 +1,4 @@
-import { Marker } from '@prisma/client';
+import { Marker } from '../../generated/prisma/client';
 import { ValidationError, NotFoundError } from '../../errors/AppError';
 import { PrismaMarkerRepository } from '../../repositories/PrismaMarkerRepository';
 import { MarkerService } from '../MarkerService';

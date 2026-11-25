@@ -1,4 +1,4 @@
-import { Marker } from '@prisma/client';
+import { Marker } from '../../generated/prisma/client';
 import { prisma } from '../../db';
 import { PrismaMarkerRepository } from '../PrismaMarkerRepository';
 
