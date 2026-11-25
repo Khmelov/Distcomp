@@ -1,9 +1,11 @@
 import app from './app';
+import { connectRedis } from './db';
 import { startKafkaRequestReply } from './kafka/requestReply';
 
 const PORT = 24110;
 
 async function bootstrap() {
+  await connectRedis();
   await startKafkaRequestReply();
 
   app.listen(PORT, '0.0.0.0', () => {

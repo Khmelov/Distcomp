@@ -1,3 +1,5 @@
+import { CACHE_PREFIX, CACHE_TTL } from '../constants';
+import { redisClient } from '../db';
 import { Message } from '../entities';
 import {
   AppError,
@@ -32,24 +34,59 @@ function handleKafkaError(err: unknown): never {
 
 export class DiscussionMessageRepository implements IRepository<Message> {
   async findAll(): Promise<Message[]> {
+    const cacheKey = `${CACHE_PREFIX.MESSAGE}:all`;
+
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      console.log(`[Cache HIT] ${cacheKey}`);
+      return JSON.parse(cached);
+    }
+
+    console.log(`[Cache MISS] ${cacheKey}`);
+
     try {
       const response = await sendKafkaRequest('GET_ALL', {});
       if (response.action === 'GET_ALL_ERROR') {
         handleKafkaError(new Error(response.error));
       }
-      return response.data as Message[];
+
+      const messages = response.data as Message[];
+      await redisClient.set(cacheKey, JSON.stringify(messages), {
+        EX: CACHE_TTL,
+      });
+
+      return messages;
     } catch (err) {
       handleKafkaError(err);
     }
   }
 
   async findById(id: number): Promise<Message | undefined> {
+    const cacheKey = `${CACHE_PREFIX.MESSAGE}:${id}`;
+
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      console.log(`[Cache HIT] ${cacheKey}`);
+      return JSON.parse(cached);
+    }
+
+    console.log(`[Cache MISS] ${cacheKey}`);
+
     try {
       const response = await sendKafkaRequest('GET_BY_ID', { id });
       if (response.action === 'GET_BY_ID_ERROR') {
         handleKafkaError(new Error(response.error));
       }
-      return (response.data ?? undefined) as Message | undefined;
+
+      const message = (response.data ?? undefined) as Message | undefined;
+
+      if (message) {
+        await redisClient.set(cacheKey, JSON.stringify(message), {
+          EX: CACHE_TTL,
+        });
+      }
+
+      return message;
     } catch (err) {
       if ((err as Error).message?.toLowerCase().includes('not found')) {
         return undefined;
@@ -62,6 +99,16 @@ export class DiscussionMessageRepository implements IRepository<Message> {
     topicId: number,
     sortOrder?: PaginationParams['sortOrder']
   ): Promise<Message[]> {
+    const cacheKey = `${CACHE_PREFIX.MESSAGE}:topic:${topicId}:${sortOrder ?? 'asc'}`;
+
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      console.log(`[Cache HIT] ${cacheKey}`);
+      return JSON.parse(cached);
+    }
+
+    console.log(`[Cache MISS] ${cacheKey}`);
+
     try {
       const response = await sendKafkaRequest('GET_BY_TOPIC', {
         topicId,
@@ -70,7 +117,13 @@ export class DiscussionMessageRepository implements IRepository<Message> {
       if (response.action === 'GET_BY_TOPIC_ERROR') {
         handleKafkaError(new Error(response.error));
       }
-      return response.data as Message[];
+
+      const messages = response.data as Message[];
+      await redisClient.set(cacheKey, JSON.stringify(messages), {
+        EX: CACHE_TTL,
+      });
+
+      return messages;
     } catch (err) {
       handleKafkaError(err);
     }
@@ -85,7 +138,19 @@ export class DiscussionMessageRepository implements IRepository<Message> {
       if (response.action === 'CREATE_ERROR') {
         handleKafkaError(new Error(response.error));
       }
-      return response.data as Message;
+
+      const created = response.data as Message;
+
+      await this.invalidateListCaches();
+      await redisClient.set(
+        `${CACHE_PREFIX.MESSAGE}:${created.id}`,
+        JSON.stringify(created),
+        {
+          EX: CACHE_TTL,
+        }
+      );
+
+      return created;
     } catch (err) {
       handleKafkaError(err);
     }
@@ -96,14 +161,19 @@ export class DiscussionMessageRepository implements IRepository<Message> {
     entity: Partial<Message>
   ): Promise<Message | undefined> {
     try {
-      const response = await sendKafkaRequest('UPDATE', {
-        id,
-        patch: entity,
-      });
+      const response = await sendKafkaRequest('UPDATE', { id, patch: entity });
       if (response.action === 'UPDATE_ERROR') {
         handleKafkaError(new Error(response.error));
       }
-      return (response.data ?? undefined) as Message | undefined;
+
+      const updated = (response.data ?? undefined) as Message | undefined;
+
+      if (updated) {
+        await redisClient.del(`${CACHE_PREFIX.MESSAGE}:${id}`);
+        await this.invalidateListCaches();
+      }
+
+      return updated;
     } catch (err) {
       if ((err as Error).message?.toLowerCase().includes('not found')) {
         return undefined;
@@ -118,7 +188,15 @@ export class DiscussionMessageRepository implements IRepository<Message> {
       if (response.action === 'DELETE_ERROR') {
         handleKafkaError(new Error(response.error));
       }
-      return Boolean(response.data);
+
+      const ok = Boolean(response.data);
+
+      if (ok) {
+        await redisClient.del(`${CACHE_PREFIX.MESSAGE}:${id}`);
+        await this.invalidateListCaches();
+      }
+
+      return ok;
     } catch (err) {
       if ((err as Error).message?.toLowerCase().includes('not found')) {
         return false;
@@ -129,5 +207,15 @@ export class DiscussionMessageRepository implements IRepository<Message> {
 
   async existsById(id: number): Promise<boolean> {
     return (await this.findById(id)) !== undefined;
+  }
+
+  private async invalidateListCaches(): Promise<void> {
+    const allKeys = await redisClient.keys(`${CACHE_PREFIX.MESSAGE}:all`);
+    const topicKeys = await redisClient.keys(`${CACHE_PREFIX.MESSAGE}:topic:*`);
+    const keysToDelete = [...allKeys, ...topicKeys];
+
+    if (keysToDelete.length > 0) {
+      await redisClient.del(keysToDelete);
+    }
   }
 }
