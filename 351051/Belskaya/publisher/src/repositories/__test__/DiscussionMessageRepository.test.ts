@@ -8,46 +8,51 @@ import {
 } from '../../errors/AppError';
 import { DiscussionMessageRepository } from '../DiscussionMessageRepository';
 
+jest.mock('../../kafka/requestReply', () => ({
+  sendKafkaRequest: jest.fn(),
+}));
+
+import { sendKafkaRequest } from '../../kafka/requestReply';
+
+const sendKafkaRequestMock = sendKafkaRequest as jest.MockedFunction<
+  typeof sendKafkaRequest
+>;
+
 describe('DiscussionMessageRepository', () => {
   let repository: DiscussionMessageRepository;
-  let fetchMock: jest.SpyInstance;
 
   const message: Message = {
     id: 100,
     topicId: 10,
     content: 'Test message',
+    state: 'APPROVE',
   };
-
-  const mockResponse = (status: number, body?: unknown): Response =>
-    ({
-      status,
-      ok: status >= 200 && status < 300,
-      json: jest.fn().mockResolvedValue(body),
-    }) as unknown as Response;
 
   beforeEach(() => {
     repository = new DiscussionMessageRepository();
-    fetchMock = jest.spyOn(global, 'fetch');
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
+    sendKafkaRequestMock.mockReset();
   });
 
   describe('findAll', () => {
     it('should return all messages', async () => {
-      fetchMock.mockResolvedValue(mockResponse(200, [message]));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'GET_ALL_RESULT',
+        correlationId: 'x',
+        data: [message],
+      });
 
       const result = await repository.findAll();
 
       expect(result).toEqual([message]);
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining('/messages')
-      );
+      expect(sendKafkaRequestMock).toHaveBeenCalledWith('GET_ALL', {});
     });
 
     it('should throw ValidationError on 400', async () => {
-      fetchMock.mockResolvedValue(mockResponse(400));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'GET_ALL_ERROR',
+        correlationId: 'x',
+        error: '400 bad request',
+      });
 
       await expect(repository.findAll()).rejects.toBeInstanceOf(
         ValidationError
@@ -55,49 +60,77 @@ describe('DiscussionMessageRepository', () => {
     });
 
     it('should throw ConflictError on 403', async () => {
-      fetchMock.mockResolvedValue(mockResponse(403));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'GET_ALL_ERROR',
+        correlationId: 'x',
+        error: '403 forbidden',
+      });
 
       await expect(repository.findAll()).rejects.toBeInstanceOf(ConflictError);
     });
 
     it('should throw NotFoundError on 404', async () => {
-      fetchMock.mockResolvedValue(mockResponse(404));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'GET_ALL_ERROR',
+        correlationId: 'x',
+        error: '404 not found',
+      });
 
       await expect(repository.findAll()).rejects.toBeInstanceOf(NotFoundError);
     });
 
     it('should throw UnprocessableEntityError on 422', async () => {
-      fetchMock.mockResolvedValue(mockResponse(422));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'GET_ALL_ERROR',
+        correlationId: 'x',
+        error: '422 unprocessable',
+      });
 
       await expect(repository.findAll()).rejects.toBeInstanceOf(
         UnprocessableEntityError
       );
     });
 
-    it('should throw AppError on unexpected status', async () => {
-      fetchMock.mockResolvedValue(mockResponse(500));
+    it('should throw AppError on timeout', async () => {
+      sendKafkaRequestMock.mockRejectedValue(
+        new Error('Kafka timeout for action GET_ALL')
+      );
 
       await expect(repository.findAll()).rejects.toMatchObject({
-        statusCode: 500,
-        errorCode: '50001',
+        statusCode: 504,
+        errorCode: '50401',
       });
+    });
+
+    it('should throw AppError on unexpected error', async () => {
+      sendKafkaRequestMock.mockRejectedValue(new Error('Something broke'));
+
+      await expect(repository.findAll()).rejects.toBeInstanceOf(AppError);
     });
   });
 
   describe('findById', () => {
     it('should return a message by id', async () => {
-      fetchMock.mockResolvedValue(mockResponse(200, message));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'GET_BY_ID_RESULT',
+        correlationId: 'x',
+        data: message,
+      });
 
       const result = await repository.findById(100);
 
       expect(result).toEqual(message);
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining('/messages/100')
-      );
+      expect(sendKafkaRequestMock).toHaveBeenCalledWith('GET_BY_ID', {
+        id: 100,
+      });
     });
 
     it('should return undefined if message does not exist', async () => {
-      fetchMock.mockResolvedValue(mockResponse(404));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'GET_BY_ID_RESULT',
+        correlationId: 'x',
+        data: null,
+      });
 
       const result = await repository.findById(100);
 
@@ -105,7 +138,9 @@ describe('DiscussionMessageRepository', () => {
     });
 
     it('should throw AppError on server error', async () => {
-      fetchMock.mockResolvedValue(mockResponse(500));
+      sendKafkaRequestMock.mockRejectedValue(
+        new Error('Kafka timeout for action GET_BY_ID')
+      );
 
       await expect(repository.findById(100)).rejects.toBeInstanceOf(AppError);
     });
@@ -113,25 +148,40 @@ describe('DiscussionMessageRepository', () => {
 
   describe('findByTopicId', () => {
     it('should return messages by topic id', async () => {
-      fetchMock.mockResolvedValue(mockResponse(200, [message]));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'GET_BY_TOPIC_RESULT',
+        correlationId: 'x',
+        data: [message],
+      });
 
       const result = await repository.findByTopicId(10);
 
       expect(result).toEqual([message]);
+      expect(sendKafkaRequestMock).toHaveBeenCalledWith('GET_BY_TOPIC', {
+        topicId: 10,
+        sortOrder: 'asc',
+      });
     });
 
     it('should pass sortOrder to Discussion', async () => {
-      fetchMock.mockResolvedValue(mockResponse(200, [message]));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'GET_BY_TOPIC_RESULT',
+        correlationId: 'x',
+        data: [message],
+      });
 
       await repository.findByTopicId(10, 'desc');
 
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining('/by-topic/10?sortOrder=desc')
-      );
+      expect(sendKafkaRequestMock).toHaveBeenCalledWith('GET_BY_TOPIC', {
+        topicId: 10,
+        sortOrder: 'desc',
+      });
     });
 
     it('should throw AppError on failed request', async () => {
-      fetchMock.mockResolvedValue(mockResponse(500));
+      sendKafkaRequestMock.mockRejectedValue(
+        new Error('Kafka timeout for action GET_BY_TOPIC')
+      );
 
       await expect(repository.findByTopicId(10)).rejects.toBeInstanceOf(
         AppError
@@ -141,25 +191,31 @@ describe('DiscussionMessageRepository', () => {
 
   describe('save', () => {
     it('should create a message', async () => {
-      fetchMock.mockResolvedValue(mockResponse(201, message));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'CREATE_RESULT',
+        correlationId: 'x',
+        data: message,
+      });
 
       const { id, ...newMessage } = message;
 
       const result = await repository.save(newMessage);
 
       expect(result).toEqual(message);
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining('/messages'),
+      expect(sendKafkaRequestMock).toHaveBeenCalledWith(
+        'CREATE',
         expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newMessage),
+          topicId: 10,
+          content: 'Test message',
+          state: 'PENDING',
         })
       );
     });
 
     it('should throw AppError on failed request', async () => {
-      fetchMock.mockResolvedValue(mockResponse(500));
+      sendKafkaRequestMock.mockRejectedValue(
+        new Error('Kafka timeout for action CREATE')
+      );
 
       await expect(
         repository.save({
@@ -174,24 +230,29 @@ describe('DiscussionMessageRepository', () => {
     it('should update a message', async () => {
       const updatedMessage = { ...message, content: 'Updated message' };
 
-      fetchMock.mockResolvedValue(mockResponse(200, updatedMessage));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'UPDATE_RESULT',
+        correlationId: 'x',
+        data: updatedMessage,
+      });
 
       const result = await repository.update(100, {
         content: 'Updated message',
       });
 
       expect(result).toEqual(updatedMessage);
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining('/messages/100'),
-        expect.objectContaining({
-          method: 'PUT',
-          body: JSON.stringify({ content: 'Updated message' }),
-        })
-      );
+      expect(sendKafkaRequestMock).toHaveBeenCalledWith('UPDATE', {
+        id: 100,
+        patch: { content: 'Updated message' },
+      });
     });
 
     it('should return undefined if message does not exist', async () => {
-      fetchMock.mockResolvedValue(mockResponse(404));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'UPDATE_RESULT',
+        correlationId: 'x',
+        data: null,
+      });
 
       const result = await repository.update(100, {
         content: 'Updated message',
@@ -201,7 +262,9 @@ describe('DiscussionMessageRepository', () => {
     });
 
     it('should throw AppError on server error', async () => {
-      fetchMock.mockResolvedValue(mockResponse(500));
+      sendKafkaRequestMock.mockRejectedValue(
+        new Error('Kafka timeout for action UPDATE')
+      );
 
       await expect(
         repository.update(100, { content: 'Updated message' })
@@ -211,19 +274,26 @@ describe('DiscussionMessageRepository', () => {
 
   describe('delete', () => {
     it('should delete a message', async () => {
-      fetchMock.mockResolvedValue(mockResponse(204));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'DELETE_RESULT',
+        correlationId: 'x',
+        data: true,
+      });
 
       const result = await repository.delete(100);
 
       expect(result).toBe(true);
-      expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining('/messages/100'),
-        { method: 'DELETE' }
-      );
+      expect(sendKafkaRequestMock).toHaveBeenCalledWith('DELETE', {
+        id: 100,
+      });
     });
 
     it('should return false if message does not exist', async () => {
-      fetchMock.mockResolvedValue(mockResponse(404));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'DELETE_RESULT',
+        correlationId: 'x',
+        data: false,
+      });
 
       const result = await repository.delete(100);
 
@@ -231,7 +301,9 @@ describe('DiscussionMessageRepository', () => {
     });
 
     it('should throw AppError on server error', async () => {
-      fetchMock.mockResolvedValue(mockResponse(500));
+      sendKafkaRequestMock.mockRejectedValue(
+        new Error('Kafka timeout for action DELETE')
+      );
 
       await expect(repository.delete(100)).rejects.toBeInstanceOf(AppError);
     });
@@ -239,7 +311,11 @@ describe('DiscussionMessageRepository', () => {
 
   describe('existsById', () => {
     it('should return true if message exists', async () => {
-      fetchMock.mockResolvedValue(mockResponse(200, message));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'GET_BY_ID_RESULT',
+        correlationId: 'x',
+        data: message,
+      });
 
       const result = await repository.existsById(100);
 
@@ -247,7 +323,11 @@ describe('DiscussionMessageRepository', () => {
     });
 
     it('should return false if message does not exist', async () => {
-      fetchMock.mockResolvedValue(mockResponse(404));
+      sendKafkaRequestMock.mockResolvedValue({
+        action: 'GET_BY_ID_RESULT',
+        correlationId: 'x',
+        data: null,
+      });
 
       const result = await repository.existsById(100);
 

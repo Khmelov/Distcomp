@@ -190,15 +190,14 @@ describe('MessageController', () => {
     });
   });
 
-  describe('PUT /messages', () => {
+  describe('PUT /messages/:id', () => {
     it('should update message and return status 200', async () => {
       const dto = {
-        id: 1,
         topicId: 10,
         content: 'Updated message',
       };
 
-      const response = await makeRequest('PUT', '/messages', dto);
+      const response = await makeRequest('PUT', '/messages/1', dto);
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(message);
